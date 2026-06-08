@@ -23,8 +23,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileNameDisplay = document.getElementById('fileNameDisplay');
     const multiFilesContainer = document.getElementById('multiFilesContainer');
     
+    // Modal preview selectors
+    const previewModal = document.getElementById('previewModal');
+    const closePreview = document.getElementById('closePreview');
+    const previewTitle = document.getElementById('previewTitle');
+    const previewBody = document.getElementById('previewBody');
+
     let isSignupMode = false;
-    let masterFilesArray = []; // Store selected files with configs and copies quantity
+    let masterFilesArray = []; // Maintains append state when user clicks 'Select Files' multiple times
     let isFirstTimeUser = false; 
 
     // --- ⏳ STAGE 1: DYNAMIC SPLASH CONTROLLER ---
@@ -33,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
             splashScreen.style.opacity = '0';
             splashScreen.style.visibility = 'hidden';
         }
-
         const sessionActiveUser = localStorage.getItem('printAppUser');
         if (sessionActiveUser) {
             const userData = JSON.parse(localStorage.getItem(`user_${sessionActiveUser}`));
@@ -51,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleAuthLink.addEventListener('click', (e) => {
         e.preventDefault();
         isSignupMode = !isSignupMode;
-
         if (isSignupMode) {
             authTitle.textContent = "Create Account";
             authSubtitle.textContent = "Join Print From Home today. Sign up using Email/Phone to order prints instantly.";
@@ -102,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
             isFirstTimeUser = localStorage.getItem(`isFirst_${identityKey}`) === 'true';
             userGreeting.textContent = `Hi, ${verifiedObject.name}`;
         }
-
         authScreen.classList.add('app-hidden');
         mainApp.classList.remove('app-hidden');
         mainApp.classList.add('app-visible');
@@ -117,34 +120,24 @@ document.addEventListener('DOMContentLoaded', () => {
         authScreen.classList.remove('app-hidden');
     });
 
-    // --- 🖨️ ADVANCED QUANTITY STEPPER CALCULATOR ENGINE ---
-    const printForm = document.getElementById('printForm');
-    const summaryPrint = document.getElementById('summaryPrint');
-    const summaryBinding = document.getElementById('summaryBinding');
-    const summaryDelivery = document.getElementById('summaryDelivery');
-    const summaryTotal = document.getElementById('summaryTotal');
-
-    const BASE_DELIVERY_CHARGE = 40.00;
-
+    // --- 🖨️ FILE EXTENSION PERSISTENCE & PREVIEW ENGINE ---
     fileUpload.addEventListener('change', () => {
-        masterFilesArray = []; // Purana stack reset (Fresh selection logic)
-        
-        if (fileUpload.files.length === 0) {
-            fileNameDisplay.textContent = "No files selected yet";
-            renderFilesUI();
-            return;
-        }
+        if (fileUpload.files.length === 0) return;
 
-        fileNameDisplay.textContent = `✓ ${fileUpload.files.length} files selected`;
-
+        // 🔥 FIX: Puraani files delete nahi hongi, nayi files append ho jayengi array mein
         Array.from(fileUpload.files).forEach(file => {
-            masterFilesArray.push({
-                fileData: file,
-                // copies tracker introduced tracking quantity natively
-                config: { pages: 1, printType: 'bw', sides: 'single', binding: 'none', copies: 1 }
-            });
+            // Avoid duplicate pushing of identical file references
+            const isDuplicate = masterFilesArray.some(f => f.fileData.name === file.name && f.fileData.size === file.size);
+            if (!isDuplicate) {
+                masterFilesArray.push({
+                    fileData: file,
+                    config: { pages: 1, printType: 'bw', sides: 'single', binding: 'none', copies: 1 }
+                });
+            }
         });
 
+        fileNameDisplay.textContent = `✓ Total ${masterFilesArray.length} files in queue`;
+        fileUpload.value = ''; // Input clear so user can select the same file again if desired
         renderFilesUI();
     });
 
@@ -152,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         multiFilesContainer.innerHTML = ''; 
 
         if (masterFilesArray.length === 0) {
+            fileNameDisplay.textContent = "No files selected yet";
             calculateTotal();
             return;
         }
@@ -165,15 +159,18 @@ document.addEventListener('DOMContentLoaded', () => {
             fileRow.style.textAlign = 'left';
 
             fileRow.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:8px; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:8px; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
                     <strong style="font-size:0.9rem; color:#1a202c; word-break:break-all;">📄 ${item.fileData.name}</strong>
                     <div style="display:flex; align-items:center; gap:12px;">
+                        <button type="button" id="previewBtn_${index}" style="background:#e2e8f0; border:none; border-radius:6px; color:#2d3748; padding:4px 8px; font-size:0.8rem; cursor:pointer; font-weight:600;">👁️ Preview</button>
+                        
                         <div style="display:flex; align-items:center; background:#edf2f7; border-radius:8px; padding:2px 6px; gap:8px;">
                             <button type="button" id="minusCopy_${index}" style="border:none; background:none; font-weight:800; color:#4a5568; cursor:pointer; padding:2px 6px;">-</button>
                             <span id="copyCountLabel_${index}" style="font-weight:700; font-size:0.9rem; min-width:14px; text-align:center;">${item.config.copies}</span>
                             <button type="button" id="plusCopy_${index}" style="border:none; background:none; font-weight:800; color:#0C8346; cursor:pointer; padding:2px 6px;">+</button>
                         </div>
                         <span id="fileTotalCost_${index}" style="font-weight:700; color:#0C8346; font-size:0.95rem;">₹0.00</span>
+                        <button type="button" id="removeFile_${index}" style="background:none; border:none; color:#e53e3e; font-weight:bold; cursor:pointer; font-size:0.8rem; margin-left:5px;">❌</button>
                     </div>
                 </div>
                 
@@ -213,13 +210,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             multiFilesContainer.appendChild(fileRow);
 
-            // Stepper click binding execution
+            // Trigger modal logic for specific indexed file element
+            document.getElementById(`previewBtn_${index}`).addEventListener('click', () => {
+                openDocumentPreview(item.fileData);
+            });
+
+            // Copies Counter Stepper configuration
             document.getElementById(`plusCopy_${index}`).addEventListener('click', () => {
                 item.config.copies++;
                 document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies;
                 calculateTotal();
             });
-
             document.getElementById(`minusCopy_${index}`).addEventListener('click', () => {
                 if (item.config.copies > 1) {
                     item.config.copies--;
@@ -228,7 +229,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Normal Input mappings
+            // Remove/Delete isolated array entity
+            document.getElementById(`removeFile_${index}`).addEventListener('click', () => {
+                masterFilesArray.splice(index, 1);
+                fileNameDisplay.textContent = masterFilesArray.length > 0 ? `✓ Total ${masterFilesArray.length} files in queue` : "No files selected yet";
+                renderFilesUI();
+            });
+
+            // Input monitors for calculations
             document.getElementById(`pages_${index}`).addEventListener('input', (e) => {
                 item.config.pages = e.target.value;
                 calculateTotal();
@@ -250,6 +258,47 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
     }
 
+    // 🔥 Live Document Preview Render Core Mechanism
+    function openDocumentPreview(file) {
+        previewTitle.textContent = `Preview: ${file.name}`;
+        previewBody.innerHTML = ''; // Fresh mapping load
+
+        const fileURL = URL.createObjectURL(file);
+
+        if (file.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src = fileURL;
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '60vh';
+            img.style.borderRadius = '8px';
+            previewBody.appendChild(img);
+        } else if (file.type === 'application/pdf') {
+            const iframe = document.createElement('iframe');
+            iframe.src = fileURL;
+            iframe.style.width = '100%';
+            iframe.style.height = '60vh';
+            iframe.style.border = 'none';
+            previewBody.appendChild(iframe);
+        } else {
+            // Document types like word files (.doc/.docx) cannot be natively previewed without cloud libraries
+            previewBody.innerHTML = `
+                <div style="text-align:center; padding:20px; color:#4a5568;">
+                    <span style="font-size:3rem;">📄</span>
+                    <p style="margin-top:10px; font-weight:600;">Preview not directly supported for this format.</p>
+                    <p style="font-size:0.8rem; color:#718096;">Ready to print securely as raw binary.</p>
+                </div>`;
+        }
+
+        previewModal.style.display = 'flex';
+    }
+
+    closePreview.addEventListener('click', () => {
+        previewModal.style.display = 'none';
+    });
+    window.addEventListener('click', (e) => {
+        if (e.target === previewModal) previewModal.style.display = 'none';
+    });
+
     function calculateTotal() {
         let totalPrintCost = 0;
         let totalBindingCost = 0;
@@ -266,11 +315,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const pages = parseInt(item.config.pages) || 1;
             const printType = item.config.printType;
             const binding = item.config.binding;
-            const copies = parseInt(item.config.copies) || 1; // Copies multiplier integration
+            const copies = parseInt(item.config.copies) || 1;
 
             let perPageRate = (printType === 'bw') ? 3.00 : 10.00;
-            
-            // Core logic updated tracking copies multiplication rules dynamically
             let filePrintCost = (pages * perPageRate) * copies;
             let fileBindingCost = 0;
             
@@ -289,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let finalDocumentCost = totalPrintCost + totalBindingCost;
         let accurateDeliveryCharge = BASE_DELIVERY_CHARGE;
 
-        // Shipping threshold engine evaluation
+        // Smart schemes checking mapping variables execution
         if (isFirstTimeUser && finalDocumentCost >= 50.00) {
             accurateDeliveryCharge = 0.00; 
         } else if (finalDocumentCost >= 99.00) {
@@ -304,12 +351,11 @@ document.addEventListener('DOMContentLoaded', () => {
         summaryTotal.textContent = `₹${grandTotal.toFixed(2)}`;
     }
 
-    // Binary payload compiler block execution
+    // Form submission processor loops over active appended file arrays safely
     printForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
         if(masterFilesArray.length === 0) {
-            alert("❌ Order place karne ke liye documents select karein bhai!");
+            alert("❌ File upload karna zaroori hai bhai!");
             return;
         }
 
@@ -327,12 +373,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 printType: item.config.printType,
                 sides: item.config.sides,
                 binding: item.config.binding,
-                copies: item.config.copies // Meta array appends copies data safely
+                copies: item.config.copies
             };
         });
 
         formData.append('totalAmount', totalAmountText);
         formData.append('configDetails', JSON.stringify(finalMetaConfig));
+        formData.append('address', document.getElementById('address').value);
 
         try {
             const response = await fetch('/api/create-order', {
@@ -342,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (!data.success) {
-                alert('Order create karne mein dikkat aayi bhai!');
+                alert('Order failure! Server validation failed.');
                 return;
             }
 
@@ -364,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     const verifyData = await verifyRes.json();
                     if(verifyData.success) {
-                        alert('🎉 Payment Successful! Aapka order receive ho gaya hai.');
+                        alert('🎉 Payment Successful! Order lock ho gaya hai.');
                         
                         const activeUserToken = localStorage.getItem('printAppUser');
                         if (activeUserToken && isFirstTimeUser) {
@@ -381,12 +428,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 "theme": { "color": "#F4C430" }
             };
-
             const rzp1 = new Razorpay(options);
             rzp1.open();
         } catch (error) {
             console.error("Payment Error:", error);
-            alert("Server se connect nahi ho paa raha hai bhai!");
+            alert("Payment Gateway unstable at the moment!");
         }
     });
 });
