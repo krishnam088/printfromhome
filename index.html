@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
-        /* CSS for the Preview Modal - Bina main style.css ko touch kiye yahan inline define kiya hai */
+        /* CSS for Preview Modal & History List - Main framework frozen */
         .preview-modal {
             display: none; position: fixed; z-index: 10000; left: 0; top: 0; 
             width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); 
@@ -25,6 +25,10 @@
         .offer-badge-box {
             background: #fffbeb; border: 1px dashed #d97706; padding: 12px; 
             border-radius: 8px; margin-bottom: 20px; text-align: left;
+        }
+        .history-card-item {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+            padding: 12px; margin-top: 10px; text-align: left; font-size: 0.85rem;
         }
     </style>
 </head>
@@ -90,8 +94,8 @@
                         🎉 Special Printing Schemes & Offers
                     </h4>
                     <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: #78350f; line-height: 1.5;">
-                        <li><strong>New User Scheme:</strong> Create an account & get <strong>FREE Delivery</strong> on orders above ₹50!</li>
-                        <li><strong>Super Saver Print:</strong> Get <strong>FREE Delivery</strong> on any order above ₹99!</li>
+                        <li><strong>First Order Scheme:</strong> Print for <strong>₹49.00</strong> or more on your first order & get <strong>FREE Delivery!</strong></li>
+                        <li><strong>Regular Scheme:</strong> Get <strong>FREE Delivery</strong> on any regular order above ₹99!</li>
                     </ul>
                 </div>
 
@@ -127,28 +131,37 @@
                 </form>
             </section>
 
-            <section class="summary-section">
-                <h2>Order Summary</h2>
-                <div class="summary-card">
-                    <div class="summary-row">
-                        <span>Printing Cost</span>
-                        <span id="summaryPrint">₹0.00</span>
+            <div style="display: flex; flex-direction: column; gap: 20px; width:100%;">
+                <section class="summary-section" style="width:100%;">
+                    <h2>Order Summary</h2>
+                    <div class="summary-card">
+                        <div class="summary-row">
+                            <span>Printing Cost</span>
+                            <span id="summaryPrint">₹0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Binding Cost</span>
+                            <span id="summaryBinding">₹0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Delivery Charges</span>
+                            <span id="summaryDelivery">₹0.00</span>
+                        </div>
+                        <hr class="summary-divider">
+                        <div class="summary-row total-row">
+                            <h3>Total Amount</h3>
+                            <h3 id="summaryTotal">₹0.00</h3>
+                        </div>
                     </div>
-                    <div class="summary-row">
-                        <span>Binding Cost</span>
-                        <span id="summaryBinding">₹0.00</span>
+                </section>
+
+                <section class="summary-section" style="width:100%; max-height:400px; overflow-y:auto;">
+                    <h2 style="font-size:1.2rem; border-bottom:2px solid #F4C430; padding-bottom:6px; margin-bottom:10px;">📋 Your Last Orders</h2>
+                    <div id="ordersHistoryContainer">
+                        <p style="font-size:0.85rem; color:#718096; text-align:center; padding:15px;">No orders placed yet.</p>
                     </div>
-                    <div class="summary-row">
-                        <span>Delivery Charges</span>
-                        <span id="summaryDelivery">₹0.00</span>
-                    </div>
-                    <hr class="summary-divider">
-                    <div class="summary-row total-row">
-                        <h3>Total Amount</h3>
-                        <h3 id="summaryTotal">₹0.00</h3>
-                    </div>
-                </div>
-            </section>
+                </section>
+            </div>
         </main>
     </div>
 
@@ -156,8 +169,7 @@
         <div class="preview-content">
             <span id="closePreview" class="close-preview">&times;</span>
             <h3 id="previewTitle" style="margin-top:0; font-size:1rem; color:#333; word-break:break-all;">Document Preview</h3>
-            <div id="previewBody" style="margin-top:15px; display:flex; justify-content:center; align-items:center; min-height:200px;">
-                </div>
+            <div id="previewBody" style="margin-top:15px; display:flex; justify-content:center; align-items:center; min-height:200px;"></div>
         </div>
     </div>
 

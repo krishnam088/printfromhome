@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileUpload = document.getElementById('fileUpload');
     const fileNameDisplay = document.getElementById('fileNameDisplay');
     const multiFilesContainer = document.getElementById('multiFilesContainer');
+    const ordersHistoryContainer = document.getElementById('ordersHistoryContainer');
     
     // Modal preview selectors
     const previewModal = document.getElementById('previewModal');
@@ -31,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let isSignupMode = false;
     let masterFilesArray = []; // Maintains append state when user clicks 'Select Files' multiple times
-    let isFirstTimeUser = false; 
+    let isFirstTimeUser = true; // Automatically evaluated based on persistent order history database
 
     // --- ⏳ STAGE 1: DYNAMIC SPLASH CONTROLLER ---
     setTimeout(() => {
@@ -43,12 +44,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sessionActiveUser) {
             const userData = JSON.parse(localStorage.getItem(`user_${sessionActiveUser}`));
             userGreeting.textContent = `Hi, ${userData ? userData.name : 'Customer'}`;
-            isFirstTimeUser = localStorage.getItem(`isFirst_${sessionActiveUser}`) === 'true';
+            
+            // 🔥 AUTOMATIC FIRST ORDER TRACKER: If order history exists, it's NOT a first order anymore
+            const savedHistory = localStorage.getItem(`history_${sessionActiveUser}`);
+            if (savedHistory && JSON.parse(savedHistory).length > 0) {
+                isFirstTimeUser = false;
+            } else {
+                isFirstTimeUser = true;
+            }
+
             mainApp.classList.remove('app-hidden');
             mainApp.classList.add('app-visible');
             
-            // 🔥 REFRESH PERSISTENCE TRICK: Load saved files on page refresh
             loadSavedFilesFromSession();
+            renderOrderHistoryUI(sessionActiveUser); // Load Last Orders view component
         } else {
             authScreen.classList.remove('app-hidden');
         }
@@ -90,8 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const userPayload = { name: inputName, id: identityKey, password: inputPassword };
             localStorage.setItem(`user_${identityKey}`, JSON.stringify(userPayload));
             localStorage.setItem('printAppUser', identityKey);
-            localStorage.setItem(`isFirst_${identityKey}`, 'true'); 
-            isFirstTimeUser = true;
+            isFirstTimeUser = true; // Dynamic fresh registration flag
             userGreeting.textContent = `Hi, ${inputName}`;
             alert("🎉 Account created successfully! Logging you in...");
         } else {
@@ -106,7 +114,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             localStorage.setItem('printAppUser', identityKey);
-            isFirstTimeUser = localStorage.getItem(`isFirst_${identityKey}`) === 'true';
+            
+            const savedHistory = localStorage.getItem(`history_${identityKey}`);
+            isFirstTimeUser = !(savedHistory && JSON.parse(savedHistory).length > 0);
             userGreeting.textContent = `Hi, ${verifiedObject.name}`;
         }
         authScreen.classList.add('app-hidden');
@@ -114,18 +124,21 @@ document.addEventListener('DOMContentLoaded', () => {
         mainApp.classList.add('app-visible');
         authForm.reset();
         
+        const currentUser = localStorage.getItem('printAppUser');
         loadSavedFilesFromSession();
+        renderOrderHistoryUI(currentUser);
         calculateTotal();
     });
 
     logoutBtn.addEventListener('click', () => {
         localStorage.removeItem('printAppUser');
-        sessionStorage.removeItem('savedPrintFiles'); // Clear session cache data on logout
+        sessionStorage.removeItem('savedPrintFiles'); 
         masterFilesArray = [];
         multiFilesContainer.innerHTML = '';
         fileNameDisplay.textContent = "No files selected yet";
         mainApp.classList.remove('app-visible');
         mainApp.classList.add('app-hidden');
+        authScreen.classList.remove('auth-hidden');
         authScreen.classList.remove('app-hidden');
         calculateTotal();
     });
@@ -141,18 +154,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     name: file.name,
                     size: file.size,
                     type: file.type,
-                    fileData: file, // Store actual file binary data
+                    fileData: file, 
                     config: { pages: 1, printType: 'bw', sides: 'single', binding: 'none', copies: 1 }
                 });
             }
         });
 
         fileUpload.value = ''; 
-        saveCurrentFilesToSession(); // 🔥 Save data to memory
+        saveCurrentFilesToSession(); 
         renderFilesUI();
     });
 
-    // 🔥 Function to Save configurations to session state mapping safely
     function saveCurrentFilesToSession() {
         const sessionPayload = masterFilesArray.map(item => ({
             name: item.name,
@@ -163,7 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.setItem('savedPrintFiles', JSON.stringify(sessionPayload));
     }
 
-    // 🔥 Function to Load data after browser tab refresh loop executes
     function loadSavedFilesFromSession() {
         const rawSessionData = sessionStorage.getItem('savedPrintFiles');
         if (rawSessionData) {
@@ -172,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 name: item.name,
                 size: item.size,
                 type: item.type,
-                fileData: null, // Refresh erases binary, handles securely during submission
+                fileData: null, 
                 config: item.config
             }));
             fileNameDisplay.textContent = `✓ Total ${masterFilesArray.length} files in queue`;
@@ -197,7 +208,6 @@ document.addEventListener('DOMContentLoaded', () => {
             fileRow.style.marginTop = '15px';
             fileRow.style.textAlign = 'left';
 
-            // If fileData is missing due to refresh, display alert hint inside button
             const previewBtnText = item.fileData ? "👁️ Preview" : "🔄 Re-upload File";
             const previewBtnBg = item.fileData ? "#e2e8f0" : "#fed7d7";
             const previewBtnColor = item.fileData ? "#2d3748" : "#c53030";
@@ -254,17 +264,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             multiFilesContainer.appendChild(fileRow);
 
-            // Handler managing re-uploads or previews execution
             document.getElementById(`previewBtn_${index}`).addEventListener('click', () => {
                 if(item.fileData) {
                     openDocumentPreview(item.fileData, item.name, item.type);
                 } else {
-                    alert(`Bhai, page refresh hone ki wajah se "${item.name}" secure sandbox se hat gayi hai. Bas niche main 'Select Files' button se ise ek baar dubara select kar lo, aapki mapping aur settings as-it-is save rahengi!`);
+                    alert(`Bhai, refresh ke kaaran data buffer unbind ho gaya hai. Main button 'Select Files' se ek baar dobara click karke files chun lo, options waise hi saved hain!`);
                     fileUpload.click();
                 }
             });
 
-            // Copies Counter Stepper configurations
             document.getElementById(`plusCopy_${index}`).addEventListener('click', () => {
                 item.config.copies++;
                 document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies;
@@ -280,7 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Remove isolated entity node item array operations
             document.getElementById(`removeFile_${index}`).addEventListener('click', () => {
                 masterFilesArray.splice(index, 1);
                 fileNameDisplay.textContent = masterFilesArray.length > 0 ? `✓ Total ${masterFilesArray.length} files in queue` : "No files selected yet";
@@ -288,7 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderFilesUI();
             });
 
-            // Input monitors mappings
             document.getElementById(`pages_${index}`).addEventListener('input', (e) => {
                 item.config.pages = parseInt(e.target.value) || 1;
                 saveCurrentFilesToSession();
@@ -301,7 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             document.getElementById(`sides_${index}`).addEventListener('change', (e) => {
                 item.config.sides = e.target.value;
-                saveCurrentFilesToSession();
                 calculateTotal();
             });
             document.getElementById(`binding_${index}`).addEventListener('change', (e) => {
@@ -314,13 +319,10 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
     }
 
-    // Live Document Preview
     function openDocumentPreview(file, name, type) {
         previewTitle.textContent = `Preview: ${name}`;
         previewBody.innerHTML = ''; 
-
         const fileURL = URL.createObjectURL(file);
-
         if (type.startsWith('image/')) {
             const img = document.createElement('img');
             img.src = fileURL;
@@ -336,24 +338,14 @@ document.addEventListener('DOMContentLoaded', () => {
             iframe.style.border = 'none';
             previewBody.appendChild(iframe);
         } else {
-            previewBody.innerHTML = `
-                <div style="text-align:center; padding:20px; color:#4a5568;">
-                    <span style="font-size:3rem;">📄</span>
-                    <p style="margin-top:10px; font-weight:600;">Preview not directly supported for this format.</p>
-                </div>`;
+            previewBody.innerHTML = `<div style="text-align:center; padding:20px; color:#4a5568;"><span style="font-size:3rem;">📄</span><p style="margin-top:10px; font-weight:600;">Preview not directly supported for this format.</p></div>`;
         }
-
         previewModal.style.display = 'flex';
     }
 
-    closePreview.addEventListener('click', () => {
-        previewModal.style.display = 'none';
-    });
-    window.addEventListener('click', (e) => {
-        if (e.target === previewModal) previewModal.style.display = 'none';
-    });
+    closePreview.addEventListener('click', () => { previewModal.style.display = 'none'; });
 
-    // Recalculator Core Engine
+    // --- 🚚 AUTOMATIC SHIPPING THRESHOLD CALCULATOR ---
     function calculateTotal() {
         let totalPrintCost = 0;
         let totalBindingCost = 0;
@@ -385,7 +377,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (binding === 'soft') fileBindingCost = 50.00 * copies;
 
             let fileTotal = filePrintCost + fileBindingCost;
-
             const costLabel = document.getElementById(`fileTotalCost_${index}`);
             if (costLabel) costLabel.textContent = `₹${fileTotal.toFixed(2)}`;
 
@@ -396,9 +387,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let finalDocumentCost = totalPrintCost + totalBindingCost;
         let accurateDeliveryCharge = 40.00; 
 
-        if (isFirstTimeUser && finalDocumentCost >= 50.00) {
+        // 🔥 AUTOMATIC SHIPPING TIERS: Pehla Order >= 49 par FREE, agle sab order >= 99 par FREE
+        if (isFirstTimeUser && finalDocumentCost >= 49.00) {
             accurateDeliveryCharge = 0.00; 
-        } else if (finalDocumentCost >= 99.00) {
+        } else if (!isFirstTimeUser && finalDocumentCost >= 99.00) {
             accurateDeliveryCharge = 0.00; 
         }
 
@@ -410,7 +402,40 @@ document.addEventListener('DOMContentLoaded', () => {
         summaryTotal.textContent = `₹${grandTotal.toFixed(2)}`;
     }
 
-    // Form submission processing pipeline loop integration execution
+    // 🔥 HISTORY UI LAYER RENDERING MECHANISM
+    function renderOrderHistoryUI(userId) {
+        const rawHistory = localStorage.getItem(`history_${userId}`);
+        if (!rawHistory || JSON.parse(rawHistory).length === 0) {
+            ordersHistoryContainer.innerHTML = `<p style="font-size:0.85rem; color:#718096; text-align:center; padding:15px;">No orders placed yet.</p>`;
+            return;
+        }
+
+        const parsedHistory = JSON.parse(rawHistory).reverse(); // Latest order top par dikhane ke liye
+        ordersHistoryContainer.innerHTML = '';
+
+        parsedHistory.forEach(order => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'history-card-item';
+            
+            let filesDetailsHtml = order.details.map(f => `• ${f.fileName} (${f.copies} copies, ${f.pages} pgs, ${f.printType === 'bw' ? 'B&W' : 'Color'})`).join('<br>');
+
+            itemDiv.innerHTML = `
+                <div style="display:flex; justify-content:space-between; font-weight:700; color:#1a202c; border-bottom:1px dashed #e2e8f0; padding-bottom:4px; margin-bottom:6px;">
+                    <span>📅 ${order.date}</span>
+                    <span style="color:#0C8346;">₹${order.amount}</span>
+                </div>
+                <div style="color:#4a5568; line-height:1.4; font-size:0.8rem; margin-bottom:4px;">
+                    ${filesDetailsHtml}
+                </div>
+                <div style="font-size:0.75rem; color:#e67e22; font-weight:600; text-align:right;">
+                    Status: <span style="background:#fff3e0; padding:2px 6px; border-radius:4px;">${order.status}</span>
+                </div>
+            `;
+            ordersHistoryContainer.appendChild(itemDiv);
+        });
+    }
+
+    // Form submission processing and database record pipeline
     const printForm = document.getElementById('printForm');
     printForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -419,10 +444,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Check if browser refresh cleared actual file binary streams references
         const missingBinaries = masterFilesArray.some(f => f.fileData === null);
         if(missingBinaries) {
-            alert("⚠️ Bhai, page refresh hone ki wajah se browser ne secure data buffer clear kar diya hai. Bas upar 'Select Files' dabake apni files ek baar phir se select kar lijiye, aapki saari custom configurations pehle se hi saved hain!");
+            alert("⚠️ Refresh ke kaaran browser local stream clear ho gayi hai. Bas 'Select Files' se ek baar files dubara chun lo, configurations loaded hain!");
             return;
         }
 
@@ -482,16 +506,30 @@ document.addEventListener('DOMContentLoaded', () => {
                         alert('🎉 Payment Successful! Order lock ho gaya hai.');
                         
                         const activeUserToken = localStorage.getItem('printAppUser');
-                        if (activeUserToken && isFirstTimeUser) {
-                            localStorage.setItem(`isFirst_${activeUserToken}`, 'false');
-                            isFirstTimeUser = false;
-                        }
+                        
+                        // 🔥 PERSISTENT LOCAL ORDER RECORD COMPILER
+                        const currentHistoryRaw = localStorage.getItem(`history_${activeUserToken}`) || '[]';
+                        const currentHistoryArray = JSON.parse(currentHistoryRaw);
+                        
+                        const newHistoryObject = {
+                            date: new Date().toLocaleDateString(),
+                            amount: totalAmountText,
+                            status: "Paid / Ready for Print",
+                            details: finalMetaConfig
+                        };
+                        currentHistoryArray.push(newHistoryObject);
+                        localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
 
-                        sessionStorage.removeItem('savedPrintFiles'); // Clear state caching tokens upon success transaction loop
+                        // Burn first-order scheme pointer flag automatic
+                        isFirstTimeUser = false;
+
+                        sessionStorage.removeItem('savedPrintFiles'); 
                         printForm.reset();
                         multiFilesContainer.innerHTML = '';
                         masterFilesArray = [];
                         fileNameDisplay.textContent = "No files selected yet";
+                        
+                        renderOrderHistoryUI(activeUserToken); // Live refresh history log panel
                         calculateTotal();
                     }
                 },
