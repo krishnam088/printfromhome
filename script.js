@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
 
         // Total price text se sirf number nikalne ke liye
-        const totalAmountText = summaryDelivery.textContent.replace('₹', '');
+        const totalAmountText = summaryTotal.textContent.replace('₹', '');
         
         // Form ka saara data akatha karo (file ke sath)
         const formData = new FormData(printForm);
