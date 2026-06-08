@@ -32,8 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update UI
         summaryPrint.textContent = `₹${printCost.toFixed(2)}`;
         summaryBinding.textContent = `₹${bindingCost.toFixed(2)}`;
-        summaryDelivery.textContent = `₹${DELIVERY_CHARGE.toFixed(2)}`;
-        summaryTotal.textContent = `₹${total.toFixed(2)}`;
+        summaryDelivery.textContent = `₹${total.toFixed(2)}`; // Total value passes to backend
     }
 
     // Event listeners to recalculate dynamically
@@ -41,9 +40,68 @@ document.addEventListener('DOMContentLoaded', () => {
     printTypeInput.addEventListener('change', calculateTotal);
     bindingInput.addEventListener('change', calculateTotal);
 
-    // Form submission simulation
-    printForm.addEventListener('submit', (e) => {
+    // 🔥 REAL RAZORPAY PAYMENT GATEWAY INTEGRATION
+    printForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        alert('Form submitted! Redirecting to payment gateway integration...');
+
+        // Total price text se sirf number nikalne ke liye
+        const totalAmountText = summaryDelivery.textContent.replace('₹', '');
+        
+        // Form ka saara data akatha karo (file ke sath)
+        const formData = new FormData(printForm);
+        formData.append('totalAmount', totalAmountText);
+
+        try {
+            // 1. Backend server se Order ID mango
+            const response = await fetch('/api/create-order', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                alert('Order create karne mein dikkat aayi bhai!');
+                return;
+            }
+
+            // 2. Razorpay Gateway Options Setup karo
+            const options = {
+                "key": data.key_id, 
+                "amount": data.amount, 
+                "currency": "INR",
+                "name": "Blinkit Print From Home",
+                "description": "Document Printing Charges",
+                "order_id": data.order_id, 
+                "handler": async function (response){
+                    // Payment successful hone par backend ko inform karo
+                    const verifyRes = await fetch('/api/verify-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            orderId: data.order_id,
+                            paymentId: response.razorpay_payment_id
+                        })
+                    });
+                    const verifyData = await verifyRes.json();
+                    if(verifyData.success) {
+                        alert('🎉 Payment Successful! Aapka order receive ho gaya hai.');
+                        printForm.reset();
+                        calculateTotal();
+                    }
+                },
+                "theme": {
+                    "color": "#F4C430" // Blinkit Yellow Theme 💛
+                }
+            };
+
+            // 3. Razorpay Popup Window Kholo
+            const rzp1 = new Razorpay(options);
+            rzp1.open();
+
+        } catch (error) {
+            console.error("Payment Error:", error);
+            alert("Server se connect nahi ho paa raha hai bhai!");
+        }
     });
 });
