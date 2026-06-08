@@ -133,7 +133,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const sessionActiveUser = localStorage.getItem('printAppUser');
         if (sessionActiveUser) {
             const userData = JSON.parse(localStorage.getItem(`user_${sessionActiveUser}`));
-            if(userGreeting) { userGreeting.innerHTML = userData ? `Hi, <span style="color:#000000; font-weight:800;">${userData.name}</span>` : `Guest Workspace Mode`; }
+            
+            // 🔥 GREETING ALIGNMENT FIXED INLINE FOR THE COMPACT TIME BAR
+            if(userGreeting) { 
+                userGreeting.innerHTML = userData ? `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${userData.name}</span>` : `GUEST MODE`; 
+            }
             
             const savedHistory = localStorage.getItem(`history_${sessionActiveUser}`);
             isFirstTimeUser = !(savedHistory && JSON.parse(savedHistory).length > 0);
@@ -144,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderOrderHistoryUI(sessionActiveUser); 
             synchronizeWalletInterfaceBalance(); // Syncs cache cash values logs
         } else {
-            if(userGreeting) userGreeting.textContent = "Guest Workspace Mode";
+            if(userGreeting) userGreeting.textContent = "GUEST MODE";
             if(authScreen) { authScreen.classList.remove('app-hidden'); authScreen.style.display = 'flex'; }
             synchronizeWalletInterfaceBalance();
         }
@@ -177,14 +181,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem(`user_${identityKey}`, JSON.stringify({ name: inputName, id: identityKey, password: inputPassword }));
                 localStorage.setItem('printAppUser', identityKey);
                 isFirstTimeUser = true; 
-                if(userGreeting) userGreeting.innerHTML = `Hi, <span style="color:#000000; font-weight:800;">${inputName}</span>`;
+                if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${inputName}</span>`;
             } else {
                 const registeredRecord = localStorage.getItem(`user_${identityKey}`);
                 if (!registeredRecord) { alert("❌ Account missing!"); return; }
                 const verifiedObject = JSON.parse(registeredRecord);
                 if (verifiedObject.password !== inputPassword) { alert("❌ Password wrong!"); return; }
                 localStorage.setItem('printAppUser', identityKey);
-                if(userGreeting) userGreeting.innerHTML = `Hi, <span style="color:#000000; font-weight:800;">${verifiedObject.name}</span>`;
+                if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${verifiedObject.name}</span>`;
             }
             if(authScreen) authScreen.style.display = 'none';
             if(mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
@@ -201,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.removeItem('printAppUser'); sessionStorage.removeItem('savedPrintFiles'); masterFilesArray = [];
             if(multiFilesContainer) multiFilesContainer.innerHTML = '';
             if(mainApp) mainApp.style.display = 'none';
-            if(userGreeting) userGreeting.textContent = "Guest Workspace Mode";
+            if(userGreeting) userGreeting.textContent = "GUEST MODE";
             if(authScreen) authScreen.style.display = 'flex';
             synchronizeWalletInterfaceBalance();
             calculateTotal();
@@ -240,60 +244,4 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:15px; align-items:center;">
                     <div class="input-group" style="margin-bottom:0;"><label style="font-size:0.75rem; font-weight:700;">Number of pages:</label><input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding:10px; border-radius:10px; border:2px solid var(--border-color); font-weight:700;" required></div>
-                    <div><label style="font-size:0.75rem; font-weight:700;">Number of copies:</label><div class="blinkit-stepper"><button type="button" id="minusCopy_${index}" class="stepper-btn">-</button><span id="copyCountLabel_${index}">${item.config.copies}</span><button type="button" id="plusCopy_${index}" class="stepper-btn">+</button></div></div>
-                </div>
-                <p style="font-size:0.75rem; font-weight:700; margin-bottom:6px;">Choose print color</p>
-                <div class="blinkit-grid-options">
-                    <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}"><div class="option-icon">🎨</div><div class="option-meta-text"><span class="option-title">Coloured</span><span class="option-subtitle">₹10/page</span></div></div>
-                    <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}"><div class="option-icon">🌑</div><div class="option-meta-text"><span class="option-title">B & W</span><span class="option-subtitle">₹3/page</span></div></div>
-                </div>
-                <p style="font-size:0.75rem; font-weight:700; margin-bottom:6px;">Choose print orientation</p>
-                <div class="blinkit-grid-options">
-                    <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}"><div class="option-icon">📱</div><div class="option-meta-text"><span class="option-title">Portrait</span><span class="option-subtitle">8.3 × 11.7 in</span></div></div>
-                    <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}"><div class="option-icon">💻</div><div class="option-meta-text"><span class="option-title">Landscape</span><span class="option-subtitle">11.7 × 8.3 in</span></div></div>
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-primary); padding:10px; border-radius:10px;"><label style="font-size:0.8rem; font-weight:700;">Binding Options:</label><select id="binding_${index}"><option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option><option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option><option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral Binding (+₹30)</option></select></div>
-            `;
-            multiFilesContainer.appendChild(fileRow);
-
-            document.getElementById(`optColor_${index}`).addEventListener('click', () => { item.config.printType = 'color'; renderFilesUI(); });
-            document.getElementById(`optBw_${index}`).addEventListener('click', () => { item.config.printType = 'bw'; renderFilesUI(); });
-            document.getElementById(`optPort_${index}`).addEventListener('click', () => { item.config.orientation = 'portrait'; renderFilesUI(); });
-            document.getElementById(`optLand_${index}`).addEventListener('click', () => { item.config.orientation = 'landscape'; renderFilesUI(); });
-            document.getElementById(`plusCopy_${index}`).addEventListener('click', () => { item.config.copies++; saveCurrentFilesToSession(); calculateTotal(); });
-            document.getElementById(`minusCopy_${index}`).addEventListener('click', () => { if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); calculateTotal(); } });
-            document.getElementById(`removeFile_${index}`).addEventListener('click', () => { masterFilesArray.splice(index, 1); saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`pages_${index}`).addEventListener('input', (e) => { item.config.pages = parseInt(e.target.value) || 1; saveCurrentFilesToSession(); calculateTotal(); });
-            document.getElementById(`binding_${index}`).addEventListener('change', (e) => { item.config.binding = e.target.value; saveCurrentFilesToSession(); calculateTotal(); });
-        });
-        calculateTotal();
-    }
-
-    function calculateTotal() {
-        let totalPrintCost = 0; let totalBindingCost = 0;
-        const summaryPrint = document.getElementById('summaryPrint');
-        const summaryBinding = document.getElementById('summaryBinding');
-        const summaryDelivery = document.getElementById('summaryDelivery');
-        const summaryTotal = document.getElementById('summaryTotal');
-
-        refreshInvoiceTabState();
-        if (!summaryPrint || !summaryBinding || !summaryDelivery || !summaryTotal) return;
-        if (masterFilesArray.length === 0) { summaryPrint.textContent = `₹0.00`; summaryBinding.textContent = `₹0.00`; summaryDelivery.textContent = `₹0.00`; summaryTotal.textContent = `₹0.00`; return; }
-
-        masterFilesArray.forEach((item) => {
-            const pages = parseInt(item.config.pages) || 1; const printType = item.config.printType; const binding = item.config.binding; const copies = parseInt(item.config.copies) || 1;
-            let perPageRate = (printType === 'bw') ? 3.00 : 10.00;
-            totalPrintCost += (pages * perPageRate) * copies;
-            if (binding === 'spiral') totalBindingCost += 30.00 * copies;
-        });
-
-        let finalDocumentCost = totalPrintCost + totalBindingCost;
-        let accurateDeliveryCharge = (isFirstTimeUser && finalDocumentCost >= 49.00) || (!isFirstTimeUser && finalDocumentCost >= 99.00) ? 0.00 : 25.00;
-        let grandTotal = finalDocumentCost + accurateDeliveryCharge;
-
-        summaryPrint.textContent = `₹${totalPrintCost.toFixed(2)}`;
-        summaryBinding.textContent = `₹${totalBindingCost.toFixed(2)}`;
-        summaryDelivery.textContent = accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`;
-        summaryTotal.textContent = `₹${grandTotal.toFixed(2)}`;
-    }
-});
+                    <div><label style="font-size:0.75rem; font-weight:700;">Number of copies:</label><div
