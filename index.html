@@ -18,8 +18,6 @@
             --blinkit-green: #0C8346;
             --blinkit-light-green: #e6f4ea;
             --border-color: #e2e8f0;
-            --gradient-start: #fffae6;
-            --gradient-end: #fffbeb;
         }
         body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; }
 
@@ -34,46 +32,61 @@
         .shop-status-badge.open { background: var(--blinkit-green); color: white; }
         .shop-status-badge.closed { background: #ef4444; color: white; }
 
-        /* 🍔 USER SLIDING SIDEBAR DRAWER */
+        /* 📱 PREMIUM BRAND HEADER SYSTEM */
+        .brand-premium-header {
+            background: linear-gradient(to bottom, #FFF3B3 0%, #FFFBE6 100%);
+            padding: 16px;
+            width: 100%;
+            border-bottom: 1px solid rgba(244,196,48,0.15);
+        }
+        .header-container { max-width: 100%; margin: 0 auto; }
+        .header-meta-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        
+        /* Attractive Compact 15 Minutes */
+        .delivery-time-title { font-size: 0.75rem; font-weight: 700; color: #4a5568; text-transform: uppercase; letter-spacing: 0.5px; }
+        .delivery-time-countdown { font-size: 1.4rem; font-weight: 900; color: #111111; display: flex; align-items: center; gap: 6px; }
+        .distance-badge { background: var(--blinkit-green); color: white; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 8px; margin-left: 5px; }
+        
+        .header-profile-cluster { display: flex; align-items: center; gap: 12px; }
+        
+        /* Functional Wallet Badge Button */
+        .wallet-micro-badge { background: #ffffff; border-radius: 14px; border: 1px solid var(--border-color); padding: 6px 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 6px; cursor: pointer; transition: transform 0.2s; }
+        .wallet-micro-badge:hover { transform: translateY(-1px); }
+        .wallet-cash-value { font-size: 0.85rem; font-weight: 800; color: #000000; }
+        
+        /* Shifted Profile Icon Trigger Button */
+        .avatar-circle-trigger { width: 44px; height: 44px; background: #000000; color: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; font-size: 1.1rem; border: 2px solid #ffffff; margin-right: -4px; transition: transform 0.2s; }
+        .avatar-circle-trigger:hover { transform: scale(1.04); }
+        
+        .destination-dropdown-trigger { font-weight: 800; font-size: 0.9rem; color: #222222; text-transform: uppercase; cursor: pointer; text-align: left; margin-top: 6px; display: inline-block; }
+        .destination-sub-text { font-weight: 600; color: var(--text-sub); text-transform: none; }
+
+        /* 🍔 USER SLIDING SIDEBAR DRAWER WITH INTERNAL SEARCH ENGINE */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1999; display: none; opacity: 0; transition: opacity 0.3s ease; }
         .drawer-overlay.active { display: block; opacity: 1; }
         
-        .side-drawer { position: fixed; top: 0; right: -320px; width: 300px; height: 100vh; background: var(--surface); z-index: 2000; box-shadow: -10px 0 30px rgba(0,0,0,0.08); transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px 20px; display: flex; flex-direction: column; border-left: 1px solid var(--border-color); }
+        .side-drawer { position: fixed; top: 0; right: -320px; width: 310px; height: 100vh; background: var(--surface); z-index: 2000; box-shadow: -10px 0 30px rgba(0,0,0,0.08); transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px 18px; display: flex; flex-direction: column; border-left: 1px solid var(--border-color); }
         .side-drawer.active { right: 0; }
-        .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; }
+        .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; }
+        
+        /* 🔍 Built-in Search input field inside profile drawer menu boxes */
+        .drawer-search-box { position: relative; margin-bottom: 20px; width: 100%; }
+        .drawer-search-box input { width: 100%; padding: 10px 14px; padding-left: 36px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 0.85rem; font-weight: 600; outline: none; }
+        .drawer-search-box input:focus { border-color: var(--blinkit-green); }
+        .drawer-search-icon { position: absolute; left: 12px; top: 11px; color: var(--text-sub); font-size: 0.9rem; }
+
         .drawer-menu-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
         .drawer-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; color: var(--text-main); cursor: pointer; transition: all 0.2s; }
         .drawer-item:hover, .drawer-item.active { background: #f1f5f9; color: var(--blinkit-green); }
 
-        /* 📱 EXACT MIRROR BRANDING HEADER SYSTEM FROM "1000283101.jpg" */
-        .brand-premium-header {
-            background: linear-gradient(to bottom, #FFF3B3 0%, #FFFBE6 100%);
-            padding: 20px 16px;
-            width: 100%;
-            border-bottom: 1px solid rgba(244,196,48,0.2);
-        }
-        .header-meta-row { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; margin-bottom: 12px; }
-        .delivery-time-title { font-size: 0.95rem; font-weight: 800; color: #000000; line-height: 1.1; }
-        .delivery-time-countdown { font-size: 2.1rem; font-weight: 900; color: #111111; letter-spacing: -0.5px; margin-top: 2px; margin-bottom: 4px; }
-        .distance-badge { background: rgba(12,131,70,0.12); color: var(--blinkit-green); font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(12,131,70,0.15); }
-        
-        .header-profile-cluster { display: flex; align-items: center; gap: 10px; }
-        .wallet-micro-badge { background: #ffffff; border-radius: 14px; border: 1px solid var(--border-color); padding: 4px 10px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; }
-        .wallet-icon-label { font-size: 1rem; }
-        .wallet-cash-value { font-size: 0.75rem; font-weight: 800; color: #000000; }
-        
-        .avatar-circle-trigger { width: 42px; height: 42px; background: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.04); border: 1px solid var(--border-color); cursor: pointer; font-size: 1.2rem; }
-        
-        /* Interactive Destination Selector Row */
-        .destination-dropdown-trigger { display: flex; align-items: center; gap: 4px; font-weight: 800; font-size: 0.95rem; color: #222222; text-transform: uppercase; cursor: pointer; text-align: left; }
-        .destination-sub-text { font-weight: 600; color: var(--text-sub); text-transform: none; font-size: 0.9rem; }
-        
-        /* Minimalist Mock Search Field Architecture from Image */
-        .mock-search-wrapper { background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-top: 15px; }
-        .mock-search-input-placeholder { display: flex; align-items: center; gap: 10px; color: var(--text-sub); font-size: 1rem; font-weight: 500; }
-        .search-mic-icon { color: #1a202c; font-size: 1.1rem; border-left: 1px solid var(--border-color); padding-left: 12px; }
+        /* Wallet Deposit Popup Modal Panel Frame Components Elements Mapping Rules */
+        .wallet-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 15000; display: none; justify-content: center; align-items: center; padding: 20px; }
+        .wallet-modal-card { background: var(--surface); border-radius: 24px; padding: 25px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 2px solid var(--blinkit-yellow); }
+        .wallet-chip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+        .wallet-chip-btn { background: var(--bg-primary); border: 2px solid var(--border-color); padding: 8px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+        .wallet-chip-btn:hover { border-color: var(--blinkit-green); color: var(--blinkit-green); }
 
-        /* Core Application Container */
+        /* Layout Architecture Systems */
         .container { width: 100%; max-width: 100%; margin: 0; padding: 15px; display: grid; grid-template-columns: 1fr; gap: 20px; transition: all 0.3s ease; }
         @media (min-width: 992px) { .container.has-invoice { grid-template-columns: 2.5fr 1.2fr; padding: 25px; } }
         @media (max-width: 768px) { .container { padding: 10px; gap: 15px; } }
@@ -82,40 +95,30 @@
         .view-section { display: none; width: 100%; }
         .view-section.active { display: block; animation: fadeView 0.25s ease-in-out; }
         @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .hidden { display: none !important; }
         
-        /* 👑 DOCS CARD DESIGN FROM VERBATIM SCREEN GRAPHIC FILE "1000283101.jpg" */
+        /* Verbatim replicated structure from image 1000283101.jpg */
         .verbatim-docs-promo-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02); width: 100%; overflow: hidden; position: relative; margin-top: 15px; }
         .promo-details-block { text-align: left; z-index: 2; max-width: 60%; }
         .promo-main-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; letter-spacing: -0.5px; }
         .promo-bullet-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
         .promo-bullet-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; color: #4a5568; }
-        .promo-bullet-diamond { color: var(--text-sub); font-size: 0.9rem; }
-        
-        .verbatim-upload-btn { background-color: #2e7d32; color: #ffffff; border: none; padding: 12px 28px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: background 0.2s; box-shadow: 0 4px 12px rgba(46,125,50,0.2); display: inline-flex; align-items: center; }
-        .verbatim-upload-btn:hover { background-color: #1b5e20; }
-        
+        .verbatim-upload-btn { background-color: #2e7d32; color: #ffffff; border: none; padding: 12px 28px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; }
         .promo-graphic-mockup { position: absolute; right: -10px; bottom: -10px; width: 45%; max-width: 180px; z-index: 1; }
-        .promo-graphic-mockup img { width: 100%; height: auto; display: block; transform: rotate(-5deg); filter: drop-shadow(0 10px 15px rgba(0,0,0,0.05)); }
+        .promo-graphic-mockup img { width: 100%; height: auto; display: block; transform: rotate(-5deg); }
 
-        /* Configuration Cards Specs */
-        .blinkit-file-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-top: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); width: 100%; }
+        .blinkit-file-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-top: 15px; width: 100%; }
         .blinkit-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px dashed var(--border-color); }
         .blinkit-stepper { display: flex; align-items: center; background: var(--blinkit-green); border-radius: 10px; padding: 6px 12px; gap: 16px; color: white; font-weight: bold; width: fit-content; }
         .stepper-btn { background: none; border: none; color: white; font-size: 1.3rem; font-weight: 800; cursor: pointer; }
-        
         .blinkit-grid-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; width: 100%; }
-        .blinkit-option-box { border: 2px solid var(--border-color); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s; background: var(--surface); width: 100%; }
+        .blinkit-option-box { border: 2px solid var(--border-color); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; background: var(--surface); width: 100%; }
         .blinkit-option-box.active { border-color: var(--blinkit-green); background-color: var(--blinkit-light-green); }
         .option-icon { font-size: 1.4rem; }
         .option-meta-text { display: flex; flex-direction: column; text-align: left; }
         .option-title { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
         .option-subtitle { font-size: 0.75rem; color: var(--text-sub); font-weight: 500; }
-
         .history-card-item { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-top: 12px; width: 100%; }
         .back-to-upload-link { background: none; border: none; color: var(--blinkit-green); font-size: 0.9rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 15px; }
-        .form-group textarea { width: 100%; border: 2px solid var(--border-color); border-radius: 12px; padding: 12px; font-size: 0.9rem; outline: none; }
-        .form-group textarea:focus { border-color: var(--blinkit-green); }
     </style>
 </head>
 <body>
@@ -132,13 +135,20 @@
     <!-- Background Dimmer Overlay -->
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
-    <!-- SIDEBAR DRAWER MENU -->
+    <!-- 🍔 USER SIDEBAR PROFILE DRAWER WITH INTERNAL SEARCH BAR FILTERS -->
     <nav id="userSideDrawer" class="side-drawer">
         <div class="drawer-header">
             <h2 style="font-size:1.2rem; font-weight:800;">Account Menu</h2>
             <span style="cursor:pointer; font-size:1.6rem; font-weight:bold; color:var(--text-sub);" onclick="toggleUserDrawer(false)">&times;</span>
         </div>
-        <ul class="drawer-menu-list">
+
+        <!-- 🔍 SEARCH BAR INTEGRATED INSIDE THE PROFILE DRAWER MENU -->
+        <div class="drawer-search-box">
+            <span class="drawer-search-icon">🔍</span>
+            <input type="text" id="menuInternalSearchInput" placeholder="Search..." onkeyup="filterSidebarMenuItemsLive()">
+        </div>
+
+        <ul class="drawer-menu-list" id="sidebarMenuContainerList">
             <li class="drawer-item active" id="menu_store" onclick="navigateUserSection('store')">🛒 Order Print Store</li>
             <li class="drawer-item" id="menu_history" onclick="navigateUserSection('history')">📋 Order Status & Details</li>
             <li class="drawer-item" id="menu_help" onclick="navigateUserSection('help')">❓ Help Center & Support</li>
@@ -148,6 +158,24 @@
             <button id="logoutBtn" class="btn-auth-submit" style="background:#ef4444; padding:10px; font-size:0.85rem; border-radius:10px;">Logout Account</button>
         </div>
     </nav>
+
+    <!-- 💰 USEFUL INTERACTIVE WALLET ADD MONEY POPUP MODAL FADE LAYER -->
+    <div id="walletDepositModal" class="wallet-modal-overlay" onclick="toggleWalletPopupGrid(false, event)">
+        <div class="wallet-modal-card">
+            <h3 style="font-size:1.3rem; font-weight:800; margin-bottom:6px;">💰 Recharge Print Wallet</h3>
+            <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:15px;">Add cash balance for seamless single-tap print dispatches</p>
+            <div class="form-group" style="text-align:left;">
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-main);">Enter Custom Amount (₹):</label>
+                <input type="number" id="walletCustomAmountInput" value="100" style="width:100%; padding:12px; border:2px solid var(--border-color); border-radius:12px; font-weight:700; font-size:1rem; outline:none; margin-top:4px;">
+            </div>
+            <div class="wallet-chip-grid">
+                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(100)">+ ₹100</button>
+                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(200)">+ ₹200</button>
+                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(500)">+ ₹500</button>
+            </div>
+            <button class="btn-admin" style="background:var(--blinkit-green); margin-top:10px;" onclick="executeWalletRazorpayDeposit()">Pay & Add Cash</button>
+        </div>
+    </div>
 
     <!-- STAGE 1: Splash Loader Screen -->
     <div id="splashScreen" class="splash-container">
@@ -185,50 +213,39 @@
     <!-- STAGE 3: Main App Workspace -->
     <div id="mainApp" class="app-hidden">
         
-        <!-- 👑 PREMIUM BRAND HEADER INJECTED DIRECTLY FROM "1000283101.jpg" -->
+        <!-- HIGH-TECH UPGRADED HEADER FROM IMAGE 1000283101.jpg -->
         <header class="brand-premium-header">
             <div class="header-container">
                 <div class="header-meta-row">
                     <div>
                         <p class="delivery-time-title">Prints in</p>
-                        <h2 class="delivery-time-countdown">15 minutes</h2>
-                        <div class="distance-badge">
-                            🏪 <span>1.7 km away</span>
-                        </div>
+                        <!-- ⏱️ Attractive Compact 15 Minutes Tracker Banner -->
+                        <h2 class="delivery-time-countdown">15 mins <span class="distance-badge">🚀 1.7 km</span></h2>
                     </div>
                     <div class="header-profile-cluster">
-                        <div class="wallet-micro-badge">
-                            <span class="wallet-icon-label">💼</span>
-                            <span class="wallet-cash-value">₹0</span>
+                        <!-- 💰 Active Working Useful Digital Wallet Interface Module -->
+                        <div class="wallet-micro-badge" onclick="toggleWalletPopupGrid(true, event)">
+                            <span class="wallet-icon-label">💵</span>
+                            <span class="wallet-cash-value" id="headerWalletDisplayBalance">₹0.00</span>
                         </div>
-                        <!-- Profile Icon triggers sliding navigation drawer sidebar menu -->
+                        <!-- 👤 Shifted Action Profile Circle Menu trigger links -->
                         <div class="avatar-circle-trigger" onclick="toggleUserDrawer(true)">
                             👤
                         </div>
                     </div>
                 </div>
 
-                <!-- 🔥 DYNAMIC LOGGED IN ACCOUNT IDENTITY BAR (BLANK UNTIL DATA BUFFERS DETECTED) -->
                 <div class="destination-dropdown-trigger" onclick="toggleUserDrawer(true)">
                     <span id="userGreeting" class="destination-sub-text">Guest Workspace Mode</span> ▾
-                </div>
-
-                <!-- Verbatim Search Input Block Layout from Image -->
-                <div class="mock-search-wrapper">
-                    <div class="mock-search-input-placeholder">
-                        <span>🔍</span> Search "notebook"
-                    </div>
-                    <span class="search-mic-icon">🎙️</span>
                 </div>
             </div>
         </header>
 
-        <!-- Dynamic Border-Fit Container -->
+        <!-- Main Window Frames Workspace -->
         <div class="container" id="mainLayoutAppContainer">
             
-            <!-- VIEW BLOCK 1: STORE FRONTEND ENTRIES -->
+            <!-- VIEW BLOCK 1: PRINT STORE -->
             <div id="user_section_store" class="view-section active">
-                
                 <div class="compact-offers-bar" id="storeOffersTopBanner">
                     <span>📢 <b>Active Offers:</b></span>
                     <marquee scrollamount="3" style="width: 100%;">
@@ -240,91 +257,77 @@
                     🚨 <b>Dukan Abhi Band Hai Bhai!</b> Print From Home accepts orders strictly between 07:00 AM and 11:59 PM.
                 </div>
 
-                <!-- 🗺️ SCREEN STATE A: CLEAN BRANDEED HOME FROM IMAGE "1000283101.jpg" -->
                 <div id="uploadScreenInitialState" style="width:100%;">
                     <div style="text-align: center; padding: 25px 10px; width:100%;">
                         <h2 style="font-size: 2.3rem; font-weight:800; color:#1a202c; letter-spacing:-1px;">Print Store</h2>
-                        <!-- 👑 FIXED BRAND DIALOUGE LINKED TO printfromhome -->
                         <p style="font-size: 0.95rem; color:var(--text-sub); font-weight:600; margin-top:2px;">printfromhome ensures secure prints at every stage</p>
                     </div>
 
-                    <!-- 👑 VERBATIM LAYOUT COPIED DIRECTLY FROM THE "1000283101.jpg" GRID SPECIFICATIONS -->
                     <div class="verbatim-docs-promo-card">
                         <div class="promo-details-block">
                             <h3 class="promo-main-title">Documents</h3>
                             <ul class="promo-bullet-list">
-                                <li class="promo-bullet-item"><span class="promo-bullet-diamond">✦</span> Price starting at ₹3/page</li>
-                                <li class="promo-bullet-item"><span class="promo-bullet-diamond">✦</span> Paper quality: 70 GSM</li>
-                                <li class="promo-bullet-item"><span class="promo-bullet-diamond">✦</span> Single side prints</li>
+                                <li class="promo-bullet-item">✦ Price starting at ₹3/page</li>
+                                <li class="promo-bullet-item">✦ Paper quality: 70 GSM</li>
+                                <li class="promo-bullet-item">✦ Single side prints</li>
                             </ul>
-                            <!-- Real Trigger Upload Action Controller Node -->
-                            <label class="verbatim-upload-btn" for="fileUpload">
-                                Upload Files
-                            </label>
+                            <label class="verbatim-upload-btn" for="fileUpload">Upload Files</label>
                             <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
                         </div>
-                        <!-- Absolute exact replica stacking layout matching visual mockup positions -->
                         <div class="promo-graphic-mockup">
-                            <img src="https://i.imgur.com/wV8bTz7.png" alt="Document Graphic Representation Stack" onerror="this.src='https://cdn-icons-png.flaticon.com/512/337/337946.png'">
+                            <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" alt="Document Representation Stack">
                         </div>
                     </div>
                 </div>
 
-                <!-- SCREEN STATE B: FULL CONFIGURATION DRAWER WORKSPACE -->
                 <div id="configurationScreenState" class="hidden" style="width:100%;">
                     <button type="button" class="back-to-upload-link" onclick="forceReturnToUploadView()">
                         &larr; Back to Add Files
                     </button>
-                    
                     <form id="printForm" enctype="multipart/form-data" style="width:100%;">
                         <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
-                        
                         <div class="form-group" style="background: var(--surface); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); width:100%; margin-bottom:20px;">
                             <label style="font-weight: 700; margin-bottom:8px; display: block; font-size: 0.9rem;">Delivery Address details:</label>
                             <textarea id="address" name="address" rows="3" placeholder="Enter full Hostel Name, Room No., Campus or Home Address" required></textarea>
                         </div>
-                        
                         <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">
                             Proceed to Payment
                         </button>
                     </form>
                 </div>
-
             </div>
 
-            <!-- VIEW BLOCK 2: LOGS HISTORIES -->
+            <!-- VIEW BLOCK 2: HISTORIES -->
             <div id="user_section_history" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
-                    <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:20px;">Real-time shipment parcel tracking logs entries mapped below</p>
                     <div id="ordersHistoryContainer" style="width:100%;">
                         <p style="text-align:center; padding:20px; color:var(--text-sub);">No print jobs recorded yet.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW BLOCK 3: TROUBLESHOOT SUPPORT -->
+            <!-- VIEW BLOCK 3: HELP -->
             <div id="user_section_help" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:15px;">❓ Help Center & Customer Care Support</h3>
                     <div style="line-height:1.7; font-size:0.95rem; color:#4a5568;">
-                        <p style="font-weight:700; color:#111; margin-bottom:8px;">💡 Frequently Asked Questions:</p>
-                        <p><b>1. Payment complete ho gayi par history me 'Pending' hai?</b><br>Chinta mat karo bhai, agar bank se paise kat gaye hain aur status sync nahi hua, toh hamara system automatic 5 minute me verify karke printer agent ko pass kar dega.</p>
+                        <p><b>Payment complete ho gayi par history me 'Pending' hai?</b><br>Chinta mat karo bhai, hamara system automatic 5 minute me verify karke printer agent ko pass kar dega.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW BLOCK 4: LEGAL MANUALS -->
+            <!-- VIEW BLOCK 4: TERMS -->
             <div id="user_section_terms" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:15px;">📜 Store Terms & Service Conditions</h3>
-                    <div style="font-size:0.9rem; color:var(--text-sub); line-height:1.8; display:flex; flex-direction:column; gap:10px;">
+                    <div style="font-size:0.9rem; color:var(--text-sub); line-height:1.8;">
                         <p>• We use premium 70 GSM sheets to provide high density laser print ink bindings.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- INVOICE BILLING TAB SIDEBAR -->
+            <!-- INVOICE BILLING SIDEBAR -->
             <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; background:var(--surface); border:1px solid var(--border-color); padding:20px; border-radius:16px;">
                 <h2>Order Invoice Summary</h2>
                 <div class="summary-card">
@@ -339,12 +342,104 @@
         </div>
     </div>
 
-    <!-- Modal Previews Wrappers -->
-    <div id="previewModal" class="preview-modal">
-        <div class="preview-content">
-            <span id="closePreview" class="close-preview">&times;</span>
-            <h3 id="previewTitle" style="word-break:break-all; font-size:0.95rem;">Document Preview</h3>
-            <div id="previewBody" style="min-height:200px; display:flex; justify-content:center; align-items:center;"></div>
+    <!-- Independent Ticking Clock Controllers Script Nodes -->
+    <script>
+        function updateMainAppUIClock() {
+            const now = new Date();
+            const clockString = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            if(document.getElementById('userLiveClock')) document.getElementById('userLiveClock').textContent = clockString;
+            
+            const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
+            let open = (hoursIST >= 7 && hoursIST < 24);
+
+            const badge = document.getElementById('userShopStatus');
+            const box = document.getElementById('storeClosedNoticeBox');
+            const btn = document.getElementById('submitOrderBtn');
+            if(badge && box && btn) {
+                if(open) {
+                    badge.textContent = "OPEN 🟢"; badge.className = "shop-status-badge open";
+                    box.classList.add('hidden'); btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
+                } else {
+                    badge.textContent = "CLOSED 🔴"; badge.className = "shop-status-badge closed";
+                    box.classList.remove('hidden'); btn.disabled = true; btn.style.opacity = "0.4"; btn.style.cursor = "not-allowed"; btn.textContent = "❌ Store is Closed";
+                }
+            }
+        }
+        setInterval(updateMainAppUIClock, 1000);
+        window.addEventListener('DOMContentLoaded', updateMainAppUIClock);
+
+        function toggleUserDrawer(open) {
+            document.getElementById('userSideDrawer').classList.toggle('active', open);
+            document.getElementById('drawerOverlay').classList.toggle('active', open);
+            if(open) {
+                // Flushes older internal search strings logs when opened fresh
+                document.getElementById('menuInternalSearchInput').value = '';
+                filterSidebarMenuItemsLive();
+            }
+        }
+
+        // 🔥 SEARCH ALGORITHM ENGINE: FILTERS SIDEBAR ACCOUNT ITEMS REAL-TIME LIVE
+        function filterSidebarMenuItemsLive() {
+            const query = document.getElementById('menuInternalSearchInput').value.toLowerCase().trim();
+            const listItems = document.querySelectorAll('#sidebarMenuContainerList .drawer-item');
+
+            listItems.forEach(item => {
+                const itemText = item.textContent.toLowerCase();
+                if(itemText.includes(query)) {
+                    item.style.display = 'flex'; // Unhides items matching search query loops bounds
+                } else {
+                    item.style.display = 'none'; // Filters away mismatched rows
+                }
+            });
+        }
+
+        // 🔥 WALLET POPUP WINDOW MODAL LAYER CONTROL
+        function toggleWalletPopupGrid(show, event) {
+            const modal = document.getElementById('walletDepositModal');
+            if(!modal) return;
+            if(show) {
+                modal.style.display = 'flex';
+            } else {
+                // Safeguard against event bubbling clicks inside structural elements wrappers bounds
+                if(event.target === modal) modal.style.display = 'none';
+            }
+        }
+        function closeWalletNotificationBox() {
+            document.getElementById('walletDepositModal').style.display = 'none';
+        }
+        function setWalletQuickAmount(amt) {
+            document.getElementById('walletCustomAmountInput').value = amt;
+        }
+
+        function navigateUserSection(targetId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`user_section_${targetId}`).classList.add('active');
+            if(document.getElementById(`menu_${targetId}`)) document.getElementById(`menu_${targetId}`).classList.add('active');
+            
+            const sidePanelPrice = document.getElementById('sidebarPricingPanel');
+            const mainLayoutWrapper = document.getElementById('mainLayoutAppContainer');
+            
+            if(targetId !== 'store') { 
+                sidePanelPrice.classList.add('hidden'); 
+                mainLayoutWrapper.classList.remove('has-invoice');
+                mainLayoutWrapper.style.gridTemplateColumns = '1fr'; 
+            } else {
+                if(typeof window.refreshInvoiceTabState === 'function') { window.refreshInvoiceTabState(); }
+            }
+            toggleUserDrawer(false);
+        }
+    </script>
+
+    <!-- Marketing Notification Modal -->
+    <div id="marketingPopupModal" style="display: none; position: fixed; z-index: 12000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #ffffff; padding: 25px; border-radius: 24px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 20px 45 rgba(0,0,0,0.2); border: 2px solid #F4C430; position: relative;">
+            <span id="closeMarketingPopup" style="position: absolute; top: 12px; right: 18px; font-size: 22px; font-weight: bold; cursor: pointer; color: #a0aec0;">&times;</span>
+            <div id="popupIconBadge" style="font-size: 3.5rem; margin-bottom: 12px;">🎉</div>
+            <h3 id="popupAlertTitle" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 8px;">Special Offer Alert!</h3>
+            <p id="popupAlertBody" style="font-size: 0.9rem; color: #4a5568; line-height: 1.5; margin-bottom: 20px;"></p>
+            <button style="width: 100%; padding: 12px; background-color: #0C8346; color: #ffffff; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer;" onclick="document.getElementById('marketingPopupModal').style.display='none'">Chalo Print Karte Hain 🚀</button>
         </div>
     </div>
 
