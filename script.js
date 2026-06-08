@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sessionActiveUser) {
             const userData = JSON.parse(localStorage.getItem(`user_${sessionActiveUser}`));
             
-            // 🔥 GREETING ALIGNMENT FIXED INLINE FOR THE COMPACT TIME BAR
+            // 🗺️ GREETING ALIGNMENT FIXED INLINE FOR THE COMPACT TIME BAR
             if(userGreeting) { 
                 userGreeting.innerHTML = userData ? `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${userData.name}</span>` : `GUEST MODE`; 
             }
@@ -222,6 +222,31 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             fileUpload.value = ''; saveCurrentFilesToSession(); renderFilesUI();
         });
+    }
+
+    function saveCurrentFilesToSession() {
+        const sessionPayload = masterFilesArray.map(item => ({
+            name: item.name,
+            size: item.size,
+            type: item.type,
+            config: item.config
+        }));
+        sessionStorage.setItem('savedPrintFiles', JSON.stringify(sessionPayload));
+    }
+
+    function loadSavedFilesFromSession() {
+        const rawSessionData = sessionStorage.getItem('savedPrintFiles');
+        if (rawSessionData) {
+            const parsedSessionData = JSON.parse(rawSessionData);
+            masterFilesArray = parsedSessionData.map(item => ({
+                name: item.name,
+                size: item.size,
+                type: item.type,
+                fileData: null, 
+                config: item.config
+            }));
+            renderFilesUI();
+        }
     }
 
     function renderFilesUI() {
