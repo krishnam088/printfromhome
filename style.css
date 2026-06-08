@@ -1,11 +1,62 @@
-/* --- 🔐 AUTHENTICATION INTERFACE STYLES --- */
+/* Global Reset Configuration */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: #F7F9FC;
+    color: #1A202C;
+}
+
+/* 💛 STAGE 1: Splash Screen Styles (1000283021_2.jpg reference) */
+.splash-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: #F4C430; /* Blinkit Yellow */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease, visibility 0.5s;
+}
+
+.splash-content {
+    text-align: center;
+}
+
+.splash-logo {
+    font-size: 3.8rem;
+    font-weight: 800;
+    color: #000000;
+    letter-spacing: -2px;
+    margin-bottom: 5px;
+}
+
+.logo-green, .brand-green {
+    color: #0C8346; /* Blinkit Green */
+}
+
+.splash-tagline {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #111;
+    letter-spacing: 0.2px;
+}
+
+/* 🔐 STAGE 2: Attractive Login/Signup Card Panel */
 .auth-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100vh;
-    background-color: #f7f9fc;
+    background: linear-gradient(135deg, #F4C430 50%, #F5D050 100%);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -13,116 +64,304 @@
 }
 
 .auth-card {
-    background: #ffffff;
-    padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    background: #FFFFFF;
+    padding: 40px 35px;
+    border-radius: 24px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
     width: 90%;
-    max-width: 400px;
+    max-width: 420px;
     text-align: center;
+    animation: cardPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+@keyframes cardPop {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.auth-brand {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 15px;
+    letter-spacing: -1px;
+}
+
+.brand-black { color: #000; }
+
 .auth-card h2 {
-    font-size: 1.6rem;
-    color: #111;
+    font-size: 1.5rem;
+    color: #1A202C;
     margin-bottom: 8px;
+    font-weight: 700;
 }
 
 .auth-card p {
-    color: #666;
+    color: #718096;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #4A5568;
+    margin-bottom: 6px;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #E2E8F0;
+    border-radius: 12px;
     font-size: 0.95rem;
-    margin-bottom: 20px;
+    color: #2D3748;
+    outline: none;
+    transition: border-color 0.2s;
 }
 
-.hidden {
-    display: none !important;
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: #F4C430;
 }
 
-.toggle-text {
-    margin-top: 15px;
+.btn-auth-submit {
+    width: 100%;
+    padding: 14px;
+    background-color: #0C8346;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.2s;
+}
+
+.btn-auth-submit:hover {
+    background-color: #0A6C3A;
+}
+
+.auth-toggle-text {
+    margin-top: 20px;
     font-size: 0.9rem;
 }
 
-.toggle-text a {
+.auth-toggle-text a {
     color: #0C8346;
     text-decoration: none;
-    font-weight: bold;
+    font-weight: 700;
 }
 
-/* --- 👑 IMAGE 1000283022_2.jpg PRINT STORE LAYOUT --- */
-.header-top {
+/* 📦 STAGE 3: Main App Interface Layout (1000283022_3.jpg reference) */
+.app-header {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #E2E8F0;
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.btn-logout {
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
+.logo {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #000;
+    letter-spacing: -1px;
 }
 
-.store-banner {
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-welcome {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #4A5568;
+}
+
+.btn-logout {
+    background: #ED8936;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 30px auto;
+    display: grid;
+    grid-template-columns: 7fr 4fr;
+    gap: 30px;
+}
+
+@media(max-width: 768px) {
+    .container { grid-template-columns: 1fr; }
+}
+
+.order-section, .summary-section {
+    background: #FFFFFF;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.store-banner h2 {
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.banner-sub {
+    color: #718096;
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+}
+
+/* Promo Card Setup matching Image layout components */
+.document-promo-card {
+    background-color: #F8FAF6;
+    border: 1px dashed #0C8346;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.promo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.promo-header h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.badge-gsm {
+    background: #E6F4EA;
+    color: #0C8346;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.promo-list {
+    list-style: none;
+}
+
+.promo-list li {
+    font-size: 0.9rem;
+    color: #4A5568;
+    margin-bottom: 6px;
+}
+
+/* File Upload custom container UI button */
+.form-group-upload {
+    background: #EDF2F7;
+    border-radius: 12px;
+    padding: 15px;
     text-align: center;
     margin-bottom: 20px;
 }
 
-.store-banner h2 {
-    font-size: 2.2rem;
-    font-weight: 800;
-    margin: 0;
-}
-
-.banner-sub {
-    color: #555;
-    font-size: 1rem;
-}
-
-.document-promo-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 25px;
-}
-
-.document-promo-card h3 {
-    margin-top: 0;
-    color: #111;
-}
-
-.document-promo-card ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.document-promo-card li {
-    margin-bottom: 8px;
-    font-size: 0.95rem;
-    color: #4a5568;
-}
-
-.upload-label-btn {
+.upload-custom-btn {
     display: inline-block;
     background: #0C8346;
     color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
+    padding: 10px 24px;
+    border-radius: 10px;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 700;
+    font-size: 0.95rem;
 }
 
-#fileUpload {
-    display: none;
-}
+#fileUpload { display: none; }
 
 #fileNameDisplay {
-    margin-left: 10px;
-    font-size: 0.9rem;
-    color: #666;
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #718096;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 15px;
+    background-color: #F4C430;
+    color: #000000;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+/* Pricing Card Layout Side panels */
+.summary-card {
+    background: #F8FAFC;
+    border-radius: 14px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    color: #4A5568;
+    font-size: 0.95rem;
+}
+
+.summary-divider {
+    border: 0;
+    border-top: 1px solid #E2E8F0;
+    margin: 15px 0;
+}
+
+.total-row {
+    color: #000000;
+    margin-bottom: 0;
+}
+
+/* Utility Hidden Classes handling Views visibility */
+.hidden { display: none !important; }
+.app-hidden { display: none; }
+.app-visible {
+    display: block;
+    animation: fadeInView 0.4s ease-in-out;
+}
+
+@keyframes fadeInView {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }

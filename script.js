@@ -1,10 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // UI Screens
+    // Stage Containers Mapping
     const splashScreen = document.getElementById('splashScreen');
     const authScreen = document.getElementById('authScreen');
     const mainApp = document.getElementById('mainApp');
 
-    // Auth Form Interaction Components
+    // Access control variables inputs & controls
     const authForm = document.getElementById('authForm');
     const authTitle = document.getElementById('authTitle');
     const authSubtitle = document.getElementById('authSubtitle');
@@ -13,110 +13,114 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleMsg = document.getElementById('toggleMsg');
     const signupOnlyFields = document.querySelectorAll('.signup-only');
 
-    // Input fields inside Auth Form
     const authName = document.getElementById('authName');
     const authIdentity = document.getElementById('authIdentity');
     const authPassword = document.getElementById('authPassword');
+    const userGreeting = document.getElementById('userGreeting');
+    const logoutBtn = document.getElementById('logoutBtn');
 
-    // Business Logic Elements
     const fileUpload = document.getElementById('fileUpload');
     const fileNameDisplay = document.getElementById('fileNameDisplay');
-    const logoutBtn = document.getElementById('logoutBtn');
     
     let isSignupMode = false;
 
-    // --- ⏳ PHASE 1: SPLASH SCREEN HANDLER ---
+    // --- ⏳ STAGE 1: DYNAMIC SPLASH CONTROLLER ---
     setTimeout(() => {
         if (splashScreen) {
             splashScreen.style.opacity = '0';
             splashScreen.style.visibility = 'hidden';
         }
 
-        // Check if user is already authenticated inside local storage session
-        const currentSessionUser = localStorage.getItem('printAppUser');
-        if (currentSessionUser) {
+        // Persistent Session Identifier verification loop
+        const sessionActiveUser = localStorage.getItem('printAppUser');
+        if (sessionActiveUser) {
+            const userData = JSON.parse(localStorage.getItem(`user_${sessionActiveUser}`));
+            userGreeting.textContent = `Hi, ${userData ? userData.name : 'Customer'}`;
             mainApp.classList.remove('app-hidden');
             mainApp.classList.add('app-visible');
         } else {
             authScreen.classList.remove('app-hidden');
         }
-    }, 2500);
+    }, 2500); // 2.5 Sec Splash View transition time
 
-    // --- 🔐 PHASE 2: AUTH MODE TOGGLE (Login <-> Signup) ---
+    // --- 🔐 STAGE 2: PREMIUM AUTH ACTION MATRIX ---
     toggleAuthLink.addEventListener('click', (e) => {
         e.preventDefault();
         isSignupMode = !isSignupMode;
 
         if (isSignupMode) {
-            authTitle.textContent = "Create Your Account";
-            authSubtitle.textContent = "Sign up using Email/Phone to start printing";
+            authTitle.textContent = "Create Account";
+            authSubtitle.textContent = "Join Print From Home today. Sign up using Email/Phone to order prints instantly.";
             authBtn.textContent = "Sign Up";
             toggleMsg.textContent = "Already have an account?";
-            toggleAuthLink.textContent = "Log In";
+            toggleAuthLink.textContent = "Login here";
             signupOnlyFields.forEach(f => f.classList.remove('hidden'));
         } else {
-            authTitle.textContent = "Welcome to Print From Home";
-            authSubtitle.textContent = "Log in or Sign up to view the print store";
+            authTitle.textContent = "Welcome Back!";
+            authSubtitle.textContent = "Log in to your account to instantly manage and print your documents.";
             authBtn.textContent = "Log In";
             toggleMsg.textContent = "New to Print From Home?";
-            toggleAuthLink.textContent = "Sign Up";
+            toggleAuthLink.textContent = "Create Account";
             signupOnlyFields.forEach(f => f.classList.add('hidden'));
         }
     });
 
-    // --- 💾 AUTH SUBMISSION HANDLER ---
     authForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const identityValue = authIdentity.value.trim();
-        const passwordValue = authPassword.value;
+        const identityKey = authIdentity.value.trim();
+        const inputPassword = authPassword.value;
 
         if (isSignupMode) {
-            // New account credentials configuration
-            const nameValue = authName.value.trim();
-            localStorage.setItem(`user_${identityValue}`, JSON.stringify({
-                name: nameValue,
-                id: identityValue,
-                password: passwordValue
-            }));
+            const inputName = authName.value.trim() || 'Customer';
+            
+            // Checking availability constraint match
+            if(localStorage.getItem(`user_${identityKey}`)) {
+                alert("❌ This Gmail or Phone number already exists! Please Log In.");
+                return;
+            }
+
+            // Save structured payload to local persistent dictionary
+            const userPayload = { name: inputName, id: identityKey, password: inputPassword };
+            localStorage.setItem(`user_${identityKey}`, JSON.stringify(userPayload));
+            localStorage.setItem('printAppUser', identityKey);
+            userGreeting.textContent = `Hi, ${inputName}`;
             alert("🎉 Account created successfully! Logging you in...");
         } else {
-            // Validation mechanism
-            const savedUserStr = localStorage.getItem(`user_${identityValue}`);
-            if (!savedUserStr) {
-                alert("❌ No account found with this Email/Phone Number. Please Sign Up first!");
+            // Authentication retrieval validation cycle
+            const registeredRecord = localStorage.getItem(`user_${identityKey}`);
+            if (!registeredRecord) {
+                alert("❌ No record found! Please create an account first.");
                 return;
             }
-            const savedUser = JSON.parse(savedUserStr);
-            if (savedUser.password !== passwordValue) {
-                alert("❌ Incorrect password! Please try again.");
+            const verifiedObject = JSON.parse(registeredRecord);
+            if (verifiedObject.password !== inputPassword) {
+                alert("❌ Incorrect password! Please verify and try again.");
                 return;
             }
+            localStorage.setItem('printAppUser', identityKey);
+            userGreeting.textContent = `Hi, ${verifiedObject.name}`;
         }
 
-        // Set persistent active storage key session
-        localStorage.setItem('printAppUser', identityValue);
-        
-        // View transition sequence
+        // Transition Screen Viewports
         authScreen.classList.add('app-hidden');
         mainApp.classList.remove('app-hidden');
         mainApp.classList.add('app-visible');
         authForm.reset();
     });
 
-    // --- 🚪 LOGOUT SYSTEM ---
+    // --- 🚪 PERSISTENT DESTRUCTION (LOGOUT MECHANISM) ---
     logoutBtn.addEventListener('click', () => {
-        localStorage.removeItem('printAppUser'); // Destroys active persistent token
+        localStorage.removeItem('printAppUser'); // Removes active token pointer but retains credentials mapping
         mainApp.classList.remove('app-visible');
         mainApp.classList.add('app-hidden');
         authScreen.classList.remove('app-hidden');
     });
 
-    // UI tracking when document selection triggers
     fileUpload.addEventListener('change', () => {
-        fileNameDisplay.textContent = fileUpload.files[0] ? fileUpload.files[0].name : "No file selected";
+        fileNameDisplay.textContent = fileUpload.files[0] ? `✓ ${fileUpload.files[0].name}` : "No file selected yet";
     });
 
-    // --- 🖨️ PRINT CALCULATOR & RAZORPAY CONFIGURATION ---
+    // --- 🖨️ PRICING COMPILATION & ORDER SUBMISSION ---
     const pagesInput = document.getElementById('pages');
     const printTypeInput = document.getElementById('printType');
     const bindingInput = document.getElementById('binding');
@@ -191,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if(verifyData.success) {
                         alert('🎉 Payment Successful! Aapka order receive ho gaya hai.');
                         printForm.reset();
-                        fileNameDisplay.textContent = "No file selected";
+                        fileNameDisplay.textContent = "No file selected yet";
                         calculateTotal();
                     }
                 },
