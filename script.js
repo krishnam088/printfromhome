@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {}
     }
 
+    // 🔥 DYNAMIC LAYOUT ENGINE: BORDER ADJUSTABLE & BINDING GRID
     window.refreshInvoiceTabState = function() {
         const sideInvoicePanel = document.getElementById('sidebarPricingPanel');
         const layoutContainer = document.getElementById('mainLayoutAppContainer');
@@ -64,20 +65,43 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeTabIsStore = activeTabStoreNode && activeTabStoreNode.classList.contains('active');
         if (!activeTabIsStore) return;
 
+        // Condition Check: Agar files select ho chuki hain toh configurations workspace active hoga
         if (masterFilesArray && masterFilesArray.length > 0) {
             if(uploadInitialScreen) uploadInitialScreen.classList.add('hidden');
             if(configWorkspaceScreen) configWorkspaceScreen.classList.remove('hidden');
             if(sideInvoicePanel) sideInvoicePanel.classList.remove('hidden');
+            
+            // 💻 DESKTOP MODE: Grid parameters matches 2.5fr 1.2fr full-stretch split
             if (window.innerWidth > 992) {
-                if(layoutContainer) { layoutContainer.classList.add('has-invoice'); layoutContainer.style.gridTemplateColumns = '2.5fr 1.2fr'; }
-            } else { if(layoutContainer) layoutContainer.style.gridTemplateColumns = '1fr'; }
+                if(layoutContainer) { 
+                    layoutContainer.classList.add('has-invoice'); 
+                    layoutContainer.style.gridTemplateColumns = '2.5fr 1.2fr'; 
+                    layoutContainer.style.width = '100%';
+                    layoutContainer.style.maxWidth = '100%';
+                }
+            } else { 
+                // 📱 MOBILE MODE: Stacks components edge-to-edge seamlessly
+                if(layoutContainer) {
+                    layoutContainer.classList.add('has-invoice');
+                    layoutContainer.style.gridTemplateColumns = '1fr'; 
+                    layoutContainer.style.width = '100%';
+                }
+            }
         } else {
+            // Restore Initial Upload screen if clear
             if(uploadInitialScreen) uploadInitialScreen.classList.remove('hidden');
             if(configWorkspaceScreen) configWorkspaceScreen.classList.add('hidden');
             if(sideInvoicePanel) sideInvoicePanel.classList.add('hidden');
-            if(layoutContainer) { layoutContainer.classList.remove('has-invoice'); layoutContainer.style.gridTemplateColumns = '1fr'; }
+            if(layoutContainer) { 
+                layoutContainer.classList.remove('has-invoice'); 
+                layoutContainer.style.gridTemplateColumns = '1fr'; 
+                layoutContainer.style.width = '100%';
+            }
         }
     }
+
+    // Attach resize listener loop to adjust grid borders live when screen scales change
+    window.addEventListener('resize', window.refreshInvoiceTabState);
 
     window.forceReturnToUploadView = function() {
         masterFilesArray = []; sessionStorage.removeItem('savedPrintFiles');
