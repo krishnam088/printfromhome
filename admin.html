@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PrintFromHome - Admin Portal</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background: #f1f5f9; }
+        h1 { color: #1e3a8a; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #1e3a8a; color: white; }
+        .status-paid { color: green; font-weight: bold; }
+        .btn-download { background: #3b82f6; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Incoming Print Dashboard Jobs</h1>
+    <button onclick="loadOrders()">🔄 Refresh Orders</button>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>File Name</th>
+                <th>Specs (Pages / Type / Binding)</th>
+                <th>Delivery Address</th>
+                <th>Total Earned</th>
+                <th>Payment Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="orderTableBody"></tbody>
+    </table>
+    <script>
+        async function loadOrders() {
+            const res = await fetch('/api/admin/orders');
+            const orders = await res.json();
+            const tbody = document.getElementById('orderTableBody');
+            tbody.innerHTML = '';
+            orders.forEach(order => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${order.date}</td>
+                        <td><strong>${order.originalName}</strong></td>
+                        <td>${order.pages} Pgs, ${order.printType.toUpperCase()}, ${order.sides}, ${order.binding}</td>
+                        <td>${order.address}</td>
+                        <td>₹${order.amount}</td>
+                        <td class="${order.status.includes('Paid') ? 'status-paid' : ''}">${order.status}</td>
+                        <td><a href="/download/${order.file}" class="btn-download" target="_blank">📥 Download PDF</a></td>
+                    </tr>
+                `;
+            });
+        }
+        window.onload = loadOrders;
+    </script>
+</body>
+</html>
