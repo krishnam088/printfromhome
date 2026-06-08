@@ -5,78 +5,139 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PrintFromHome - Online Document Printing & Delivery</title>
     <link rel="stylesheet" href="style.css">
-    <!-- 🔥 FIX 1: Razorpay Integration SDK Script Jodh Di Hai -->
+    <!-- Razorpay Integration SDK Script -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
 
-    <header>
-        <div class="logo">PrintFromHome.com</div>
-        <p>Your Documents, Printed and Delivered to Your Doorstep</p>
-    </header>
+    <!-- 💛 PHASE 1: Splash Screen (Blinkit Style) -->
+    <div id="splashScreen" class="splash-container">
+        <div class="splash-content">
+            <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
+            <p class="splash-tagline">India's Last Minute Printing App</p>
+        </div>
+    </div>
 
-    <main class="container">
-        <section class="order-section">
-            <h2>Configure Your Print Order</h2>
-            <form id="printForm" enctype="multipart/form-data">
-                
-                <!-- 🔥 FIX 2: Saare Inputs Mein name="" Attributes Jodh Diye Hain Taaki Backend Data Padh Sake -->
-                <div class="form-group">
-                    <label for="fileUpload">Upload Document (PDF preferred):</label>
-                    <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" required>
+    <!-- 🔐 PHASE 2: User Friendly Auth Card (Login / Signup) -->
+    <div id="authScreen" class="auth-container app-hidden">
+        <div class="auth-card">
+            <h2 id="authTitle">Welcome to Print From Home</h2>
+            <p id="authSubtitle">Log in or Sign up to view the print store</p>
+            
+            <form id="authForm">
+                <!-- Signup fields (Initially hidden via toggle) -->
+                <div class="form-group signup-only hidden">
+                    <label for="authName">Full Name</label>
+                    <input type="text" id="authName" placeholder="Enter your full name">
                 </div>
 
                 <div class="form-group">
-                    <label for="pages">Number of Pages:</label>
-                    <input type="number" id="pages" name="pages" min="1" value="1" required>
+                    <label for="authIdentity">Email or Phone Number</label>
+                    <input type="text" id="authIdentity" placeholder="Enter Gmail or Phone Number" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="printType">Print Type:</label>
-                    <select id="printType" name="printType">
-                        <option value="bw">Black & White (₹2 / page)</option>
-                        <option value="color">Full Color (₹10 / page)</option>
-                    </select>
+                    <label for="authPassword">Password</label>
+                    <input type="password" id="authPassword" placeholder="Enter password" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="sides">Sides:</label>
-                    <select id="sides" name="sides">
-                        <option value="single">Single Sided</option>
-                        <option value="double">Double Sided (Duplex)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="binding">Binding Option:</label>
-                    <select id="binding" name="binding">
-                        <option value="none">No Binding (Loose Sheets)</option>
-                        <option value="staple">Stapled (Free)</option>
-                        <option value="spiral">Spiral Binding (+₹30)</option>
-                        <option value="soft">Soft Book Binding (+₹50)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="address">Delivery Address:</label>
-                    <textarea id="address" name="address" rows="3" placeholder="Enter your full hostel, college room, or home address" required></textarea>
-                </div>
-
-                <button type="submit" class="btn-submit">Proceed to Payment</button>
+                <button type="submit" id="authBtn" class="btn-submit">Log In</button>
             </form>
-        </section>
 
-        <section class="summary-section">
-            <h2>Order Summary</h2>
-            <div class="summary-card">
-                <p>Printing Cost: <span id="summaryPrint">₹2.00</span></p>
-                <p>Binding Cost: <span id="summaryBinding">₹0.00</span></p>
-                <p>Delivery Charges: <span id="summaryDelivery">₹40.00</span></p>
-                <hr>
-                <h3>Total Amount: <span id="summaryTotal">₹42.00</span></h3>
+            <p class="toggle-text">
+                <span id="toggleMsg">New to Print From Home?</span> 
+                <a href="#" id="toggleAuthLink">Sign Up</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- 📦 PHASE 3: Main App Content (Blinkit Print Store UI Reference: 1000283022_2.jpg) -->
+    <div id="mainApp" class="app-hidden">
+        <header>
+            <div class="header-top">
+                <div class="logo">PrintFromHome.com</div>
+                <button id="logoutBtn" class="btn-logout">Logout</button>
             </div>
-        </section>
-    </main>
+            <p>Your Documents, Printed and Delivered to Your Doorstep</p>
+        </header>
+
+        <main class="container">
+            <!-- Premium Print Store Section matching image 1000283022_2.jpg layout -->
+            <section class="order-section">
+                <div class="store-banner">
+                    <h2>Print Store</h2>
+                    <p class="banner-sub">Ensuring secure prints at every stage</p>
+                </div>
+
+                <div class="document-promo-card">
+                    <h3>Documents</h3>
+                    <ul>
+                        <li>✦ Price starting at ₹2/page</li>
+                        <li>✦ Paper quality: 70 GSM Bond Paper</li>
+                        <li>✦ Single or Double side prints</li>
+                    </ul>
+                </div>
+
+                <form id="printForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label class="upload-label-btn" for="fileUpload">📂 Upload Files</label>
+                        <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" required>
+                        <span id="fileNameDisplay">No file selected</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pages">Number of Pages:</label>
+                        <input type="number" id="pages" name="pages" min="1" value="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="printType">Print Type:</label>
+                        <select id="printType" name="printType">
+                            <option value="bw">Black & White (₹2 / page)</option>
+                            <option value="color">Full Color (₹10 / page)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sides">Sides:</label>
+                        <select id="sides" name="sides">
+                            <option value="single">Single Sided</option>
+                            <option value="double">Double Sided (Duplex)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="binding">Binding Option:</label>
+                        <select id="binding" name="binding">
+                            <option value="none">No Binding (Loose Sheets)</option>
+                            <option value="staple">Stapled (Free)</option>
+                            <option value="spiral">Spiral Binding (+₹30)</option>
+                            <option value="soft">Soft Book Binding (+₹50)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Delivery Address:</label>
+                        <textarea id="address" name="address" rows="3" placeholder="Enter your full hostel, college room, or home address" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Proceed to Payment</button>
+                </form>
+            </section>
+
+            <!-- Order Summary Sidebar -->
+            <section class="summary-section">
+                <h2>Order Summary</h2>
+                <div class="summary-card">
+                    <p>Printing Cost: <span id="summaryPrint">₹2.00</span></p>
+                    <p>Binding Cost: <span id="summaryBinding">₹0.00</span></p>
+                    <p>Delivery Charges: <span id="summaryDelivery">₹40.00</span></p>
+                    <hr>
+                    <h3>Total Amount: <span id="summaryTotal">₹42.00</span></h3>
+                </div>
+            </section>
+        </main>
+    </div>
 
     <script src="script.js"></script>
 </body>
