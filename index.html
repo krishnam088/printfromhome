@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Print From Home - India's Last Minute Printing App</title>
+    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
@@ -49,6 +50,7 @@
         .logo-green { color: var(--blinkit-green); }
         .menu-toggle-btn { background: #000; color: #fff; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
+        /* MAIN CONTAINER SETUP */
         .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; display: grid; grid-template-columns: 1fr; gap: 25px; transition: all 0.3s ease; }
         .container.has-invoice { grid-template-columns: 2fr 1fr; }
         @media (max-width: 768px) { .container.has-invoice { grid-template-columns: 1fr; } }
@@ -60,29 +62,30 @@
         @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .hidden { display: none !important; }
         
-        /* 👑 BLINKIT STYLE DYNAMIC SETTINGS CARD NODES */
-        .blinkit-file-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px; margin-top: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
+        /* 👑 BLINKIT LAYOUT SPECIFICATIONS FROM 1000283099.jpg */
+        .blinkit-file-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-top: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
         .blinkit-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px dashed var(--border-color); }
         
-        /* Stepper +/- Elements */
-        .blinkit-stepper { display: flex; align-items: center; background: var(--blinkit-green); border-radius: 10px; padding: 4px 10px; gap: 14px; color: white; font-weight: bold; }
-        .stepper-btn { background: none; border: none; color: white; font-size: 1.2rem; font-weight: 800; cursor: pointer; padding: 2px 6px; }
+        .blinkit-stepper { display: flex; align-items: center; background: var(--blinkit-green); border-radius: 10px; padding: 6px 12px; gap: 16px; color: white; font-weight: bold; width: fit-content; }
+        .stepper-btn { background: none; border: none; color: white; font-size: 1.3rem; font-weight: 800; cursor: pointer; }
         
-        /* Selectors Custom Grid Systems */
         .blinkit-grid-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
-        .blinkit-option-box { border: 2px solid var(--border-color); border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s; background: var(--bg-primary); }
+        .blinkit-option-box { border: 2px solid var(--border-color); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s; background: var(--surface); }
         .blinkit-option-box.active { border-color: var(--blinkit-green); background-color: var(--blinkit-light-green); }
-        .option-icon { font-size: 1.3rem; }
+        .option-icon { font-size: 1.4rem; }
         .option-meta-text { display: flex; flex-direction: column; text-align: left; }
-        .option-title { font-size: 0.85rem; font-weight: 700; color: var(--text-main); }
+        .option-title { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
         .option-subtitle { font-size: 0.75rem; color: var(--text-sub); font-weight: 500; }
 
-        .btn-submit-container { width: 100%; display: flex; justify-content: flex-end; margin-top: 15px; }
         .history-card-item { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-top: 12px; }
+
+        /* 🔙 BACK TO UPLOAD BUTTON LINKED UI BACKGROUND */
+        .back-to-upload-link { background: none; border: none; color: var(--blinkit-green); font-size: 0.9rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
+    <!-- TOP SYSTEM HEADER CLOCK -->
     <div class="live-timer-banner">
         <div>🕒 India Time: <span id="userLiveClock" style="color: var(--blinkit-yellow); font-family: monospace; font-size: 0.95rem;">00:00:00 AM</span></div>
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -91,8 +94,10 @@
         </div>
     </div>
 
+    <!-- Background Dimmer Overlay -->
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
+    <!-- SIDEBAR DRAWER MENU -->
     <nav id="userSideDrawer" class="side-drawer">
         <div class="drawer-header">
             <h2 style="font-size:1.2rem; font-weight:800;">Account Menu</h2>
@@ -109,6 +114,7 @@
         </div>
     </nav>
 
+    <!-- STAGE 1: Splash Loader Screen -->
     <div id="splashScreen" class="splash-container">
         <div class="splash-content">
             <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
@@ -116,6 +122,7 @@
         </div>
     </div>
 
+    <!-- STAGE 2: Authentication View -->
     <div id="authScreen" class="auth-container app-hidden">
         <div class="auth-card">
             <div class="auth-brand">print<span class="brand-green">from</span>home</div>
@@ -140,6 +147,7 @@
         </div>
     </div>
 
+    <!-- STAGE 3: Main App Workspace -->
     <div id="mainApp" class="app-hidden">
         <header class="app-header">
             <div class="header-container">
@@ -153,13 +161,10 @@
 
         <div class="container" id="mainLayoutAppContainer">
             
+            <!-- VIEW BLOCK 1: STORE FRONTEND ENTRIES -->
             <div id="user_section_store" class="view-section active" style="width: 100%;">
                 <section class="order-section" style="width:100%;">
-                    <div class="store-banner">
-                        <h2>Print Store Workspace</h2>
-                        <p class="banner-sub">Upload documents and configure layout specifications instantly</p>
-                    </div>
-
+                    
                     <div class="compact-offers-bar">
                         <span>📢 <b>Active Schemes:</b></span>
                         <marquee scrollamount="3" style="width: 100%;">
@@ -171,24 +176,47 @@
                         🚨 <b>Dukan Abhi Band Hai Bhai!</b> Print From Home accepts orders strictly between 07:00 AM and 11:59 PM.
                     </div>
 
-                    <form id="printForm" enctype="multipart/form-data">
-                        <div class="form-group-upload">
-                            <label class="upload-custom-btn" for="fileUpload">📂 Select Files / Add Files</label>
+                    <!-- 🗺️ SCREEN STATE A: CORE CLEAN INITIAL UPLOAD ZONE -->
+                    <div id="uploadScreenInitialState">
+                        <div class="store-banner" style="text-align: center; padding: 40px 20px;">
+                            <h2 style="font-size: 1.8rem; margin-bottom: 8px;">Print Store</h2>
+                            <p class="banner-sub" style="font-size: 0.95rem;">Blinkit ensures secure prints at every stage. Select your files to begin configurations.</p>
+                        </div>
+                        <div class="form-group-upload" style="max-width: 450px; margin: 0 auto;">
+                            <label class="upload-custom-btn" for="fileUpload" style="padding: 20px; font-size: 1.1rem; border-radius: 16px;">
+                                📂 Select Files / Add Files
+                            </label>
                             <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
-                            <div id="fileNameDisplay">No files selected yet</div>
                         </div>
+                    </div>
+
+                    <!-- 🗺️ SCREEN STATE B: FULL CONFIGURATION WORKSPACE (DIVERTED FROM FILE UPLOAD ACCORDING TO 1000283099.jpg) -->
+                    <div id="configurationScreenState" class="hidden">
+                        <button type="button" class="back-to-upload-link" onclick="forceReturnToUploadView()">
+                            &larr; Back to Add Files
+                        </button>
                         
-                        <div id="multiFilesContainer" style="margin-bottom: 20px;"></div>
-                        
-                        <div class="form-group">
-                            <label>Delivery Address:</label>
-                            <textarea id="address" name="address" rows="3" placeholder="Enter full Hostel Name, Room No., Campus or Home Address" required></textarea>
-                        </div>
-                        <button type="submit" id="submitOrderBtn" class="btn-submit">Proceed to Payment</button>
-                    </form>
+                        <form id="printForm" enctype="multipart/form-data">
+                            <!-- Live Dynamic Blinkit Inspired Product Config Containers Slot -->
+                            <div id="multiFilesContainer" style="margin-bottom: 25px;"></div>
+                            
+                            <div class="form-group" style="background: var(--surface); padding: 18px; border-radius: 16px; border: 1px solid var(--border-color);">
+                                <label style="font-weight: 700; margin-bottom: 8px; display: block; font-size: 0.9rem;">Delivery Address details:</label>
+                                <textarea id="address" name="address" rows="3" placeholder="Enter full Hostel Name, Room No., Campus or Home Address" style="border: 2px solid var(--border-color); border-radius: 12px; padding: 12px; font-size: 0.9rem; outline: none; width: 100%;" required></textarea>
+                            </div>
+                            
+                            <div class="btn-submit-container">
+                                <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px 28px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%; max-width: 320px;">
+                                    Proceed to Payment
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
                 </section>
             </div>
 
+            <!-- VIEW BLOCK 2: HISTORIES -->
             <div id="user_section_history" class="view-section" style="width: 100%;">
                 <section class="order-section" style="width:100%;">
                     <h3>📋 Your Printing Jobs & Delivery Status</h3>
@@ -198,6 +226,7 @@
                 </section>
             </div>
 
+            <!-- VIEW BLOCK 3: HELP -->
             <div id="user_section_help" class="view-section" style="width: 100%;">
                 <section class="order-section" style="width:100%;">
                     <h3>❓ Help Center & Customer Care Support</h3>
@@ -207,6 +236,7 @@
                 </section>
             </div>
 
+            <!-- VIEW BLOCK 4: TERMS -->
             <div id="user_section_terms" class="view-section" style="width: 100%;">
                 <section class="order-section" style="width:100%;">
                     <h3>📜 Store Terms & Service Conditions</h3>
@@ -216,6 +246,7 @@
                 </section>
             </div>
 
+            <!-- INVOICE BILLING TAB SIDEBAR -->
             <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content;">
                 <h2>Order Invoice Summary</h2>
                 <div class="summary-card">
@@ -230,71 +261,12 @@
         </div>
     </div>
 
+    <!-- Document Popups Modal -->
     <div id="previewModal" class="preview-modal">
         <div class="preview-content">
             <span id="closePreview" class="close-preview">&times;</span>
             <h3 id="previewTitle" style="word-break:break-all; font-size:0.95rem;">Document Preview</h3>
             <div id="previewBody" style="min-height:200px; display:flex; justify-content:center; align-items:center;"></div>
-        </div>
-    </div>
-
-    <script>
-        function updateMainAppUIClock() {
-            const now = new Date();
-            const clockString = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-            if(document.getElementById('userLiveClock')) document.getElementById('userLiveClock').textContent = clockString;
-            
-            const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
-            let open = (hoursIST >= 7 && hoursIST < 24);
-
-            const badge = document.getElementById('userShopStatus');
-            const box = document.getElementById('storeClosedNoticeBox');
-            const btn = document.getElementById('submitOrderBtn');
-            if(badge && box && btn) {
-                if(open) {
-                    badge.textContent = "OPEN 🟢"; badge.className = "shop-status-badge open";
-                    box.classList.add('hidden'); btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
-                } else {
-                    badge.textContent = "CLOSED 🔴"; badge.className = "shop-status-badge closed";
-                    box.classList.remove('hidden'); btn.disabled = true; btn.style.opacity = "0.4"; btn.style.cursor = "not-allowed"; btn.textContent = "❌ Store is Closed";
-                }
-            }
-        }
-        setInterval(updateMainAppUIClock, 1000);
-        window.addEventListener('DOMContentLoaded', updateMainAppUIClock);
-
-        function toggleUserDrawer(open) {
-            document.getElementById('userSideDrawer').classList.toggle('active', open);
-            document.getElementById('drawerOverlay').classList.toggle('active', open);
-        }
-
-        function navigateUserSection(targetId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`user_section_${targetId}`).classList.add('active');
-            if(document.getElementById(`menu_${targetId}`)) document.getElementById(`menu_${targetId}`).classList.add('active');
-            
-            const sidePanelPrice = document.getElementById('sidebarPricingPanel');
-            const mainLayoutWrapper = document.getElementById('mainLayoutAppContainer');
-            
-            if(targetId !== 'store') { 
-                sidePanelPrice.classList.add('hidden'); 
-                mainLayoutWrapper.classList.remove('has-invoice');
-                mainLayoutWrapper.style.gridTemplateColumns = '1fr'; 
-            } else {
-                if(typeof window.refreshInvoiceTabState === 'function') { window.refreshInvoiceTabState(); }
-            }
-            toggleUserDrawer(false);
-        }
-    </script>
-
-    <div id="marketingPopupModal" style="display: none; position: fixed; z-index: 12000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; padding: 20px;">
-        <div style="background: #ffffff; padding: 25px; border-radius: 24px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 20px 45px rgba(0,0,0,0.2); border: 2px solid #F4C430; position: relative;">
-            <span id="closeMarketingPopup" style="position: absolute; top: 12px; right: 18px; font-size: 22px; font-weight: bold; cursor: pointer; color: #a0aec0;">&times;</span>
-            <div id="popupIconBadge" style="font-size: 3.5rem; margin-bottom: 12px;">🎉</div>
-            <h3 id="popupAlertTitle" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 8px;">Special Offer Alert!</h3>
-            <p id="popupAlertBody" style="font-size: 0.9rem; color: #4a5568; line-height: 1.5; margin-bottom: 20px;"></p>
-            <button style="width: 100%; padding: 12px; background-color: #0C8346; color: #ffffff; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer;" onclick="document.getElementById('marketingPopupModal').style.display='none'">Chalo Print Karte Hain 🚀</button>
         </div>
     </div>
 

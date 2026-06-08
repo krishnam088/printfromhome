@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutBtn = document.getElementById('logoutBtn');
 
     const fileUpload = document.getElementById('fileUpload');
-    const fileNameDisplay = document.getElementById('fileNameDisplay');
     const multiFilesContainer = document.getElementById('multiFilesContainer');
     const ordersHistoryContainer = document.getElementById('ordersHistoryContainer');
     
@@ -34,17 +33,26 @@ document.addEventListener('DOMContentLoaded', () => {
     let masterFilesArray = []; 
     let isFirstTimeUser = true; 
 
-    // --- 🕒 AUTOMATED LAYOUT INVOICE PANEL DYNAMIC TOGGLE ---
+    // 🔥 AUTOMATED SCREEN DIVERTOR & INVOICE TOGGLE ENGINE
     window.refreshInvoiceTabState = function() {
         const sideInvoicePanel = document.getElementById('sidebarPricingPanel');
         const layoutContainer = document.getElementById('mainLayoutAppContainer');
         const activeTabStoreNode = document.getElementById('user_section_store');
         
+        const uploadInitialScreen = document.getElementById('uploadScreenInitialState');
+        const configWorkspaceScreen = document.getElementById('configurationScreenState');
+
         const activeTabIsStore = activeTabStoreNode && activeTabStoreNode.classList.contains('active');
 
-        if (!sideInvoicePanel || !layoutContainer || !activeTabIsStore) return;
+        if (!sideInvoicePanel || !layoutContainer || !activeTabIsStore || !uploadInitialScreen || !configWorkspaceScreen) return;
 
+        // Condition Check: If user has selected 1 or more files to print
         if (masterFilesArray && masterFilesArray.length > 0) {
+            // 🔄 DIVERTS USER SCREEN TO DYNAMIC CONFIG WORKSPACE
+            uploadInitialScreen.classList.add('hidden');
+            configWorkspaceScreen.classList.remove('hidden');
+
+            // Unhides billing panel sidebar frames
             sideInvoicePanel.classList.remove('hidden');
             if (window.innerWidth > 768) {
                 layoutContainer.classList.add('has-invoice');
@@ -53,10 +61,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 layoutContainer.style.gridTemplateColumns = '1fr';
             }
         } else {
+            // 🔄 RESTORES INITIAL VIEW IF ALL COPIES ARE REMOVED
+            uploadInitialScreen.classList.remove('hidden');
+            configWorkspaceScreen.classList.add('hidden');
+
             sideInvoicePanel.classList.add('hidden');
             layoutContainer.classList.remove('has-invoice');
             layoutContainer.style.gridTemplateColumns = '1fr';
         }
+    }
+
+    // Direct Return Force Controller link mapping
+    window.forceReturnToUploadView = function() {
+        masterFilesArray = [];
+        sessionStorage.removeItem('savedPrintFiles');
+        if(multiFilesContainer) multiFilesContainer.innerHTML = '';
+        refreshInvoiceTabState();
+        calculateTotal();
     }
 
     // --- ⏳ STAGE 1: DYNAMIC SPLASH UNLOCK CONTROLLER ---
@@ -173,14 +194,12 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.removeItem('savedPrintFiles'); 
             masterFilesArray = [];
             if(multiFilesContainer) multiFilesContainer.innerHTML = '';
-            if(fileNameDisplay) fileNameDisplay.textContent = "No files selected yet";
             if(mainApp) mainApp.style.display = 'none';
             if(authScreen) authScreen.style.display = 'flex';
             calculateTotal();
         });
     }
 
-    // --- 🖨️ FILE EXTENSION PERSISTENCE & PREVIEW ENGINE ---
     if(fileUpload) {
         fileUpload.addEventListener('change', () => {
             if (fileUpload.files.length === 0) return;
@@ -225,21 +244,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 fileData: null, 
                 config: item.config
             }));
-            if(fileNameDisplay) fileNameDisplay.textContent = `✓ Total ${masterFilesArray.length} files in queue`;
             renderFilesUI();
         }
     }
 
-    // 🔥 BLINKIT IMAGE-INSPIRED INTERFACE GENERATION ENGINE
+    // 👑 1000283099.jpg INTERFACE GENERATION SCHEMAS
     function renderFilesUI() {
         if(!multiFilesContainer) return;
         multiFilesContainer.innerHTML = ''; 
 
-        if (masterFilesArray.length === 0) {
-            if(fileNameDisplay) fileNameDisplay.textContent = "No files selected yet";
-            calculateTotal();
-            return;
-        }
+        // Update layouts diversion instantly inside changes arrays hook bounds
+        refreshInvoiceTabState();
+
+        if (masterFilesArray.length === 0) return;
 
         masterFilesArray.forEach((item, index) => {
             const fileRow = document.createElement('div');
@@ -254,9 +271,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="blinkit-card-row">
                     <div style="text-align:left;">
                         <h4 style="font-size:0.95rem; font-weight:700; color:var(--text-main); word-break:break-all;">📄 ${item.name}</h4>
-                        <span style="font-size:0.75rem; color:var(--text-sub); font-weight:500;">File ${index+1} (Pages Input Attached)</span>
+                        <span style="font-size:0.75rem; color:var(--text-sub); font-weight:500;">File ${index+1} (Pages Custom Parameters)</span>
                     </div>
-                    <button type="button" id="removeFile_${index}" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1.1rem;">&times;</button>
+                    <button type="button" id="removeFile_${index}" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1.4rem;">&times;</button>
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:15px; align-items:center;">
@@ -323,55 +340,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
             multiFilesContainer.appendChild(fileRow);
 
-            // Bind Grid Events Controls Handlers
-            document.getElementById(`optColor_${index}`).addEventListener('click', () => {
-                item.config.printType = 'color';
-                renderFilesUI();
-            });
-            document.getElementById(`optBw_${index}`).addEventListener('click', () => {
-                item.config.printType = 'bw';
-                renderFilesUI();
-            });
-            document.getElementById(`optPort_${index}`).addEventListener('click', () => {
-                item.config.orientation = 'portrait';
-                renderFilesUI();
-            });
-            document.getElementById(`optLand_${index}`).addEventListener('click', () => {
-                item.config.orientation = 'landscape';
-                renderFilesUI();
-            });
+            document.getElementById(`optColor_${index}`).addEventListener('click', () => { item.config.printType = 'color'; renderFilesUI(); });
+            document.getElementById(`optBw_${index}`).addEventListener('click', () => { item.config.printType = 'bw'; renderFilesUI(); });
+            document.getElementById(`optPort_${index}`).addEventListener('click', () => { item.config.orientation = 'portrait'; renderFilesUI(); });
+            document.getElementById(`optLand_${index}`).addEventListener('click', () => { item.config.orientation = 'landscape'; renderFilesUI(); });
 
             document.getElementById(`plusCopy_${index}`).addEventListener('click', () => {
                 item.config.copies++;
-                saveCurrentFilesToSession();
-                calculateTotal();
+                saveCurrentFilesToSession(); calculateTotal();
                 document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies;
             });
             document.getElementById(`minusCopy_${index}`).addEventListener('click', () => {
                 if (item.config.copies > 1) {
                     item.config.copies--;
-                    saveCurrentFilesToSession();
-                    calculateTotal();
+                    saveCurrentFilesToSession(); calculateTotal();
                     document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies;
                 }
             });
 
             document.getElementById(`removeFile_${index}`).addEventListener('click', () => {
                 masterFilesArray.splice(index, 1);
-                if(fileNameDisplay) fileNameDisplay.textContent = masterFilesArray.length > 0 ? `✓ Total ${masterFilesArray.length} files in queue` : "No files selected yet";
                 saveCurrentFilesToSession();
                 renderFilesUI();
             });
 
             document.getElementById(`pages_${index}`).addEventListener('input', (e) => {
                 item.config.pages = parseInt(e.target.value) || 1;
-                saveCurrentFilesToSession();
-                calculateTotal();
+                saveCurrentFilesToSession(); calculateTotal();
             });
             document.getElementById(`binding_${index}`).addEventListener('change', (e) => {
                 item.config.binding = e.target.value;
-                saveCurrentFilesToSession();
-                calculateTotal();
+                saveCurrentFilesToSession(); calculateTotal();
             });
         });
 
@@ -385,20 +384,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const fileURL = URL.createObjectURL(file);
         if (type.startsWith('image/')) {
             const img = document.createElement('img');
-            img.src = fileURL;
-            img.style.maxWidth = '100%';
-            img.style.maxHeight = '60vh';
-            img.style.borderRadius = '8px';
+            img.src = fileURL; img.style.maxWidth = '100%'; img.style.maxHeight = '60vh'; img.style.borderRadius = '8px';
             previewBody.appendChild(img);
         } else if (type === 'application/pdf') {
             const iframe = document.createElement('iframe');
-            iframe.src = fileURL;
-            iframe.style.width = '100%';
-            iframe.style.height = '60vh';
-            iframe.style.border = 'none';
+            iframe.src = fileURL; iframe.style.width = '100%'; iframe.style.height = '60vh'; iframe.style.border = 'none';
             previewBody.appendChild(iframe);
-        } else {
-            previewBody.innerHTML = `<div style="text-align:center; padding:20px; color:#4a5568;"><span style="font-size:3rem;">📄</span><p style="margin-top:10px; font-weight:600;">Preview not directly supported for this format.</p></div>`;
         }
         previewModal.style.display = 'flex';
     }
@@ -419,10 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!summaryPrint || !summaryBinding || !summaryDelivery || !summaryTotal) return;
 
         if (masterFilesArray.length === 0) {
-            summaryPrint.textContent = `₹0.00`;
-            summaryBinding.textContent = `₹0.00`;
-            summaryDelivery.textContent = `₹0.00`; 
-            summaryTotal.textContent = `₹0.00`;
+            summaryPrint.textContent = `₹0.00`; summaryBinding.textContent = `₹0.00`; summaryDelivery.textContent = `₹0.00`; summaryTotal.textContent = `₹0.00`;
             return;
         }
 
@@ -446,11 +434,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let finalDocumentCost = totalPrintCost + totalBindingCost;
         let accurateDeliveryCharge = 25.00; 
 
-        if (isFirstTimeUser && finalDocumentCost >= 49.00) {
-            accurateDeliveryCharge = 0.00; 
-        } else if (!isFirstTimeUser && finalDocumentCost >= 99.00) {
-            accurateDeliveryCharge = 0.00; 
-        }
+        if (isFirstTimeUser && finalDocumentCost >= 49.00) { accurateDeliveryCharge = 0.00; } 
+        else if (!isFirstTimeUser && finalDocumentCost >= 99.00) { accurateDeliveryCharge = 0.00; }
 
         let grandTotal = finalDocumentCost + accurateDeliveryCharge;
 
@@ -467,27 +452,18 @@ document.addEventListener('DOMContentLoaded', () => {
             ordersHistoryContainer.innerHTML = `<p style="font-size:0.85rem; color:#718096; text-align:center; padding:15px;">No orders placed yet.</p>`;
             return;
         }
-
         const parsedHistory = JSON.parse(rawHistory).reverse(); 
         ordersHistoryContainer.innerHTML = '';
-
         parsedHistory.forEach(order => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'history-card-item';
-            
             let filesDetailsHtml = order.details.map(f => `• ${f.fileName} (${f.copies} copies, ${f.pages} pgs, ${f.printType === 'bw' ? 'B&W' : 'Color'})`).join('<br>');
-
             itemDiv.innerHTML = `
                 <div style="display:flex; justify-content:space-between; font-weight:700; color:#1a202c; border-bottom:1px solid #e2e8f0; padding-bottom:4px; margin-bottom:6px;">
-                    <span>📅 ${order.date}</span>
-                    <span style="color:#0C8346;">₹${order.amount}</span>
+                    <span>📅 ${order.date}</span> <span style="color:#0C8346;">₹${order.amount}</span>
                 </div>
-                <div style="color:#4a5568; line-height:1.4; font-size:0.8rem; margin-bottom:4px;">
-                    ${filesDetailsHtml}
-                </div>
-                <div style="font-size:0.75rem; color:#e67e22; font-weight:600; text-align:right;">
-                    Status: <span style="background:#fff3e0; padding:2px 6px; border-radius:4px;">${order.status}</span>
-                </div>
+                <div style="color:#4a5568; line-height:1.4; font-size:0.8rem; margin-bottom:4px;">${filesDetailsHtml}</div>
+                <div style="font-size:0.75rem; color:#e67e22; font-weight:600; text-align:right;">Status: <span style="background:#fff3e0; padding:2px 6px; border-radius:4px;">${order.status}</span></div>
             `;
             ordersHistoryContainer.appendChild(itemDiv);
         });
@@ -497,34 +473,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if(printForm) {
         printForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if(masterFilesArray.length === 0) {
-                alert("❌ File upload karna zaroori hai bhai!");
-                return;
-            }
-
-            const missingBinaries = masterFilesArray.some(f => f.fileData === null);
-            if(missingBinaries) {
-                alert("⚠️ Refresh ke kaaran browser local stream clear ho gayi hai. Bas 'Select Files' se ek baar files jagah chun lo!");
-                return;
-            }
-
             const summaryTotal = document.getElementById('summaryTotal');
             const totalAmountText = summaryTotal ? summaryTotal.textContent.replace('₹', '') : "0";
             const formData = new FormData();
 
-            masterFilesArray.forEach((item) => {
-                if(item.fileData) formData.append('document', item.fileData); 
-            });
+            masterFilesArray.forEach((item) => { if(item.fileData) formData.append('document', item.fileData); });
 
             const finalMetaConfig = masterFilesArray.map((item) => {
-                return {
-                    fileName: item.name,
-                    pages: item.config.pages,
-                    printType: item.config.printType,
-                    sides: item.config.sides,
-                    binding: item.config.binding,
-                    copies: item.config.copies
-                };
+                return { fileName: item.name, pages: item.config.pages, printType: item.config.printType, sides: item.config.orientation === 'portrait' ? 'single' : 'landscape', binding: item.config.binding, copies: item.config.copies };
             });
 
             formData.append('totalAmount', totalAmountText);
@@ -532,156 +488,48 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('address', document.getElementById('address').value);
 
             try {
-                const response = await fetch('/api/create-order', {
-                    method: 'POST',
-                    body: formData
-                });
+                const response = await fetch('/api/create-order', { method: 'POST', body: formData });
                 const data = await response.json();
-
-                if (!data.success) {
-                    alert('Order failure! Server validation failed.');
-                    return;
-                }
+                if (!data.success) return;
 
                 const options = {
-                    "key": data.key_id, 
-                    "amount": data.amount, 
-                    "currency": "INR",
-                    "name": "Print From Home",
-                    "description": "Document Printing Charges",
-                    "order_id": data.order_id, 
+                    "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Print From Home", "order_id": data.order_id,
                     "handler": async function (response){
-                        const verifyRes = await fetch('/api/verify-payment', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                orderId: data.order_id,
-                                paymentId: response.razorpay_payment_id
-                            })
-                        });
+                        const verifyRes = await fetch('/api/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: data.order_id, paymentId: response.razorpay_payment_id }) });
                         const verifyData = await verifyRes.json();
                         if(verifyData.success) {
-                            alert('🎉 Payment Successful! Order lock ho gaya hai.');
-                            
+                            alert('🎉 Payment Successful!');
                             const activeUserToken = localStorage.getItem('printAppUser');
                             const currentHistoryRaw = localStorage.getItem(`history_${activeUserToken}`) || '[]';
                             const currentHistoryArray = JSON.parse(currentHistoryRaw);
-                            
-                            const newHistoryObject = {
-                                date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}),
-                                amount: totalAmountText,
-                                status: "Paid / Ready for Print",
-                                details: finalMetaConfig
-                            };
-                            currentHistoryArray.push(newHistoryObject);
+                            currentHistoryArray.push({ date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), amount: totalAmountText, status: "Paid / Ready for Print", details: finalMetaConfig });
                             localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
 
-                            isFirstTimeUser = false;
-                            sessionStorage.removeItem('savedPrintFiles'); 
-                            printForm.reset();
-                            if(multiFilesContainer) multiFilesContainer.innerHTML = '';
-                            masterFilesArray = [];
-                            if(fileNameDisplay) fileNameDisplay.textContent = "No files selected yet";
-                            
-                            renderOrderHistoryUI(activeUserToken); 
-                            calculateTotal();
+                            isFirstTimeUser = false; sessionStorage.removeItem('savedPrintFiles'); printForm.reset(); multiFilesContainer.innerHTML = ''; masterFilesArray = [];
+                            renderOrderHistoryUI(activeUserToken); calculateTotal();
                         }
-                    },
-                    "theme": { "color": "#F4C430" }
+                    }, "theme": { "color": "#F4C430" }
                 };
-                const rzp1 = new Razorpay(options);
-                rzp1.open();
-            } catch (error) {
-                console.error("Payment Error:", error);
-            }
+                const rzp1 = new Razorpay(options); rzp1.open();
+            } catch (error) {}
         });
     }
 
     let currentLocalVersion = null;
     async function checkForNewUpdates() {
         try {
-            const res = await fetch('/api/version');
-            const data = await res.json();
+            const res = await fetch('/api/version'); const data = await res.json();
             if (!currentLocalVersion) { currentLocalVersion = data.version; } 
-            else if (currentLocalVersion !== data.version) {
-                currentLocalVersion = data.version;
-                window.location.reload(true); 
-            }
+            else if (currentLocalVersion !== data.version) { window.location.reload(true); }
         } catch (err) {}
     }
-    setInterval(checkForNewUpdates, 20000); 
-    checkForNewUpdates();
+    setInterval(checkForNewUpdates, 20000);
 
-    // --- 📢 AUTOMATED MARKETING POPUP ---
     function triggerSmartMarketingPopup() {
         const activeUserKey = localStorage.getItem('printAppUser');
         const popupModal = document.getElementById('marketingPopupModal');
-        const popupTitle = document.getElementById('popupAlertTitle');
-        const popupBody = document.getElementById('popupAlertBody');
-        const popupIcon = document.getElementById('popupIconBadge');
-
-        if (!popupModal || !popupTitle || !popupBody || !popupIcon) return;
-
-        const offersList = [
-            { title: "🔥 Flash Sale Alert!", body: "Bhai, exam time aa gaya hai! Pure Varanasi ke bacchon ke liye Black & White prints abhi direct live chal rahe hain sirf ₹3.00/page par.", icon: "⚡" }
-        ];
-
-        if (!activeUserKey) {
-            const randomScheme = offersList[Math.floor(Math.random() * offersList.length)];
-            popupTitle.textContent = randomScheme.title;
-            popupBody.textContent = randomScheme.body;
-            popupIcon.textContent = randomScheme.icon;
-            setTimeout(() => { popupModal.style.display = 'flex'; }, 3500);
-            return;
-        }
-
-        const userData = JSON.parse(localStorage.getItem(`user_${activeUserKey}`)) || {};
-        const userName = userData.name || "Bhai";
-        const userContact = activeUserKey; 
-
-        const rawHistory = localStorage.getItem(`history_${activeUserKey}`);
-        let lastOrderDate = null;
-
-        if (rawHistory) {
-            const parsedHistory = JSON.parse(rawHistory);
-            if (parsedHistory.length > 0) {
-                const latestOrder = parsedHistory[parsedHistory.length - 1];
-                if (latestOrder.date) {
-                    lastOrderDate = new Date(latestOrder.date.split(' ')[0]);
-                }
-            }
-        }
-
-        const now = new Date();
-        let daysSinceLastOrder = 999; 
-
-        if (lastOrderDate) {
-            const differenceInTime = now.getTime() - lastOrderDate.getTime();
-            daysSinceLastOrder = Math.floor(differenceInTime / (1000 * 3600 * 24));
-        }
-
-        if (daysSinceLastOrder >= 3) {
-            popupIcon.textContent = "👋";
-            popupTitle.textContent = `We Miss You, ${userName}!`;
-            popupBody.innerHTML = `Hame pata hai aap <b>(${userContact})</b> se connected hain, par kaafi dino se aapne koi document print nahi kiya bhai!`;
-            setTimeout(() => { popupModal.style.display = 'flex'; }, 3000);
-        } else {
-            popupIcon.textContent = "🚚";
-            popupTitle.textContent = `Hey ${userName}, Fast Delivery Active!`;
-            popupBody.textContent = `HP Smart Tank 580 pipeline 100% online hai. Place your order now!`;
-            setTimeout(() => { popupModal.style.display = 'flex'; }, 4000);
-        }
-
-        const closeMarketingBtn = document.getElementById('closeMarketingPopup');
-        if(closeMarketingBtn) { closeMarketingBtn.onclick = () => { popupModal.style.display = 'none'; }; }
+        if (!popupModal) return;
+        if (!activeUserKey) { setTimeout(() => { popupModal.style.display = 'flex'; }, 3500); }
     }
-
-    window.addEventListener('load', () => {
-        setTimeout(triggerSmartMarketingPopup, 1000);
-    });
-
-    window.closeMarketingNotificationBox = function() {
-        const popupModal = document.getElementById('marketingPopupModal');
-        if(popupModal) popupModal.style.display = 'none';
-    };
+    window.addEventListener('load', () => { setTimeout(triggerSmartMarketingPopup, 1000); });
 });
