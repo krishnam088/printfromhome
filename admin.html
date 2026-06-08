@@ -385,5 +385,18 @@
         }
         function adminLogout() { sessionStorage.removeItem('adminToken'); window.location.reload(); }
     </script>
+    <div id="adminControls" style="position:fixed; bottom:20px; right:20px; z-index:9999; background:white; padding:10px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.2);">
+    <button onclick="toggleStoreStatus()" style="background:#ef4444; color:white; padding:8px; border:none; border-radius:5px; cursor:pointer;">
+        Toggle Store Status
+    </button>
+</div>
 </body>
+<div style="position:fixed; bottom:20px; right:20px; z-index:9999;">
+    <button onclick="toggleAdminPanel()" style="background:#000; color:#fff; padding:10px; border-radius:50%; border:none; cursor:pointer;">⚙️</button>
+</div>
+
+<div id="adminPanel" style="display:none; position:fixed; bottom:70px; right:20px; background:white; padding:15px; border-radius:12px; box-shadow:0 0 20px rgba(0,0,0,0.2); z-index:9999;">
+    <h4>Admin Controls</h4>
+    <button onclick="manualCloseStore()" style="background:#ef4444; color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; margin-top:10px;">Force Close Store</button>
+</div>
 </html>

@@ -145,4 +145,44 @@ document.addEventListener('DOMContentLoaded', () => {
         if(configScreen) configScreen.classList.add('hidden');
         if(uploadScreen) uploadScreen.classList.remove('hidden');
     }
+    // Store status ko manually toggle karne ke liye
+window.toggleStoreStatus = function() {
+    const isClosed = localStorage.getItem('manual_store_close') === 'true';
+    if (isClosed) {
+        localStorage.setItem('manual_store_close', 'false');
+        alert("✅ Store Khul gaya!");
+    } else {
+        localStorage.setItem('manual_store_close', 'true');
+        alert("🛑 Store Band kar diya gaya!");
+    }
+    window.location.reload(); // Page reload hote hi sabko 'Closed' dikhega
+};
+
+// Scheduler guard me ye check add karo
+function runSilentIntradaySchedulerGuard() {
+    const isManuallyClosed = localStorage.getItem('manual_store_close') === 'true';
+    const now = new Date();
+    const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
+    
+    // Store tabhi open hoga jab time sahi ho AUR admin ne band na kiya ho
+    const isOpen = (hoursIST >= 7 && hoursIST < 24) && !isManuallyClosed;
+
+    const badge = document.getElementById('userShopStatus');
+    const btn = document.getElementById('submitOrderBtn');
+    
+    if(badge) {
+        if(isOpen) {
+            badge.textContent = "OPEN 🟢"; 
+            badge.className = "shop-status-text-badge open";
+            if(btn) btn.disabled = false;
+        } else {
+            badge.textContent = "CLOSED 🔴"; 
+            badge.className = "shop-status-text-badge closed";
+            if(btn) {
+                btn.disabled = true;
+                btn.textContent = "❌ Store is Closed";
+            }
+        }
+    }
+}
 });
