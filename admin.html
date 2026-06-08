@@ -39,8 +39,8 @@
 
     <div id="adminDashboard" class="dashboard-container">
         <div class="dashboard-header">
-            <h1>🖨️ Incoming Jobs Panel</h1>
-            <button class="btn-admin" style="width:auto; padding:6px 15px; background:#e53e3e;" onclick="adminLogout()">Lock Panel</button>
+            <h1>🖨️ ADMIN DASHBOARD</h1>
+            <button class="btn-admin" style="width:auto; padding:6px 15px; background:#e53e3e;" onclick="adminLogout()">Logout</button>
         </div>
         <div id="liveOrdersContainer">
             <p style="text-align:center; color:#718096; padding:20px;">Fetching live printing queue...</p>
@@ -58,11 +58,11 @@
             const pass = document.getElementById('adminPass').value;
 
             // 🔥 APNA ADMIN ID AUR PASSWORD YAHAN SET KARO
-            if(user === 'bhavishya' && pass === 'pfhadmin2026') { 
+            if(user === 'krishna' && pass === 'pfhadmin2026') { 
                 sessionStorage.setItem('adminToken', 'secure_active_session');
                 showDashboard();
             } else {
-                alert("❌ Unauthorized! Galat Credentials hain bhai.");
+                alert("❌ Unauthorized! Wrong Credentials.");
             }
         }
 
@@ -79,7 +79,7 @@
                 const container = document.getElementById('liveOrdersContainer');
                 
                 if(orders.length === 0) {
-                    container.innerHTML = '<p style="text-align:center; color:#718096; padding:20px;">Filhaal koi order nahi hai bhai.</p>';
+                    container.innerHTML = '<p style="text-align:center; color:#718096; padding:20px;">No live orders at the moment.</p>';
                     return;
                 }
 
