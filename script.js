@@ -1,16 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Stage Containers Mapping
     const splashScreen = document.getElementById('splashScreen');
     const authScreen = document.getElementById('authScreen');
     const mainApp = document.getElementById('mainApp');
 
-    // Access control variables
     const authForm = document.getElementById('authForm');
     const authTitle = document.getElementById('authTitle');
-    const authSubtitle = document.getElementById('authSubtitle');
     const authBtn = document.getElementById('authBtn');
     const toggleAuthLink = document.getElementById('toggleAuthLink');
-    const toggleMsg = document.getElementById('toggleMsg');
     const signupOnlyFields = document.querySelectorAll('.signup-only');
 
     const authName = document.getElementById('authName');
@@ -22,88 +18,51 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileUpload = document.getElementById('fileUpload');
     const multiFilesContainer = document.getElementById('multiFilesContainer');
     const ordersHistoryContainer = document.getElementById('ordersHistoryContainer');
-    
-    // Modal preview selectors
-    const previewModal = document.getElementById('previewModal');
-    const closePreview = document.getElementById('closePreview');
-    const previewTitle = document.getElementById('previewTitle');
-    const previewBody = document.getElementById('previewBody');
 
     let isSignupMode = false;
     let masterFilesArray = []; 
     let isFirstTimeUser = true; 
 
-    // --- 💰 AUTOMATED DIGITAL WALLET REAL BALANCE INJECTOR ---
     function synchronizeWalletInterfaceBalance() {
         const sessionActiveUser = localStorage.getItem('printAppUser');
         const balanceDisplayNode = document.getElementById('headerWalletDisplayBalance');
         if(!balanceDisplayNode) return;
-        
-        if(!sessionActiveUser) {
-            balanceDisplayNode.textContent = "₹0.00";
-            return;
-        }
-        // Pull wallet keys strings from user specific local records database caches
+        if(!sessionActiveUser) { balanceDisplayNode.textContent = "₹0.00"; return; }
         let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
         balanceDisplayNode.textContent = `₹${currentWalletCash.toFixed(2)}`;
     }
 
-    // Razorpay Wallet Deposit Trigger Engine Function Mappings
     window.executeWalletRazorpayDeposit = async function() {
         const sessionActiveUser = localStorage.getItem('printAppUser');
-        if(!sessionActiveUser) {
-            alert("❌ Add Money ke liye pehle account log in kijiye bhai!");
-            document.getElementById('walletDepositModal').style.display = 'none';
-            if(authScreen) authScreen.style.display = 'flex';
-            return;
-        }
-
-        const depositValueInput = document.getElementById('walletCustomAmountInput').value;
-        const depositAmount = parseFloat(depositValueInput) || 100;
-
-        if (depositAmount <= 0) { alert("❌ Galat amount hai bhai!"); return; }
-
+        if(!sessionActiveUser) { alert("❌ Log in kijiye!"); return; }
+        const depositAmount = parseFloat(document.getElementById('walletCustomAmountInput').value) || 100;
+        if (depositAmount <= 0) return;
         try {
-            // Reuses order route parameters mapping safely to lock deposit transaction parameters stream
-            const response = await fetch('/api/create-order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ totalAmount: depositAmount.toString(), address: "Wallet Deposit Token Log", configDetails: "[]" })
-            });
+            const response = await fetch('/api/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ totalAmount: depositAmount.toString(), address: "Wallet Deposit", configDetails: "[]" }) });
             const data = await response.json();
             if(!data.success) return;
-
             const options = {
-                "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Wallet Topup - PFH", "description": "Add Cash Balance", "order_id": data.order_id,
+                "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Wallet Topup", "order_id": data.order_id,
                 "handler": async function (response){
-                    // Increment wallet values cache locally upon successful transaction verify hit
                     let oldCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
                     localStorage.setItem(`wallet_cash_${sessionActiveUser}`, (oldCash + depositAmount).toFixed(2));
-                    
                     synchronizeWalletInterfaceBalance();
-                    alert(`🎉 Success! ₹${depositAmount} aapke Print Wallet me jodh diye gaye hain.`);
                     document.getElementById('walletDepositModal').style.display = 'none';
                 }, "theme": { "color": "#0C8346" }
             };
-            const rzpWalletInstance = new Razorpay(options);
-            rzpWalletInstance.open();
-        } catch (err) { alert("❌ Wallet gateway connection drop!"); }
+            const rzpWallet = new Razorpay(options); rzpWallet.open();
+        } catch (err) {}
     }
 
-    // --- ⏳ SCREEN STATE INTERFACES STATE TOGGLES ---
     window.refreshInvoiceTabState = function() {
         const sideInvoicePanel = document.getElementById('sidebarPricingPanel');
         const layoutContainer = document.getElementById('mainLayoutAppContainer');
-        const activeTabStoreNode = document.getElementById('user_section_store');
-        
         const uploadInitialScreen = document.getElementById('uploadScreenInitialState');
         const configWorkspaceScreen = document.getElementById('configurationScreenState');
-        const storeOffersTopBanner = document.getElementById('storeOffersTopBanner');
+        const activeTabStoreNode = document.getElementById('user_section_store');
 
         const activeTabIsStore = activeTabStoreNode && activeTabStoreNode.classList.contains('active');
-
         if (!activeTabIsStore) return;
-        if(storeOffersTopBanner) storeOffersTopBanner.classList.remove('hidden');
 
         if (masterFilesArray && masterFilesArray.length > 0) {
             if(uploadInitialScreen) uploadInitialScreen.classList.add('hidden');
@@ -126,91 +85,20 @@ document.addEventListener('DOMContentLoaded', () => {
         refreshInvoiceTabState(); calculateTotal();
     }
 
-    // --- ⏳ STAGE 1: SPLASH UNLOCK SEQUENCE ---
     setTimeout(() => {
-        if (splashScreen) { splashScreen.classList.add('hidden'); }
-        
+        if (splashScreen) splashScreen.classList.add('hidden');
         const sessionActiveUser = localStorage.getItem('printAppUser');
         if (sessionActiveUser) {
             const userData = JSON.parse(localStorage.getItem(`user_${sessionActiveUser}`));
-            
-            // 🗺️ GREETING ALIGNMENT FIXED INLINE FOR THE COMPACT TIME BAR
-            if(userGreeting) { 
-                userGreeting.innerHTML = userData ? `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${userData.name}</span>` : `GUEST MODE`; 
-            }
-            
-            const savedHistory = localStorage.getItem(`history_${sessionActiveUser}`);
-            isFirstTimeUser = !(savedHistory && JSON.parse(savedHistory).length > 0);
-
+            if(userGreeting) userGreeting.innerHTML = userData ? `HI, <span style="color:#000000; font-weight:800;">${userData.name}</span>` : `GUEST MODE`;
             if(mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
-            
             loadSavedFilesFromSession();
-            renderOrderHistoryUI(sessionActiveUser); 
-            synchronizeWalletInterfaceBalance(); // Syncs cache cash values logs
-        } else {
-            if(userGreeting) userGreeting.textContent = "GUEST MODE";
-            if(authScreen) { authScreen.classList.remove('app-hidden'); authScreen.style.display = 'flex'; }
             synchronizeWalletInterfaceBalance();
+        } else {
+            if(authScreen) { authScreen.classList.remove('app-hidden'); authScreen.style.display = 'flex'; }
         }
         calculateTotal();
     }, 2500);
-
-    // --- 🔐 STAGE 2: PREMIUM AUTH ACTION MATRIX ---
-    if(toggleAuthLink) {
-        toggleAuthLink.addEventListener('click', (e) => {
-            e.preventDefault(); isSignupMode = !isSignupMode;
-            if (isSignupMode) {
-                authTitle.textContent = "Create Account"; authSubtitle.textContent = "Sign up to order prints instantly."; authBtn.textContent = "Sign Up";
-                signupOnlyFields.forEach(f => f.classList.remove('hidden'));
-            } else {
-                authTitle.textContent = "Welcome Back!"; authBtn.textContent = "Log In";
-                signupOnlyFields.forEach(f => f.classList.add('hidden'));
-            }
-        });
-    }
-
-    if(authForm) {
-        authForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const identityKey = authIdentity.value.trim();
-            const inputPassword = authPassword.value;
-
-            if (isSignupMode) {
-                const inputName = authName.value.trim() || 'Customer';
-                if(localStorage.getItem(`user_${identityKey}`)) { alert("❌ Account already exists!"); return; }
-                localStorage.setItem(`user_${identityKey}`, JSON.stringify({ name: inputName, id: identityKey, password: inputPassword }));
-                localStorage.setItem('printAppUser', identityKey);
-                isFirstTimeUser = true; 
-                if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${inputName}</span>`;
-            } else {
-                const registeredRecord = localStorage.getItem(`user_${identityKey}`);
-                if (!registeredRecord) { alert("❌ Account missing!"); return; }
-                const verifiedObject = JSON.parse(registeredRecord);
-                if (verifiedObject.password !== inputPassword) { alert("❌ Password wrong!"); return; }
-                localStorage.setItem('printAppUser', identityKey);
-                if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${verifiedObject.name}</span>`;
-            }
-            if(authScreen) authScreen.style.display = 'none';
-            if(mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
-            authForm.reset();
-            loadSavedFilesFromSession();
-            renderOrderHistoryUI(identityKey);
-            synchronizeWalletInterfaceBalance();
-            calculateTotal();
-        });
-    }
-
-    if(logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('printAppUser'); sessionStorage.removeItem('savedPrintFiles'); masterFilesArray = [];
-            if(multiFilesContainer) multiFilesContainer.innerHTML = '';
-            if(mainApp) mainApp.style.display = 'none';
-            if(userGreeting) userGreeting.textContent = "GUEST MODE";
-            if(authScreen) authScreen.style.display = 'flex';
-            synchronizeWalletInterfaceBalance();
-            calculateTotal();
-        });
-    }
 
     if(fileUpload) {
         fileUpload.addEventListener('change', () => {
@@ -220,31 +108,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     masterFilesArray.push({ name: file.name, size: file.size, type: file.type, fileData: file, config: { pages: 1, printType: 'bw', orientation: 'portrait', binding: 'none', copies: 1 } });
                 }
             });
-            fileUpload.value = ''; saveCurrentFilesToSession(); renderFilesUI();
+            fileUpload.value = ''; 
+            saveCurrentFilesToSession(); 
+            renderFilesUI();
         });
     }
 
     function saveCurrentFilesToSession() {
-        const sessionPayload = masterFilesArray.map(item => ({
-            name: item.name,
-            size: item.size,
-            type: item.type,
-            config: item.config
-        }));
-        sessionStorage.setItem('savedPrintFiles', JSON.stringify(sessionPayload));
+        sessionStorage.setItem('savedPrintFiles', JSON.stringify(masterFilesArray.map(i => ({ name: i.name, size: i.size, type: i.type, config: i.config }))));
     }
 
     function loadSavedFilesFromSession() {
-        const rawSessionData = sessionStorage.getItem('savedPrintFiles');
-        if (rawSessionData) {
-            const parsedSessionData = JSON.parse(rawSessionData);
-            masterFilesArray = parsedSessionData.map(item => ({
-                name: item.name,
-                size: item.size,
-                type: item.type,
-                fileData: null, 
-                config: item.config
-            }));
+        const raw = sessionStorage.getItem('savedPrintFiles');
+        if (raw) {
+            masterFilesArray = JSON.parse(raw).map(i => ({ name: i.name, size: i.size, type: i.type, fileData: null, config: i.config }));
             renderFilesUI();
         }
     }
@@ -304,92 +181,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const summaryBinding = document.getElementById('summaryBinding');
         const summaryDelivery = document.getElementById('summaryDelivery');
         const summaryTotal = document.getElementById('summaryTotal');
-
-        refreshInvoiceTabState();
         if (!summaryPrint || !summaryBinding || !summaryDelivery || !summaryTotal) return;
         if (masterFilesArray.length === 0) { summaryPrint.textContent = `₹0.00`; summaryBinding.textContent = `₹0.00`; summaryDelivery.textContent = `₹0.00`; summaryTotal.textContent = `₹0.00`; return; }
-
         masterFilesArray.forEach((item) => {
             const pages = parseInt(item.config.pages) || 1; const printType = item.config.printType; const binding = item.config.binding; const copies = parseInt(item.config.copies) || 1;
-            let perPageRate = (printType === 'bw') ? 3.00 : 10.00;
-            totalPrintCost += (pages * perPageRate) * copies;
+            totalPrintCost += (pages * ((printType === 'bw') ? 3.00 : 10.00)) * copies;
             if (binding === 'spiral') totalBindingCost += 30.00 * copies;
         });
-
         let finalDocumentCost = totalPrintCost + totalBindingCost;
-        let accurateDeliveryCharge = (isFirstTimeUser && finalDocumentCost >= 49.00) || (!isFirstTimeUser && finalDocumentCost >= 99.00) ? 0.00 : 25.00;
-        let grandTotal = finalDocumentCost + accurateDeliveryCharge;
-
+        let accurateDeliveryCharge = finalDocumentCost >= 99.00 ? 0.00 : 25.00;
         summaryPrint.textContent = `₹${totalPrintCost.toFixed(2)}`;
         summaryBinding.textContent = `₹${totalBindingCost.toFixed(2)}`;
         summaryDelivery.textContent = accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`;
-        summaryTotal.textContent = `₹${grandTotal.toFixed(2)}`;
-    }
-
-    function renderOrderHistoryUI(userId) {
-        if(!ordersHistoryContainer) return;
-        const rawHistory = localStorage.getItem(`history_${userId}`);
-        if (!rawHistory || JSON.parse(rawHistory).length === 0) {
-            ordersHistoryContainer.innerHTML = `<p style="font-size:0.85rem; color:#718096; text-align:center; padding:15px;">No orders placed yet.</p>`;
-            return;
-        }
-        const parsedHistory = JSON.parse(rawHistory).reverse(); 
-        ordersHistoryContainer.innerHTML = '';
-        parsedHistory.forEach(order => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'history-card-item';
-            let filesDetailsHtml = order.details.map(f => `• ${f.fileName} (${f.copies} copies)`).join('<br>');
-            itemDiv.innerHTML = `
-                <div style="display:flex; justify-content:space-between; font-weight:700; color:#1a202c; border-bottom:1px solid #e2e8f0; padding-bottom:4px; margin-bottom:6px;">
-                    <span>📅 ${order.date}</span> <span style="color:#0C8346;">₹${order.amount}</span>
-                </div>
-                <div style="color:#4a5568; line-height:1.4; font-size:0.8rem; margin-bottom:4px;">${filesDetailsHtml}</div>
-                <div style="font-size:0.75rem; color:#e67e22; font-weight:600; text-align:right;">Status: <span style="background:#fff3e0; padding:2px 6px; border-radius:4px;">${order.status}</span></div>
-            `;
-            ordersHistoryContainer.appendChild(itemDiv);
-        });
-    }
-
-    const printForm = document.getElementById('printForm');
-    if(printForm) {
-        printForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const summaryTotal = document.getElementById('summaryTotal');
-            const totalAmountText = summaryTotal ? summaryTotal.textContent.replace('₹', '') : "0";
-            const formData = new FormData();
-            masterFilesArray.forEach((item) => { if(item.fileData) formData.append('document', item.fileData); });
-
-            const finalMetaConfig = masterFilesArray.map((item) => {
-                return { fileName: item.name, pages: item.config.pages, printType: item.config.printType, sides: item.config.orientation === 'portrait' ? 'single' : 'landscape', binding: item.config.binding, copies: item.config.copies };
-            });
-
-            formData.append('totalAmount', totalAmountText);
-            formData.append('configDetails', JSON.stringify(finalMetaConfig));
-            formData.append('address', document.getElementById('address').value);
-
-            try {
-                const response = await fetch('/api/create-order', { method: 'POST', body: formData });
-                const data = await response.json();
-                if (!data.success) return;
-
-                const options = {
-                    "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Print From Home", "order_id": data.order_id,
-                    "handler": async function (response){
-                        const verifyRes = await fetch('/api/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: data.order_id, paymentId: response.razorpay_payment_id }) });
-                        const verifyData = await verifyRes.json();
-                        if(verifyData.success) {
-                            alert('🎉 Payment Successful!');
-                            const activeUserToken = localStorage.getItem('printAppUser');
-                            const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
-                            currentHistoryArray.push({ date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), amount: totalAmountText, status: "Paid / Ready for Print", details: finalMetaConfig });
-                            localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
-                            isFirstTimeUser = false; sessionStorage.removeItem('savedPrintFiles'); printForm.reset(); multiFilesContainer.innerHTML = ''; masterFilesArray = [];
-                            renderOrderHistoryUI(activeUserToken); calculateTotal();
-                        }
-                    }, "theme": { "color": "#F4C430" }
-                };
-                const rzp1 = new Razorpay(options); rzp1.open();
-            } catch (error) {}
-        });
+        summaryTotal.textContent = `₹${(finalDocumentCost + accurateDeliveryCharge).toFixed(2)}`;
     }
 });

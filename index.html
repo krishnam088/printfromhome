@@ -21,7 +21,7 @@
         }
         body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; }
 
-        /* PREMIUM BRAND HEADER SYSTEM - SLIDED TO TOP */
+        /* HEADER STRUCTURE */
         .brand-premium-header {
             background: linear-gradient(to bottom, #FFF3B3 0%, #FFFBE6 100%);
             padding: 16px 20px;
@@ -31,16 +31,13 @@
         .header-container { max-width: 100%; margin: 0 auto; position: relative; }
         .header-meta-row { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
         
-        /* Left Brand Column: Delivery + Inline Username Setup */
         .delivery-brand-box { display: flex; flex-direction: column; text-align: left; }
         .user-greeting-inline { font-size: 0.85rem; font-weight: 700; color: #2d3748; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
         .delivery-time-title { font-size: 0.75rem; font-weight: 700; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
         .delivery-time-countdown { font-size: 1.5rem; font-weight: 900; color: #111111; margin-top: -2px; }
         
-        /* Right Side: Cluster Layout Stack */
         .header-profile-cluster { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
         
-        /* Small Shop Status Navigation Stack right above profile icon */
         .status-micro-nav { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
         .shop-status-text-badge { font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; }
         .shop-status-text-badge.open { background: var(--blinkit-green); color: white; }
@@ -49,7 +46,6 @@
 
         .profile-wallet-row { display: flex; align-items: center; gap: 10px; }
         
-        /* Wallet & Profile Buttons */
         .wallet-micro-badge { background: #ffffff; border-radius: 14px; border: 1px solid var(--border-color); padding: 6px 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 6px; cursor: pointer; transition: transform 0.2s; }
         .wallet-micro-badge:hover { transform: translateY(-1px); }
         .wallet-cash-value { font-size: 0.85rem; font-weight: 800; color: #000000; }
@@ -57,7 +53,7 @@
         .avatar-circle-trigger { width: 44px; height: 44px; background: #000000; color: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; font-size: 1.1rem; border: 2px solid #ffffff; transition: transform 0.2s; }
         .avatar-circle-trigger:hover { transform: scale(1.04); }
 
-        /* USER SLIDING SIDEBAR DRAWER - EXPANDED CAPACITY FOR INTEGRATED SECTIONS */
+        /* SIDEBAR DRAWER */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1999; display: none; opacity: 0; transition: opacity 0.3s ease; }
         .drawer-overlay.active { display: block; opacity: 1; }
         
@@ -65,32 +61,22 @@
         .side-drawer.active { right: 0; }
         .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; }
         
-        .drawer-search-box { position: relative; margin-bottom: 15px; width: 100%; }
-        .drawer-search-box input { width: 100%; padding: 10px 14px; padding-left: 36px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 0.85rem; font-weight: 600; outline: none; }
-        .drawer-search-box input:focus { border-color: var(--blinkit-green); }
-        .drawer-search-icon { position: absolute; left: 12px; top: 11px; color: var(--text-sub); font-size: 0.9rem; }
-
         .drawer-menu-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; }
         .drawer-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; font-weight: 600; font-size: 0.85rem; color: var(--text-main); cursor: pointer; transition: all 0.2s; }
         .drawer-item:hover, .drawer-item.active { background: #f1f5f9; color: var(--blinkit-green); }
 
-        /* INNER SUB-PANELS IN DRAWER (PROFILE EDIT, HELP CENTER, ETC.) */
         .drawer-subpanel-content { flex: 1; overflow-y: auto; display: none; padding-right: 2px; }
         .drawer-subpanel-content.active { display: block; }
         
-        /* Custom Inputs for Settings inside drawer */
         .drawer-input-group { margin-bottom: 12px; text-align: left; }
         .drawer-input-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 4px; }
-        .drawer-input-group input { width: 100%; padding: 10px 12px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 0.85rem; font-weight: 600; outline: none; transition: border-color 0.2s; }
+        .drawer-input-group input { width: 100%; padding: 10px 12px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 0.85rem; font-weight: 600; outline: none; }
         .drawer-input-group input:focus { border-color: var(--blinkit-green); }
         
-        .btn-drawer-action { width: 100%; padding: 10px; background: var(--blinkit-green); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; margin-top: 5px; }
-        .btn-drawer-action:hover { background: #0a6e3a; }
-        
-        .whatsapp-support-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background-color: #25D366; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; text-decoration: none; margin-top: 15px; box-shadow: 0 4px 12px rgba(37,211,102,0.25); transition: transform 0.2s; }
-        .whatsapp-support-btn:hover { transform: translateY(-1px); background-color: #20ba5a; }
+        .btn-drawer-action { width: 100%; padding: 10px; background: var(--blinkit-green); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; margin-top: 5px; }
+        .whatsapp-support-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background-color: #25D366; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; text-decoration: none; margin-top: 15px; box-shadow: 0 4px 12px rgba(37,211,102,0.25); }
 
-        /* Wallet Deposit Popup Modal Frame */
+        /* Wallet Deposit Modal */
         .wallet-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 15000; display: none; justify-content: center; align-items: center; padding: 20px; }
         .wallet-modal-card { background: var(--surface); border-radius: 24px; padding: 25px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 2px solid var(--blinkit-yellow); }
         .wallet-chip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
@@ -106,6 +92,7 @@
         .view-section { display: none; width: 100%; }
         .view-section.active { display: block; animation: fadeView 0.25s ease-in-out; }
         @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden { display: none !important; }
         
         /* Docs Promo Card Settings */
         .verbatim-docs-promo-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02); width: 100%; overflow: hidden; position: relative; margin-top: 15px; }
@@ -134,8 +121,10 @@
 </head>
 <body>
 
+    <!-- Background Overlay Layer -->
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
+    <!-- 🍔 SIDEBAR PROFILE DRAWER -->
     <nav id="userSideDrawer" class="side-drawer">
         <div class="drawer-header">
             <h2 style="font-size:1.1rem; font-weight:800;">Account Menu</h2>
@@ -150,12 +139,13 @@
             <li class="drawer-item" id="menu_terms" onclick="navigateDrawerSection('terms')">📜 Terms & Manuals</li>
         </ul>
 
+        <!-- ⚙️ EDIT PROFILE SETTINGS -->
         <div id="drawer_panel_profile_edit" class="drawer-subpanel-content">
             <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:12px; color:var(--text-main); padding-bottom:4px; border-bottom:1px solid var(--border-color);">Account Settings</h4>
             <form id="drawerProfileUpdateForm">
                 <div class="drawer-input-group">
                     <label>Change Username / Name</label>
-                    <input type="text" id="drawerEditName" placeholder="Enter naye name" required>
+                    <input type="text" id="drawerEditName" placeholder="Enter new name" required>
                 </div>
                 <div class="drawer-input-group">
                     <label>Alternate Mobile Number</label>
@@ -172,24 +162,22 @@
             </div>
         </div>
 
+        <!-- ❓ HELP CENTER & SUPPORT -->
         <div id="drawer_panel_help" class="drawer-subpanel-content">
             <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:12px; color:var(--text-main); padding-bottom:4px; border-bottom:1px solid var(--border-color);">Help Desk & Support</h4>
-            
-            <a href="https://wa.me/91XXXXXXXXXX?text=Hi%20PrintFromHome%20Support,%20I%20need%20help%20with%20my%20printing%20job." target="_blank" class="whatsapp-support-btn">
+            <a href="https://wa.me/91XXXXXXXXXX?text=Hi" target="_blank" class="whatsapp-support-btn">
                 <span>💬</span> Chat on WhatsApp Support
             </a>
-
             <div style="line-height:1.5; font-size:0.78rem; color:#4a5568; margin-top:15px; background:#f8fafc; padding:12px; border-radius:10px; border:1px solid var(--border-color);">
-                <p style="margin-bottom:8px;"><b>Payment complete ho gayi par order show nahi ho raha?</b><br>Chinta mat kijiye bhai, agar bank se paise kat gaye hain toh automatic server verification 5 minutes me confirm karke printing pipeline me update kar dega.</p>
-                <p><b>Refund request initiate kaise karein?</b><br>Galat file format ya corrupted layout hone par WhatsApp desk par invoice dispatch screenshot share kijiye, 10 mins me response milega.</p>
+                <p><b>Payment complete ho gayi par order show nahi ho raha?</b><br>Chinta mat kijiye bhai, automatic server verification 5 minutes me confirm karke update kar dega.</p>
             </div>
         </div>
 
+        <!-- 📜 TERMS AND MANUALS -->
         <div id="drawer_panel_terms" class="drawer-subpanel-content">
             <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:12px; color:var(--text-main); padding-bottom:4px; border-bottom:1px solid var(--border-color);">Terms of Service</h4>
             <div style="font-size:0.78rem; color:var(--text-sub); line-height:1.6;">
-                <p style="margin-bottom:6px;">• We use premium 70 GSM sheets to provide high density laser print bindings.</p>
-                <p style="margin-bottom:6px;">• Orders dispatched into print logs cannot be canceled due to automated processing layout sequences.</p>
+                <p>• We use premium 70 GSM sheets to provide high density laser print bindings.</p>
             </div>
         </div>
 
@@ -198,10 +186,11 @@
         </div>
     </nav>
 
+    <!-- 💰 DIGITAL RECHARGE WALLET MODAL -->
     <div id="walletDepositModal" class="wallet-modal-overlay" onclick="toggleWalletPopupGrid(false, event)">
         <div class="wallet-modal-card">
             <h3 style="font-size:1.3rem; font-weight:800; margin-bottom:6px;">💰 Recharge Print Wallet</h3>
-            <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:15px;">Add cash balance for seamless single-tap print dispatches</p>
+            <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:15px;">Add cash balance for seamless dispatches</p>
             <div class="form-group" style="text-align:left;">
                 <label style="font-size:0.75rem; font-weight:700; color:var(--text-main);">Enter Custom Amount (₹):</label>
                 <input type="number" id="walletCustomAmountInput" value="100" style="width:100%; padding:12px; border:2px solid var(--border-color); border-radius:12px; font-weight:700; font-size:1rem; outline:none; margin-top:4px;">
@@ -215,6 +204,7 @@
         </div>
     </div>
 
+    <!-- STAGE 1: Splash Screen -->
     <div id="splashScreen" class="splash-container">
         <div class="splash-content">
             <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
@@ -222,11 +212,11 @@
         </div>
     </div>
 
+    <!-- STAGE 2: Access Gateway Auth -->
     <div id="authScreen" class="auth-container app-hidden">
         <div class="auth-card">
             <div class="auth-brand">print<span class="brand-green">from</span>home</div>
             <h2 id="authTitle">Welcome Back!</h2>
-            <p id="authSubtitle">Log in to your account to instantly manage and print your documents.</p>
             <form id="authForm">
                 <div class="form-group signup-only hidden">
                     <label>Full Name</label>
@@ -234,7 +224,7 @@
                 </div>
                 <div class="form-group">
                     <label>Gmail or Phone Number</label>
-                    <input type="text" id="authIdentity" placeholder="e.g., name@gmail.com or 98765xxxxx" required>
+                    <input type="text" id="authIdentity" placeholder="e.g., name@gmail.com" required>
                 </div>
                 <div class="form-group">
                     <label>Password</label>
@@ -246,8 +236,8 @@
         </div>
     </div>
 
+    <!-- STAGE 3: Main App Workspace -->
     <div id="mainApp" class="app-hidden">
-        
         <header class="brand-premium-header">
             <div class="header-container">
                 <div class="header-meta-row">
@@ -257,7 +247,6 @@
                             <span class="delivery-time-title" style="margin-right:6px;">Prints in</span> 15 mins
                         </h2>
                     </div>
-
                     <div class="header-profile-cluster">
                         <div class="status-micro-nav">
                             <span id="userShopStatus" class="shop-status-text-badge open">OPEN 🟢</span>
@@ -265,12 +254,9 @@
                         </div>
                         <div class="profile-wallet-row">
                             <div class="wallet-micro-badge" onclick="toggleWalletPopupGrid(true, event)">
-                                <span>💵</span>
-                                <span class="wallet-cash-value" id="headerWalletDisplayBalance">₹0.00</span>
+                                <span>💵</span> <span class="wallet-cash-value" id="headerWalletDisplayBalance">₹0.00</span>
                             </div>
-                            <div class="avatar-circle-trigger" onclick="toggleUserDrawer(true)">
-                                👤
-                            </div>
+                            <div class="avatar-circle-trigger" onclick="toggleUserDrawer(true)">👤</div>
                         </div>
                     </div>
                 </div>
@@ -278,15 +264,16 @@
         </header>
 
         <div class="container" id="mainLayoutAppContainer">
-            
+            <!-- PRINT STOREFRONT -->
             <div id="user_section_store" class="view-section active">
                 <div class="compact-offers-bar" id="storeOffersTopBanner">
                     <span>📢 <b>Active Offers:</b></span>
                     <marquee scrollamount="3" style="width: 100%;">
-                        ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!
+                        ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery!
                     </marquee>
                 </div>
 
+                <!-- SCREEN STATE A: CLEAN BRANDEED HOME -->
                 <div id="uploadScreenInitialState" style="width:100%;">
                     <div style="text-align: center; padding: 25px 10px; width:100%;">
                         <h2 style="font-size: 2.3rem; font-weight:800; color:#1a202c; letter-spacing:-1px;">Print Store</h2>
@@ -301,32 +288,31 @@
                                 <li class="promo-bullet-item">✦ Paper quality: 70 GSM</li>
                                 <li class="promo-bullet-item">✦ Single side prints</li>
                             </ul>
+                            <!-- 🔥 TRIGGER SOURCE INPUT LINKED PERFECTLY -->
                             <label class="verbatim-upload-btn" for="fileUpload">Upload Files</label>
                             <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
                         </div>
                         <div class="promo-graphic-mockup">
-                            <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" alt="Document Representation Stack">
+                            <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" alt="Stack">
                         </div>
                     </div>
                 </div>
 
+                <!-- SCREEN STATE B: CONFIGURATION WORKSPACE -->
                 <div id="configurationScreenState" class="hidden" style="width:100%;">
-                    <button type="button" class="back-to-upload-link" onclick="forceReturnToUploadView()">
-                        &larr; Back to Add Files
-                    </button>
+                    <button type="button" class="back-to-upload-link" onclick="forceReturnToUploadView()">&larr; Back to Add Files</button>
                     <form id="printForm" enctype="multipart/form-data" style="width:100%;">
                         <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
                         <div class="form-group" style="background: var(--surface); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); width:100%; margin-bottom:20px;">
                             <label style="font-weight: 700; margin-bottom:8px; display: block; font-size: 0.9rem;">Delivery Address details:</label>
-                            <textarea id="address" name="address" rows="3" placeholder="Enter full Hostel Name, Room No., Campus or Home Address" required></textarea>
+                            <textarea id="address" name="address" rows="3" placeholder="Enter full address" required></textarea>
                         </div>
-                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">
-                            Proceed to Payment
-                        </button>
+                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">Proceed to Payment</button>
                     </form>
                 </div>
             </div>
 
+            <!-- VIEW BLOCK 2: HISTORIES -->
             <div id="user_section_history" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
@@ -336,6 +322,7 @@
                 </div>
             </div>
 
+            <!-- INVOICE BILLING SIDEBAR -->
             <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; background:var(--surface); border:1px solid var(--border-color); padding:20px; border-radius:16px;">
                 <h2>Order Invoice Summary</h2>
                 <div class="summary-card">
@@ -346,7 +333,6 @@
                     <div class="summary-row total-row"><h3>Grand Total Amount</h3><h3 id="summaryTotal">₹0.00</h3></div>
                 </div>
             </section>
-
         </div>
     </div>
 
@@ -355,7 +341,6 @@
             const now = new Date();
             const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
             let open = (hoursIST >= 7 && hoursIST < 24);
-
             const badge = document.getElementById('userShopStatus');
             const btn = document.getElementById('submitOrderBtn');
             if(badge && btn) {
@@ -386,7 +371,6 @@
                 }
             }
         }
-
         function toggleWalletPopupGrid(show, event) {
             const modal = document.getElementById('walletDepositModal');
             if(!modal) return;
@@ -396,10 +380,7 @@
 
         function navigateDrawerSection(targetId) {
             document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
-            if(document.getElementById(`menu_${targetId}`)) {
-                document.getElementById(`menu_${targetId}`).classList.add('active');
-            }
-
+            if(document.getElementById(`menu_${targetId}`)) document.getElementById(`menu_${targetId}`).classList.add('active');
             document.querySelectorAll('.drawer-subpanel-content').forEach(el => el.classList.remove('active'));
 
             const sidePanelPrice = document.getElementById('sidebarPricingPanel');
@@ -408,7 +389,6 @@
             if (targetId === 'store' || targetId === 'history') {
                 document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
                 document.getElementById(`user_section_${targetId}`).classList.add('active');
-                
                 if(targetId !== 'store') {
                     sidePanelPrice.classList.add('hidden');
                     mainLayoutWrapper.classList.remove('has-invoice');
@@ -426,27 +406,15 @@
         document.getElementById('drawerProfileUpdateForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const currentSessionUser = localStorage.getItem('printAppUser');
-            if(!currentSessionUser) {
-                alert("❌ Please log in to update parameters!");
-                return;
-            }
-
+            if(!currentSessionUser) return;
             const updatedName = document.getElementById('drawerEditName').value.trim();
             const updatedPassword = document.getElementById('drawerEditPassword').value;
             const updatedAltMobile = document.getElementById('drawerEditAlternateMobile').value.trim();
-
             const userRecord = JSON.parse(localStorage.getItem(`user_${currentSessionUser}`)) || {};
-            userRecord.name = updatedName;
-            userRecord.password = updatedPassword;
-            userRecord.altMobile = updatedAltMobile;
-
+            userRecord.name = updatedName; userRecord.password = updatedPassword; userRecord.altMobile = updatedAltMobile;
             localStorage.setItem(`user_${currentSessionUser}`, JSON.stringify(userRecord));
-            
             const userGreeting = document.getElementById('userGreeting');
-            if(userGreeting) {
-                userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${updatedName}</span>`;
-            }
-
+            if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${updatedName}</span>`;
             const alertSuccess = document.getElementById('profileUpdateSuccessMsg');
             alertSuccess.style.display = 'block';
             setTimeout(() => { alertSuccess.style.display = 'none'; }, 3500);
