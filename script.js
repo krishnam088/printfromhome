@@ -111,9 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     masterFilesArray.push({ name: file.name, size: file.size, type: file.type, fileData: file, config: { pages: 1, printType: 'bw', orientation: 'portrait', binding: 'none', copies: 1 } });
                 }
             });
-            fileUpload.value = ''; 
-            saveCurrentFilesToSession(); 
-            renderFilesUI();
+            fileUpload.value = ''; saveCurrentFilesToSession(); renderFilesUI();
         });
     }
 
@@ -132,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderFilesUI() {
         if(!multiFilesContainer) return; multiFilesContainer.innerHTML = ''; 
         refreshInvoiceTabState();
-        if (masterFilesArray === 0) return;
+        if (masterFilesArray.length === 0) return;
 
         masterFilesArray.forEach((item, index) => {
             const fileRow = document.createElement('div');
@@ -150,59 +148,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <button type="button" id="removeFile_${index}" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1.2rem; margin-left:auto;">&times;</button>
                 </div>
-                
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px; align-items:center;">
-                    <div class="input-group" style="margin-bottom:0;">
-                        <label style="font-size:0.65rem; font-weight:700; color:var(--text-sub); margin-bottom:2px; display:block;">Pages:</label>
-                        <input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding:6px; border-radius:6px; border:2px solid var(--border-color); font-weight:700; font-size:0.75rem; height:28px;" required>
-                    </div>
-                    <div>
-                        <label style="font-size:0.65rem; font-weight:700; color:var(--text-sub); margin-bottom:2px; display:block;">Copies:</label>
-                        <div class="blinkit-stepper" style="padding:2px 6px; gap:8px; height:28px; border-radius:6px;">
-                            <button type="button" id="minusCopy_${index}" class="stepper-btn" style="font-size:0.95rem;">-</button>
-                            <span id="copyCountLabel_${index}" style="font-size:0.75rem;">${item.config.copies}</span>
-                            <button type="button" id="plusCopy_${index}" class="stepper-btn" style="font-size:0.95rem;">+</button>
-                        </div>
-                    </div>
+                    <div class="input-group" style="margin-bottom:0;"><label style="font-size:0.65rem; font-weight:700;">Pages:</label><input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding:6px; border-radius:6px; border:2px solid var(--border-color); font-weight:700; font-size:0.75rem; height:28px;" required></div>
+                    <div><label style="font-size:0.65rem; font-weight:700;">Copies:</label><div class="blinkit-stepper"><button type="button" id="minusCopy_${index}" class="stepper-btn">-</button><span id="copyCountLabel_${index}">${item.config.copies}</span><button type="button" id="plusCopy_${index}" class="stepper-btn">+</button></div></div>
                 </div>
-
-                <p style="font-size:0.65rem; font-weight:700; color:var(--text-sub); margin-bottom:3px;">Print Color</p>
+                <p style="font-size:0.65rem; font-weight:700; margin-bottom:3px;">Print Color</p>
                 <div class="blinkit-grid-options" style="gap: 8px; margin-bottom: 8px;">
-                    <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}" style="padding: 6px 8px; border-radius: 8px;">
-                        <div class="option-icon" style="font-size:1rem;">🎨</div>
-                        <div class="option-meta-text">
-                            <span class="option-title" style="font-size:0.75rem;">Coloured</span>
-                            <span class="option-subtitle" style="font-size:0.62rem;">₹10/pg</span>
-                        </div>
-                    </div>
-                    <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}" style="padding: 6px 8px; border-radius: 8px;">
-                        <div class="option-icon" style="font-size:1rem;">🌑</div>
-                        <div class="option-meta-text">
-                            <span class="option-title" style="font-size:0.75rem;">B & W</span>
-                            <span class="option-subtitle" style="font-size:0.62rem;">₹3/pg</span>
-                        </div>
-                    </div>
+                    <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}"><div class="option-icon">🎨</div><div class="option-meta-text"><span class="option-title">Coloured</span><span class="option-subtitle">₹10/pg</span></div></div>
+                    <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}"><div class="option-icon">🌑</div><div class="option-meta-text"><span class="option-title">B & W</span><span class="option-subtitle">₹3/pg</span></div></div>
                 </div>
-
-                <p style="font-size:0.65rem; font-weight:700; color:var(--text-sub); margin-bottom:3px;">Orientation</p>
-                <div class="blinkit-grid-options" style="gap: 8px; margin-bottom: 8px;">
-                    <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}" style="padding: 6px 8px; border-radius: 8px;">
-                        <div class="option-icon" style="font-size:1rem;">📱</div>
-                        <div class="option-meta-text">
-                            <span class="option-title" style="font-size:0.75rem;">Portrait</span>
-                            <span class="option-subtitle" style="font-size:0.62rem;">A4 Vertical</span>
-                        </div>
-                    </div>
-                    <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}" style="padding: 6px 8px; border-radius: 8px;">
-                        <div class="option-icon" style="font-size:1rem;">💻</div>
-                        <div class="option-meta-text">
-                            <span class="option-title" style="font-size:0.75rem;">Landscape</span>
-                            <span class="option-subtitle" style="font-size:0.62rem;">A4 Horiz</span>
-                        </div>
-                    </div>
+                <p style="font-size:0.65rem; font-weight:700; margin-bottom:3px;">Orientation</p>
+                <div class="blinkit-grid-options">
+                    <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}"><div class="option-icon">📱</div><div class="option-meta-text"><span class="option-title">Portrait</span></div></div>
+                    <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}"><div class="option-icon">💻</div><div class="option-meta-text"><span class="option-title">Landscape</span></div></div>
                 </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-primary); padding:6px 10px; border-radius:6px; border:1px solid var(--border-color);"><label style="font-size:0.68rem; font-weight:700;">Binding:</label><select id="binding_${index}" style="padding:2px 4px; font-size:0.68rem; font-weight:700; outline:none; border-radius:4px; border:1px solid var(--border-color); height:24px;"><option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option><option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option><option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral (+₹30)</option></select></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-primary); padding:6px 10px; border-radius:6px; border:1px solid var(--border-color);"><label style="font-size:0.68rem; font-weight:700;">Binding:</label><select id="binding_${index}"><option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option><option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option><option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral (+₹30)</option></select></div>
             `;
             multiFilesContainer.appendChild(fileRow);
 
@@ -210,8 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById(`optBw_${index}`).addEventListener('click', () => { item.config.printType = 'bw'; renderFilesUI(); });
             document.getElementById(`optPort_${index}`).addEventListener('click', () => { item.config.orientation = 'portrait'; renderFilesUI(); });
             document.getElementById(`optLand_${index}`).addEventListener('click', () => { item.config.orientation = 'landscape'; renderFilesUI(); });
-            document.getElementById(`plusCopy_${index}`).addEventListener('click', () => { item.config.copies++; saveCurrentFilesToSession(); calculateTotal(); document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies; });
-            document.getElementById(`minusCopy_${index}`).addEventListener('click', () => { if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); calculateTotal(); document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies; } });
+            document.getElementById(`plusCopy_${index}`).addEventListener('click', () => { item.config.copies++; saveCurrentFilesToSession(); calculateTotal(); });
+            document.getElementById(`minusCopy_${index}`).addEventListener('click', () => { if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); calculateTotal(); } });
             document.getElementById(`removeFile_${index}`).addEventListener('click', () => { masterFilesArray.splice(index, 1); saveCurrentFilesToSession(); renderFilesUI(); });
             document.getElementById(`pages_${index}`).addEventListener('input', (e) => { item.config.pages = parseInt(e.target.value) || 1; saveCurrentFilesToSession(); calculateTotal(); });
             document.getElementById(`binding_${index}`).addEventListener('change', (e) => { item.config.binding = e.target.value; saveCurrentFilesToSession(); calculateTotal(); });
@@ -240,6 +200,70 @@ document.addEventListener('DOMContentLoaded', () => {
         summaryTotal.textContent = `₹${(finalDocumentCost + accurateDeliveryCharge).toFixed(2)}`;
     }
 
+    // 🔥 HIGH INTELLIGENCE TIMELINE DEEP REDIRECT LOGIC MAPPING
+    window.openOrderDeepTrackingWorkspacePage = function(orderStringPayload) {
+        const order = JSON.parse(decodeURIComponent(orderStringPayload));
+        
+        if(typeof navigateDrawerSection === 'function') {
+            navigateDrawerSection('order_tracking'); // Divert screen to isolated tracking panel
+        }
+
+        // Fill semantic static properties records
+        document.getElementById('trackOrderIdLabel').textContent = `ID Reference: ${order.orderId || 'PFH-' + Date.now()}`;
+        document.getElementById('trackGrandTotalBadge').textContent = `₹${order.amount}`;
+        document.getElementById('trackShippingAddressLabel').textContent = order.address || 'N/A';
+
+        // Load document rows metadata breakdown checklist
+        const listContainer = document.getElementById('trackFilesManifestList');
+        listContainer.innerHTML = '';
+        if(order.details) {
+            order.details.forEach(file => {
+                const row = document.createElement('div');
+                row.style = 'display:flex; justify-content:space-between; font-size:0.8rem; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0; font-weight:600;';
+                row.innerHTML = `<span>📄 ${file.fileName} (${file.copies} copies)</span><span style="color:var(--blinkit-green);">${file.printType === 'bw' ? 'B&W' : 'Color'} Print</span>`;
+                listContainer.appendChild(row);
+            });
+        }
+
+        // 🔥 CRITICAL RULE: CHECK TIMELINE LIVE VISIBILITY BY STATUS
+        const timelineWrapper = document.getElementById('liveTrackingTimelineContainer');
+        const normalizeStatus = order.status ? order.status.toLowerCase() : 'pending';
+
+        if(normalizeStatus.includes('delivered')) {
+            // Hide the tracking lines parameters completely if delivered
+            if(timelineWrapper) timelineWrapper.style.display = 'none';
+        } else {
+            if(timelineWrapper) timelineWrapper.style.display = 'block';
+            
+            // Flush old completed/active timeline steps layout configurations
+            document.querySelectorAll('.timeline-step').forEach(step => {
+                step.classList.remove('completed', 'active');
+            });
+
+            // Set cascade parameters based on cloud memory array logs pointer indices
+            const stepPending = document.getElementById('step_pending');
+            const stepPaid = document.getElementById('step_paid');
+            const stepPrinting = document.getElementById('step_printing');
+            const stepDelivery = document.getElementById('step_delivery');
+
+            if(normalizeStatus.includes('pending')) {
+                if(stepPending) stepPending.classList.add('active');
+            } else if(normalizeStatus.includes('paid') || normalizeStatus.includes('ready')) {
+                if(stepPending) stepPending.classList.add('completed');
+                if(stepPaid) stepPaid.classList.add('active');
+            } else if(normalizeStatus.includes('print')) {
+                if(stepPending) stepPending.classList.add('completed');
+                if(stepPaid) stepPaid.classList.add('completed');
+                if(stepPrinting) stepPrinting.classList.add('active');
+            } else if(normalizeStatus.includes('delivery') || normalizeStatus.includes('out')) {
+                if(stepPending) stepPending.classList.add('completed');
+                if(stepPaid) stepPaid.classList.add('completed');
+                if(stepPrinting) stepPrinting.classList.add('completed');
+                if(stepDelivery) stepDelivery.classList.add('active');
+            }
+        }
+    }
+
     function renderOrderHistoryUI(userId) {
         if(!ordersHistoryContainer) return;
         const rawHistory = localStorage.getItem(`history_${userId}`);
@@ -252,13 +276,21 @@ document.addEventListener('DOMContentLoaded', () => {
         parsedHistory.forEach(order => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'history-card-item';
-            let filesDetailsHtml = order.details.map(f => `• ${f.fileName} (${f.copies} copies, ${f.printType === 'bw' ? 'B&W' : 'Color'})`).join('<br>');
+            
+            // Encode row elements payload to enable safe native link redirections strings clicks
+            const stringifiedPayload = encodeURIComponent(JSON.stringify(order));
+            itemDiv.setAttribute('onclick', `openOrderDeepTrackingWorkspacePage('${stringifiedPayload}')`);
+
+            let filesDetailsHtml = order.details ? order.details.map(f => `• ${f.fileName} (${f.copies} copies)`).join('<br>') : 'Document Package';
             itemDiv.innerHTML = `
-                <div style="display:flex; justify-content:space-between; font-weight:700; color:#1a202c; border-bottom:1px solid #e2e8f0; padding-bottom:4px; margin-bottom:6px;">
+                <div style="display:flex; justify-content:space-between; font-weight:700; color:#1a202c; border-bottom:1px solid #e2e8f0; padding-bottom:4px; margin-bottom:6px; font-size:0.85rem;">
                     <span>📅 ${order.date}</span> <span style="color:#0C8346;">₹${order.amount}</span>
                 </div>
-                <div style="color:#4a5568; line-height:1.4; font-size:0.8rem; margin-bottom:4px;">${filesDetailsHtml}</div>
-                <div style="font-size:0.75rem; color:#e67e22; font-weight:600; text-align:right;">Status: <span style="background:#fff3e0; padding:2px 6px; border-radius:4px;">${order.status}</span></div>
+                <div style="color:#4a5568; line-height:1.4; font-size:0.78rem; margin-bottom:6px;">${filesDetailsHtml}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
+                    <span style="color:var(--blinkit-green); font-weight:700;">👁️ Tap to View Details &rarr;</span>
+                    <span style="background:#fff3e0; padding:2px 6px; border-radius:4px; color:#e67e22; font-weight:600;">${order.status || 'Paid / Ready for Print'}</span>
+                </div>
             `;
             ordersHistoryContainer.appendChild(itemDiv);
         });
@@ -295,22 +327,24 @@ document.addEventListener('DOMContentLoaded', () => {
                             alert('🎉 Payment Successful!');
                             const activeUserToken = localStorage.getItem('printAppUser');
                             const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
-                            currentHistoryArray.push({ date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), amount: totalAmountText, status: "Paid / Ready for Print", details: finalMetaConfig });
+                            
+                            const newOrderPayload = { 
+                                orderId: data.order_id,
+                                date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), 
+                                amount: totalAmountText, 
+                                status: "Paid / Ready for Print", 
+                                details: finalMetaConfig,
+                                address: document.getElementById('address').value 
+                            };
+                            
+                            currentHistoryArray.push(newOrderPayload);
                             localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
                             
-                            // 🚀 FIXED: Dynamic redirect to live history block inside dashboard bounds
-                            isFirstTimeUser = false; 
-                            sessionStorage.removeItem('savedPrintFiles'); 
-                            printForm.reset(); 
-                            multiFilesContainer.innerHTML = ''; 
-                            masterFilesArray = [];
+                            isFirstTimeUser = false; sessionStorage.removeItem('savedPrintFiles'); printForm.reset(); multiFilesContainer.innerHTML = ''; masterFilesArray = [];
+                            renderOrderHistoryUI(activeUserToken); calculateTotal();
                             
-                            // Re-triggers data arrays updates instantly and loads native section panels
-                            renderOrderHistoryUI(activeUserToken); 
-                            calculateTotal();
-                            if(typeof window.navigateDrawerSection === 'function') {
-                                window.navigateDrawerSection('history');
-                            }
+                            // Instantly fire dynamic open tracking redirect page routing logs parameters
+                            openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
                         }
                     }, "theme": { "color": "#F4C430" }
                 };
