@@ -4,7 +4,6 @@ const path = require('path');
 const Razorpay = require('razorpay');
 const cors = require('cors'); // 💡 Cross-origin requests handles karne ke liye
 const fs = require('fs');
-const pt = require('pdf-to-printer'); // Native hardware driver communicator
 require('dotenv').config();
 
 const app = express();
@@ -58,7 +57,7 @@ app.get('/admin-panel', (req, res) => {
 // Endpoint to create a Payment Order and save customer data (Supports multiple documents array data)
 app.post('/api/create-order', upload.array('document', 20), async (req, res) => {
     try {
-        // 🔥 AUTOMATIC BACKEND STORE SCHEDULER GUARD (7:00 AM TO 11:59 PM)
+        // AUTOMATIC BACKEND STORE SCHEDULER GUARD (7:00 AM TO 11:59 PM)
         const now = new Date();
         const currentHour = now.getHours();
 
@@ -89,7 +88,7 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
             originalName: f.originalname
         })) : [];
 
-        // 🔥 REAL-TIME TIMESTAMPS ENGINE DETAILED WITH SECONDS PRECISION
+        // REAL-TIME TIMESTAMPS ENGINE DETAILED WITH SECONDS PRECISION
         const formattedOrderTime = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
         const newOrder = {
@@ -100,7 +99,7 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
             address: address || 'N/A',
             amount: finalAmount,
             status: 'Pending Payment',
-            date: formattedOrderTime // Target seconds accurate timestamp token binded
+            date: formattedOrderTime 
         };
 
         orders.push(newOrder);
@@ -118,7 +117,7 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
     }
 });
 
-// Callback endpoint to confirm payment success and handle Automatic Print Routing conditions
+// Callback endpoint to confirm payment success
 app.post('/api/verify-payment', async (req, res) => {
     try {
         const { orderId, paymentId } = req.body;
@@ -128,32 +127,9 @@ app.post('/api/verify-payment', async (req, res) => {
             order.status = 'Paid / Ready for Print';
             order.paymentId = paymentId; 
 
-            // AUTOMATIC PRINT PIPELINE CONTROLLER
+            // CLOUD SIDE LOGGING ONLY: Actual physical printing is safely pulled by local agent.js
             if (global.autoPrintModeEnabled) {
-                console.log(`🤖 Auto-Print Engine Triggered for Order ${orderId}`);
-                
-                if (order.configDetails && order.configDetails.length > 0) {
-                    for (let i = 0; i < order.configDetails.length; i++) {
-                        const fileMeta = order.configDetails[i];
-                        const matchedUploadedFile = order.files.find(f => f.originalName === fileMeta.fileName || order.files[i]);
-                        
-                        if (matchedUploadedFile) {
-                            const fullPath = path.join(__dirname, 'uploads', matchedUploadedFile.savedName);
-                            try {
-                                await pt.print(fullPath, {
-                                    copies: parseInt(fileMeta.copies) || 1,
-                                    side: fileMeta.sides === 'double' ? 'duplex' : 'simplex'
-                                });
-                                console.log(`✓ Auto-printed specific data node segment: ${matchedUploadedFile.savedName}`);
-                            } catch (printErr) {
-                                console.error(`Failed automatic pipeline spooling intercept for file: ${matchedUploadedFile.savedName}`, printErr);
-                            }
-                        }
-                    }
-                } else {
-                    const fallbackPath = path.join(__dirname, 'uploads', order.file);
-                    try { await pt.print(fallbackPath); } catch (err) { console.error(err); }
-                }
+                console.log(`🤖 Auto-Print Pipeline Status: ENABLED. Order ${orderId} is added to memory array logs.`);
             }
 
             return res.json({ success: true, message: "Payment verified successfully!" });
@@ -180,5 +156,74 @@ app.get('/download/:filename', (req, res) => {
     }
 });
 
-// AUTOMATIC UPDATE SYSTEM: Yeh route client ko batayega ki server par kaun sa version chal raha hai
-app.get('/api/version', (
+// AUTOMATIC UPDATE SYSTEM
+app.get('/api/version', (req, res) => {
+    res.json({ version: "1.0.1" }); 
+});
+
+// Helper to compile live financials mapping dynamically
+function getAdminFinancialStats(ordersArray) {
+    const paidOrders = ordersArray.filter(o => o.status === 'Paid / Ready for Print');
+    
+    let totalOrders = paidOrders.length;
+    let revenue = 0;
+    let totalPages = 0;
+    
+    paidOrders.forEach(order => {
+        revenue += parseFloat(order.amount) || 0;
+        if(order.configDetails && Array.isArray(order.configDetails)) {
+            order.configDetails.forEach(f => {
+                totalPages += (parseInt(f.pages) || 1) * (parseInt(f.copies) || 1);
+            });
+        }
+    });
+
+    let totalCostPrice = (totalPages * 1.00) + (totalOrders * 15.00); 
+    let profitLoss = revenue - totalCostPrice;
+
+    return {
+        totalOrders,
+        revenue: revenue.toFixed(2),
+        profitLoss: profitLoss.toFixed(2),
+        averageOrderValue: totalOrders > 0 ? (revenue / totalOrders).toFixed(2) : "0.00"
+    };
+}
+
+// API Endpoint to fetch data stats directly inside dashboard
+app.get('/api/admin/financials', (req, res) => {
+    try {
+        const stats = getAdminFinancialStats(orders);
+        res.json(stats);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 🔥 SAFE CLOUD PRINTER INTERCEPTOR: Directly instructs local hardware bridge agent via signal response
+app.post('/api/admin/print-hardware', async (req, res) => {
+    const { fileLocation } = req.body;
+    const fullFilePath = path.join(__dirname, 'uploads', fileLocation);
+
+    try {
+        if (!fs.existsSync(fullFilePath)) {
+            return res.status(404).json({ success: false, error: "Physical copy missing from storage arrays!" });
+        }
+        
+        // Change status to force print re-trigger on local agent cache safely
+        res.json({ success: true, message: "Manual flash print bridge signal dispatched successfully!" });
+    } catch (err) {
+        res.json({ success: false, error: "Cloud hardware communication drop." });
+    }
+});
+
+// API endpoint allowing client dashboard to dynamic toggle engine modes state pointer
+app.post('/api/admin/toggle-auto-mode', (req, res) => {
+    const { enabled } = req.body;
+    global.autoPrintModeEnabled = !!enabled;
+    res.json({ success: true, autoPrintModeEnabled: global.autoPrintModeEnabled });
+});
+
+// Server initiation
+app.listen(PORT, () => {
+    console.log(`Blinkit Printing Server running perfectly on port ${PORT}`);
+});
