@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let masterFilesArray = []; 
     let isFirstTimeUser = true; 
 
-    // 🔥 AUTOMATED SCREEN DIVERTOR & INVOICE TOGGLE ENGINE
+    // 🔥 AUTOMATED SCREEN DIVERTOR & PAGE ISOLATION MATRIX (IMAGE 1000283099.jpg COMPATIBLE)
     window.refreshInvoiceTabState = function() {
         const sideInvoicePanel = document.getElementById('sidebarPricingPanel');
         const layoutContainer = document.getElementById('mainLayoutAppContainer');
@@ -41,37 +41,43 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const uploadInitialScreen = document.getElementById('uploadScreenInitialState');
         const configWorkspaceScreen = document.getElementById('configurationScreenState');
+        const storeOffersTopBanner = document.getElementById('storeOffersTopBanner');
 
         const activeTabIsStore = activeTabStoreNode && activeTabStoreNode.classList.contains('active');
 
-        if (!sideInvoicePanel || !layoutContainer || !activeTabIsStore || !uploadInitialScreen || !configWorkspaceScreen) return;
+        // If user navigates out of store tab, don't execute visibility shifts
+        if (!activeTabIsStore) return;
 
-        // Condition Check: If user has selected 1 or more files to print
+        // Force ensure store banners are only active inside store sections boundaries
+        if(storeOffersTopBanner) storeOffersTopBanner.classList.remove('hidden');
+
         if (masterFilesArray && masterFilesArray.length > 0) {
-            // 🔄 DIVERTS USER SCREEN TO DYNAMIC CONFIG WORKSPACE
-            uploadInitialScreen.classList.add('hidden');
-            configWorkspaceScreen.classList.remove('hidden');
+            // Divert step sequence mapping instantly
+            if(uploadInitialScreen) uploadInitialScreen.classList.add('hidden');
+            if(configWorkspaceScreen) configWorkspaceScreen.classList.remove('hidden');
 
-            // Unhides billing panel sidebar frames
-            sideInvoicePanel.classList.remove('hidden');
-            if (window.innerWidth > 768) {
-                layoutContainer.classList.add('has-invoice');
-                layoutContainer.style.gridTemplateColumns = '2fr 1fr';
+            if(sideInvoicePanel) sideInvoicePanel.classList.remove('hidden');
+            if (window.innerWidth > 992) {
+                if(layoutContainer) {
+                    layoutContainer.classList.add('has-invoice');
+                    layoutContainer.style.gridTemplateColumns = '2.5fr 1.2fr';
+                }
             } else {
-                layoutContainer.style.gridTemplateColumns = '1fr';
+                if(layoutContainer) layoutContainer.style.gridTemplateColumns = '1fr';
             }
         } else {
-            // 🔄 RESTORES INITIAL VIEW IF ALL COPIES ARE REMOVED
-            uploadInitialScreen.classList.remove('hidden');
-            configWorkspaceScreen.classList.add('hidden');
+            // Restore upload triggers layout boundary state if arrays flush
+            if(uploadInitialScreen) uploadInitialScreen.classList.remove('hidden');
+            if(configWorkspaceScreen) configWorkspaceScreen.classList.add('hidden');
 
-            sideInvoicePanel.classList.add('hidden');
-            layoutContainer.classList.remove('has-invoice');
-            layoutContainer.style.gridTemplateColumns = '1fr';
+            if(sideInvoicePanel) sideInvoicePanel.classList.add('hidden');
+            if(layoutContainer) {
+                layoutContainer.classList.remove('has-invoice');
+                layoutContainer.style.gridTemplateColumns = '1fr';
+            }
         }
     }
 
-    // Direct Return Force Controller link mapping
     window.forceReturnToUploadView = function() {
         masterFilesArray = [];
         sessionStorage.removeItem('savedPrintFiles');
@@ -80,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
     }
 
-    // --- ⏳ STAGE 1: DYNAMIC SPLASH UNLOCK CONTROLLER ---
+    // --- ⏳ STAGE 1: SPLASH LOADER ---
     setTimeout(() => {
         if (splashScreen) {
             splashScreen.style.opacity = '0';
@@ -94,11 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(userGreeting) userGreeting.textContent = `Hi, ${userData ? userData.name : 'Customer'}`;
             
             const savedHistory = localStorage.getItem(`history_${sessionActiveUser}`);
-            if (savedHistory && JSON.parse(savedHistory).length > 0) {
-                isFirstTimeUser = false;
-            } else {
-                isFirstTimeUser = true;
-            }
+            isFirstTimeUser = !(savedHistory && JSON.parse(savedHistory).length > 0);
 
             if(mainApp) {
                 mainApp.classList.remove('app-hidden');
@@ -248,12 +250,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 👑 1000283099.jpg INTERFACE GENERATION SCHEMAS
     function renderFilesUI() {
         if(!multiFilesContainer) return;
         multiFilesContainer.innerHTML = ''; 
 
-        // Update layouts diversion instantly inside changes arrays hook bounds
         refreshInvoiceTabState();
 
         if (masterFilesArray.length === 0) return;
@@ -346,60 +346,27 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById(`optLand_${index}`).addEventListener('click', () => { item.config.orientation = 'landscape'; renderFilesUI(); });
 
             document.getElementById(`plusCopy_${index}`).addEventListener('click', () => {
-                item.config.copies++;
-                saveCurrentFilesToSession(); calculateTotal();
-                document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies;
+                item.config.copies++; saveCurrentFilesToSession(); calculateTotal();
             });
             document.getElementById(`minusCopy_${index}`).addEventListener('click', () => {
-                if (item.config.copies > 1) {
-                    item.config.copies--;
-                    saveCurrentFilesToSession(); calculateTotal();
-                    document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies;
-                }
+                if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); calculateTotal(); }
             });
-
             document.getElementById(`removeFile_${index}`).addEventListener('click', () => {
-                masterFilesArray.splice(index, 1);
-                saveCurrentFilesToSession();
-                renderFilesUI();
+                masterFilesArray.splice(index, 1); saveCurrentFilesToSession(); renderFilesUI();
             });
-
             document.getElementById(`pages_${index}`).addEventListener('input', (e) => {
-                item.config.pages = parseInt(e.target.value) || 1;
-                saveCurrentFilesToSession(); calculateTotal();
+                item.config.pages = parseInt(e.target.value) || 1; saveCurrentFilesToSession(); calculateTotal();
             });
             document.getElementById(`binding_${index}`).addEventListener('change', (e) => {
-                item.config.binding = e.target.value;
-                saveCurrentFilesToSession(); calculateTotal();
+                item.config.binding = e.target.value; saveCurrentFilesToSession(); calculateTotal();
             });
         });
 
         calculateTotal();
     }
 
-    function openDocumentPreview(file, name, type) {
-        if(!previewTitle || !previewBody || !previewModal) return;
-        previewTitle.textContent = `Preview: ${name}`;
-        previewBody.innerHTML = ''; 
-        const fileURL = URL.createObjectURL(file);
-        if (type.startsWith('image/')) {
-            const img = document.createElement('img');
-            img.src = fileURL; img.style.maxWidth = '100%'; img.style.maxHeight = '60vh'; img.style.borderRadius = '8px';
-            previewBody.appendChild(img);
-        } else if (type === 'application/pdf') {
-            const iframe = document.createElement('iframe');
-            iframe.src = fileURL; iframe.style.width = '100%'; iframe.style.height = '60vh'; iframe.style.border = 'none';
-            previewBody.appendChild(iframe);
-        }
-        previewModal.style.display = 'flex';
-    }
-
-    if(closePreview) { closePreview.addEventListener('click', () => { previewModal.style.display = 'none'; }); }
-
     function calculateTotal() {
-        let totalPrintCost = 0;
-        let totalBindingCost = 0;
-
+        let totalPrintCost = 0; let totalBindingCost = 0;
         const summaryPrint = document.getElementById('summaryPrint');
         const summaryBinding = document.getElementById('summaryBinding');
         const summaryDelivery = document.getElementById('summaryDelivery');
@@ -427,18 +394,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (binding === 'spiral') fileBindingCost = 30.00 * copies;
             if (binding === 'soft') fileBindingCost = 50.00 * copies;
 
-            totalPrintCost += filePrintCost;
-            totalBindingCost += fileBindingCost;
+            totalPrintCost += filePrintCost; totalBindingCost += fileBindingCost;
         });
 
         let finalDocumentCost = totalPrintCost + totalBindingCost;
         let accurateDeliveryCharge = 25.00; 
 
-        if (isFirstTimeUser && finalDocumentCost >= 49.00) { accurateDeliveryCharge = 0.00; } 
-        else if (!isFirstTimeUser && finalDocumentCost >= 99.00) { accurateDeliveryCharge = 0.00; }
+        if (isFirstTimeUser && finalDocumentCost >= 49.00) accurateDeliveryCharge = 0.00; 
+        else if (!isFirstTimeUser && finalDocumentCost >= 99.00) accurateDeliveryCharge = 0.00;
 
         let grandTotal = finalDocumentCost + accurateDeliveryCharge;
-
         summaryPrint.textContent = `₹${totalPrintCost.toFixed(2)}`;
         summaryBinding.textContent = `₹${totalBindingCost.toFixed(2)}`;
         summaryDelivery.textContent = accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`;
@@ -457,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
         parsedHistory.forEach(order => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'history-card-item';
-            let filesDetailsHtml = order.details.map(f => `• ${f.fileName} (${f.copies} copies, ${f.pages} pgs, ${f.printType === 'bw' ? 'B&W' : 'Color'})`).join('<br>');
+            let filesDetailsHtml = order.details.map(f => `• ${f.fileName} (${f.copies} copies)`).join('<br>');
             itemDiv.innerHTML = `
                 <div style="display:flex; justify-content:space-between; font-weight:700; color:#1a202c; border-bottom:1px solid #e2e8f0; padding-bottom:4px; margin-bottom:6px;">
                     <span>📅 ${order.date}</span> <span style="color:#0C8346;">₹${order.amount}</span>
@@ -476,7 +441,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const summaryTotal = document.getElementById('summaryTotal');
             const totalAmountText = summaryTotal ? summaryTotal.textContent.replace('₹', '') : "0";
             const formData = new FormData();
-
             masterFilesArray.forEach((item) => { if(item.fileData) formData.append('document', item.fileData); });
 
             const finalMetaConfig = masterFilesArray.map((item) => {
@@ -498,13 +462,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         const verifyRes = await fetch('/api/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: data.order_id, paymentId: response.razorpay_payment_id }) });
                         const verifyData = await verifyRes.json();
                         if(verifyData.success) {
-                            alert('🎉 Payment Successful!');
+                            alert('🎉 Payment Successful! Order locked.');
                             const activeUserToken = localStorage.getItem('printAppUser');
-                            const currentHistoryRaw = localStorage.getItem(`history_${activeUserToken}`) || '[]';
-                            const currentHistoryArray = JSON.parse(currentHistoryRaw);
+                            const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
                             currentHistoryArray.push({ date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), amount: totalAmountText, status: "Paid / Ready for Print", details: finalMetaConfig });
                             localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
-
                             isFirstTimeUser = false; sessionStorage.removeItem('savedPrintFiles'); printForm.reset(); multiFilesContainer.innerHTML = ''; masterFilesArray = [];
                             renderOrderHistoryUI(activeUserToken); calculateTotal();
                         }
@@ -514,22 +476,4 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {}
         });
     }
-
-    let currentLocalVersion = null;
-    async function checkForNewUpdates() {
-        try {
-            const res = await fetch('/api/version'); const data = await res.json();
-            if (!currentLocalVersion) { currentLocalVersion = data.version; } 
-            else if (currentLocalVersion !== data.version) { window.location.reload(true); }
-        } catch (err) {}
-    }
-    setInterval(checkForNewUpdates, 20000);
-
-    function triggerSmartMarketingPopup() {
-        const activeUserKey = localStorage.getItem('printAppUser');
-        const popupModal = document.getElementById('marketingPopupModal');
-        if (!popupModal) return;
-        if (!activeUserKey) { setTimeout(() => { popupModal.style.display = 'flex'; }, 3500); }
-    }
-    window.addEventListener('load', () => { setTimeout(triggerSmartMarketingPopup, 1000); });
 });

@@ -45,42 +45,65 @@
 
         /* App Navbar Layout */
         .app-header { background: var(--surface); padding: 15px 20px; border-bottom: 1px solid var(--border-color); }
-        .header-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .header-container { max-width: 100%; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
         .logo { font-size: 1.4rem; font-weight: 800; letter-spacing: -1px; }
         .logo-green { color: var(--blinkit-green); }
         .menu-toggle-btn { background: #000; color: #fff; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
-        /* MAIN CONTAINER SETUP */
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; display: grid; grid-template-columns: 1fr; gap: 25px; transition: all 0.3s ease; }
-        .container.has-invoice { grid-template-columns: 2fr 1fr; }
-        @media (max-width: 768px) { .container.has-invoice { grid-template-columns: 1fr; } }
+        /* 🔥 DYNAMIC FIT-TO-BORDER GRID SYSTEM (DESKTOP VS PHONE RESPONSIVE) */
+        .container { 
+            width: 100%; 
+            max-width: 100%; 
+            margin: 0; 
+            padding: 15px; 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 20px; 
+            transition: all 0.3s ease; 
+        }
+        
+        /* Desktop Mode Grid Rules */
+        @media (min-width: 992px) {
+            .container.has-invoice { 
+                grid-template-columns: 2.5fr 1.2fr; 
+                padding: 25px;
+            }
+        }
+        
+        /* Mobile Viewport Border Optimization Mapping */
+        @media (max-width: 768px) {
+            .container { padding: 10px; gap: 15px; }
+        }
 
-        .compact-offers-bar { display: flex; align-items: center; gap: 10px; background: #fffbeb; border: 1px solid #fed7aa; padding: 10px 14px; border-radius: 10px; margin-bottom: 20px; font-size: 0.8rem; font-weight: 600; color: #b45309; }
+        /* 👑 MINIMALIST COMPACT ACTIVE OFFERS RESHAPED */
+        .compact-offers-bar { display: flex; align-items: center; gap: 10px; background: #fffbeb; border: 1px solid #fed7aa; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 0.8rem; font-weight: 600; color: #b45309; width: 100%; box-shadow: 0 2px 5px rgba(0,0,0,0.01); }
 
-        .view-section { display: none; }
+        .view-section { display: none; width: 100%; }
         .view-section.active { display: block; animation: fadeView 0.25s ease-in-out; }
         @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .hidden { display: none !important; }
         
-        /* 👑 BLINKIT LAYOUT SPECIFICATIONS FROM 1000283099.jpg */
-        .blinkit-file-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-top: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        /* 👑 BLINKIT LAYOUT SPECIFICATIONS FROM 1000283099.jpg (FIT TO BORDER CARD) */
+        .blinkit-file-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-top: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); width: 100%; }
         .blinkit-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px dashed var(--border-color); }
         
         .blinkit-stepper { display: flex; align-items: center; background: var(--blinkit-green); border-radius: 10px; padding: 6px 12px; gap: 16px; color: white; font-weight: bold; width: fit-content; }
         .stepper-btn { background: none; border: none; color: white; font-size: 1.3rem; font-weight: 800; cursor: pointer; }
         
-        .blinkit-grid-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
-        .blinkit-option-box { border: 2px solid var(--border-color); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s; background: var(--surface); }
+        .blinkit-grid-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; width: 100%; }
+        .blinkit-option-box { border: 2px solid var(--border-color); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s; background: var(--surface); width: 100%; }
         .blinkit-option-box.active { border-color: var(--blinkit-green); background-color: var(--blinkit-light-green); }
         .option-icon { font-size: 1.4rem; }
         .option-meta-text { display: flex; flex-direction: column; text-align: left; }
         .option-title { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
         .option-subtitle { font-size: 0.75rem; color: var(--text-sub); font-weight: 500; }
 
-        .history-card-item { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-top: 12px; }
-
-        /* 🔙 BACK TO UPLOAD BUTTON LINKED UI BACKGROUND */
+        .history-card-item { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-top: 12px; width: 100%; }
         .back-to-upload-link { background: none; border: none; color: var(--blinkit-green); font-size: 0.9rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 15px; }
+        
+        /* Structural Border Fixes for textareas */
+        .form-group textarea { width: 100%; border: 2px solid var(--border-color); border-radius: 12px; padding: 12px; font-size: 0.9rem; outline: none; transition: border 0.2s; }
+        .form-group textarea:focus { border-color: var(--blinkit-green); }
     </style>
 </head>
 <body>
@@ -159,95 +182,98 @@
             </div>
         </header>
 
+        <!-- Dynamic Border-Fit Grid Container -->
         <div class="container" id="mainLayoutAppContainer">
             
             <!-- VIEW BLOCK 1: STORE FRONTEND ENTRIES -->
-            <div id="user_section_store" class="view-section active" style="width: 100%;">
-                <section class="order-section" style="width:100%;">
+            <div id="user_section_store" class="view-section active">
+                
+                <!-- 🔥 REDESIGNED OFFERS HEADER: Active Schemes To Active Offers Locked -->
+                <div class="compact-offers-bar" id="storeOffersTopBanner">
+                    <span>📢 <b>Active Offers:</b></span>
+                    <marquee scrollamount="3" style="width: 100%;">
+                        ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!
+                    </marquee>
+                </div>
+
+                <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%;">
+                    🚨 <b>Dukan Abhi Band Hai Bhai!</b> Print From Home accepts orders strictly between 07:00 AM and 11:59 PM.
+                </div>
+
+                <!-- SCREEN STATE A: CLEAN UPLOAD ENGINE -->
+                <div id="uploadScreenInitialState" style="width:100%;">
+                    <div class="store-banner" style="text-align: center; padding: 40px 20px; width:100%;">
+                        <h2 style="font-size: 1.8rem; margin-bottom: 8px; font-weight:800;">Print Store</h2>
+                        <p class="banner-sub" style="font-size: 0.95rem; color:var(--text-sub);">Blinkit ensures secure prints at every stage. Select your files to begin configurations.</p>
+                    </div>
+                    <div class="form-group-upload" style="max-width: 450px; margin: 0 auto; width:100%;">
+                        <label class="upload-custom-btn" for="fileUpload" style="padding: 20px; font-size: 1.1rem; border-radius: 16px; cursor:pointer;">
+                            📂 Select Files / Add Files
+                        </label>
+                        <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
+                    </div>
+                </div>
+
+                <!-- SCREEN STATE B: FULL CONFIGURATION DRAWER WORKSPACE REFERENCE FILE 1000283099.jpg -->
+                <div id="configurationScreenState" class="hidden" style="width:100%;">
+                    <button type="button" class="back-to-upload-link" onclick="forceReturnToUploadView()">
+                        &larr; Back to Add Files
+                    </button>
                     
-                    <div class="compact-offers-bar">
-                        <span>📢 <b>Active Schemes:</b></span>
-                        <marquee scrollamount="3" style="width: 100%;">
-                            ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!
-                        </marquee>
-                    </div>
-
-                    <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b;">
-                        🚨 <b>Dukan Abhi Band Hai Bhai!</b> Print From Home accepts orders strictly between 07:00 AM and 11:59 PM.
-                    </div>
-
-                    <!-- 🗺️ SCREEN STATE A: CORE CLEAN INITIAL UPLOAD ZONE -->
-                    <div id="uploadScreenInitialState">
-                        <div class="store-banner" style="text-align: center; padding: 40px 20px;">
-                            <h2 style="font-size: 1.8rem; margin-bottom: 8px;">Print Store</h2>
-                            <p class="banner-sub" style="font-size: 0.95rem;">Blinkit ensures secure prints at every stage. Select your files to begin configurations.</p>
-                        </div>
-                        <div class="form-group-upload" style="max-width: 450px; margin: 0 auto;">
-                            <label class="upload-custom-btn" for="fileUpload" style="padding: 20px; font-size: 1.1rem; border-radius: 16px;">
-                                📂 Select Files / Add Files
-                            </label>
-                            <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
-                        </div>
-                    </div>
-
-                    <!-- 🗺️ SCREEN STATE B: FULL CONFIGURATION WORKSPACE (DIVERTED FROM FILE UPLOAD ACCORDING TO 1000283099.jpg) -->
-                    <div id="configurationScreenState" class="hidden">
-                        <button type="button" class="back-to-upload-link" onclick="forceReturnToUploadView()">
-                            &larr; Back to Add Files
-                        </button>
+                    <form id="printForm" enctype="multipart/form-data" style="width:100%;">
+                        <!-- Dynamic Configuration Components Inserted Live Here -->
+                        <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
                         
-                        <form id="printForm" enctype="multipart/form-data">
-                            <!-- Live Dynamic Blinkit Inspired Product Config Containers Slot -->
-                            <div id="multiFilesContainer" style="margin-bottom: 25px;"></div>
-                            
-                            <div class="form-group" style="background: var(--surface); padding: 18px; border-radius: 16px; border: 1px solid var(--border-color);">
-                                <label style="font-weight: 700; margin-bottom: 8px; display: block; font-size: 0.9rem;">Delivery Address details:</label>
-                                <textarea id="address" name="address" rows="3" placeholder="Enter full Hostel Name, Room No., Campus or Home Address" style="border: 2px solid var(--border-color); border-radius: 12px; padding: 12px; font-size: 0.9rem; outline: none; width: 100%;" required></textarea>
-                            </div>
-                            
-                            <div class="btn-submit-container">
-                                <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px 28px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%; max-width: 320px;">
-                                    Proceed to Payment
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        <div class="form-group" style="background: var(--surface); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); width:100%; margin-bottom:20px;">
+                            <label style="font-weight: 700; margin-bottom:8px; display: block; font-size: 0.9rem;">Delivery Address details:</label>
+                            <textarea id="address" name="address" rows="3" placeholder="Enter full Hostel Name, Room No., Campus or Home Address" required></textarea>
+                        </div>
+                        
+                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">
+                            Proceed to Payment
+                        </button>
+                    </form>
+                </div>
 
-                </section>
             </div>
 
-            <!-- VIEW BLOCK 2: HISTORIES -->
-            <div id="user_section_history" class="view-section" style="width: 100%;">
-                <section class="order-section" style="width:100%;">
-                    <h3>📋 Your Printing Jobs & Delivery Status</h3>
-                    <div id="ordersHistoryContainer">
+            <!-- VIEW BLOCK 2: SLIDED ACCOUNT ORDERS HISTORIES (CLEAN AND EXCLUSIVE LOOK) -->
+            <div id="user_section_history" class="view-section">
+                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
+                    <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
+                    <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:20px;">Real-time shipment parcel tracking logs entries mapped below</p>
+                    <div id="ordersHistoryContainer" style="width:100%;">
                         <p style="text-align:center; padding:20px; color:var(--text-sub);">No print jobs recorded yet.</p>
                     </div>
-                </section>
+                </div>
             </div>
 
-            <!-- VIEW BLOCK 3: HELP -->
-            <div id="user_section_help" class="view-section" style="width: 100%;">
-                <section class="order-section" style="width:100%;">
-                    <h3>❓ Help Center & Customer Care Support</h3>
-                    <div style="margin-top:15px; line-height:1.7; font-size:0.9rem; color:#4a5568;">
-                        <p><b>Payment complete ho gayi par history me 'Pending' hai?</b><br>Chinta mat karo bhai, hamara system automatic 5 minute me verify karke printer agent ko pass kar dega.</p>
+            <!-- VIEW BLOCK 3: TROUBLESHOOT HELP MODULE (EXCLUSIVE CONTENT LOCK) -->
+            <div id="user_section_help" class="view-section">
+                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
+                    <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:15px;">❓ Help Center & Customer Care Support</h3>
+                    <div style="line-height:1.7; font-size:0.95rem; color:#4a5568;">
+                        <p style="font-weight:700; color:#111; margin-bottom:8px;">💡 Frequently Asked Questions:</p>
+                        <p><b>1. Payment complete ho gayi par history me 'Pending' hai?</b><br>Chinta mat karo bhai, agar bank se paise kat gaye hain aur status sync nahi hua, toh hamara system automatic 5 minute me verify karke printer agent ko pass kar dega.</p>
+                        <p style="margin-top:12px;"><b>2. Delivery kitni der me hoti hai Varanasi me?</b><br>Blinkit partner matching algorithms ke raste aapka page print hote hi nearest delivery picker 15-25 minute me hostel ke main gate par drop kar dega.</p>
                     </div>
-                </section>
+                </div>
             </div>
 
-            <!-- VIEW BLOCK 4: TERMS -->
-            <div id="user_section_terms" class="view-section" style="width: 100%;">
-                <section class="order-section" style="width:100%;">
-                    <h3>📜 Store Terms & Service Conditions</h3>
-                    <div style="margin-top:15px; font-size:0.85rem; color:var(--text-sub); line-height:1.7;">
+            <!-- VIEW BLOCK 4: SERVICE TERMS EXCLUSIVE CONTAINER -->
+            <div id="user_section_terms" class="view-section">
+                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
+                    <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:15px;">📜 Store Terms & Service Conditions</h3>
+                    <div style="font-size:0.9rem; color:var(--text-sub); line-height:1.8; display:flex; flex-direction:column; gap:10px;">
                         <p>• We use premium 70 GSM sheets to provide high density laser print ink bindings.</p>
+                        <p>• Raat 11:59 PM ke baad server auto-close configuration active mode me betha hota hai, isliye time fence rules maintain karna anivarya hai.</p>
+                        <p>• Document content confidentiality completely locked hai. Files print buffer processing queue se clear hote hi background cloud storage arrays se permanent shred (delete) kar di jaati hain.</p>
                     </div>
-                </section>
+                </div>
             </div>
 
-            <!-- INVOICE BILLING TAB SIDEBAR -->
-            <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content;">
+            <!-- INVOICE BILLING TAB SIDEBAR (🔥 STRICTLY BOUNDS ONLY TO STORE SECTION TAB) -->
+            <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; background:var(--surface); border:1px solid var(--border-color); padding:20px; border-radius:16px;">
                 <h2>Order Invoice Summary</h2>
                 <div class="summary-card">
                     <div class="summary-row"><span>Printing Sheet Cost</span><span id="summaryPrint">₹0.00</span></div>
@@ -261,12 +287,77 @@
         </div>
     </div>
 
-    <!-- Document Popups Modal -->
+    <!-- Modal Previews Wrappers -->
     <div id="previewModal" class="preview-modal">
         <div class="preview-content">
             <span id="closePreview" class="close-preview">&times;</span>
             <h3 id="previewTitle" style="word-break:break-all; font-size:0.95rem;">Document Preview</h3>
             <div id="previewBody" style="min-height:200px; display:flex; justify-content:center; align-items:center;"></div>
+        </div>
+    </div>
+
+    <!-- Active Open Close Timer Scripts Node Frame -->
+    <script>
+        function updateMainAppUIClock() {
+            const now = new Date();
+            const clockString = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            if(document.getElementById('userLiveClock')) document.getElementById('userLiveClock').textContent = clockString;
+            
+            const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
+            let open = (hoursIST >= 7 && hoursIST < 24);
+
+            const badge = document.getElementById('userShopStatus');
+            const box = document.getElementById('storeClosedNoticeBox');
+            const btn = document.getElementById('submitOrderBtn');
+            if(badge && box && btn) {
+                if(open) {
+                    badge.textContent = "OPEN 🟢"; badge.className = "shop-status-badge open";
+                    box.classList.add('hidden'); btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
+                } else {
+                    badge.textContent = "CLOSED 🔴"; badge.className = "shop-status-badge closed";
+                    box.classList.remove('hidden'); btn.disabled = true; btn.style.opacity = "0.4"; btn.style.cursor = "not-allowed"; btn.textContent = "❌ Store is Closed";
+                }
+            }
+        }
+        setInterval(updateMainAppUIClock, 1000);
+        window.addEventListener('DOMContentLoaded', updateMainAppUIClock);
+
+        function toggleUserDrawer(open) {
+            document.getElementById('userSideDrawer').classList.toggle('active', open);
+            document.getElementById('drawerOverlay').classList.toggle('active', open);
+        }
+
+        // 🔥 CRITICAL NATIVE VIEW ROUTER: CLEANSE EXTRA STUFF WHEN LEAVING MAIN TAB
+        function navigateUserSection(targetId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`user_section_${targetId}`).classList.add('active');
+            if(document.getElementById(`menu_${targetId}`)) document.getElementById(`menu_${targetId}`).classList.add('active');
+            
+            const sidePanelPrice = document.getElementById('sidebarPricingPanel');
+            const mainLayoutWrapper = document.getElementById('mainLayoutAppContainer');
+            
+            // 🔥 STRICT LOCK: Hide Offers banner and Invoice completely when visiting non-store views
+            if(targetId !== 'store') { 
+                sidePanelPrice.classList.add('hidden'); 
+                mainLayoutWrapper.classList.remove('has-invoice');
+                mainLayoutWrapper.style.gridTemplateColumns = '1fr'; 
+            } else {
+                if(typeof window.refreshInvoiceTabState === 'function') { window.refreshInvoiceTabState(); }
+            }
+            toggleUserDrawer(false);
+        }
+    </script>
+
+    <!-- Marketing Popup Content Modals -->
+    <div id="marketingPopupModal" style="display: none; position: fixed; z-index: 12000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #ffffff; padding: 25px; border-radius: 24px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 20px 45px rgba(0,0,0,0.2); border: 2px solid #F4C430; position: relative;">
+            <span id="closeMarketingPopup" style="position: absolute; top: 12px; right: 18px; font-size: 22px; font-weight: bold; cursor: pointer; color: #a0aec0;">&times;</span>
+            <div id="popupIconBadge" style="font-size: 3.5rem; margin-bottom: 12px;">🎉</div>
+            <h3 id="popupAlertTitle" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 8px;">Special Offer Alert!</h3>
+            <p id="popupAlertBody" style="font-size: 0.9rem; color: #4a5568; line-height: 1.5; margin-bottom: 20px;"></p>
+            <button style="width: 100%; padding: 12px; background-color: #0C8346; color: #ffffff; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer;" onclick="document.getElementById('marketingPopupModal').style.display='none'">Chalo Print Karte Hain 🚀</button>
         </div>
     </div>
 
