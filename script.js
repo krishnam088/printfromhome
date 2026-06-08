@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {}
     }
 
-    // 🔥 DYNAMIC LAYOUT ENGINE: BORDER ADJUSTABLE & BINDING GRID
+    // 🔥 RESPONSIVE MATRIX GRID BOUNDS CONFIGURATIONS
     window.refreshInvoiceTabState = function() {
         const sideInvoicePanel = document.getElementById('sidebarPricingPanel');
         const layoutContainer = document.getElementById('mainLayoutAppContainer');
@@ -65,42 +65,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeTabIsStore = activeTabStoreNode && activeTabStoreNode.classList.contains('active');
         if (!activeTabIsStore) return;
 
-        // Condition Check: Agar files select ho chuki hain toh configurations workspace active hoga
         if (masterFilesArray && masterFilesArray.length > 0) {
             if(uploadInitialScreen) uploadInitialScreen.classList.add('hidden');
             if(configWorkspaceScreen) configWorkspaceScreen.classList.remove('hidden');
             if(sideInvoicePanel) sideInvoicePanel.classList.remove('hidden');
-            
-            // 💻 DESKTOP MODE: Grid parameters matches 2.5fr 1.2fr full-stretch split
             if (window.innerWidth > 992) {
-                if(layoutContainer) { 
-                    layoutContainer.classList.add('has-invoice'); 
-                    layoutContainer.style.gridTemplateColumns = '2.5fr 1.2fr'; 
-                    layoutContainer.style.width = '100%';
-                    layoutContainer.style.maxWidth = '100%';
-                }
-            } else { 
-                // 📱 MOBILE MODE: Stacks components edge-to-edge seamlessly
-                if(layoutContainer) {
-                    layoutContainer.classList.add('has-invoice');
-                    layoutContainer.style.gridTemplateColumns = '1fr'; 
-                    layoutContainer.style.width = '100%';
-                }
-            }
+                if(layoutContainer) { layoutContainer.classList.add('has-invoice'); layoutContainer.style.gridTemplateColumns = '2.5fr 1.2fr'; }
+            } else { if(layoutContainer) layoutContainer.style.gridTemplateColumns = '1fr'; }
         } else {
-            // Restore Initial Upload screen if clear
             if(uploadInitialScreen) uploadInitialScreen.classList.remove('hidden');
             if(configWorkspaceScreen) configWorkspaceScreen.classList.add('hidden');
             if(sideInvoicePanel) sideInvoicePanel.classList.add('hidden');
-            if(layoutContainer) { 
-                layoutContainer.classList.remove('has-invoice'); 
-                layoutContainer.style.gridTemplateColumns = '1fr'; 
-                layoutContainer.style.width = '100%';
-            }
+            if(layoutContainer) { layoutContainer.classList.remove('has-invoice'); layoutContainer.style.gridTemplateColumns = '1fr'; }
         }
     }
 
-    // Attach resize listener loop to adjust grid borders live when screen scales change
     window.addEventListener('resize', window.refreshInvoiceTabState);
 
     window.forceReturnToUploadView = function() {
@@ -150,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 👑 RE-CONFIGURED COMPACT CORE SETTINGS CARD ENGINE WITH INTEGRATED "+ ADD MORE" shortlink
     function renderFilesUI() {
         if(!multiFilesContainer) return; multiFilesContainer.innerHTML = ''; 
         refreshInvoiceTabState();
@@ -165,24 +145,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
             fileRow.innerHTML = `
                 <div class="blinkit-card-row">
-                    <div><h4 style="font-weight:700; font-size:0.95rem; word-break:break-all;">📄 ${item.name}</h4></div>
-                    <button type="button" id="removeFile_${index}" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1.4rem;">&times;</button>
+                    <div style="text-align:left; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <h4 style="font-weight:700; font-size:0.88rem; word-break:break-all; color:var(--text-main);">📄 ${item.name}</h4>
+                        <button type="button" class="add-more-inline-card-btn" onclick="triggerInlineFileUploadClick()">+ Add More</button>
+                    </div>
+                    <button type="button" id="removeFile_${index}" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1.3rem; margin-left:auto;">&times;</button>
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:15px; align-items:center;">
-                    <div class="input-group" style="margin-bottom:0;"><label style="font-size:0.75rem; font-weight:700;">Number of pages:</label><input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding:10px; border-radius:10px; border:2px solid var(--border-color); font-weight:700;" required></div>
-                    <div><label style="font-size:0.75rem; font-weight:700;">Number of copies:</label><div class="blinkit-stepper"><button type="button" id="minusCopy_${index}" class="stepper-btn">-</button><span id="copyCountLabel_${index}">${item.config.copies}</span><button type="button" id="plusCopy_${index}" class="stepper-btn">+</button></div></div>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px; align-items:center;">
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label style="font-size:0.7rem; font-weight:700; color:var(--text-sub); margin-bottom:2px; display:block;">Pages:</label>
+                        <input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding:8px; border-radius:8px; border:2px solid var(--border-color); font-weight:700; font-size:0.8rem;" required>
+                    </div>
+                    <div>
+                        <label style="font-size:0.7rem; font-weight:700; color:var(--text-sub); margin-bottom:2px; display:block;">Copies:</label>
+                        <div class="blinkit-stepper" style="padding:3px 8px; gap:10px;">
+                            <button type="button" id="minusCopy_${index}" class="stepper-btn">-</button>
+                            <span id="copyCountLabel_${index}" style="font-size:0.8rem;">${item.config.copies}</span>
+                            <button type="button" id="plusCopy_${index}" class="stepper-btn">+</button>
+                        </div>
+                    </div>
                 </div>
-                <p style="font-size:0.75rem; font-weight:700; margin-bottom:6px;">Choose print color</p>
+                <p style="font-size:0.7rem; font-weight:700; color:var(--text-sub); margin-bottom:4px;">Print Color</p>
                 <div class="blinkit-grid-options">
-                    <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}"><div class="option-icon">🎨</div><div class="option-meta-text"><span class="option-title">Coloured</span><span class="option-subtitle">₹10/page</span></div></div>
-                    <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}"><div class="option-icon">🌑</div><div class="option-meta-text"><span class="option-title">B & W</span><span class="option-subtitle">₹3/page</span></div></div>
+                    <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}"><div class="option-icon">🎨</div><div class="option-meta-text"><span class="option-title">Coloured</span><span class="option-subtitle">₹10/pg</span></div></div>
+                    <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}"><div class="option-icon">🌑</div><div class="option-meta-text"><span class="option-title">B & W</span><span class="option-subtitle">₹3/pg</span></div></div>
                 </div>
-                <p style="font-size:0.75rem; font-weight:700; margin-bottom:6px;">Choose print orientation</p>
+                <p style="font-size:0.7rem; font-weight:700; color:var(--text-sub); margin-bottom:4px;">Orientation</p>
                 <div class="blinkit-grid-options">
-                    <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}"><div class="option-icon">📱</div><div class="option-meta-text"><span class="option-title">Portrait</span><span class="option-subtitle">8.3 × 11.7 in</span></div></div>
-                    <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}"><div class="option-icon">💻</div><div class="option-meta-text"><span class="option-title">Landscape</span><span class="option-subtitle">11.7 × 8.3 in</span></div></div>
+                    <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}"><div class="option-icon">📱</div><div class="option-meta-text"><span class="option-title">Portrait</span><span class="option-subtitle">A4 Size</span></div></div>
+                    <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}"><div class="option-icon">💻</div><div class="option-meta-text"><span class="option-title">Landscape</span><span class="option-subtitle">A4 Size</span></div></div>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-primary); padding:10px; border-radius:10px;"><label style="font-size:0.8rem; font-weight:700;">Binding Options:</label><select id="binding_${index}"><option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option><option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option><option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral Binding (+₹30)</option></select></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-primary); padding:8px; border-radius:8px; border:1px solid var(--border-color);"><label style="font-size:0.72rem; font-weight:700;">Binding:</label><select id="binding_${index}" style="padding:4px; font-size:0.72rem; font-weight:700; outline:none; border-radius:6px; border:1px solid var(--border-color);"><option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option><option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option><option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral (+₹30)</option></select></div>
             `;
             multiFilesContainer.appendChild(fileRow);
 
@@ -190,8 +184,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById(`optBw_${index}`).addEventListener('click', () => { item.config.printType = 'bw'; renderFilesUI(); });
             document.getElementById(`optPort_${index}`).addEventListener('click', () => { item.config.orientation = 'portrait'; renderFilesUI(); });
             document.getElementById(`optLand_${index}`).addEventListener('click', () => { item.config.orientation = 'landscape'; renderFilesUI(); });
-            document.getElementById(`plusCopy_${index}`).addEventListener('click', () => { item.config.copies++; saveCurrentFilesToSession(); calculateTotal(); });
-            document.getElementById(`minusCopy_${index}`).addEventListener('click', () => { if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); calculateTotal(); } });
+            document.getElementById(`plusCopy_${index}`).addEventListener('click', () => { item.config.copies++; saveCurrentFilesToSession(); calculateTotal(); document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies; });
+            document.getElementById(`minusCopy_${index}`).addEventListener('click', () => { if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); calculateTotal(); document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies; } });
             document.getElementById(`removeFile_${index}`).addEventListener('click', () => { masterFilesArray.splice(index, 1); saveCurrentFilesToSession(); renderFilesUI(); });
             document.getElementById(`pages_${index}`).addEventListener('input', (e) => { item.config.pages = parseInt(e.target.value) || 1; saveCurrentFilesToSession(); calculateTotal(); });
             document.getElementById(`binding_${index}`).addEventListener('change', (e) => { item.config.binding = e.target.value; saveCurrentFilesToSession(); calculateTotal(); });
@@ -218,5 +212,48 @@ document.addEventListener('DOMContentLoaded', () => {
         summaryBinding.textContent = `₹${totalBindingCost.toFixed(2)}`;
         summaryDelivery.textContent = accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`;
         summaryTotal.textContent = `₹${(finalDocumentCost + accurateDeliveryCharge).toFixed(2)}`;
+    }
+
+    const printForm = document.getElementById('printForm');
+    if(printForm) {
+        printForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const summaryTotal = document.getElementById('summaryTotal');
+            const totalAmountText = summaryTotal ? summaryTotal.textContent.replace('₹', '') : "0";
+            const formData = new FormData();
+            masterFilesArray.forEach((item) => { if(item.fileData) formData.append('document', item.fileData); });
+
+            const finalMetaConfig = masterFilesArray.map((item) => {
+                return { fileName: item.name, pages: item.config.pages, printType: item.config.printType, sides: item.config.orientation === 'portrait' ? 'single' : 'landscape', binding: item.config.binding, copies: item.config.copies };
+            });
+
+            formData.append('totalAmount', totalAmountText);
+            formData.append('configDetails', JSON.stringify(finalMetaConfig));
+            formData.append('address', document.getElementById('address').value);
+
+            try {
+                const response = await fetch('/api/create-order', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (!data.success) return;
+
+                const options = {
+                    "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Print From Home", "order_id": data.order_id,
+                    "handler": async function (response){
+                        const verifyRes = await fetch('/api/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: data.order_id, paymentId: response.razorpay_payment_id }) });
+                        const verifyData = await verifyRes.json();
+                        if(verifyData.success) {
+                            alert('🎉 Payment Successful!');
+                            const activeUserToken = localStorage.getItem('printAppUser');
+                            const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
+                            currentHistoryArray.push({ date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), amount: totalAmountText, status: "Paid / Ready for Print", details: finalMetaConfig });
+                            localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
+                            isFirstTimeUser = false; sessionStorage.removeItem('savedPrintFiles'); printForm.reset(); multiFilesContainer.innerHTML = ''; masterFilesArray = [];
+                            renderOrderHistoryUI(activeUserToken); calculateTotal();
+                        }
+                    }, "theme": { "color": "#F4C430" }
+                };
+                const rzp1 = new Razorpay(options); rzp1.open();
+            } catch (error) {}
+        });
     }
 });

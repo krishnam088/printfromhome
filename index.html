@@ -21,7 +21,7 @@
         }
         body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; }
 
-        /* HEADER STRUCTURE */
+        /* PREMIUM BRAND HEADER SYSTEM */
         .brand-premium-header {
             background: linear-gradient(to bottom, #FFF3B3 0%, #FFFBE6 100%);
             padding: 16px 20px;
@@ -51,9 +51,8 @@
         .wallet-cash-value { font-size: 0.85rem; font-weight: 800; color: #000000; }
         
         .avatar-circle-trigger { width: 44px; height: 44px; background: #000000; color: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; font-size: 1.1rem; border: 2px solid #ffffff; transition: transform 0.2s; }
-        .avatar-circle-trigger:hover { transform: scale(1.04); }
 
-        /* SIDEBAR DRAWER */
+        /* USER SLIDING SIDEBAR DRAWER */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1999; display: none; opacity: 0; transition: opacity 0.3s ease; }
         .drawer-overlay.active { display: block; opacity: 1; }
         
@@ -71,19 +70,17 @@
         .drawer-input-group { margin-bottom: 12px; text-align: left; }
         .drawer-input-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 4px; }
         .drawer-input-group input { width: 100%; padding: 10px 12px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 0.85rem; font-weight: 600; outline: none; }
-        .drawer-input-group input:focus { border-color: var(--blinkit-green); }
         
         .btn-drawer-action { width: 100%; padding: 10px; background: var(--blinkit-green); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; margin-top: 5px; }
         .whatsapp-support-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background-color: #25D366; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; text-decoration: none; margin-top: 15px; box-shadow: 0 4px 12px rgba(37,211,102,0.25); }
 
-        /* Wallet Deposit Modal */
+        /* Wallet Deposit Popup Modal Frame */
         .wallet-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 15000; display: none; justify-content: center; align-items: center; padding: 20px; }
         .wallet-modal-card { background: var(--surface); border-radius: 24px; padding: 25px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 2px solid var(--blinkit-yellow); }
         .wallet-chip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
         .wallet-chip-btn { background: var(--bg-primary); border: 2px solid var(--border-color); padding: 8px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
-        .wallet-chip-btn:hover { border-color: var(--blinkit-green); color: var(--blinkit-green); }
 
-        /* Main Workspace Container Layout */
+        /* Dynamic Fit-to-Border Main Containers Workspace Grid */
         .container { width: 100%; max-width: 100%; margin: 0; padding: 15px; display: grid; grid-template-columns: 1fr; gap: 20px; transition: all 0.3s ease; }
         @media (min-width: 992px) { .container.has-invoice { grid-template-columns: 2.5fr 1.2fr; padding: 25px; } }
         @media (max-width: 768px) { .container { padding: 10px; gap: 15px; } }
@@ -94,7 +91,7 @@
         @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .hidden { display: none !important; }
         
-        /* Docs Promo Card Settings */
+        /* Verbatim Docs Home Card Settings */
         .verbatim-docs-promo-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02); width: 100%; overflow: hidden; position: relative; margin-top: 15px; }
         .promo-details-block { text-align: left; z-index: 2; max-width: 60%; }
         .promo-main-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; letter-spacing: -0.5px; }
@@ -104,27 +101,34 @@
         .promo-graphic-mockup { position: absolute; right: -10px; bottom: -10px; width: 45%; max-width: 180px; z-index: 1; }
         .promo-graphic-mockup img { width: 100%; height: auto; display: block; transform: rotate(-5deg); }
 
-        .blinkit-file-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-top: 15px; width: 100%; }
-        .blinkit-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px dashed var(--border-color); }
-        .blinkit-stepper { display: flex; align-items: center; background: var(--blinkit-green); border-radius: 10px; padding: 6px 12px; gap: 16px; color: white; font-weight: bold; width: fit-content; }
-        .stepper-btn { background: none; border: none; color: white; font-size: 1.3rem; font-weight: 800; cursor: pointer; }
-        .blinkit-grid-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; width: 100%; }
-        .blinkit-option-box { border: 2px solid var(--border-color); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; background: var(--surface); width: 100%; }
+        /* 👑 COMPACT BLINKIT CARD DESIGN & SHRUNK PARAMETERS */
+        .blinkit-file-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 14px; padding: 15px; margin-top: 12px; width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.01); }
+        .blinkit-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); }
+        
+        /* Shrunk Typography Parameters for Perfect Fit Alignment */
+        .blinkit-stepper { display: flex; align-items: center; background: var(--blinkit-green); border-radius: 8px; padding: 4px 10px; gap: 12px; color: white; font-weight: bold; width: fit-content; }
+        .stepper-btn { background: none; border: none; color: white; font-size: 1.1rem; font-weight: 800; cursor: pointer; }
+        
+        .blinkit-grid-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; width: 100%; }
+        .blinkit-option-box { border: 2px solid var(--border-color); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 8px; cursor: pointer; background: var(--surface); width: 100%; }
         .blinkit-option-box.active { border-color: var(--blinkit-green); background-color: var(--blinkit-light-green); }
-        .option-icon { font-size: 1.4rem; }
+        .option-icon { font-size: 1.1rem; }
         .option-meta-text { display: flex; flex-direction: column; text-align: left; }
-        .option-title { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
-        .option-subtitle { font-size: 0.75rem; color: var(--text-sub); font-weight: 500; }
+        .option-title { font-size: 0.8rem; font-weight: 700; color: var(--text-main); }
+        .option-subtitle { font-size: 0.7rem; color: var(--text-sub); font-weight: 500; }
+
         .history-card-item { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-top: 12px; width: 100%; }
-        .back-to-upload-link { background: none; border: none; color: var(--blinkit-green); font-size: 0.9rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 15px; }
+        .form-group textarea { width: 100%; border: 2px solid var(--border-color); border-radius: 12px; padding: 12px; font-size: 0.9rem; outline: none; }
+        
+        /* 👑 SLEEK SHORTCUT TRIGGER FOR ADDING MORE STREAMS QUEUE IN HEADER CARD */
+        .add-more-inline-card-btn { background: var(--blinkit-light-green); color: var(--blinkit-green); border: 1px solid rgba(12,131,70,0.2); border-radius: 8px; padding: 4px 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 3px; }
+        .add-more-inline-card-btn:hover { background: var(--blinkit-green); color: white; }
     </style>
 </head>
 <body>
 
-    <!-- Background Overlay Layer -->
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
-    <!-- 🍔 SIDEBAR PROFILE DRAWER -->
     <nav id="userSideDrawer" class="side-drawer">
         <div class="drawer-header">
             <h2 style="font-size:1.1rem; font-weight:800;">Account Menu</h2>
@@ -139,7 +143,6 @@
             <li class="drawer-item" id="menu_terms" onclick="navigateDrawerSection('terms')">📜 Terms & Manuals</li>
         </ul>
 
-        <!-- ⚙️ EDIT PROFILE SETTINGS -->
         <div id="drawer_panel_profile_edit" class="drawer-subpanel-content">
             <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:12px; color:var(--text-main); padding-bottom:4px; border-bottom:1px solid var(--border-color);">Account Settings</h4>
             <form id="drawerProfileUpdateForm">
@@ -162,7 +165,6 @@
             </div>
         </div>
 
-        <!-- ❓ HELP CENTER & SUPPORT -->
         <div id="drawer_panel_help" class="drawer-subpanel-content">
             <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:12px; color:var(--text-main); padding-bottom:4px; border-bottom:1px solid var(--border-color);">Help Desk & Support</h4>
             <a href="https://wa.me/91XXXXXXXXXX?text=Hi" target="_blank" class="whatsapp-support-btn">
@@ -173,11 +175,10 @@
             </div>
         </div>
 
-        <!-- 📜 TERMS AND MANUALS -->
         <div id="drawer_panel_terms" class="drawer-subpanel-content">
             <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:12px; color:var(--text-main); padding-bottom:4px; border-bottom:1px solid var(--border-color);">Terms of Service</h4>
             <div style="font-size:0.78rem; color:var(--text-sub); line-height:1.6;">
-                <p>• We use premium 70 GSM sheets to provide high density laser print bindings.</p>
+                <p style="margin-bottom:6px;">• We use premium 70 GSM sheets to provide high density laser print bindings.</p>
             </div>
         </div>
 
@@ -186,7 +187,6 @@
         </div>
     </nav>
 
-    <!-- 💰 DIGITAL RECHARGE WALLET MODAL -->
     <div id="walletDepositModal" class="wallet-modal-overlay" onclick="toggleWalletPopupGrid(false, event)">
         <div class="wallet-modal-card">
             <h3 style="font-size:1.3rem; font-weight:800; margin-bottom:6px;">💰 Recharge Print Wallet</h3>
@@ -204,7 +204,6 @@
         </div>
     </div>
 
-    <!-- STAGE 1: Splash Screen -->
     <div id="splashScreen" class="splash-container">
         <div class="splash-content">
             <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
@@ -212,7 +211,6 @@
         </div>
     </div>
 
-    <!-- STAGE 2: Access Gateway Auth -->
     <div id="authScreen" class="auth-container app-hidden">
         <div class="auth-card">
             <div class="auth-brand">print<span class="brand-green">from</span>home</div>
@@ -236,7 +234,6 @@
         </div>
     </div>
 
-    <!-- STAGE 3: Main App Workspace -->
     <div id="mainApp" class="app-hidden">
         <header class="brand-premium-header">
             <div class="header-container">
@@ -264,17 +261,20 @@
         </header>
 
         <div class="container" id="mainLayoutAppContainer">
-            <!-- PRINT STOREFRONT -->
             <div id="user_section_store" class="view-section active">
-                <div class="compact-offers-bar" id="storeOffersTopBanner">
-                    <span>📢 <b>Active Offers:</b></span>
-                    <marquee scrollamount="3" style="width: 100%;">
-                        ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery!
-                    </marquee>
-                </div>
 
-                <!-- SCREEN STATE A: CLEAN BRANDEED HOME -->
                 <div id="uploadScreenInitialState" style="width:100%;">
+                    <div class="compact-offers-bar" id="storeOffersTopBanner" style="margin-top:10px;">
+                        <span>📢 <b>Active Offers:</b></span>
+                        <marquee scrollamount="3" style="width: 100%;">
+                            ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!
+                        </marquee>
+                    </div>
+
+                    <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%;">
+                        🚨 <b>Dukan Abhi Band Hai Bhai!</b> Print From Home accepts orders strictly between 07:00 AM and 11:59 PM.
+                    </div>
+
                     <div style="text-align: center; padding: 25px 10px; width:100%;">
                         <h2 style="font-size: 2.3rem; font-weight:800; color:#1a202c; letter-spacing:-1px;">Print Store</h2>
                         <p style="font-size: 0.95rem; color:var(--text-sub); font-weight:600; margin-top:2px;">printfromhome ensures secure prints at every stage</p>
@@ -288,31 +288,31 @@
                                 <li class="promo-bullet-item">✦ Paper quality: 70 GSM</li>
                                 <li class="promo-bullet-item">✦ Single side prints</li>
                             </ul>
-                            <!-- 🔥 TRIGGER SOURCE INPUT LINKED PERFECTLY -->
                             <label class="verbatim-upload-btn" for="fileUpload">Upload Files</label>
                             <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
                         </div>
                         <div class="promo-graphic-mockup">
-                            <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" alt="Stack">
+                            <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" alt="Stack Image Mockup Representation">
                         </div>
                     </div>
                 </div>
 
-                <!-- SCREEN STATE B: CONFIGURATION WORKSPACE -->
                 <div id="configurationScreenState" class="hidden" style="width:100%;">
-                    <button type="button" class="back-to-upload-link" onclick="forceReturnToUploadView()">&larr; Back to Add Files</button>
                     <form id="printForm" enctype="multipart/form-data" style="width:100%;">
-                        <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
-                        <div class="form-group" style="background: var(--surface); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); width:100%; margin-bottom:20px;">
-                            <label style="font-weight: 700; margin-bottom:8px; display: block; font-size: 0.9rem;">Delivery Address details:</label>
-                            <textarea id="address" name="address" rows="3" placeholder="Enter full address" required></textarea>
+                        <div id="multiFilesContainer" style="margin-bottom: 20px; width:100%;"></div>
+                        
+                        <div class="form-group" style="background: var(--surface); padding: 16px; border-radius: 14px; border: 1px solid var(--border-color); width:100%; margin-bottom:15px;">
+                            <label style="font-weight: 700; margin-bottom:6px; display: block; font-size: 0.85rem;">Delivery Address details:</label>
+                            <textarea id="address" name="address" rows="3" placeholder="Enter full hostel room or campus delivery coordinates address" required style="border-radius:10px; font-size:0.85rem; padding:10px; border:2px solid var(--border-color); outline:none; width:100%;"></textarea>
                         </div>
-                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">Proceed to Payment</button>
+                        
+                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 12px; font-size: 0.95rem; border-radius: 10px; background: var(--blinkit-green); font-weight: 700; width: 100%;">
+                            Proceed to Payment
+                        </button>
                     </form>
                 </div>
             </div>
 
-            <!-- VIEW BLOCK 2: HISTORIES -->
             <div id="user_section_history" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
@@ -322,7 +322,6 @@
                 </div>
             </div>
 
-            <!-- INVOICE BILLING SIDEBAR -->
             <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; background:var(--surface); border:1px solid var(--border-color); padding:20px; border-radius:16px;">
                 <h2>Order Invoice Summary</h2>
                 <div class="summary-card">
@@ -333,6 +332,14 @@
                     <div class="summary-row total-row"><h3>Grand Total Amount</h3><h3 id="summaryTotal">₹0.00</h3></div>
                 </div>
             </section>
+        </div>
+    </div>
+
+    <div id="previewModal" class="preview-modal">
+        <div class="preview-content">
+            <span id="closePreview" class="close-preview">&times;</span>
+            <h3 id="previewTitle" style="word-break:break-all; font-size:0.95rem;">Document Preview</h3>
+            <div id="previewBody" style="min-height:200px; display:flex; justify-content:center; align-items:center;"></div>
         </div>
     </div>
 
@@ -377,6 +384,12 @@
             if(show) { modal.style.display = 'flex'; } else { if(event.target === modal) modal.style.display = 'none'; }
         }
         function setWalletQuickAmount(amt) { document.getElementById('walletCustomAmountInput').value = amt; }
+
+        // Helper trigger to handle inline configuration link activations 
+        window.triggerInlineFileUploadClick = function() {
+            const upBtn = document.getElementById('fileUpload');
+            if(upBtn) upBtn.click();
+        }
 
         function navigateDrawerSection(targetId) {
             document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
