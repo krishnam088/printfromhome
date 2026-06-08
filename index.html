@@ -5,14 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Print From Home - India's Last Minute Printing App</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Fonts Google for clean corporate look -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <!-- Razorpay SDK Script -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
 
-    <!-- 💛 STAGE 1: Splash Screen (Inspired by 1000283021_2.jpg) -->
     <div id="splashScreen" class="splash-container">
         <div class="splash-content">
             <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
@@ -20,7 +17,6 @@
         </div>
     </div>
 
-    <!-- 🔐 STAGE 2: Ultra Premium Login/Signup Interface -->
     <div id="authScreen" class="auth-container app-hidden">
         <div class="auth-card">
             <div class="auth-brand">
@@ -30,7 +26,6 @@
             <p id="authSubtitle">Log in to your account to instantly manage and print your documents.</p>
             
             <form id="authForm">
-                <!-- Name field - Show only during Signup mode -->
                 <div class="form-group signup-only hidden">
                     <label for="authName">Full Name</label>
                     <input type="text" id="authName" placeholder="Enter your full name">
@@ -56,7 +51,6 @@
         </div>
     </div>
 
-    <!-- 📦 STAGE 3: Main Store Application (Layout inspired by 1000283022_3.jpg) -->
     <div id="mainApp" class="app-hidden">
         <header class="app-header">
             <div class="header-container">
@@ -69,21 +63,19 @@
         </header>
 
         <main class="container">
-            <!-- Left Config Side -->
             <section class="order-section">
                 <div class="store-banner">
                     <h2>Print Store</h2>
                     <p class="banner-sub">Print From Home ensures secure prints at every stage</p>
                 </div>
 
-                <!-- Feature Highlighting Box from Reference Image -->
                 <div class="document-promo-card">
                     <div class="promo-header">
                         <h3>Documents</h3>
                         <span class="badge-gsm">70 GSM Paper Quality</span>
                     </div>
                     <ul class="promo-list">
-                        <li>✦ Price starting at just ₹2.00 / page</li>
+                        <li>✦ Price starting at just ₹3.00 / page</li>
                         <li>✦ Crystal clear single or double-sided prints</li>
                         <li>✦ Select custom styling & premium book binding instantly</li>
                     </ul>
@@ -92,46 +84,13 @@
                 <form id="printForm" enctype="multipart/form-data">
                     <div class="form-group-upload">
                         <label class="upload-custom-btn" for="fileUpload">
-                            <span class="upload-icon">📂</span> Upload Files
+                            <span class="upload-icon">📂</span> Select Files
                         </label>
-                        <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" required>
-                        <div id="fileNameDisplay">No file selected yet</div>
+                        <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple required>
+                        <div id="fileNameDisplay">No files selected yet</div>
                     </div>
 
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="pages">Number of Pages:</label>
-                            <input type="number" id="pages" name="pages" min="1" value="1" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="printType">Print Type:</label>
-                            <select id="printType" name="printType">
-                                <option value="bw">Black & White (₹2 / page)</option>
-                                <option value="color">Full Color (₹10 / page)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="sides">Sides:</label>
-                            <select id="sides" name="sides">
-                                <option value="single">Single Sided</option>
-                                <option value="double">Double Sided (Duplex)</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="binding">Binding Option:</label>
-                            <select id="binding" name="binding">
-                                <option value="none">No Binding (Loose Sheets)</option>
-                                <option value="staple">Stapled (Free)</option>
-                                <option value="spiral">Spiral Binding (+₹30)</option>
-                                <option value="soft">Soft Book Binding (+₹50)</option>
-                            </select>
-                        </div>
-                    </div>
+                    <div id="multiFilesContainer" style="margin-bottom: 20px;"></div>
 
                     <div class="form-group">
                         <label for="address">Delivery Address:</label>
@@ -142,13 +101,12 @@
                 </form>
             </section>
 
-            <!-- Right Pricing Summary Side -->
             <section class="summary-section">
                 <h2>Order Summary</h2>
                 <div class="summary-card">
                     <div class="summary-row">
                         <span>Printing Cost</span>
-                        <span id="summaryPrint">₹2.00</span>
+                        <span id="summaryPrint">₹0.00</span>
                     </div>
                     <div class="summary-row">
                         <span>Binding Cost</span>
@@ -156,12 +114,12 @@
                     </div>
                     <div class="summary-row">
                         <span>Delivery Charges</span>
-                        <span id="summaryDelivery">₹40.00</span>
+                        <span id="summaryDelivery">₹0.00</span>
                     </div>
                     <hr class="summary-divider">
                     <div class="summary-row total-row">
                         <h3>Total Amount</h3>
-                        <h3 id="summaryTotal">₹42.00</h3>
+                        <h3 id="summaryTotal">₹0.00</h3>
                     </div>
                 </div>
             </section>
