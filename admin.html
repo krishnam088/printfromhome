@@ -14,16 +14,36 @@
         .input-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
         .input-group input { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 0.95rem; outline: none; }
         .btn-admin { width: 100%; padding: 12px; background: #000; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; }
-        .dashboard-container { max-width: 900px; margin: 0 auto; display: none; }
-        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 3px solid #F4C430; padding-bottom: 10px; }
+        .dashboard-container { max-width: 1100px; margin: 0 auto; display: none; }
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 3px solid #F4C430; padding-bottom: 10px; flex-wrap: wrap; gap: 15px; }
+        
+        /* 📊 FINANCIAL ANALYTICS CARDS UI GRID */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); border-top: 4px solid #F4C430; text-align: left; }
+        .stat-card p { font-size: 0.8rem; color: #718096; font-weight: 600; }
+        .stat-card h2 { font-size: 1.6rem; font-weight: 800; margin-top: 5px; color: #111; }
+        
+        /* ⚙️ HARDWARE INTEGRATION UTILITIES */
+        .mode-toggle-box { background: #fff; padding: 15px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .switch-label { font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+        
         .order-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 15px; border-left: 5px solid #0C8346; }
         .order-header { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 8px; font-size: 0.95rem; }
-        .file-link { display: inline-block; background: #E6F4EA; color: #0C8346; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.85rem; margin-top: 10px; }
+        
+        /* Interactive Buttons */
+        .btn-action-panel { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .file-link { display: inline-block; background: #E6F4EA; color: #0C8346; padding: 8px 14px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.85rem; }
+        .btn-direct-print { background: #0C8346; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .btn-direct-print:hover { background: #0A6C3A; }
+        
         .hidden { display: none !important; }
+        .pulse-live { width: 10px; height: 10px; background: #0C8346; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.5; } }
     </style>
 </head>
 <body>
 
+    <!-- 🔐 Admin Login View -->
     <div id="adminLoginBox" class="admin-box">
         <h2>Admin Gateway</h2>
         <div class="input-group">
@@ -37,18 +57,51 @@
         <button class="btn-admin" onclick="verifyAdminLogin()">Unlock Dashboard</button>
     </div>
 
+    <!-- 📊 Live Dashboard View -->
     <div id="adminDashboard" class="dashboard-container">
         <div class="dashboard-header">
-            <h1>🖨️ ADMIN DASHBOARD</h1>
-            <button class="btn-admin" style="width:auto; padding:6px 15px; background:#e53e3e;" onclick="adminLogout()">Logout</button>
+            <div>
+                <h1>🖨️ Incoming Jobs Panel <span class="pulse-live"></span></h1>
+                <p style="font-size:0.85rem; color:#718096;">Real-time Automated Network Connected Dashboard</p>
+            </div>
+            <button class="btn-admin" style="width:auto; padding:8px 20px; background:#e53e3e;" onclick="adminLogout()">Lock Panel</button>
         </div>
+
+        <!-- 📊 NEW FINANCIAL BUSINESS ANALYTICS METRICS SCOREBOARD -->
+        <div class="stats-grid">
+            <div class="stat-card" style="border-top-color: #3182ce;">
+                <p>TOTAL COMPLETED ORDERS</p>
+                <h2 id="statTotalOrders">0</h2>
+            </div>
+            <div class="stat-card" style="border-top-color: #0c8346;">
+                <p>GROSS REVENUE</p>
+                <h2 id="statRevenue">₹0.00</h2>
+            </div>
+            <div class="stat-card" id="profitCard" style="border-top-color: #38a169;">
+                <p>NET PROFIT / LOSS</p>
+                <h2 id="statProfit">₹0.00</h2>
+            </div>
+        </div>
+
+        <!-- ⚙️ AUTOMATIC VS MANUAL PRINTING MODE INTERCEPTOR CONTROLS -->
+        <div class="mode-toggle-box">
+            <div class="switch-label">
+                <span>🤖 Automation Print Engine Mode:</span>
+                <span id="printModeStatusText" style="color:#e67e22; font-weight:800;">MANUAL STACK</span>
+            </div>
+            <button id="togglePrintEngineBtn" class="btn-admin" style="width:auto; padding:8px 16px; background:#111;" onclick="togglePrintAutomationMode()">
+                Switch to Fully Automatic Print
+            </button>
+        </div>
+
         <div id="liveOrdersContainer">
             <p style="text-align:center; color:#718096; padding:20px;">Fetching live printing queue...</p>
         </div>
     </div>
 
     <script>
-        // Token persistent loop check inside session storage
+        let autoPrintEngineActive = false;
+
         if(sessionStorage.getItem('adminToken') === 'secure_active_session') {
             showDashboard();
         }
@@ -57,12 +110,11 @@
             const user = document.getElementById('adminUser').value.trim();
             const pass = document.getElementById('adminPass').value;
 
-            // 🔥 APNA ADMIN ID AUR PASSWORD YAHAN SET KARO
-            if(user === 'krishna' && pass === 'pfhadmin2026') { 
+            if(user === 'bhavishya' && pass === 'pfhadmin2026') { 
                 sessionStorage.setItem('adminToken', 'secure_active_session');
                 showDashboard();
             } else {
-                alert("❌ Unauthorized! Wrong Credentials.");
+                alert("❌ Unauthorized! Galat Credentials hain bhai.");
             }
         }
 
@@ -70,6 +122,57 @@
             document.getElementById('adminLoginBox').classList.add('hidden');
             document.getElementById('adminDashboard').style.display = 'block';
             loadLiveOrders();
+            loadFinancialMetrics();
+            
+            // Background pooling synchronization loop interval (updates charts data every 10 seconds)
+            setInterval(() => {
+                if(sessionStorage.getItem('adminToken') === 'secure_active_session') {
+                    loadLiveOrders();
+                    loadFinancialMetrics();
+                }
+            }, 10000);
+        }
+
+        // 🔥 Toggles between Fully Automated Cloud Execution vs Manual Trigger Stack
+        function togglePrintAutomationMode() {
+            autoPrintEngineActive = !autoPrintEngineActive;
+            const textLabel = document.getElementById('printModeStatusText');
+            const actionBtn = document.getElementById('togglePrintEngineBtn');
+            
+            if(autoPrintEngineActive) {
+                textLabel.textContent = "FULLY AUTOMATIC";
+                textLabel.style.color = "#0C8346";
+                actionBtn.textContent = "Switch to Manual Mode Intercept";
+                actionBtn.style.background = "#e67e22";
+                alert("🚀 AUTOMATIC MODE ACTIVE! Ab koi bhi order aate hi server use bina click kiye aapke default printer par automatic command bhej dega!");
+            } else {
+                textLabel.textContent = "MANUAL STACK";
+                textLabel.style.color = "#e67e22";
+                actionBtn.textContent = "Switch to Fully Automatic Print";
+                actionBtn.style.background = "#111";
+            }
+        }
+
+        async function loadFinancialMetrics() {
+            try {
+                const res = await fetch('/api/admin/financials');
+                const data = await res.json();
+                
+                document.getElementById('statTotalOrders').textContent = data.totalOrders;
+                document.getElementById('statRevenue').textContent = `₹${data.revenue}`;
+                
+                const profitEl = document.getElementById('statProfit');
+                profitEl.textContent = `₹${data.profitLoss}`;
+                
+                // Color formatting depending on performance matrix limits
+                if(parseFloat(data.profitLoss) < 0) {
+                    document.getElementById('profitCard').style.borderTopColor = "#e53e3e";
+                    profitEl.style.color = "#e53e3e";
+                } else {
+                    document.getElementById('profitCard').style.borderTopColor = "#38a169";
+                    profitEl.style.color = "#0C8346";
+                }
+            } catch (err) { console.error("Metrics sync failure ignored.", err); }
         }
 
         async function loadLiveOrders() {
@@ -79,20 +182,23 @@
                 const container = document.getElementById('liveOrdersContainer');
                 
                 if(orders.length === 0) {
-                    container.innerHTML = '<p style="text-align:center; color:#718096; padding:20px;">No live orders at the moment.</p>';
+                    container.innerHTML = '<p style="text-align:center; color:#718096; padding:20px;">Filhaal koi order nahi hai bhai.</p>';
                     return;
                 }
 
                 container.innerHTML = '';
-                // Latest orders screen par sabse upar dikhane ke liye reverse kiya hai
-                orders.reverse().forEach(order => {
+                orders.reverse().forEach((order, index) => {
                     const card = document.createElement('div');
                     card.className = 'order-card';
                     
                     let configDetails = "";
+                    let isMetaPayloadParsed = false;
+                    let metaArray = [];
+
                     if(order.configDetails) {
-                        const parsed = typeof order.configDetails === 'string' ? JSON.parse(order.configDetails) : order.configDetails;
-                        configDetails = parsed.map(f => `• <b>File:</b> ${f.fileName} <br> [${f.copies} copies × ${f.pages} pages | ${f.printType === 'bw' ? 'B&W' : 'Color'} | ${f.binding}]`).join('<br><br>');
+                        metaArray = typeof order.configDetails === 'string' ? JSON.parse(order.configDetails) : order.configDetails;
+                        isMetaPayloadParsed = true;
+                        configDetails = metaArray.map(f => `• <b>File:</b> ${f.fileName} <br> [Quantity: ${f.copies} copies × ${f.pages} pages | ${f.printType === 'bw' ? 'B&W' : 'Color'} | ${f.binding}]`).join('<br><br>');
                     } else {
                         configDetails = `• Pages: ${order.pages} | Type: ${order.printType} | Binding: ${order.binding}`;
                     }
@@ -109,12 +215,62 @@
                             </div>
                             <p style="font-size:0.8rem; color:#718096;">Order ID: ${order.orderId}</p>
                         </div>
-                        <a href="/download/${order.file}" class="file-link" target="_blank">📥 Download Document Raw Binary</a>
+                        <div class="btn-action-panel">
+                            <a href="/download/${order.file}" class="file-link" target="_blank">📥 Download Raw File</a>
+                            
+                            <!-- 🔥 DUAL SYSTEM OPERATION FLAG INTERRUPT TRIGGER BUTTON -->
+                            <button class="btn-direct-print" onclick="triggerHardwareFlashPrint('${order.file}', ${JSON.stringify(metaArray).replace(/"/g, '&quot;')})">
+                                🖨️ Direct Flash Print
+                            </button>
+                        </div>
                     `;
                     container.appendChild(card);
+                    
+                    // IF AUTOMATIC ENGINE SYSTEM TRIGGER PATTERN VERIFIES TRUE
+                    if(autoPrintEngineActive && !sessionStorage.getItem(`printed_${order.orderId}`)) {
+                        sessionStorage.setItem(`printed_${order.orderId}`, 'triggered');
+                        triggerHardwareFlashPrint(order.file, metaArray);
+                    }
                 });
-            } catch(err) {
-                console.error(err);
+            } catch(err) { console.error(err); }
+        }
+
+        // 🔥 COMMUNICATES RAW PRINT METADATA SIGNALS DIRECTLY TO OPERATING HARDWARE
+        async function triggerHardwareFlashPrint(fileLocation, metaArray) {
+            console.log("Sending print stream down payload:", fileLocation);
+            
+            // Loop targets configurations arrays for isolation compilation
+            let targetPages = undefined;
+            let targetCopies = 1;
+            let targetSides = 'single';
+
+            if(metaArray && metaArray.length > 0) {
+                targetPages = metaArray[0].pages;
+                targetCopies = metaArray[0].copies;
+                targetSides = metaArray[0].sides;
+            }
+
+            try {
+                const response = await fetch('/api/admin/print-hardware', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fileLocation: fileLocation,
+                        options: {
+                            copies: targetCopies,
+                            pages: targetPages,
+                            sides: targetSides
+                        }
+                    })
+                });
+                const result = await response.json();
+                if(result.success) {
+                    alert(`🚀 Printing Started! File queue successfully locked and forwarded directly to printer hardware workspace!`);
+                } else {
+                    alert(`⚠️ Printer Integration Interrupted: ${result.error}. Hard copy files backup available via manual cloud downloads downloads link.`);
+                }
+            } catch (err) {
+                alert("❌ Hardware connection timed out! Make sure local print drivers are active.");
             }
         }
 
