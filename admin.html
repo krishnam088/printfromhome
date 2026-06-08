@@ -2,55 +2,126 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>PrintFromHome - Admin Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print From Home - Admin Control Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; margin: 30px; background: #f1f5f9; }
-        h1 { color: #1e3a8a; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #1e3a8a; color: white; }
-        .status-paid { color: green; font-weight: bold; }
-        .btn-download { background: #3b82f6; color: white; padding: 6px 12px; text-decoration: none; border-radius: 4px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: #f7f9fc; color: #1a202c; padding: 20px; }
+        .admin-box { background: white; max-width: 400px; margin: 100px auto; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; }
+        .admin-box h2 { font-weight: 800; margin-bottom: 20px; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
+        .input-group input { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 0.95rem; outline: none; }
+        .btn-admin { width: 100%; padding: 12px; background: #000; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; }
+        .dashboard-container { max-width: 900px; margin: 0 auto; display: none; }
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 3px solid #F4C430; padding-bottom: 10px; }
+        .order-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 15px; border-left: 5px solid #0C8346; }
+        .order-header { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 8px; font-size: 0.95rem; }
+        .file-link { display: inline-block; background: #E6F4EA; color: #0C8346; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.85rem; margin-top: 10px; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <h1>Incoming Print Dashboard Jobs</h1>
-    <button onclick="loadOrders()">🔄 Refresh Orders</button>
-    <table>
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>File Name</th>
-                <th>Specs (Pages / Type / Binding)</th>
-                <th>Delivery Address</th>
-                <th>Total Earned</th>
-                <th>Payment Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody id="orderTableBody"></tbody>
-    </table>
+
+    <div id="adminLoginBox" class="admin-box">
+        <h2>Admin Gateway</h2>
+        <div class="input-group">
+            <label>Admin Access Key / ID</label>
+            <input type="text" id="adminUser" placeholder="Enter Admin Username">
+        </div>
+        <div class="input-group">
+            <label>Secret Password</label>
+            <input type="password" id="adminPass" placeholder="Enter Password">
+        </div>
+        <button class="btn-admin" onclick="verifyAdminLogin()">Unlock Dashboard</button>
+    </div>
+
+    <div id="adminDashboard" class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>🖨️ Incoming Jobs Panel</h1>
+            <button class="btn-admin" style="width:auto; padding:6px 15px; background:#e53e3e;" onclick="adminLogout()">Lock Panel</button>
+        </div>
+        <div id="liveOrdersContainer">
+            <p style="text-align:center; color:#718096; padding:20px;">Fetching live printing queue...</p>
+        </div>
+    </div>
+
     <script>
-        async function loadOrders() {
-            const res = await fetch('/api/admin/orders');
-            const orders = await res.json();
-            const tbody = document.getElementById('orderTableBody');
-            tbody.innerHTML = '';
-            orders.forEach(order => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${order.date}</td>
-                        <td><strong>${order.originalName}</strong></td>
-                        <td>${order.pages} Pgs, ${order.printType.toUpperCase()}, ${order.sides}, ${order.binding}</td>
-                        <td>${order.address}</td>
-                        <td>₹${order.amount}</td>
-                        <td class="${order.status.includes('Paid') ? 'status-paid' : ''}">${order.status}</td>
-                        <td><a href="/download/${order.file}" class="btn-download" target="_blank">📥 Download PDF</a></td>
-                    </tr>
-                `;
-            });
+        // Token persistent loop check inside session storage
+        if(sessionStorage.getItem('adminToken') === 'secure_active_session') {
+            showDashboard();
         }
-        window.onload = loadOrders;
+
+        function verifyAdminLogin() {
+            const user = document.getElementById('adminUser').value.trim();
+            const pass = document.getElementById('adminPass').value;
+
+            // 🔥 APNA ADMIN ID AUR PASSWORD YAHAN SET KARO
+            if(user === 'bhavishya' && pass === 'pfhadmin2026') { 
+                sessionStorage.setItem('adminToken', 'secure_active_session');
+                showDashboard();
+            } else {
+                alert("❌ Unauthorized! Galat Credentials hain bhai.");
+            }
+        }
+
+        function showDashboard() {
+            document.getElementById('adminLoginBox').classList.add('hidden');
+            document.getElementById('adminDashboard').style.display = 'block';
+            loadLiveOrders();
+        }
+
+        async function loadLiveOrders() {
+            try {
+                const res = await fetch('/api/admin/orders');
+                const orders = await res.json();
+                const container = document.getElementById('liveOrdersContainer');
+                
+                if(orders.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:#718096; padding:20px;">Filhaal koi order nahi hai bhai.</p>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                // Latest orders screen par sabse upar dikhane ke liye reverse kiya hai
+                orders.reverse().forEach(order => {
+                    const card = document.createElement('div');
+                    card.className = 'order-card';
+                    
+                    let configDetails = "";
+                    if(order.configDetails) {
+                        const parsed = typeof order.configDetails === 'string' ? JSON.parse(order.configDetails) : order.configDetails;
+                        configDetails = parsed.map(f => `• <b>File:</b> ${f.fileName} <br> [${f.copies} copies × ${f.pages} pages | ${f.printType === 'bw' ? 'B&W' : 'Color'} | ${f.binding}]`).join('<br><br>');
+                    } else {
+                        configDetails = `• Pages: ${order.pages} | Type: ${order.printType} | Binding: ${order.binding}`;
+                    }
+
+                    card.innerHTML = `
+                        <div class="order-header">
+                            <span>📅 ${order.date || 'N/A'}</span>
+                            <span style="color:#0C8346;">Total Amount: ₹${order.amount}</span>
+                        </div>
+                        <div style="font-size:0.9rem; color:#4a5568; line-height:1.6; margin-bottom:10px;">
+                            <p style="margin-bottom:8px; color:#111;">📍 <b>Address:</b> ${order.address}</p>
+                            <div style="background:#f7f9fc; padding:10px; border-radius:8px; margin-bottom:10px;">
+                                ${configDetails}
+                            </div>
+                            <p style="font-size:0.8rem; color:#718096;">Order ID: ${order.orderId}</p>
+                        </div>
+                        <a href="/download/${order.file}" class="file-link" target="_blank">📥 Download Document Raw Binary</a>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch(err) {
+                console.error(err);
+            }
+        }
+
+        function adminLogout() {
+            sessionStorage.removeItem('adminToken');
+            window.location.reload();
+        }
     </script>
 </body>
 </html>

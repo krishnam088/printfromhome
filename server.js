@@ -45,7 +45,10 @@ const razorpay = new Razorpay({
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
-
+// 🔥 ADMIN GATEWAY ROUTE: Is link se phone ya laptop par admin panel open hoga
+app.get('/admin-panel', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
+});
 // Endpoint to create a Payment Order and save customer data
 app.post('/api/create-order', upload.single('document'), async (req, res) => {
     try {
