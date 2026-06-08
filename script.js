@@ -54,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {}
     }
 
-    // 🔥 RESPONSIVE MATRIX GRID BOUNDS CONFIGURATIONS
     window.refreshInvoiceTabState = function() {
         const sideInvoicePanel = document.getElementById('sidebarPricingPanel');
         const layoutContainer = document.getElementById('mainLayoutAppContainer');
@@ -129,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 👑 RE-CONFIGURED COMPACT CORE SETTINGS CARD ENGINE WITH INTEGRATED "+ ADD MORE" shortlink
+    // 👑 ULTRA COMPACT AND HIGH-DENSITY GRID RENDER PIPELINE
     function renderFilesUI() {
         if(!multiFilesContainer) return; multiFilesContainer.innerHTML = ''; 
         refreshInvoiceTabState();
@@ -144,39 +143,75 @@ document.addEventListener('DOMContentLoaded', () => {
             const activeOriLand = item.config.orientation === 'landscape' ? 'active' : '';
 
             fileRow.innerHTML = `
-                <div class="blinkit-card-row">
-                    <div style="text-align:left; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                        <h4 style="font-weight:700; font-size:0.88rem; word-break:break-all; color:var(--text-main);">📄 ${item.name}</h4>
-                        <button type="button" class="add-more-inline-card-btn" onclick="triggerInlineFileUploadClick()">+ Add More</button>
+                <div class="blinkit-card-row" style="margin-bottom: 8px; padding-bottom: 6px;">
+                    <div style="text-align:left; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                        <h4 style="font-weight:700; font-size:0.82rem; word-break:break-all; color:var(--text-main);">📄 ${item.name}</h4>
+                        <button type="button" class="add-more-inline-card-btn" style="padding: 2px 6px; font-size: 0.7rem;" onclick="triggerInlineFileUploadClick()">+ Add More</button>
                     </div>
-                    <button type="button" id="removeFile_${index}" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1.3rem; margin-left:auto;">&times;</button>
+                    <button type="button" id="removeFile_${index}" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1.2rem; margin-left:auto;">&times;</button>
                 </div>
                 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px; align-items:center;">
+                <!-- Shrunk inputs grid frame layout -->
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px; align-items:center;">
                     <div class="input-group" style="margin-bottom:0;">
-                        <label style="font-size:0.7rem; font-weight:700; color:var(--text-sub); margin-bottom:2px; display:block;">Pages:</label>
-                        <input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding:8px; border-radius:8px; border:2px solid var(--border-color); font-weight:700; font-size:0.8rem;" required>
+                        <label style="font-size:0.65rem; font-weight:700; color:var(--text-sub); margin-bottom:2px; display:block;">Pages:</label>
+                        <input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding:6px; border-radius:6px; border:2px solid var(--border-color); font-weight:700; font-size:0.75rem; height:28px;" required>
                     </div>
                     <div>
-                        <label style="font-size:0.7rem; font-weight:700; color:var(--text-sub); margin-bottom:2px; display:block;">Copies:</label>
-                        <div class="blinkit-stepper" style="padding:3px 8px; gap:10px;">
-                            <button type="button" id="minusCopy_${index}" class="stepper-btn">-</button>
-                            <span id="copyCountLabel_${index}" style="font-size:0.8rem;">${item.config.copies}</span>
-                            <button type="button" id="plusCopy_${index}" class="stepper-btn">+</button>
+                        <label style="font-size:0.65rem; font-weight:700; color:var(--text-sub); margin-bottom:2px; display:block;">Copies:</label>
+                        <div class="blinkit-stepper" style="padding:2px 6px; gap:8px; height:28px; border-radius:6px;">
+                            <button type="button" id="minusCopy_${index}" class="stepper-btn" style="font-size:0.95rem;">-</button>
+                            <span id="copyCountLabel_${index}" style="font-size:0.75rem;">${item.config.copies}</span>
+                            <button type="button" id="plusCopy_${index}" class="stepper-btn" style="font-size:0.95rem;">+</button>
                         </div>
                     </div>
                 </div>
-                <p style="font-size:0.7rem; font-weight:700; color:var(--text-sub); margin-bottom:4px;">Print Color</p>
-                <div class="blinkit-grid-options">
-                    <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}"><div class="option-icon">🎨</div><div class="option-meta-text"><span class="option-title">Coloured</span><span class="option-subtitle">₹10/pg</span></div></div>
-                    <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}"><div class="option-icon">🌑</div><div class="option-meta-text"><span class="option-title">B & W</span><span class="option-subtitle">₹3/pg</span></div></div>
+
+                <!-- Shrunk Option Grid Items -->
+                <p style="font-size:0.65rem; font-weight:700; color:var(--text-sub); margin-bottom:3px;">Print Color</p>
+                <div class="blinkit-grid-options" style="gap: 8px; margin-bottom: 8px;">
+                    <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}" style="padding: 6px 8px; border-radius: 8px;">
+                        <div class="option-icon" style="font-size:1rem;">🎨</div>
+                        <div class="option-meta-text">
+                            <span class="option-title" style="font-size:0.75rem;">Coloured</span>
+                            <span class="option-subtitle" style="font-size:0.62rem;">₹10/pg</span>
+                        </div>
+                    </div>
+                    <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}" style="padding: 6px 8px; border-radius: 8px;">
+                        <div class="option-icon" style="font-size:1rem;">🌑</div>
+                        <div class="option-meta-text">
+                            <span class="option-title" style="font-size:0.75rem;">B & W</span>
+                            <span class="option-subtitle" style="font-size:0.62rem;">₹3/pg</span>
+                        </div>
+                    </div>
                 </div>
-                <p style="font-size:0.7rem; font-weight:700; color:var(--text-sub); margin-bottom:4px;">Orientation</p>
-                <div class="blinkit-grid-options">
-                    <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}"><div class="option-icon">📱</div><div class="option-meta-text"><span class="option-title">Portrait</span><span class="option-subtitle">A4 Size</span></div></div>
-                    <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}"><div class="option-icon">💻</div><div class="option-meta-text"><span class="option-title">Landscape</span><span class="option-subtitle">A4 Size</span></div></div>
+
+                <p style="font-size:0.65rem; font-weight:700; color:var(--text-sub); margin-bottom:3px;">Orientation</p>
+                <div class="blinkit-grid-options" style="gap: 8px; margin-bottom: 8px;">
+                    <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}" style="padding: 6px 8px; border-radius: 8px;">
+                        <div class="option-icon" style="font-size:1rem;">📱</div>
+                        <div class="option-meta-text">
+                            <span class="option-title" style="font-size:0.75rem;">Portrait</span>
+                            <span class="option-subtitle" style="font-size:0.62rem;">A4 Vertical</span>
+                        </div>
+                    </div>
+                    <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}" style="padding: 6px 8px; border-radius: 8px;">
+                        <div class="option-icon" style="font-size:1rem;">💻</div>
+                        <div class="option-meta-text">
+                            <span class="option-title" style="font-size:0.75rem;">Landscape</span>
+                            <span class="option-subtitle" style="font-size:0.62rem;">A4 Horiz</span>
+                        </div>
+                    </div>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-primary); padding:8px; border-radius:8px; border:1px solid var(--border-color);"><label style="font-size:0.72rem; font-weight:700;">Binding:</label><select id="binding_${index}" style="padding:4px; font-size:0.72rem; font-weight:700; outline:none; border-radius:6px; border:1px solid var(--border-color);"><option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option><option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option><option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral (+₹30)</option></select></div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-primary); padding:6px 10px; border-radius:6px; border:1px solid var(--border-color);">
+                    <label style="font-size:0.68rem; font-weight:700;">Binding:</label>
+                    <select id="binding_${index}" style="padding:2px 4px; font-size:0.68rem; font-weight:700; outline:none; border-radius:4px; border:1px solid var(--border-color); height:24px;">
+                        <option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option>
+                        <option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option>
+                        <option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral (+₹30)</option>
+                    </select>
+                </div>
             `;
             multiFilesContainer.appendChild(fileRow);
 
