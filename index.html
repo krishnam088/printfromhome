@@ -29,9 +29,25 @@
             background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
             padding: 12px; margin-top: 10px; text-align: left; font-size: 0.85rem;
         }
+        /* 🔥 CLOCK & STATUS METRIC STYLES */
+        .live-timer-banner {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #1e293b; color: white; padding: 8px 15px; font-size: 0.8rem;
+            font-weight: 600; width: 100%; border-bottom: 2px solid #F4C430;
+        }
+        .shop-status-badge {
+            padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+        }
+        .shop-status-badge.open { background: #0C8346; color: white; }
+        .shop-status-badge.closed { background: #ef4444; color: white; }
     </style>
 </head>
 <body>
+
+    <div class="live-timer-banner">
+        <div>🕒 System Time: <span id="userLiveClock">00:00:00 AM</span></div>
+        <div>Store Status: <span id="userShopStatus" class="shop-status-badge open">Checking...</span></div>
+    </div>
 
     <div id="splashScreen" class="splash-container">
         <div class="splash-content">
@@ -95,7 +111,12 @@
                     <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: #78350f; line-height: 1.5;">
                         <li><strong>First Order Scheme:</strong> Print for <strong>₹49.00</strong> or more on your first order & get <strong>FREE Delivery!</strong></li>
                         <li><strong>Regular Scheme:</strong> Get <strong>FREE Delivery</strong> on any regular order above ₹99!</li>
+                        <li style="color:#c2410c;">⏰ <b>Store Timings:</b> Morning 7:00 AM to Night 11:59 PM (Automatic Closing)</li>
                     </ul>
+                </div>
+
+                <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b;">
+                    🚨 <b>Dukan Abhi Band Hai Bhai!</b> We accept printing orders only between 07:00 AM and 11:59 PM. Subah 7 baje aate hi automatic orders chalu ho jayenge!
                 </div>
 
                 <div class="document-promo-card">
@@ -126,7 +147,7 @@
                         <textarea id="address" name="address" rows="3" placeholder="Enter full Hostel Name, Room No., College Campus or Home address" required></textarea>
                     </div>
 
-                    <button type="submit" class="btn-submit">Proceed to Payment</button>
+                    <button type="submit" id="submitOrderBtn" class="btn-submit">Proceed to Payment</button>
                 </form>
             </section>
 

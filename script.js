@@ -31,8 +31,54 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewBody = document.getElementById('previewBody');
 
     let isSignupMode = false;
-    let masterFilesArray = []; // Maintains append state when user clicks 'Select Files' multiple times
-    let isFirstTimeUser = true; // Automatically evaluated based on persistent order history database
+    let masterFilesArray = []; 
+    let isFirstTimeUser = true; 
+
+    // --- 🕒 REAL TIME CLOCK & AUTOMATIC STORE PROTECTOR ENGINE ---
+    function updateLiveSystemClock() {
+        const now = new Date();
+        
+        // 1. Format dynamic digital ticking clock for viewports
+        const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const clockEl = document.getElementById('userLiveClock');
+        if (clockEl) clockEl.textContent = timeString;
+
+        // 2. Extract operational limits constraints hours and minutes
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+
+        // Rule parameters: Opening 07:00 AM, Closing 23:59 PM (Raat 11:59)
+        let isStoreOpen = false;
+        if (currentHour >= 7 && currentHour < 24) {
+            isStoreOpen = true; // Between 7 AM and 11:59 PM
+        }
+
+        const statusBadge = document.getElementById('userShopStatus');
+        const closedNoticeBox = document.getElementById('storeClosedNoticeBox');
+        const submitBtn = document.getElementById('submitOrderBtn');
+
+        if (statusBadge && closedNoticeBox && submitBtn) {
+            if (isStoreOpen) {
+                statusBadge.textContent = "OPEN 🟢";
+                statusBadge.className = "shop-status-badge open";
+                closedNoticeBox.classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = "1";
+                submitBtn.style.cursor = "pointer";
+                submitBtn.textContent = "Proceed to Payment";
+            } else {
+                statusBadge.textContent = "CLOSED 🔴";
+                statusBadge.className = "shop-status-badge closed";
+                closedNoticeBox.classList.remove('hidden');
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = "0.4";
+                submitBtn.style.cursor = "not-allowed";
+                submitBtn.textContent = "❌ Store is Closed";
+            }
+        }
+    }
+    setInterval(updateLiveSystemClock, 1000);
+    updateLiveSystemClock();
 
     // --- ⏳ STAGE 1: DYNAMIC SPLASH CONTROLLER ---
     setTimeout(() => {
@@ -45,7 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const userData = JSON.parse(localStorage.getItem(`user_${sessionActiveUser}`));
             userGreeting.textContent = `Hi, ${userData ? userData.name : 'Customer'}`;
             
-            // 🔥 AUTOMATIC FIRST ORDER TRACKER: If order history exists, it's NOT a first order anymore
             const savedHistory = localStorage.getItem(`history_${sessionActiveUser}`);
             if (savedHistory && JSON.parse(savedHistory).length > 0) {
                 isFirstTimeUser = false;
@@ -57,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mainApp.classList.add('app-visible');
             
             loadSavedFilesFromSession();
-            renderOrderHistoryUI(sessionActiveUser); // Load Last Orders view component
+            renderOrderHistoryUI(sessionActiveUser); 
         } else {
             authScreen.classList.remove('app-hidden');
         }
@@ -99,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const userPayload = { name: inputName, id: identityKey, password: inputPassword };
             localStorage.setItem(`user_${identityKey}`, JSON.stringify(userPayload));
             localStorage.setItem('printAppUser', identityKey);
-            isFirstTimeUser = true; // Dynamic fresh registration flag
+            isFirstTimeUser = true; 
             userGreeting.textContent = `Hi, ${inputName}`;
             alert("🎉 Account created successfully! Logging you in...");
         } else {
@@ -143,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
     });
 
-    // --- 🖨️ FILE EXTENSION PERSISTENCE & PREVIEW ENGINE ---
+    // --- 🖨️ FILE EXTENCE PERSISTENCE & PREVIEW ENGINE ---
     fileUpload.addEventListener('change', () => {
         if (fileUpload.files.length === 0) return;
 
@@ -268,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(item.fileData) {
                     openDocumentPreview(item.fileData, item.name, item.type);
                 } else {
-                    alert(`Bhai, refresh ke kaaran data buffer unbind ho gaya hai. Main button 'Select Files' se ek baar dobara click karke files chun lo, options waise hi saved hain!`);
+                    alert(`Bhai, refresh ke kaaran data buffer unbind ho gaya hai. Main button se ek baar dobara click karke files chun lo, options waise hi saved hain!`);
                     fileUpload.click();
                 }
             });
@@ -345,7 +390,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     closePreview.addEventListener('click', () => { previewModal.style.display = 'none'; });
 
-    // --- 🚚 AUTOMATIC SHIPPING THRESHOLD CALCULATOR ---
     function calculateTotal() {
         let totalPrintCost = 0;
         let totalBindingCost = 0;
@@ -385,9 +429,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         let finalDocumentCost = totalPrintCost + totalBindingCost;
-        let accurateDeliveryCharge = 40.00; 
+        let accurateDeliveryCharge = 25.00; 
 
-        // 🔥 AUTOMATIC SHIPPING TIERS: Pehla Order >= 49 par FREE, agle sab order >= 99 par FREE
         if (isFirstTimeUser && finalDocumentCost >= 49.00) {
             accurateDeliveryCharge = 0.00; 
         } else if (!isFirstTimeUser && finalDocumentCost >= 99.00) {
@@ -402,7 +445,6 @@ document.addEventListener('DOMContentLoaded', () => {
         summaryTotal.textContent = `₹${grandTotal.toFixed(2)}`;
     }
 
-    // 🔥 HISTORY UI LAYER RENDERING MECHANISM
     function renderOrderHistoryUI(userId) {
         const rawHistory = localStorage.getItem(`history_${userId}`);
         if (!rawHistory || JSON.parse(rawHistory).length === 0) {
@@ -410,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const parsedHistory = JSON.parse(rawHistory).reverse(); // Latest order top par dikhane ke liye
+        const parsedHistory = JSON.parse(rawHistory).reverse(); 
         ordersHistoryContainer.innerHTML = '';
 
         parsedHistory.forEach(order => {
@@ -435,7 +477,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Form submission processing and database record pipeline
     const printForm = document.getElementById('printForm');
     printForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -446,7 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const missingBinaries = masterFilesArray.some(f => f.fileData === null);
         if(missingBinaries) {
-            alert("⚠️ Refresh ke kaaran browser local stream clear ho gayi hai. Bas 'Select Files' se ek baar files dubara chun lo, configurations loaded hain!");
+            alert("⚠️ Refresh ke kaaran browser local stream clear ho gayi hai. Bas 'Select Files' se ek baar files jagah chun lo!");
             return;
         }
 
@@ -506,13 +547,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         alert('🎉 Payment Successful! Order lock ho gaya hai.');
                         
                         const activeUserToken = localStorage.getItem('printAppUser');
-                        
-                        // 🔥 PERSISTENT LOCAL ORDER RECORD COMPILER
                         const currentHistoryRaw = localStorage.getItem(`history_${activeUserToken}`) || '[]';
                         const currentHistoryArray = JSON.parse(currentHistoryRaw);
                         
+                        // 🔥 TIMESTAMPS TRACKED NATIVELY WITH SECONDS PRECISION IN LOGS
                         const newHistoryObject = {
-                            date: new Date().toLocaleDateString(),
+                            date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}),
                             amount: totalAmountText,
                             status: "Paid / Ready for Print",
                             details: finalMetaConfig
@@ -520,16 +560,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         currentHistoryArray.push(newHistoryObject);
                         localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
 
-                        // Burn first-order scheme pointer flag automatic
                         isFirstTimeUser = false;
-
                         sessionStorage.removeItem('savedPrintFiles'); 
                         printForm.reset();
                         multiFilesContainer.innerHTML = '';
                         masterFilesArray = [];
                         fileNameDisplay.textContent = "No files selected yet";
                         
-                        renderOrderHistoryUI(activeUserToken); // Live refresh history log panel
+                        renderOrderHistoryUI(activeUserToken); 
                         calculateTotal();
                     }
                 },
@@ -539,35 +577,21 @@ document.addEventListener('DOMContentLoaded', () => {
             rzp1.open();
         } catch (error) {
             console.error("Payment Error:", error);
-            alert("Payment Gateway unstable at the moment!");
         }
     });
-    // 🔥 AUTOMATIC LIVE REFRESH ENGINE FOR NEW UPDATES
-    let currentLocalVersion = null;
 
+    let currentLocalVersion = null;
     async function checkForNewUpdates() {
         try {
             const res = await fetch('/api/version');
             const data = await res.json();
-            
-            if (!currentLocalVersion) {
-                // Pehli baar khulne par current version memory mein save karo
+            if (!currentLocalVersion) { currentLocalVersion = data.version; } 
+            else if (currentLocalVersion !== data.version) {
                 currentLocalVersion = data.version;
-            } else if (currentLocalVersion !== data.version) {
-                console.log("🚀 Naya Update Mil Gaya! Auto-refreshing website...");
-                
-                // Clear session code tags safety buffer before auto reload
-                currentLocalVersion = data.version;
-                
-                // User friendly small notification check (Optional alert blocks clear)
-                window.location.reload(true); // Forced hard reload from server
+                window.location.reload(true); 
             }
-        } catch (err) {
-            console.log("Background version check error skipped securely.");
-        }
+        } catch (err) {}
     }
-
-    // Har 20 second mein background mein check karega ki aapne naya push kiya ya nahi
     setInterval(checkForNewUpdates, 20000); 
-    checkForNewUpdates(); // Initial prompt check on load
+    checkForNewUpdates(); 
 });
