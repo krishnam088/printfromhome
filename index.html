@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Print From Home - India's Last Minute Printing App</title>
-    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
@@ -16,11 +15,12 @@
             --text-sub: #64748b;
             --blinkit-yellow: #F4C430;
             --blinkit-green: #0C8346;
+            --blinkit-light-green: #e6f4ea;
             --border-color: #e2e8f0;
         }
         body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; }
 
-        /* 🕒 STICKY HIGH-CONTRAST HEADER CLOCK */
+        /* 🕒 TOP STICKY SYSTEM HEADER CLOCK */
         .live-timer-banner {
             display: flex; justify-content: space-between; align-items: center;
             background: #0f172a; color: white; padding: 12px 20px; font-size: 0.85rem;
@@ -49,24 +49,40 @@
         .logo-green { color: var(--blinkit-green); }
         .menu-toggle-btn { background: #000; color: #fff; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
-        /* 🔥 DYNAMIC MAIN CONTAINER: Swaps layouts depending on invoice status */
         .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; display: grid; grid-template-columns: 1fr; gap: 25px; transition: all 0.3s ease; }
         .container.has-invoice { grid-template-columns: 2fr 1fr; }
         @media (max-width: 768px) { .container.has-invoice { grid-template-columns: 1fr; } }
 
-        /* 👑 MINIMALIST COMPACT OFFERS BAR STYLE (NO CLUTTER) */
         .compact-offers-bar { display: flex; align-items: center; gap: 10px; background: #fffbeb; border: 1px solid #fed7aa; padding: 10px 14px; border-radius: 10px; margin-bottom: 20px; font-size: 0.8rem; font-weight: 600; color: #b45309; }
 
         .view-section { display: none; }
         .view-section.active { display: block; animation: fadeView 0.25s ease-in-out; }
         @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .hidden { display: none !important; }
+        
+        /* 👑 BLINKIT STYLE DYNAMIC SETTINGS CARD NODES */
+        .blinkit-file-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px; margin-top: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
+        .blinkit-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px dashed var(--border-color); }
+        
+        /* Stepper +/- Elements */
+        .blinkit-stepper { display: flex; align-items: center; background: var(--blinkit-green); border-radius: 10px; padding: 4px 10px; gap: 14px; color: white; font-weight: bold; }
+        .stepper-btn { background: none; border: none; color: white; font-size: 1.2rem; font-weight: 800; cursor: pointer; padding: 2px 6px; }
+        
+        /* Selectors Custom Grid Systems */
+        .blinkit-grid-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+        .blinkit-option-box { border: 2px solid var(--border-color); border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s; background: var(--bg-primary); }
+        .blinkit-option-box.active { border-color: var(--blinkit-green); background-color: var(--blinkit-light-green); }
+        .option-icon { font-size: 1.3rem; }
+        .option-meta-text { display: flex; flex-direction: column; text-align: left; }
+        .option-title { font-size: 0.85rem; font-weight: 700; color: var(--text-main); }
+        .option-subtitle { font-size: 0.75rem; color: var(--text-sub); font-weight: 500; }
+
+        .btn-submit-container { width: 100%; display: flex; justify-content: flex-end; margin-top: 15px; }
         .history-card-item { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-top: 12px; }
     </style>
 </head>
 <body>
 
-    <!-- TOP REAL-TIME DYNAMIC SYSTEM HEADER CLOCK -->
     <div class="live-timer-banner">
         <div>🕒 India Time: <span id="userLiveClock" style="color: var(--blinkit-yellow); font-family: monospace; font-size: 0.95rem;">00:00:00 AM</span></div>
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -75,10 +91,8 @@
         </div>
     </div>
 
-    <!-- Background Dimmer Drop Overlay -->
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
-    <!-- SLIDING DRAWER MENU -->
     <nav id="userSideDrawer" class="side-drawer">
         <div class="drawer-header">
             <h2 style="font-size:1.2rem; font-weight:800;">Account Menu</h2>
@@ -95,7 +109,6 @@
         </div>
     </nav>
 
-    <!-- STAGE 1: Splash Loader Screen -->
     <div id="splashScreen" class="splash-container">
         <div class="splash-content">
             <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
@@ -103,7 +116,6 @@
         </div>
     </div>
 
-    <!-- STAGE 2: Authentication View -->
     <div id="authScreen" class="auth-container app-hidden">
         <div class="auth-card">
             <div class="auth-brand">print<span class="brand-green">from</span>home</div>
@@ -128,7 +140,6 @@
         </div>
     </div>
 
-    <!-- STAGE 3: Main App Workspace -->
     <div id="mainApp" class="app-hidden">
         <header class="app-header">
             <div class="header-container">
@@ -140,10 +151,8 @@
             </div>
         </header>
 
-        <!-- Main Window Container Setup -->
         <div class="container" id="mainLayoutAppContainer">
             
-            <!-- VIEW BLOCK 1: STORE FRONTEND ENTRIES -->
             <div id="user_section_store" class="view-section active" style="width: 100%;">
                 <section class="order-section" style="width:100%;">
                     <div class="store-banner">
@@ -151,7 +160,6 @@
                         <p class="banner-sub">Upload documents and configure layout specifications instantly</p>
                     </div>
 
-                    <!-- 👑 CLEAN ULTRA-COMPACT OFFERS LAYOUT (NO CROWD) -->
                     <div class="compact-offers-bar">
                         <span>📢 <b>Active Schemes:</b></span>
                         <marquee scrollamount="3" style="width: 100%;">
@@ -165,11 +173,13 @@
 
                     <form id="printForm" enctype="multipart/form-data">
                         <div class="form-group-upload">
-                            <label class="upload-custom-btn" for="fileUpload">📂 Select Files to Print</label>
+                            <label class="upload-custom-btn" for="fileUpload">📂 Select Files / Add Files</label>
                             <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
                             <div id="fileNameDisplay">No files selected yet</div>
                         </div>
+                        
                         <div id="multiFilesContainer" style="margin-bottom: 20px;"></div>
+                        
                         <div class="form-group">
                             <label>Delivery Address:</label>
                             <textarea id="address" name="address" rows="3" placeholder="Enter full Hostel Name, Room No., Campus or Home Address" required></textarea>
@@ -179,43 +189,34 @@
                 </section>
             </div>
 
-            <!-- VIEW BLOCK 2: SLIDED ACCOUNT ORDERS HISTORIES -->
             <div id="user_section_history" class="view-section" style="width: 100%;">
                 <section class="order-section" style="width:100%;">
                     <h3>📋 Your Printing Jobs & Delivery Status</h3>
-                    <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:15px;">Real-time shipment parcel tracking and logs details</p>
                     <div id="ordersHistoryContainer">
                         <p style="text-align:center; padding:20px; color:var(--text-sub);">No print jobs recorded yet.</p>
                     </div>
                 </section>
             </div>
 
-            <!-- VIEW BLOCK 3: SLIDED HELP AND SUPPORT CARD -->
             <div id="user_section_help" class="view-section" style="width: 100%;">
                 <section class="order-section" style="width:100%;">
                     <h3>❓ Help Center & Customer Care Support</h3>
                     <div style="margin-top:15px; line-height:1.7; font-size:0.9rem; color:#4a5568;">
-                        <p style="font-weight:700; color:#111; margin-bottom:8px;">💡 Frequently Asked Questions:</p>
-                        <p><b>1. Payment complete ho gayi par history me 'Pending' hai?</b><br>Chinta mat karo bhai, agar bank se paise kat gaye hain aur status sync nahi hua, toh hamara system automatic 5 minute me verify karke printer agent ko pass kar dega.</p>
-                        <p style="margin-top:10px;"><b>2. Delivery kitni der me hoti hai Varanasi me?</b><br>Blinkit partner matching algorithms ke raste aapka page print hote hi nearest delivery picker 15-25 minute me hostel ke main gate par drop kar dega.</p>
+                        <p><b>Payment complete ho gayi par history me 'Pending' hai?</b><br>Chinta mat karo bhai, hamara system automatic 5 minute me verify karke printer agent ko pass kar dega.</p>
                     </div>
                 </section>
             </div>
 
-            <!-- VIEW BLOCK 4: SLIDED LEGAL CONDITIONS MANUALS -->
             <div id="user_section_terms" class="view-section" style="width: 100%;">
                 <section class="order-section" style="width:100%;">
                     <h3>📜 Store Terms & Service Conditions</h3>
                     <div style="margin-top:15px; font-size:0.85rem; color:var(--text-sub); line-height:1.7;">
                         <p>• We use premium 70 GSM sheets to provide high density laser print ink bindings.</p>
-                        <p>• Raat 11:59 PM ke baad server auto-close configuration active mode me betha hota hai, isliye time fence rules maintain karna anivarya hai.</p>
-                        <p>• Document content confidentiality completely locked hai. Files print buffer processing queue se clear hote hi background cloud storage arrays se permanent shred (delete) kar di jaati hain.</p>
                     </div>
                 </section>
             </div>
 
-            <!-- 🔥 INVOICE BILLING TAB SIDEBAR: Natively locked hidden until file interaction triggers -->
-            <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; animation: fadeView 0.3s ease;">
+            <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content;">
                 <h2>Order Invoice Summary</h2>
                 <div class="summary-card">
                     <div class="summary-row"><span>Printing Sheet Cost</span><span id="summaryPrint">₹0.00</span></div>
@@ -229,7 +230,6 @@
         </div>
     </div>
 
-    <!-- Popups Document Modal -->
     <div id="previewModal" class="preview-modal">
         <div class="preview-content">
             <span id="closePreview" class="close-preview">&times;</span>
@@ -238,7 +238,6 @@
         </div>
     </div>
 
-    <!-- Global Layout Visibility Controllers Script -->
     <script>
         function updateMainAppUIClock() {
             const now = new Date();
@@ -272,11 +271,9 @@
         function navigateUserSection(targetId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
-            
             document.getElementById(`user_section_${targetId}`).classList.add('active');
             if(document.getElementById(`menu_${targetId}`)) document.getElementById(`menu_${targetId}`).classList.add('active');
             
-            // Re-evaluates visibility matrices matching chosen menu indices mapping bounds
             const sidePanelPrice = document.getElementById('sidebarPricingPanel');
             const mainLayoutWrapper = document.getElementById('mainLayoutAppContainer');
             
@@ -285,14 +282,12 @@
                 mainLayoutWrapper.classList.remove('has-invoice');
                 mainLayoutWrapper.style.gridTemplateColumns = '1fr'; 
             } else {
-                // If switching back to store tab, let the native file-check logic determine layout layout width
                 if(typeof window.refreshInvoiceTabState === 'function') { window.refreshInvoiceTabState(); }
             }
             toggleUserDrawer(false);
         }
     </script>
 
-    <!-- Marketing Notification Modal -->
     <div id="marketingPopupModal" style="display: none; position: fixed; z-index: 12000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; padding: 20px;">
         <div style="background: #ffffff; padding: 25px; border-radius: 24px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 20px 45px rgba(0,0,0,0.2); border: 2px solid #F4C430; position: relative;">
             <span id="closeMarketingPopup" style="position: absolute; top: 12px; right: 18px; font-size: 22px; font-weight: bold; cursor: pointer; color: #a0aec0;">&times;</span>

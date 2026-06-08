@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (splashScreen) {
             splashScreen.style.opacity = '0';
             splashScreen.style.visibility = 'hidden';
-            splashScreen.classList.add('hidden'); // Force removes splash blocker layer instantly
+            splashScreen.classList.add('hidden'); 
         }
         
         const sessionActiveUser = localStorage.getItem('printAppUser');
@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 🖨️ FILE EXTENCE PERSISTENCE & PREVIEW ENGINE ---
+    // --- 🖨️ FILE EXTENSION PERSISTENCE & PREVIEW ENGINE ---
     if(fileUpload) {
         fileUpload.addEventListener('change', () => {
             if (fileUpload.files.length === 0) return;
@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         size: file.size,
                         type: file.type,
                         fileData: file, 
-                        config: { pages: 1, printType: 'bw', sides: 'single', binding: 'none', copies: 1 }
+                        config: { pages: 1, printType: 'bw', orientation: 'portrait', binding: 'none', copies: 1 }
                     });
                 }
             });
@@ -230,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 🔥 BLINKIT IMAGE-INSPIRED INTERFACE GENERATION ENGINE
     function renderFilesUI() {
         if(!multiFilesContainer) return;
         multiFilesContainer.innerHTML = ''; 
@@ -242,89 +243,116 @@ document.addEventListener('DOMContentLoaded', () => {
 
         masterFilesArray.forEach((item, index) => {
             const fileRow = document.createElement('div');
-            fileRow.className = 'document-promo-card';
-            fileRow.style.border = '1px solid #cbd5e0';
-            fileRow.style.backgroundColor = '#fff';
-            fileRow.style.marginTop = '15px';
-            fileRow.style.textAlign = 'left';
+            fileRow.className = 'blinkit-file-card';
 
-            const previewBtnText = item.fileData ? "👁️ Preview" : "🔄 Re-upload File";
-            const previewBtnBg = item.fileData ? "#e2e8f0" : "#fed7d7";
-            const previewBtnColor = item.fileData ? "#2d3748" : "#c53030";
+            const activeColorBw = item.config.printType === 'bw' ? 'active' : '';
+            const activeColorCol = item.config.printType === 'color' ? 'active' : '';
+            const activeOriPort = item.config.orientation === 'portrait' ? 'active' : '';
+            const activeOriLand = item.config.orientation === 'landscape' ? 'active' : '';
 
             fileRow.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:8px; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
-                    <strong style="font-size:0.9rem; color:#1a202c; word-break:break-all;">📄 ${item.name}</strong>
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <button type="button" id="previewBtn_${index}" style="background:${previewBtnBg}; border:none; border-radius:6px; color:${previewBtnColor}; padding:4px 8px; font-size:0.8rem; cursor:pointer; font-weight:600;">${previewBtnText}</button>
-                        
-                        <div style="display:flex; align-items:center; background:#edf2f7; border-radius:8px; padding:2px 6px; gap:8px;">
-                            <button type="button" id="minusCopy_${index}" style="border:none; background:none; font-weight:800; color:#4a5568; cursor:pointer; padding:2px 6px;">-</button>
-                            <span id="copyCountLabel_${index}" style="font-weight:700; font-size:0.9rem; min-width:14px; text-align:center;">${item.config.copies}</span>
-                            <button type="button" id="plusCopy_${index}" style="border:none; background:none; font-weight:800; color:#0C8346; cursor:pointer; padding:2px 6px;">+</button>
-                        </div>
-                        <span id="fileTotalCost_${index}" style="font-weight:700; color:#0C8346; font-size:0.95rem;">₹0.00</span>
-                        <button type="button" id="removeFile_${index}" style="background:none; border:none; color:#e53e3e; font-weight:bold; cursor:pointer; font-size:0.8rem; margin-left:5px;">❌</button>
+                <div class="blinkit-card-row">
+                    <div style="text-align:left;">
+                        <h4 style="font-size:0.95rem; font-weight:700; color:var(--text-main); word-break:break-all;">📄 ${item.name}</h4>
+                        <span style="font-size:0.75rem; color:var(--text-sub); font-weight:500;">File ${index+1} (Pages Input Attached)</span>
                     </div>
+                    <button type="button" id="removeFile_${index}" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1.1rem;">&times;</button>
                 </div>
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Number of Pages:</label>
-                        <input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding:8px; border-radius:8px;" required>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:15px; align-items:center;">
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub); margin-bottom:4px; display:block;">Number of pages:</label>
+                        <input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding:10px; border-radius:10px; border:2px solid var(--border-color); font-size:0.85rem; width:100%; font-weight:700;" required>
                     </div>
-                    <div class="form-group">
-                        <label>Print Type:</label>
-                        <select id="printType_${index}" style="padding:8px; border-radius:8px;">
-                            <option value="bw" ${item.config.printType === 'bw' ? 'selected' : ''}>Black & White (₹3 / page)</option>
-                            <option value="color" ${item.config.printType === 'color' ? 'selected' : ''}>Full Color (₹10 / page)</option>
-                        </select>
+                    <div>
+                        <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub); margin-bottom:4px; display:block;">Number of copies:</label>
+                        <div class="blinkit-stepper" style="justify-content:space-between; max-width:140px; margin-top:4px;">
+                            <button type="button" id="minusCopy_${index}" class="stepper-btn">-</button>
+                            <span id="copyCountLabel_${index}" style="font-size:0.9rem;">${item.config.copies}</span>
+                            <button type="button" id="plusCopy_${index}" class="stepper-btn">+</button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Sides:</label>
-                        <select id="sides_${index}" style="padding:8px; border-radius:8px;">
-                            <option value="single" ${item.config.sides === 'single' ? 'selected' : ''}>Single Sided</option>
-                            <option value="double" ${item.config.sides === 'double' ? 'selected' : ''}>Double Sided</option>
-                        </select>
+                <p style="font-size:0.75rem; font-weight:700; color:var(--text-sub); margin-bottom:6px; text-align:left;">Choose print color</p>
+                <div class="blinkit-grid-options">
+                    <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}">
+                        <div class="option-icon">🎨</div>
+                        <div class="option-meta-text">
+                            <span class="option-title">Coloured</span>
+                            <span class="option-subtitle">₹10/page</span>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Binding Option:</label>
-                        <select id="binding_${index}" style="padding:8px; border-radius:8px;">
-                            <option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option>
-                            <option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option>
-                            <option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral Binding (+₹30)</option>
-                            <option value="soft" ${item.config.binding === 'soft' ? 'selected' : ''}>Soft Book Binding (+₹50)</option>
-                        </select>
+                    <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}">
+                        <div class="option-icon">🌑</div>
+                        <div class="option-meta-text">
+                            <span class="option-title">B & W</span>
+                            <span class="option-subtitle">₹3/page</span>
+                        </div>
                     </div>
+                </div>
+
+                <p style="font-size:0.75rem; font-weight:700; color:var(--text-sub); margin-bottom:6px; text-align:left;">Choose print orientation</p>
+                <div class="blinkit-grid-options">
+                    <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}">
+                        <div class="option-icon">📱</div>
+                        <div class="option-meta-text">
+                            <span class="option-title">Portrait</span>
+                            <span class="option-subtitle">8.3 × 11.7 in</span>
+                        </div>
+                    </div>
+                    <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}">
+                        <div class="option-icon">💻</div>
+                        <div class="option-meta-text">
+                            <span class="option-title">Landscape</span>
+                            <span class="option-subtitle">11.7 × 8.3 in</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-primary); padding:10px; border-radius:10px; border:1px solid var(--border-color);">
+                    <label style="font-size:0.8rem; font-weight:700; color:var(--text-main);">Binding Options:</label>
+                    <select id="binding_${index}" style="padding:6px; border-radius:8px; border:1px solid var(--border-color); font-size:0.8rem; font-weight:600; outline:none; cursor:pointer;">
+                        <option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option>
+                        <option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option>
+                        <option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral Binding (+₹30)</option>
+                        <option value="soft" ${item.config.binding === 'soft' ? 'selected' : ''}>Soft Book Binding (+₹50)</option>
+                    </select>
                 </div>
             `;
 
             multiFilesContainer.appendChild(fileRow);
 
-            document.getElementById(`previewBtn_${index}`).addEventListener('click', () => {
-                if(item.fileData) {
-                    openDocumentPreview(item.fileData, item.name, item.type);
-                } else {
-                    alert(`Bhai, refresh ke kaaran data buffer unbind ho gaya hai. Main button se ek baar dobara click karke files chun lo, options waise hi saved hain!`);
-                    if(fileUpload) fileUpload.click();
-                }
+            // Bind Grid Events Controls Handlers
+            document.getElementById(`optColor_${index}`).addEventListener('click', () => {
+                item.config.printType = 'color';
+                renderFilesUI();
+            });
+            document.getElementById(`optBw_${index}`).addEventListener('click', () => {
+                item.config.printType = 'bw';
+                renderFilesUI();
+            });
+            document.getElementById(`optPort_${index}`).addEventListener('click', () => {
+                item.config.orientation = 'portrait';
+                renderFilesUI();
+            });
+            document.getElementById(`optLand_${index}`).addEventListener('click', () => {
+                item.config.orientation = 'landscape';
+                renderFilesUI();
             });
 
             document.getElementById(`plusCopy_${index}`).addEventListener('click', () => {
                 item.config.copies++;
-                document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies;
                 saveCurrentFilesToSession();
                 calculateTotal();
+                document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies;
             });
             document.getElementById(`minusCopy_${index}`).addEventListener('click', () => {
                 if (item.config.copies > 1) {
                     item.config.copies--;
-                    document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies;
                     saveCurrentFilesToSession();
                     calculateTotal();
+                    document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies;
                 }
             });
 
@@ -338,15 +366,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById(`pages_${index}`).addEventListener('input', (e) => {
                 item.config.pages = parseInt(e.target.value) || 1;
                 saveCurrentFilesToSession();
-                calculateTotal();
-            });
-            document.getElementById(`printType_${index}`).addEventListener('change', (e) => {
-                item.config.printType = e.target.value;
-                saveCurrentFilesToSession();
-                calculateTotal();
-            });
-            document.getElementById(`sides_${index}`).addEventListener('change', (e) => {
-                item.config.sides = e.target.value;
                 calculateTotal();
             });
             document.getElementById(`binding_${index}`).addEventListener('change', (e) => {
@@ -395,7 +414,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const summaryDelivery = document.getElementById('summaryDelivery');
         const summaryTotal = document.getElementById('summaryTotal');
 
-        // 🔥 Trigger dynamic layout configuration mapping
         refreshInvoiceTabState();
 
         if (!summaryPrint || !summaryBinding || !summaryDelivery || !summaryTotal) return;
@@ -408,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        masterFilesArray.forEach((item, index) => {
+        masterFilesArray.forEach((item) => {
             const pages = parseInt(item.config.pages) || 1;
             const printType = item.config.printType;
             const binding = item.config.binding;
@@ -420,10 +438,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (binding === 'spiral') fileBindingCost = 30.00 * copies;
             if (binding === 'soft') fileBindingCost = 50.00 * copies;
-
-            let fileTotal = filePrintCost + fileBindingCost;
-            const costLabel = document.getElementById(`fileTotalCost_${index}`);
-            if (costLabel) costLabel.textContent = `₹${fileTotal.toFixed(2)}`;
 
             totalPrintCost += filePrintCost;
             totalBindingCost += fileBindingCost;
@@ -558,7 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 amount: totalAmountText,
                                 status: "Paid / Ready for Print",
                                 details: finalMetaConfig
-            };
+                            };
                             currentHistoryArray.push(newHistoryObject);
                             localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
 
@@ -598,7 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(checkForNewUpdates, 20000); 
     checkForNewUpdates();
 
-    // --- 📢 AUTOMATED MARKETING REMINDER & POPUP CONTROLLER ENGINE ---
+    // --- 📢 AUTOMATED MARKETING POPUP ---
     function triggerSmartMarketingPopup() {
         const activeUserKey = localStorage.getItem('printAppUser');
         const popupModal = document.getElementById('marketingPopupModal');
@@ -609,8 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!popupModal || !popupTitle || !popupBody || !popupIcon) return;
 
         const offersList = [
-            { title: "🔥 Flash Sale Alert!", body: "Bhai, exam time aa gaya hai! Pure Varanasi ke bacchon ke liye Black & White prints abhi direct live chal rahe hain sirf ₹3.00/page par. Fatafat files select karo aur delivery pao!", icon: "⚡" },
-            { title: "🎁 Surprise Bundle Offer!", body: "Dukan par naya system update hua hai! Multi-file upload chalu hai, saari PDFs ek sath select karo aur copies stepper se direct copies badhao makkhan ki tarah!", icon: "📦" }
+            { title: "🔥 Flash Sale Alert!", body: "Bhai, exam time aa gaya hai! Pure Varanasi ke bacchon ke liye Black & White prints abhi direct live chal rahe hain sirf ₹3.00/page par.", icon: "⚡" }
         ];
 
         if (!activeUserKey) {
@@ -650,12 +663,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (daysSinceLastOrder >= 3) {
             popupIcon.textContent = "👋";
             popupTitle.textContent = `We Miss You, ${userName}!`;
-            popupBody.innerHTML = `Hame pata hai aap <b>(${userContact})</b> se connected hain, par kaafi dino se aapne koi document print nahi kiya bhai! Kal subah <b>7:00 AM</b> dukan khulne se pehle hi apni saari files line up kar lo, <b>First Order Scheme</b> par free delivery abhi bhi active hai!`;
+            popupBody.innerHTML = `Hame pata hai aap <b>(${userContact})</b> se connected hain, par kaafi dino se aapne koi document print nahi kiya bhai!`;
             setTimeout(() => { popupModal.style.display = 'flex'; }, 3000);
         } else {
             popupIcon.textContent = "🚚";
             popupTitle.textContent = `Hey ${userName}, Fast Delivery Active!`;
-            popupBody.textContent = `Aapka system registered account active hai. Hamara 'HP Smart Tank 580' hardware and automatic local bridge pipeline 100% online hai. Place your order now for hyper-fast doorstep drop!`;
+            popupBody.textContent = `HP Smart Tank 580 pipeline 100% online hai. Place your order now!`;
             setTimeout(() => { popupModal.style.display = 'flex'; }, 4000);
         }
 
