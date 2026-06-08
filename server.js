@@ -35,13 +35,14 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Initialize Razorpay Instance
+// 🛠️ FIX: Direct Razorpay Keys Setup (Render Environment Variable ka jhanjhat khatam)
+// Niche 'YOUR_ASLI_KEY_ID' aur 'YOUR_ASLI_SECRET_KEY' ki jagah apni asli keys single quotes ke andar daal do
 const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || 'YOUR_TEST_KEY_ID',
-    key_secret: process.env.RAZORPAY_KEY_SECRET || 'YOUR_TEST_KEY_SECRET'
+    key_id: 'rzp_test_YOUR_ASLI_KEY_ID_HERE', 
+    key_secret: 'YOUR_ASLI_SECRET_KEY_HERE'
 });
 
-// 🌐 FIX: Website kholte hi index.html dikhane ke liye main route
+// 🌐 Website kholte hi index.html dikhane ke liye main route
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
