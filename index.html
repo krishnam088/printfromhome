@@ -35,33 +35,32 @@
         /* 📱 PREMIUM BRAND HEADER SYSTEM */
         .brand-premium-header {
             background: linear-gradient(to bottom, #FFF3B3 0%, #FFFBE6 100%);
-            padding: 16px;
+            padding: 16px 20px;
             width: 100%;
             border-bottom: 1px solid rgba(244,196,48,0.15);
         }
         .header-container { max-width: 100%; margin: 0 auto; }
         .header-meta-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         
-        /* Attractive Compact 15 Minutes */
-        .delivery-time-title { font-size: 0.75rem; font-weight: 700; color: #4a5568; text-transform: uppercase; letter-spacing: 0.5px; }
-        .delivery-time-countdown { font-size: 1.4rem; font-weight: 900; color: #111111; display: flex; align-items: center; gap: 6px; }
-        .distance-badge { background: var(--blinkit-green); color: white; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 8px; margin-left: 5px; }
+        /* Left Brand Column: Delivery + Username Side-by-Side */
+        .delivery-brand-box { display: flex; flex-direction: column; text-align: left; }
+        .user-greeting-inline { font-size: 0.8rem; font-weight: 700; color: #2d3748; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .delivery-time-title { font-size: 0.75rem; font-weight: 700; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
+        .delivery-time-countdown { font-size: 1.4rem; font-weight: 900; color: #111111; display: flex; align-items: center; margin-top: -2px; }
         
-        .header-profile-cluster { display: flex; align-items: center; gap: 12px; }
+        /* Right Side: Action Cluster System Layout Alignment */
+        .header-profile-cluster { display: flex; align-items: center; gap: 10px; margin-left: auto; }
         
-        /* Functional Wallet Badge Button */
-        .wallet-micro-badge { background: #ffffff; border-radius: 14px; border: 1px solid var(--border-color); padding: 6px 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 6px; cursor: pointer; transition: transform 0.2s; }
+        /* Wallet on Left Side of Icon */
+        .wallet-micro-badge { background: #ffffff; border-radius: 14px; border: 1px solid var(--border-color); padding: 7px 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 6px; cursor: pointer; transition: transform 0.2s; }
         .wallet-micro-badge:hover { transform: translateY(-1px); }
         .wallet-cash-value { font-size: 0.85rem; font-weight: 800; color: #000000; }
         
-        /* Shifted Profile Icon Trigger Button */
-        .avatar-circle-trigger { width: 44px; height: 44px; background: #000000; color: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; font-size: 1.1rem; border: 2px solid #ffffff; margin-right: -4px; transition: transform 0.2s; }
+        /* Profile Icon Push Extreme Side Border Edge */
+        .avatar-circle-trigger { width: 44px; height: 44px; background: #000000; color: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; font-size: 1.1rem; border: 2px solid #ffffff; transition: transform 0.2s; }
         .avatar-circle-trigger:hover { transform: scale(1.04); }
-        
-        .destination-dropdown-trigger { font-weight: 800; font-size: 0.9rem; color: #222222; text-transform: uppercase; cursor: pointer; text-align: left; margin-top: 6px; display: inline-block; }
-        .destination-sub-text { font-weight: 600; color: var(--text-sub); text-transform: none; }
 
-        /* 🍔 USER SLIDING SIDEBAR DRAWER WITH INTERNAL SEARCH ENGINE */
+        /* 🍔 USER SLIDING SIDEBAR DRAWER */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1999; display: none; opacity: 0; transition: opacity 0.3s ease; }
         .drawer-overlay.active { display: block; opacity: 1; }
         
@@ -69,7 +68,7 @@
         .side-drawer.active { right: 0; }
         .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; }
         
-        /* 🔍 Built-in Search input field inside profile drawer menu boxes */
+        /* Drawer Internal Filter Search box */
         .drawer-search-box { position: relative; margin-bottom: 20px; width: 100%; }
         .drawer-search-box input { width: 100%; padding: 10px 14px; padding-left: 36px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 0.85rem; font-weight: 600; outline: none; }
         .drawer-search-box input:focus { border-color: var(--blinkit-green); }
@@ -79,14 +78,14 @@
         .drawer-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; color: var(--text-main); cursor: pointer; transition: all 0.2s; }
         .drawer-item:hover, .drawer-item.active { background: #f1f5f9; color: var(--blinkit-green); }
 
-        /* Wallet Deposit Popup Modal Panel Frame Components Elements Mapping Rules */
+        /* Wallet Deposit Popup Modal Frame */
         .wallet-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 15000; display: none; justify-content: center; align-items: center; padding: 20px; }
         .wallet-modal-card { background: var(--surface); border-radius: 24px; padding: 25px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 2px solid var(--blinkit-yellow); }
         .wallet-chip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
         .wallet-chip-btn { background: var(--bg-primary); border: 2px solid var(--border-color); padding: 8px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
         .wallet-chip-btn:hover { border-color: var(--blinkit-green); color: var(--blinkit-green); }
 
-        /* Layout Architecture Systems */
+        /* Layout Layout Setup Systems */
         .container { width: 100%; max-width: 100%; margin: 0; padding: 15px; display: grid; grid-template-columns: 1fr; gap: 20px; transition: all 0.3s ease; }
         @media (min-width: 992px) { .container.has-invoice { grid-template-columns: 2.5fr 1.2fr; padding: 25px; } }
         @media (max-width: 768px) { .container { padding: 10px; gap: 15px; } }
@@ -96,7 +95,7 @@
         .view-section.active { display: block; animation: fadeView 0.25s ease-in-out; }
         @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Verbatim replicated structure from image 1000283101.jpg */
+        /* Verbatim layout features */
         .verbatim-docs-promo-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02); width: 100%; overflow: hidden; position: relative; margin-top: 15px; }
         .promo-details-block { text-align: left; z-index: 2; max-width: 60%; }
         .promo-main-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; letter-spacing: -0.5px; }
@@ -123,7 +122,6 @@
 </head>
 <body>
 
-    <!-- TOP SYSTEM HEADER CLOCK -->
     <div class="live-timer-banner">
         <div>🕒 India Time: <span id="userLiveClock" style="color: var(--blinkit-yellow); font-family: monospace; font-size: 0.95rem;">00:00:00 AM</span></div>
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -132,17 +130,14 @@
         </div>
     </div>
 
-    <!-- Background Dimmer Overlay -->
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
-    <!-- 🍔 USER SIDEBAR PROFILE DRAWER WITH INTERNAL SEARCH BAR FILTERS -->
     <nav id="userSideDrawer" class="side-drawer">
         <div class="drawer-header">
             <h2 style="font-size:1.2rem; font-weight:800;">Account Menu</h2>
             <span style="cursor:pointer; font-size:1.6rem; font-weight:bold; color:var(--text-sub);" onclick="toggleUserDrawer(false)">&times;</span>
         </div>
 
-        <!-- 🔍 SEARCH BAR INTEGRATED INSIDE THE PROFILE DRAWER MENU -->
         <div class="drawer-search-box">
             <span class="drawer-search-icon">🔍</span>
             <input type="text" id="menuInternalSearchInput" placeholder="Search..." onkeyup="filterSidebarMenuItemsLive()">
@@ -159,7 +154,6 @@
         </div>
     </nav>
 
-    <!-- 💰 USEFUL INTERACTIVE WALLET ADD MONEY POPUP MODAL FADE LAYER -->
     <div id="walletDepositModal" class="wallet-modal-overlay" onclick="toggleWalletPopupGrid(false, event)">
         <div class="wallet-modal-card">
             <h3 style="font-size:1.3rem; font-weight:800; margin-bottom:6px;">💰 Recharge Print Wallet</h3>
@@ -177,7 +171,6 @@
         </div>
     </div>
 
-    <!-- STAGE 1: Splash Loader Screen -->
     <div id="splashScreen" class="splash-container">
         <div class="splash-content">
             <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
@@ -185,7 +178,6 @@
         </div>
     </div>
 
-    <!-- STAGE 2: Authentication View -->
     <div id="authScreen" class="auth-container app-hidden">
         <div class="auth-card">
             <div class="auth-brand">print<span class="brand-green">from</span>home</div>
@@ -210,41 +202,33 @@
         </div>
     </div>
 
-    <!-- STAGE 3: Main App Workspace -->
     <div id="mainApp" class="app-hidden">
         
-        <!-- HIGH-TECH UPGRADED HEADER FROM IMAGE 1000283101.jpg -->
         <header class="brand-premium-header">
             <div class="header-container">
                 <div class="header-meta-row">
-                    <div>
-                        <p class="delivery-time-title">Prints in</p>
-                        <!-- ⏱️ Attractive Compact 15 Minutes Tracker Banner -->
-                        <h2 class="delivery-time-countdown">15 mins <span class="distance-badge">🚀 1.7 km</span></h2>
+                    <div class="delivery-brand-box">
+                        <div id="userGreeting" class="user-greeting-inline">Guest Mode</div>
+                        <h2 class="delivery-time-countdown">
+                            <span class="delivery-time-title" style="margin-right:6px;">Prints in</span> 15 mins
+                        </h2>
                     </div>
+
                     <div class="header-profile-cluster">
-                        <!-- 💰 Active Working Useful Digital Wallet Interface Module -->
                         <div class="wallet-micro-badge" onclick="toggleWalletPopupGrid(true, event)">
-                            <span class="wallet-icon-label">💵</span>
+                            <span>💵</span>
                             <span class="wallet-cash-value" id="headerWalletDisplayBalance">₹0.00</span>
                         </div>
-                        <!-- 👤 Shifted Action Profile Circle Menu trigger links -->
                         <div class="avatar-circle-trigger" onclick="toggleUserDrawer(true)">
                             👤
                         </div>
                     </div>
                 </div>
-
-                <div class="destination-dropdown-trigger" onclick="toggleUserDrawer(true)">
-                    <span id="userGreeting" class="destination-sub-text">Guest Workspace Mode</span> ▾
-                </div>
             </div>
         </header>
 
-        <!-- Main Window Frames Workspace -->
         <div class="container" id="mainLayoutAppContainer">
             
-            <!-- VIEW BLOCK 1: PRINT STORE -->
             <div id="user_section_store" class="view-section active">
                 <div class="compact-offers-bar" id="storeOffersTopBanner">
                     <span>📢 <b>Active Offers:</b></span>
@@ -297,7 +281,6 @@
                 </div>
             </div>
 
-            <!-- VIEW BLOCK 2: HISTORIES -->
             <div id="user_section_history" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
@@ -307,7 +290,6 @@
                 </div>
             </div>
 
-            <!-- VIEW BLOCK 3: HELP -->
             <div id="user_section_help" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:15px;">❓ Help Center & Customer Care Support</h3>
@@ -317,7 +299,6 @@
                 </div>
             </div>
 
-            <!-- VIEW BLOCK 4: TERMS -->
             <div id="user_section_terms" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:15px;">📜 Store Terms & Service Conditions</h3>
@@ -327,7 +308,6 @@
                 </div>
             </div>
 
-            <!-- INVOICE BILLING SIDEBAR -->
             <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; background:var(--surface); border:1px solid var(--border-color); padding:20px; border-radius:16px;">
                 <h2>Order Invoice Summary</h2>
                 <div class="summary-card">
@@ -342,7 +322,6 @@
         </div>
     </div>
 
-    <!-- Independent Ticking Clock Controllers Script Nodes -->
     <script>
         function updateMainAppUIClock() {
             const now = new Date();
@@ -372,44 +351,26 @@
             document.getElementById('userSideDrawer').classList.toggle('active', open);
             document.getElementById('drawerOverlay').classList.toggle('active', open);
             if(open) {
-                // Flushes older internal search strings logs when opened fresh
                 document.getElementById('menuInternalSearchInput').value = '';
                 filterSidebarMenuItemsLive();
             }
         }
 
-        // 🔥 SEARCH ALGORITHM ENGINE: FILTERS SIDEBAR ACCOUNT ITEMS REAL-TIME LIVE
         function filterSidebarMenuItemsLive() {
             const query = document.getElementById('menuInternalSearchInput').value.toLowerCase().trim();
             const listItems = document.querySelectorAll('#sidebarMenuContainerList .drawer-item');
-
             listItems.forEach(item => {
                 const itemText = item.textContent.toLowerCase();
-                if(itemText.includes(query)) {
-                    item.style.display = 'flex'; // Unhides items matching search query loops bounds
-                } else {
-                    item.style.display = 'none'; // Filters away mismatched rows
-                }
+                if(itemText.includes(query)) { item.style.display = 'flex'; } else { item.style.display = 'none'; }
             });
         }
 
-        // 🔥 WALLET POPUP WINDOW MODAL LAYER CONTROL
         function toggleWalletPopupGrid(show, event) {
             const modal = document.getElementById('walletDepositModal');
             if(!modal) return;
-            if(show) {
-                modal.style.display = 'flex';
-            } else {
-                // Safeguard against event bubbling clicks inside structural elements wrappers bounds
-                if(event.target === modal) modal.style.display = 'none';
-            }
+            if(show) { modal.style.display = 'flex'; } else { if(event.target === modal) modal.style.display = 'none'; }
         }
-        function closeWalletNotificationBox() {
-            document.getElementById('walletDepositModal').style.display = 'none';
-        }
-        function setWalletQuickAmount(amt) {
-            document.getElementById('walletCustomAmountInput').value = amt;
-        }
+        function setWalletQuickAmount(amt) { document.getElementById('walletCustomAmountInput').value = amt; }
 
         function navigateUserSection(targetId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
@@ -425,24 +386,10 @@
                 sidePanelPrice.classList.add('hidden'); 
                 mainLayoutWrapper.classList.remove('has-invoice');
                 mainLayoutWrapper.style.gridTemplateColumns = '1fr'; 
-            } else {
-                if(typeof window.refreshInvoiceTabState === 'function') { window.refreshInvoiceTabState(); }
-            }
+            } else { if(typeof window.refreshInvoiceTabState === 'function') { window.refreshInvoiceTabState(); } }
             toggleUserDrawer(false);
         }
     </script>
-
-    <!-- Marketing Notification Modal -->
-    <div id="marketingPopupModal" style="display: none; position: fixed; z-index: 12000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; padding: 20px;">
-        <div style="background: #ffffff; padding: 25px; border-radius: 24px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 20px 45 rgba(0,0,0,0.2); border: 2px solid #F4C430; position: relative;">
-            <span id="closeMarketingPopup" style="position: absolute; top: 12px; right: 18px; font-size: 22px; font-weight: bold; cursor: pointer; color: #a0aec0;">&times;</span>
-            <div id="popupIconBadge" style="font-size: 3.5rem; margin-bottom: 12px;">🎉</div>
-            <h3 id="popupAlertTitle" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 8px;">Special Offer Alert!</h3>
-            <p id="popupAlertBody" style="font-size: 0.9rem; color: #4a5568; line-height: 1.5; margin-bottom: 20px;"></p>
-            <button style="width: 100%; padding: 12px; background-color: #0C8346; color: #ffffff; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer;" onclick="document.getElementById('marketingPopupModal').style.display='none'">Chalo Print Karte Hain 🚀</button>
-        </div>
-    </div>
-
     <script src="script.js"></script>
 </body>
 </html>
