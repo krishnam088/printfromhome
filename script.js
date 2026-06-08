@@ -29,30 +29,31 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.reload();
     };
 
-    authForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const id = authIdentity.value.trim().toLowerCase();
-        const pass = authPassword.value;
-        const name = authName.value.trim() || 'Customer';
+    if(authForm) {
+        authForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = authIdentity.value.trim().toLowerCase();
+            const pass = authPassword.value;
+            const name = authName.value.trim() || 'Customer';
 
-        if (isSignupMode) {
-            if(localStorage.getItem(`user_${id}`)) {
-                alert("❌ Yeh ID already registered hai. Login karein.");
+            if (isSignupMode) {
+                if(localStorage.getItem(`user_${id}`)) {
+                    alert("❌ Yeh ID already registered hai. Login karein.");
+                } else {
+                    localStorage.setItem(`user_${id}`, JSON.stringify({ name, password: pass, wallet: 0 }));
+                    loginUser(id, name);
+                }
             } else {
-                localStorage.setItem(`user_${id}`, JSON.stringify({ name, password: pass, wallet: 0 }));
-                loginUser(id, name);
+                const userData = JSON.parse(localStorage.getItem(`user_${id}`));
+                if(userData && userData.password === pass) {
+                    loginUser(id, userData.name);
+                } else {
+                    alert("❌ Galat ID ya Password!");
+                }
             }
-        } else {
-            const userData = JSON.parse(localStorage.getItem(`user_${id}`));
-            if(userData && userData.password === pass) {
-                loginUser(id, userData.name);
-            } else {
-                alert("❌ Galat ID ya Password!");
-            }
-        }
-    });
+        });
+    }
 
-    // Toggle Login/Signup Mode
     if(toggleAuthLink) {
         toggleAuthLink.addEventListener('click', (e) => {
             e.preventDefault();
@@ -62,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Logout
     if(logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             localStorage.removeItem('printAppUser');
@@ -71,10 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 💰 WALLET & PRINT ENGINE ---
-    function synchronizeWalletInterfaceBalance() {
+    window.synchronizeWalletInterfaceBalance = function() {
         const user = localStorage.getItem('printAppUser');
         const balanceNode = document.getElementById('headerWalletDisplayBalance');
-        if(!balanceDisplayNode) return;
+        if(!balanceNode) return;
         if(!user) { balanceNode.textContent = "₹0.00"; return; }
         let cash = parseFloat(localStorage.getItem(`wallet_${user}`)) || 0.00;
         balanceNode.textContent = `₹${cash.toFixed(2)}`;
@@ -84,8 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const user = localStorage.getItem('printAppUser');
         if(!user) { alert("❌ Pehle login kijiye!"); return; }
         const amount = parseFloat(document.getElementById('walletCustomAmountInput').value) || 100;
-        
-        // Mockup Payment for now - Replace with your Razorpay Key Logic
         let oldCash = parseFloat(localStorage.getItem(`wallet_${user}`)) || 0.00;
         localStorage.setItem(`wallet_${user}`, (oldCash + amount).toFixed(2));
         synchronizeWalletInterfaceBalance();
@@ -110,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 🖨️ FILE PROCESSING LOGIC ---
     if(fileUpload) {
         fileUpload.addEventListener('change', () => {
+            if(fileUpload.files.length === 0) return;
             Array.from(fileUpload.files).forEach(file => {
                 masterFilesArray.push({ name: file.name, config: { pages: 1, copies: 1 } });
             });
@@ -117,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function renderFilesUI() {
+    window.renderFilesUI = function() {
         if(!multiFilesContainer) return;
         multiFilesContainer.innerHTML = '';
         masterFilesArray.forEach((item, index) => {
@@ -126,12 +125,24 @@ document.addEventListener('DOMContentLoaded', () => {
             card.innerHTML = `
                 <div class="blinkit-card-row">
                     <h4 style="font-size:0.85rem;">📄 ${item.name}</h4>
-                    <button onclick="masterFilesArray.splice(${index}, 1); renderFilesUI();" style="color:red; border:none; background:none;">&times;</button>
+                    <button onclick="masterFilesArray.splice(${index}, 1); renderFilesUI();" style="color:red; border:none; background:none; cursor:pointer;">&times;</button>
                 </div>
             `;
             multiFilesContainer.appendChild(card);
         });
-        document.getElementById('configurationScreenState').classList.remove('hidden');
-        document.getElementById('uploadScreenInitialState').classList.add('hidden');
+        
+        // Divert to Config Screen
+        const configScreen = document.getElementById('configurationScreenState');
+        const uploadScreen = document.getElementById('uploadScreenInitialState');
+        if(configScreen) configScreen.classList.remove('hidden');
+        if(uploadScreen) uploadScreen.classList.add('hidden');
+    }
+
+    window.forceReturnToUploadView = function() {
+        masterFilesArray = [];
+        const configScreen = document.getElementById('configurationScreenState');
+        const uploadScreen = document.getElementById('uploadScreenInitialState');
+        if(configScreen) configScreen.classList.add('hidden');
+        if(uploadScreen) uploadScreen.classList.remove('hidden');
     }
 });
