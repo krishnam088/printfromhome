@@ -124,9 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fileUpload.addEventListener('change', () => {
         if (fileUpload.files.length === 0) return;
 
-        // 🔥 FIX: Puraani files delete nahi hongi, nayi files append ho jayengi array mein
         Array.from(fileUpload.files).forEach(file => {
-            // Avoid duplicate pushing of identical file references
             const isDuplicate = masterFilesArray.some(f => f.fileData.name === file.name && f.fileData.size === file.size);
             if (!isDuplicate) {
                 masterFilesArray.push({
@@ -137,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         fileNameDisplay.textContent = `✓ Total ${masterFilesArray.length} files in queue`;
-        fileUpload.value = ''; // Input clear so user can select the same file again if desired
+        fileUpload.value = ''; 
         renderFilesUI();
     });
 
@@ -219,13 +217,13 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById(`plusCopy_${index}`).addEventListener('click', () => {
                 item.config.copies++;
                 document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies;
-                calculateTotal();
+                calculateTotal(); // 🔥 Live Calculate Trigger
             });
             document.getElementById(`minusCopy_${index}`).addEventListener('click', () => {
                 if (item.config.copies > 1) {
                     item.config.copies--;
                     document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies;
-                    calculateTotal();
+                    calculateTotal(); // 🔥 Live Calculate Trigger
                 }
             });
 
@@ -236,9 +234,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderFilesUI();
             });
 
-            // Input monitors for calculations
+            // Input monitors to save configuration changes and trigger live totals
             document.getElementById(`pages_${index}`).addEventListener('input', (e) => {
-                item.config.pages = e.target.value;
+                item.config.pages = parseInt(e.target.value) || 1;
                 calculateTotal();
             });
             document.getElementById(`printType_${index}`).addEventListener('change', (e) => {
@@ -258,10 +256,10 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
     }
 
-    // 🔥 Live Document Preview Render Core Mechanism
+    // Live Document Preview Render Core Mechanism
     function openDocumentPreview(file) {
         previewTitle.textContent = `Preview: ${file.name}`;
-        previewBody.innerHTML = ''; // Fresh mapping load
+        previewBody.innerHTML = ''; 
 
         const fileURL = URL.createObjectURL(file);
 
@@ -280,7 +278,6 @@ document.addEventListener('DOMContentLoaded', () => {
             iframe.style.border = 'none';
             previewBody.appendChild(iframe);
         } else {
-            // Document types like word files (.doc/.docx) cannot be natively previewed without cloud libraries
             previewBody.innerHTML = `
                 <div style="text-align:center; padding:20px; color:#4a5568;">
                     <span style="font-size:3rem;">📄</span>
@@ -299,9 +296,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === previewModal) previewModal.style.display = 'none';
     });
 
+    // 🔥 FIXED REAL-TIME CALCULATOR ENGINE
     function calculateTotal() {
         let totalPrintCost = 0;
         let totalBindingCost = 0;
+
+        const summaryPrint = document.getElementById('summaryPrint');
+        const summaryBinding = document.getElementById('summaryBinding');
+        const summaryDelivery = document.getElementById('summaryDelivery');
+        const summaryTotal = document.getElementById('summaryTotal');
 
         if (masterFilesArray.length === 0) {
             summaryPrint.textContent = `₹0.00`;
@@ -312,6 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         masterFilesArray.forEach((item, index) => {
+            // Strong Data Type Parsing to ensure math variables work smoothly
             const pages = parseInt(item.config.pages) || 1;
             const printType = item.config.printType;
             const binding = item.config.binding;
@@ -326,6 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let fileTotal = filePrintCost + fileBindingCost;
 
+            // Individual Card Cost Update
             const costLabel = document.getElementById(`fileTotalCost_${index}`);
             if (costLabel) costLabel.textContent = `₹${fileTotal.toFixed(2)}`;
 
@@ -334,9 +339,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         let finalDocumentCost = totalPrintCost + totalBindingCost;
-        let accurateDeliveryCharge = BASE_DELIVERY_CHARGE;
+        let accurateDeliveryCharge = 40.00; // Base Delivery Charge
 
-        // Smart schemes checking mapping variables execution
+        // Smart schemes check matrix execution
         if (isFirstTimeUser && finalDocumentCost >= 50.00) {
             accurateDeliveryCharge = 0.00; 
         } else if (finalDocumentCost >= 99.00) {
@@ -345,13 +350,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let grandTotal = finalDocumentCost + accurateDeliveryCharge;
 
+        // 🔥 Updating DOM elements directly for instant recalculations
         summaryPrint.textContent = `₹${totalPrintCost.toFixed(2)}`;
         summaryBinding.textContent = `₹${totalBindingCost.toFixed(2)}`;
         summaryDelivery.textContent = accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`;
         summaryTotal.textContent = `₹${grandTotal.toFixed(2)}`;
     }
 
-    // Form submission processor loops over active appended file arrays safely
+    // Form submission processor
+    const printForm = document.getElementById('printForm');
     printForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         if(masterFilesArray.length === 0) {
@@ -359,6 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const summaryTotal = document.getElementById('summaryTotal');
         const totalAmountText = summaryTotal.textContent.replace('₹', '');
         const formData = new FormData();
 
