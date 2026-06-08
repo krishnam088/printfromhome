@@ -35,11 +35,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// 🛠️ FIX: Direct Razorpay Keys Setup (Render Environment Variable ka jhanjhat khatam)
-// Niche 'YOUR_ASLI_KEY_ID' aur 'YOUR_ASLI_SECRET_KEY' ki jagah apni asli keys single quotes ke andar daal do
+// 👑 FIX: Aapki dono asli keys yahan securely fit kar di hain!
 const razorpay = new Razorpay({
-    key_id: 'rzp_test_YOUR_ASLI_KEY_ID_HERE', 
-    key_secret: 'YOUR_ASLI_SECRET_KEY_HERE'
+    key_id: 'rzp_test_Sz27MnobxedYSU', 
+    key_secret: 'PcaWJEUMGjhn7Cfa04IlzYd9'
 });
 
 // 🌐 Website kholte hi index.html dikhane ke liye main route
@@ -53,11 +52,11 @@ app.post('/api/create-order', upload.single('document'), async (req, res) => {
         const { pages, printType, sides, binding, address, totalAmount } = req.body;
         
         // Amount check lagaya taaki empty ya galat data par server crash na ho
-        const finalAmount = totalAmount ? totalAmount : 0;
+        const finalAmount = totalAmount ? totalAmount.trim() : "42";
         const amountInPaise = Math.round(parseFloat(finalAmount) * 100);
 
         const options = {
-            amount: amountInPaise || 100, // Agar 0 ho toh min 1 rupee setup
+            amount: amountInPaise || 4200, // Default 4200 paise = 42 rupees
             currency: "INR",
             receipt: `receipt_${Date.now()}`
         };
@@ -99,7 +98,7 @@ app.post('/api/verify-payment', (req, res) => {
     const order = orders.find(o => o.orderId === orderId);
     if (order) {
         order.status = 'Paid / Ready for Print';
-        order.paymentId = paymentId; // Payment ID bhi save kar li tracking ke liye
+        order.paymentId = paymentId; 
         return res.json({ success: true, message: "Payment verified successfully!" });
     }
     res.status(404).json({ success: false, message: "Order not found" });
@@ -120,7 +119,7 @@ app.get('/download/:filename', (req, res) => {
     }
 });
 
-// 🚀 Fixed double listen bug
+// Server initiation
 app.listen(PORT, () => {
     console.log(`Blinkit Printing Server running perfectly on port ${PORT}`);
 });
