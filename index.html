@@ -21,7 +21,7 @@
         }
         body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; }
 
-        /* 📱 PREMIUM BRAND HEADER SYSTEM FROM "1000283101.jpg" - NOW SLIDED TO TOP */
+        /* PREMIUM BRAND HEADER SYSTEM - SLIDED TO TOP */
         .brand-premium-header {
             background: linear-gradient(to bottom, #FFF3B3 0%, #FFFBE6 100%);
             padding: 16px 20px;
@@ -40,7 +40,7 @@
         /* Right Side: Cluster Layout Stack */
         .header-profile-cluster { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
         
-        /* 🔥 NEW POSITION: Small Shop Status Navigation Stack right above profile icon */
+        /* Small Shop Status Navigation Stack right above profile icon */
         .status-micro-nav { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
         .shop-status-text-badge { font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; }
         .shop-status-text-badge.open { background: var(--blinkit-green); color: white; }
@@ -57,22 +57,38 @@
         .avatar-circle-trigger { width: 44px; height: 44px; background: #000000; color: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; font-size: 1.1rem; border: 2px solid #ffffff; transition: transform 0.2s; }
         .avatar-circle-trigger:hover { transform: scale(1.04); }
 
-        /* 🍔 USER SLIDING SIDEBAR DRAWER */
+        /* USER SLIDING SIDEBAR DRAWER - EXPANDED CAPACITY FOR INTEGRATED SECTIONS */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1999; display: none; opacity: 0; transition: opacity 0.3s ease; }
         .drawer-overlay.active { display: block; opacity: 1; }
         
-        .side-drawer { position: fixed; top: 0; right: -320px; width: 310px; height: 100vh; background: var(--surface); z-index: 2000; box-shadow: -10px 0 30px rgba(0,0,0,0.08); transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px 18px; display: flex; flex-direction: column; border-left: 1px solid var(--border-color); }
+        .side-drawer { position: fixed; top: 0; right: -360px; width: 350px; height: 100vh; background: var(--surface); z-index: 2000; box-shadow: -10px 0 30px rgba(0,0,0,0.08); transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px 18px; display: flex; flex-direction: column; border-left: 1px solid var(--border-color); }
         .side-drawer.active { right: 0; }
         .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; }
         
-        .drawer-search-box { position: relative; margin-bottom: 20px; width: 100%; }
+        .drawer-search-box { position: relative; margin-bottom: 15px; width: 100%; }
         .drawer-search-box input { width: 100%; padding: 10px 14px; padding-left: 36px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 0.85rem; font-weight: 600; outline: none; }
         .drawer-search-box input:focus { border-color: var(--blinkit-green); }
         .drawer-search-icon { position: absolute; left: 12px; top: 11px; color: var(--text-sub); font-size: 0.9rem; }
 
-        .drawer-menu-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-        .drawer-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; color: var(--text-main); cursor: pointer; transition: all 0.2s; }
+        .drawer-menu-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; }
+        .drawer-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; font-weight: 600; font-size: 0.85rem; color: var(--text-main); cursor: pointer; transition: all 0.2s; }
         .drawer-item:hover, .drawer-item.active { background: #f1f5f9; color: var(--blinkit-green); }
+
+        /* INNER SUB-PANELS IN DRAWER (PROFILE EDIT, HELP CENTER, ETC.) */
+        .drawer-subpanel-content { flex: 1; overflow-y: auto; display: none; padding-right: 2px; }
+        .drawer-subpanel-content.active { display: block; }
+        
+        /* Custom Inputs for Settings inside drawer */
+        .drawer-input-group { margin-bottom: 12px; text-align: left; }
+        .drawer-input-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 4px; }
+        .drawer-input-group input { width: 100%; padding: 10px 12px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 0.85rem; font-weight: 600; outline: none; transition: border-color 0.2s; }
+        .drawer-input-group input:focus { border-color: var(--blinkit-green); }
+        
+        .btn-drawer-action { width: 100%; padding: 10px; background: var(--blinkit-green); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; margin-top: 5px; }
+        .btn-drawer-action:hover { background: #0a6e3a; }
+        
+        .whatsapp-support-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background-color: #25D366; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; text-decoration: none; margin-top: 15px; box-shadow: 0 4px 12px rgba(37,211,102,0.25); transition: transform 0.2s; }
+        .whatsapp-support-btn:hover { transform: translateY(-1px); background-color: #20ba5a; }
 
         /* Wallet Deposit Popup Modal Frame */
         .wallet-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 15000; display: none; justify-content: center; align-items: center; padding: 20px; }
@@ -91,7 +107,7 @@
         .view-section.active { display: block; animation: fadeView 0.25s ease-in-out; }
         @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Docs Promo Card Settings from Image 1000283101.jpg */
+        /* Docs Promo Card Settings */
         .verbatim-docs-promo-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02); width: 100%; overflow: hidden; position: relative; margin-top: 15px; }
         .promo-details-block { text-align: left; z-index: 2; max-width: 60%; }
         .promo-main-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; letter-spacing: -0.5px; }
@@ -118,30 +134,78 @@
 </head>
 <body>
 
+    <!-- Background Overlay Blocker Layer -->
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
+    <!-- 🍔 SIDEBAR PROFILE DRAWER -->
     <nav id="userSideDrawer" class="side-drawer">
         <div class="drawer-header">
-            <h2 style="font-size:1.2rem; font-weight:800;">Account Menu</h2>
+            <h2 style="font-size:1.1rem; font-weight:800;">Account Menu</h2>
             <span style="cursor:pointer; font-size:1.6rem; font-weight:bold; color:var(--text-sub);" onclick="toggleUserDrawer(false)">&times;</span>
         </div>
 
-        <div class="drawer-search-box">
-            <span class="drawer-search-icon">🔍</span>
-            <input type="text" id="menuInternalSearchInput" placeholder="Search..." onkeyup="filterSidebarMenuItemsLive()">
+        <!-- INNER NAVIGATION SUB-TABS -->
+        <ul class="drawer-menu-list" id="sidebarMenuContainerList">
+            <li class="drawer-item active" id="menu_store" onclick="navigateDrawerSection('store')">🛒 Order Print Store</li>
+            <li class="drawer-item" id="menu_profile_edit" onclick="navigateDrawerSection('profile_edit')">⚙️ Edit Profile Settings</li>
+            <li class="drawer-item" id="menu_history" onclick="navigateDrawerSection('history')">📋 Order Status & History</li>
+            <li class="drawer-item" id="menu_help" onclick="navigateDrawerSection('help')">❓ Help Center & Support</li>
+            <li class="drawer-item" id="menu_terms" onclick="navigateDrawerSection('terms')">📜 Terms & Manuals</li>
+        </ul>
+
+        <!-- ⚙️ SUB-PANEL A: EDIT PROFILE SETTINGS (FULLY FUNCTIONAL) -->
+        <div id="drawer_panel_profile_edit" class="drawer-subpanel-content">
+            <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:12px; color:var(--text-main); padding-bottom:4px; border-bottom:1px solid var(--border-color);">Account Settings</h4>
+            <form id="drawerProfileUpdateForm">
+                <div class="drawer-input-group">
+                    <label>Change Username / Name</label>
+                    <input type="text" id="drawerEditName" placeholder="Enter new name" required>
+                </div>
+                <div class="drawer-input-group">
+                    <label>Alternate Mobile Number</label>
+                    <input type="tel" id="drawerEditAlternateMobile" placeholder="e.g., +91 98765xxxxx">
+                </div>
+                <div class="drawer-input-group">
+                    <label>Change Account Password</label>
+                    <input type="password" id="drawerEditPassword" placeholder="Enter new password" required>
+                </div>
+                <button type="submit" class="btn-drawer-action">Update Account Info</button>
+            </form>
+            <div id="profileUpdateSuccessMsg" style="display:none; color:var(--blinkit-green); font-size:0.75rem; font-weight:700; margin-top:8px; text-align:center;">
+                ✅ Account Parameters Updated Successfully!
+            </div>
         </div>
 
-        <ul class="drawer-menu-list" id="sidebarMenuContainerList">
-            <li class="drawer-item active" id="menu_store" onclick="navigateUserSection('store')">🛒 Order Print Store</li>
-            <li class="drawer-item" id="menu_history" onclick="navigateUserSection('history')">📋 Order Status & Details</li>
-            <li class="drawer-item" id="menu_help" onclick="navigateUserSection('help')">❓ Help Center & Support</li>
-            <li class="drawer-item" id="menu_terms" onclick="navigateUserSection('terms')">📜 Terms & Conditions</li>
-        </ul>
+        <!-- ❓ SUB-PANEL B: HELP CENTER & SUPPORT (WITH LIVE WHATSAPP TRIGGER) -->
+        <div id="drawer_panel_help" class="drawer-subpanel-content">
+            <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:12px; color:var(--text-main); padding-bottom:4px; border-bottom:1px solid var(--border-color);">Help Desk & Support</h4>
+            
+            <!-- COMMAND TYPE B: WHATSAPP DIRECT LINK INTEGRATION -->
+            <a href="https://wa.me/91XXXXXXXXXX?text=Hi%20PrintFromHome%20Support,%20I%20need%20help%20with%20my%20printing%20job." target="_blank" class="whatsapp-support-btn">
+                <span>💬</span> Chat on WhatsApp Support
+            </a>
+
+            <div style="line-height:1.5; font-size:0.78rem; color:#4a5568; margin-top:15px; background:#f8fafc; padding:12px; border-radius:10px; border:1px solid var(--border-color);">
+                <p style="margin-bottom:8px;"><b>Payment complete ho gayi par order show nahi ho raha?</b><br>Chinta mat kijiye bhai, agar bank se paise kat gaye hain toh automatic server verification 5 minutes me confirm karke printing pipeline me update kar dega.</p>
+                <p><b>Refund request initiate kaise karein?</b><br>Galat file format ya corrupted layout hone par WhatsApp desk par invoice dispatch screenshot share kijiye, 10 mins me response milega.</p>
+            </div>
+        </div>
+
+        <!-- 📜 SUB-PANEL C: TERMS AND MANUALS -->
+        <div id="drawer_panel_terms" class="drawer-subpanel-content">
+            <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:12px; color:var(--text-main); padding-bottom:4px; border-bottom:1px solid var(--border-color);">Terms of Service</h4>
+            <div style="font-size:0.78rem; color:var(--text-sub); line-height:1.6;">
+                <p style="margin-bottom:6px;">• Secure laser configuration provides crisp text layout optimization.</p>
+                <p>• Orders dispatched into print logs cannot be canceled due to automated raw material cutting sequences.</p>
+            </div>
+        </div>
+
         <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border-color);">
-            <button id="logoutBtn" class="btn-auth-submit" style="background:#ef4444; padding:10px; font-size:0.85rem; border-radius:10px;">Logout Account</button>
+            <button id="logoutBtn" class="btn-auth-submit" style="background:#ef4444; padding:10px; font-size:0.85rem; border-radius:10px; width:100%; color:white; border:none; font-weight:700; cursor:pointer;">Logout Account</button>
         </div>
     </nav>
 
+    <!-- 💰 DIGITAL RECHARGE WALLET MODAL -->
     <div id="walletDepositModal" class="wallet-modal-overlay" onclick="toggleWalletPopupGrid(false, event)">
         <div class="wallet-modal-card">
             <h3 style="font-size:1.3rem; font-weight:800; margin-bottom:6px;">💰 Recharge Print Wallet</h3>
@@ -159,6 +223,7 @@
         </div>
     </div>
 
+    <!-- STAGE 1: Splash Screen Blocker -->
     <div id="splashScreen" class="splash-container">
         <div class="splash-content">
             <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
@@ -166,6 +231,7 @@
         </div>
     </div>
 
+    <!-- STAGE 2: Access Gateway Auth Cards -->
     <div id="authScreen" class="auth-container app-hidden">
         <div class="auth-card">
             <div class="auth-brand">print<span class="brand-green">from</span>home</div>
@@ -190,8 +256,10 @@
         </div>
     </div>
 
+    <!-- STAGE 3: Main Dynamic App Environment Workspace -->
     <div id="mainApp" class="app-hidden">
         
+        <!-- HEADER STRUCTURE -->
         <header class="brand-premium-header">
             <div class="header-container">
                 <div class="header-meta-row">
@@ -221,8 +289,10 @@
             </div>
         </header>
 
+        <!-- Main Workspace Section Split Layout -->
         <div class="container" id="mainLayoutAppContainer">
             
+            <!-- MAIN RE-LOCATED WORKSPACE TARGET VIEW BLOCK 1: PRINT STOREFRONT -->
             <div id="user_section_store" class="view-section active">
                 <div class="compact-offers-bar" id="storeOffersTopBanner">
                     <span>📢 <b>Active Offers:</b></span>
@@ -271,6 +341,7 @@
                 </div>
             </div>
 
+            <!-- VIEW BLOCK 2: HISTORIES -->
             <div id="user_section_history" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
@@ -280,24 +351,7 @@
                 </div>
             </div>
 
-            <div id="user_section_help" class="view-section">
-                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
-                    <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:15px;">❓ Help Center & Customer Care Support</h3>
-                    <div style="line-height:1.7; font-size:0.95rem; color:#4a5568;">
-                        <p><b>Payment complete ho gayi par history me 'Pending' hai?</b><br>Chinta mat karo bhai, agar bank se paise kat gaye hain aur status sync nahi hua, toh hamara system automatic 5 minute me verify karke printer agent ko pass kar dega.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div id="user_section_terms" class="view-section">
-                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
-                    <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:15px;">📜 Store Terms & Service Conditions</h3>
-                    <div style="font-size:0.9rem; color:var(--text-sub); line-height:1.8;">
-                        <p>• We use premium 70 GSM sheets to provide high density laser print ink bindings.</p>
-                    </div>
-                </div>
-            </div>
-
+            <!-- INVOICE BILLING TAB SIDEBAR PANEL -->
             <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; background:var(--surface); border:1px solid var(--border-color); padding:20px; border-radius:16px;">
                 <h2>Order Invoice Summary</h2>
                 <div class="summary-card">
@@ -312,6 +366,7 @@
         </div>
     </div>
 
+    <!-- Active Open/Close Hour Evaluator Core Scripts -->
     <script>
         function runSilentIntradaySchedulerGuard() {
             const now = new Date();
@@ -337,18 +392,16 @@
             document.getElementById('userSideDrawer').classList.toggle('active', open);
             document.getElementById('drawerOverlay').classList.toggle('active', open);
             if(open) {
-                document.getElementById('menuInternalSearchInput').value = '';
-                filterSidebarMenuItemsLive();
+                const currentSessionUser = localStorage.getItem('printAppUser');
+                if(currentSessionUser) {
+                    const userData = JSON.parse(localStorage.getItem(`user_${currentSessionUser}`));
+                    if(userData) {
+                        document.getElementById('drawerEditName').value = userData.name || '';
+                        document.getElementById('drawerEditPassword').value = userData.password || '';
+                        document.getElementById('drawerEditAlternateMobile').value = userData.altMobile || '';
+                    }
+                }
             }
-        }
-
-        function filterSidebarMenuItemsLive() {
-            const query = document.getElementById('menuInternalSearchInput').value.toLowerCase().trim();
-            const listItems = document.querySelectorAll('#sidebarMenuContainerList .drawer-item');
-            listItems.forEach(item => {
-                const itemText = item.textContent.toLowerCase();
-                if(itemText.includes(query)) { item.style.display = 'flex'; } else { item.style.display = 'none'; }
-            });
         }
 
         function toggleWalletPopupGrid(show, event) {
@@ -358,23 +411,63 @@
         }
         function setWalletQuickAmount(amt) { document.getElementById('walletCustomAmountInput').value = amt; }
 
-        function navigateUserSection(targetId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        function navigateDrawerSection(targetId) {
             document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
-            
-            document.getElementById(`user_section_${targetId}`).classList.add('active');
-            if(document.getElementById(`menu_${targetId}`)) document.getElementById(`menu_${targetId}`).classList.add('active');
-            
+            if(document.getElementById(`menu_${targetId}`)) {
+                document.getElementById(`menu_${targetId}`).classList.add('active');
+            }
+
+            document.querySelectorAll('.drawer-subpanel-content').forEach(el => el.classList.remove('active'));
+
             const sidePanelPrice = document.getElementById('sidebarPricingPanel');
             const mainLayoutWrapper = document.getElementById('mainLayoutAppContainer');
-            
-            if(targetId !== 'store') { 
-                sidePanelPrice.classList.add('hidden'); 
-                mainLayoutWrapper.classList.remove('has-invoice');
-                mainLayoutWrapper.style.gridTemplateColumns = '1fr'; 
-            } else { if(typeof window.refreshInvoiceTabState === 'function') { window.refreshInvoiceTabState(); } }
-            toggleUserDrawer(false);
+
+            if (targetId === 'store' || targetId === 'history') {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                document.getElementById(`user_section_${targetId}`).classList.add('active');
+                
+                if(targetId !== 'store') {
+                    sidePanelPrice.classList.add('hidden');
+                    mainLayoutWrapper.classList.remove('has-invoice');
+                    mainLayoutWrapper.style.gridTemplateColumns = '1fr';
+                } else {
+                    if(typeof window.refreshInvoiceTabState === 'function') { window.refreshInvoiceTabState(); }
+                }
+                toggleUserDrawer(false);
+            } else {
+                const activeSubPanel = document.getElementById(`drawer_panel_${targetId}`);
+                if(activeSubPanel) activeSubPanel.classList.add('active');
+            }
         }
+
+        document.getElementById('drawerProfileUpdateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const currentSessionUser = localStorage.getItem('printAppUser');
+            if(!currentSessionUser) {
+                alert("❌ Please log in to update parameters!");
+                return;
+            }
+
+            const updatedName = document.getElementById('drawerEditName').value.trim();
+            const updatedPassword = document.getElementById('drawerEditPassword').value;
+            const updatedAltMobile = document.getElementById('drawerEditAlternateMobile').value.trim();
+
+            const userRecord = JSON.parse(localStorage.getItem(`user_${currentSessionUser}`)) || {};
+            userRecord.name = updatedName;
+            userRecord.password = updatedPassword;
+            userRecord.altMobile = updatedAltMobile;
+
+            localStorage.setItem(`user_${currentSessionUser}`, JSON.stringify(userRecord));
+            
+            const userGreeting = document.getElementById('userGreeting');
+            if(userGreeting) {
+                userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${updatedName}</span>`;
+            }
+
+            const alertSuccess = document.getElementById('profileUpdateSuccessMsg');
+            alertSuccess.style.display = 'block';
+            setTimeout(() => { alertSuccess.style.display = 'none'; }, 3500);
+        });
     </script>
     <script src="script.js"></script>
 </body>
