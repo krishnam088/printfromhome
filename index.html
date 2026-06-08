@@ -5,51 +5,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Print From Home - India's Last Minute Printing App</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
-        .preview-modal {
-            display: none; position: fixed; z-index: 10000; left: 0; top: 0; 
-            width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); 
-            justify-content: center; align-items: center; padding: 20px;
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        :root {
+            --bg-primary: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --blinkit-yellow: #F4C430;
+            --blinkit-green: #0C8346;
+            --border-color: #e2e8f0;
         }
-        .preview-content {
-            background: white; padding: 20px; border-radius: 12px; max-width: 90%; 
-            max-height: 90%; overflow: auto; position: relative; text-align: center;
-        }
-        .close-preview {
-            position: absolute; top: 10px; right: 15px; font-size: 24px; 
-            font-weight: bold; cursor: pointer; color: #333;
-        }
-        .offer-badge-box {
-            background: #fffbeb; border: 1px dashed #d97706; padding: 12px; 
-            border-radius: 8px; margin-bottom: 20px; text-align: left;
-        }
-        .history-card-item {
-            background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
-            padding: 12px; margin-top: 10px; text-align: left; font-size: 0.85rem;
-        }
-        /* 🕒 DYNAMIC CLOCK STYLES */
+        body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; }
+
+        /* 🕒 STICKY HIGH-CONTRAST HEADER CLOCK */
         .live-timer-banner {
             display: flex; justify-content: space-between; align-items: center;
-            background: #1e293b; color: white; padding: 10px 15px; font-size: 0.85rem;
-            font-weight: 600; width: 100%; border-bottom: 2px solid #F4C430;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1001;
+            background: #0f172a; color: white; padding: 12px 20px; font-size: 0.85rem;
+            font-weight: 600; width: 100%; border-bottom: 3px solid var(--blinkit-yellow);
+            position: sticky; top: 0; z-index: 1001; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
-        .shop-status-badge {
-            padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
-        }
-        .shop-status-badge.open { background: #0C8346; color: white; }
+        .shop-status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; }
+        .shop-status-badge.open { background: var(--blinkit-green); color: white; }
         .shop-status-badge.closed { background: #ef4444; color: white; }
+
+        /* 🍔 USER SLIDING SIDEBAR DRAWER */
+        .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1999; display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .drawer-overlay.active { display: block; opacity: 1; }
+        
+        .side-drawer { position: fixed; top: 0; right: -320px; width: 300px; height: 100vh; background: var(--surface); z-index: 2000; box-shadow: -10px 0 30px rgba(0,0,0,0.08); transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px 20px; display: flex; flex-direction: column; border-left: 1px solid var(--border-color); }
+        .side-drawer.active { right: 0; }
+        .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; }
+        .drawer-menu-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+        .drawer-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; color: var(--text-main); cursor: pointer; transition: all 0.2s; }
+        .drawer-item:hover, .drawer-item.active { background: #f1f5f9; color: var(--blinkit-green); }
+
+        /* App Navbar Elements Layout */
+        .app-header { background: var(--surface); padding: 15px 20px; border-bottom: 1px solid var(--border-color); }
+        .header-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.4rem; font-weight: 800; letter-spacing: -1px; }
+        .logo-green { color: var(--blinkit-green); }
+        .menu-toggle-btn { background: #000; color: #fff; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+
+        .offer-badge-box { background: #fffbeb; border: 1px dashed #d97706; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; }
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeView 0.25s ease-in-out; }
+        @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden { display: none !important; }
+        .history-card-item { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-top: 12px; }
     </style>
 </head>
 <body>
 
+    <!-- 🕒 TOP REAL-TIME DYNAMIC SYSTEM HEADER CLOCK -->
     <div class="live-timer-banner">
-        <div>🕒 India Time: <span id="userLiveClock" style="color: #F4C430; font-family: monospace; font-size: 0.95rem;">00:00:00 AM</span></div>
-        <div>Shop Status: <span id="userShopStatus" class="shop-status-badge open">OPEN 🟢</span></div>
+        <div>🕒 India Time: <span id="userLiveClock" style="color: var(--blinkit-yellow); font-family: monospace; font-size: 0.95rem;">00:00:00 AM</span></div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 0.75rem; color: var(--text-sub);">Timing: 7AM - 12AM</span>
+            <span id="userShopStatus" class="shop-status-badge open">OPEN 🟢</span>
+        </div>
     </div>
 
+    <!-- Background Dimmer Drop Overlay -->
+    <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
+
+    <!-- 🍔 ULTRA FRIENDLY SLIDING DRAWER MENU -->
+    <nav id="userSideDrawer" class="side-drawer">
+        <div class="drawer-header">
+            <h2 style="font-size:1.2rem; font-weight:800;">Account Menu</h2>
+            <span style="cursor:pointer; font-size:1.6rem; font-weight:bold; color:var(--text-sub);" onclick="toggleUserDrawer(false)">&times;</span>
+        </div>
+        <ul class="drawer-menu-list">
+            <li class="drawer-item active" id="menu_store" onclick="navigateUserSection('store')">🛒 Order Print Store</li>
+            <li class="drawer-item" id="menu_history" onclick="navigateUserSection('history')">📋 Order Status & Details</li>
+            <li class="drawer-item" id="menu_help" onclick="navigateUserSection('help')">❓ Help Center & Support</li>
+            <li class="drawer-item" id="menu_terms" onclick="navigateUserSection('terms')">📜 Terms & Conditions</li>
+        </ul>
+        <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border-color);">
+            <button id="logoutBtn" class="btn-auth-submit" style="background:#ef4444; padding:10px; font-size:0.85rem; border-radius:10px;">Logout Account</button>
+        </div>
+    </nav>
+
+    <!-- STAGE 1: Splash Loader Screen -->
     <div id="splashScreen" class="splash-container">
         <div class="splash-content">
             <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
@@ -57,208 +99,201 @@
         </div>
     </div>
 
+    <!-- STAGE 2: Secure Access Gate Authentication View -->
     <div id="authScreen" class="auth-container app-hidden">
         <div class="auth-card">
-            <div class="auth-brand">
-                <span class="brand-black">print</span><span class="brand-green">from</span><span class="brand-black">home</span>
-            </div>
+            <div class="auth-brand">print<span class="brand-green">from</span>home</div>
             <h2 id="authTitle">Welcome Back!</h2>
             <p id="authSubtitle">Log in to your account to instantly manage and print your documents.</p>
-            
             <form id="authForm">
                 <div class="form-group signup-only hidden">
-                    <label for="authName">Full Name</label>
+                    <label>Full Name</label>
                     <input type="text" id="authName" placeholder="Enter your full name">
                 </div>
                 <div class="form-group">
-                    <label for="authIdentity">Gmail or Phone Number</label>
+                    <label>Gmail or Phone Number</label>
                     <input type="text" id="authIdentity" placeholder="e.g., name@gmail.com or 98765xxxxx" required>
                 </div>
                 <div class="form-group">
-                    <label for="authPassword">Password</label>
+                    <label>Password</label>
                     <input type="password" id="authPassword" placeholder="Minimum 6 characters" required>
                 </div>
                 <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
             </form>
-            <p class="auth-toggle-text">
-                <span id="toggleMsg">New to Print From Home?</span> 
-                <a href="#" id="toggleAuthLink">Create Account</a>
-            </p>
+            <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
         </div>
     </div>
 
+    <!-- STAGE 3: Main Dynamic App Environment Workspace -->
     <div id="mainApp" class="app-hidden">
-        <header class="app-header" style="position: relative; z-index: 1000;">
+        <header class="app-header">
             <div class="header-container">
                 <div class="logo">print<span class="logo-green">from</span>home</div>
-                <div class="header-right">
-                    <span id="userGreeting" class="user-welcome">Hi, User</span>
-                    <button id="logoutBtn" class="btn-logout">Logout</button>
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <span id="userGreeting" style="font-size:0.9rem; font-weight:700;">Hi, User</span>
+                    <!-- 🍔 Sliding toggle button trigger -->
+                    <button class="menu-toggle-btn" onclick="toggleUserDrawer(true)">☰ Menu Sidebar</button>
                 </div>
             </div>
         </header>
 
-        <main class="container">
-            <section class="order-section">
-                <div class="store-banner">
-                    <h2>Print Store</h2>
-                    <p class="banner-sub">Print From Home ensures secure prints at every stage</p>
-                </div>
-
-                <div class="offer-badge-box">
-                    <h4 style="margin: 0 0 8px 0; color: #b45309; display: flex; align-items: center; gap: 6px;">
-                        🎉 Special Printing Schemes & Offers
-                    </h4>
-                    <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: #78350f; line-height: 1.5;">
-                        <li><strong>First Order Scheme:</strong> Print for <strong>₹49.00</strong> or more on your first order & get <strong>FREE Delivery!</strong></li>
-                        <li><strong>Regular Scheme:</strong> Get <strong>FREE Delivery</strong> on any regular order above ₹99!</li>
-                        <li style="color:#c2410c; font-weight: 700;">⏰ Store Timings: Subah 7:00 AM se Raat 11:59 PM tak (Automatic Open/Close)</li>
-                    </ul>
-                </div>
-
-                <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b;">
-                    🚨 <b>Dukan Abhi Band Hai Bhai!</b> We accept printing orders only between 07:00 AM and 11:59 PM. Subah 7 baje dukan automatic khul jayegi.
-                </div>
-
-                <div class="document-promo-card">
-                    <div class="promo-header">
-                        <h3>Documents</h3>
-                        <span class="badge-gsm">70 GSM Paper Quality</span>
-                    </div>
-                    <ul class="promo-list">
-                        <li>✦ Price starting at just ₹3.00 / page</li>
-                        <li>✦ Crystal clear single or double-sided prints</li>
-                        <li>✦ Select custom styling & premium book binding instantly</li>
-                    </ul>
-                </div>
-
-                <form id="printForm" enctype="multipart/form-data">
-                    <div class="form-group-upload">
-                        <label class="upload-custom-btn" for="fileUpload">
-                            <span class="upload-icon">📂</span> Select Files
-                        </label>
-                        <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
-                        <div id="fileNameDisplay">No files selected yet</div>
+        <!-- Dynamic Viewports Sections Split Split Frame Work -->
+        <div class="container">
+            
+            <!-- VIEW BLOCK 1: CORE PRINT STORE SUBMISSION ENGINE -->
+            <div id="user_section_store" class="view-section active">
+                <section class="order-section" style="width:100%;">
+                    <div class="store-banner">
+                        <h2>Print Store Workspace</h2>
+                        <p class="banner-sub">Upload documents and configure layout specifications instantly</p>
                     </div>
 
-                    <div id="multiFilesContainer" style="margin-bottom: 20px;"></div>
-
-                    <div class="form-group">
-                        <label for="address">Delivery Address:</label>
-                        <textarea id="address" name="address" rows="3" placeholder="Enter full Hostel Name, Room No., College Campus or Home address" required></textarea>
+                    <div class="offer-badge-box">
+                        <h4 style="margin: 0 0 6px 0; color: #b45309;">🎉 Printing Schemes & Active Offers</h4>
+                        <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: #78350f; line-height: 1.5;">
+                            <li><strong>First Order Offer:</strong> Print for <b>₹49.00</b> or more & get <b>FREE Delivery!</b></li>
+                            <li><strong>Regular Scheme:</strong> Get <b>FREE Delivery</b> on any order above ₹99!</li>
+                        </ul>
                     </div>
 
-                    <button type="submit" id="submitOrderBtn" class="btn-submit">Proceed to Payment</button>
-                </form>
-            </section>
-
-            <div style="display: flex; flex-direction: column; gap: 20px; width:100%;">
-                <section class="summary-section" style="width:100%;">
-                    <h2>Order Summary</h2>
-                    <div class="summary-card">
-                        <div class="summary-row">
-                            <span>Printing Cost</span>
-                            <span id="summaryPrint">₹0.00</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>Binding Cost</span>
-                            <span id="summaryBinding">₹0.00</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>Delivery Charges</span>
-                            <span id="summaryDelivery">₹0.00</span>
-                        </div>
-                        <hr class="summary-divider">
-                        <div class="summary-row total-row">
-                            <h3>Total Amount</h3>
-                            <h3 id="summaryTotal">₹0.00</h3>
-                        </div>
+                    <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b;">
+                        🚨 <b>Dukan Abhi Band Hai Bhai!</b> Print From Home accepts orders strictly between 07:00 AM and 11:59 PM.
                     </div>
+
+                    <form id="printForm" enctype="multipart/form-data">
+                        <div class="form-group-upload">
+                            <label class="upload-custom-btn" for="fileUpload">📂 Select Files to Print</label>
+                            <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
+                            <div id="fileNameDisplay">No files selected yet</div>
+                        </div>
+                        <div id="multiFilesContainer" style="margin-bottom: 20px;"></div>
+                        <div class="form-group">
+                            <label>Delivery Address:</label>
+                            <textarea id="address" name="address" rows="3" placeholder="Enter full Hostel Name, Room No., Campus or Home Address" required></textarea>
+                        </div>
+                        <button type="submit" id="submitOrderBtn" class="btn-submit">Proceed to Payment</button>
+                    </form>
                 </section>
+            </div>
 
-                <section class="summary-section" style="width:100%; max-height:400px; overflow-y:auto;">
-                    <h2 style="font-size:1.2rem; border-bottom:2px solid #F4C430; padding-bottom:6px; margin-bottom:10px;">📋 Your Last Orders</h2>
+            <!-- VIEW BLOCK 2: SLIDED PROFILE ORDER HISTORIES LOGS -->
+            <div id="user_section_history" class="view-section">
+                <section class="order-section" style="width:100%;">
+                    <h3>📋 Your Printing Jobs & Delivery Status</h3>
+                    <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:15px;">Real-time shipment parcel tracking and logs details</p>
                     <div id="ordersHistoryContainer">
-                        <p style="font-size:0.85rem; color:#718096; text-align:center; padding:15px;">No orders placed yet.</p>
+                        <p style="text-align:center; padding:20px; color:var(--text-sub);">No print jobs recorded yet.</p>
                     </div>
                 </section>
             </div>
-        </main>
+
+            <!-- VIEW BLOCK 3: SLIDED HELP AND TRUBLESHOOT CENTER -->
+            <div id="user_section_help" class="view-section">
+                <section class="order-section" style="width:100%;">
+                    <h3>❓ Help Center & Customer Care Support</h3>
+                    <div style="margin-top:15px; line-height:1.7; font-size:0.9rem; color:#4a5568;">
+                        <p style="font-weight:700; color:#111; margin-bottom:8px;">💡 Frequently Asked Questions:</p>
+                        <p><b>1. Payment complete ho gayi par history me 'Pending' hai?</b><br>Chinta mat karo bhai, agar bank se paise kat gaye hain aur status sync nahi hua, toh hamara system automatic 5 minute me verify karke printer agent ko pass kar dega.</p>
+                        <p style="margin-top:10px;"><b>2. Delivery kitni der me hoti hai Varanasi me?</b><br>Blinkit partner matching algorithms ke raste aapka page print hote hi nearest delivery picker 15-25 minute me hostel ke main gate par drop kar dega.</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- VIEW BLOCK 4: SLIDED TERMS AND CONDITIONS MANUALS -->
+            <div id="user_section_terms" class="view-section">
+                <section class="order-section" style="width:100%;">
+                    <h3>📜 Store Terms & Service Conditions</h3>
+                    <div style="margin-top:15px; font-size:0.85rem; color:var(--text-sub); line-height:1.7;">
+                        <p>• We use premium 70 GSM sheets to provide high density laser print ink bindings.</p>
+                        <p>• Raat 11:59 PM ke baad server auto-close configuration active mode me betha hota hai, isliye time fence rules maintain karna anivarya hai.</p>
+                        <p>• Document content confidentiality completely locked hai. Files print buffer processing queue se clear hote hi background cloud storage arrays se permanent shred (delete) kar di jaati hain.</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Fixed Pricing Panel Sidebar Node Viewport -->
+            <section class="summary-section" id="sidebarPricingPanel" style="width:100%; height: fit-content;">
+                <h2>Order Invoice Summary</h2>
+                <div class="summary-card">
+                    <div class="summary-row"><span>Printing Sheet Cost</span><span id="summaryPrint">₹0.00</span></div>
+                    <div class="summary-row"><span>Binding Cost Allocation</span><span id="summaryBinding">₹0.00</span></div>
+                    <div class="summary-row"><span>Delivery Logistics Fee</span><span id="summaryDelivery">₹0.00</span></div>
+                    <hr class="summary-divider">
+                    <div class="summary-row total-row"><h3>Grand Total Amount</h3><h3 id="summaryTotal">₹0.00</h3></div>
+                </div>
+            </section>
+
+        </div>
     </div>
 
+    <!-- Document Popups View Modal Panel Wrapper -->
     <div id="previewModal" class="preview-modal">
         <div class="preview-content">
             <span id="closePreview" class="close-preview">&times;</span>
-            <h3 id="previewTitle" style="margin-top:0; font-size:1rem; color:#333; word-break:break-all;">Document Preview</h3>
-            <div id="previewBody" style="margin-top:15px; display:flex; justify-content:center; align-items:center; min-height:200px;"></div>
+            <h3 id="previewTitle" style="word-break:break-all; font-size:0.95rem;">Document Preview</h3>
+            <div id="previewBody" style="min-height:200px; display:flex; justify-content:center; align-items:center;"></div>
         </div>
     </div>
 
+    <!-- Independent Time Clock Synchronization script -->
     <script>
-        function runNativeFrontClockEngine() {
+        function updateMainAppUIClock() {
             const now = new Date();
+            const clockString = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            if(document.getElementById('userLiveClock')) document.getElementById('userLiveClock').textContent = clockString;
             
-            // IST Time conversion block handles precise Indian values safely
-            const options = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-            const indiaTimeStr = now.toLocaleTimeString('en-US', options);
-            
-            const clockNode = document.getElementById('userLiveClock');
-            if(clockNode) clockNode.textContent = indiaTimeStr;
+            const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
+            let open = (hoursIST >= 7 && hoursIST < 24);
 
-            // Strict scheduling hours evaluation engine
-            const formatter = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false });
-            const currentHourIST = parseInt(formatter.format(now));
-
-            let isShopOpen = (currentHourIST >= 7 && currentHourIST < 24); // Subah 7 se raat 11:59
-
-            const statusBadge = document.getElementById('userShopStatus');
-            const noticeBox = document.getElementById('storeClosedNoticeBox');
-            const actionBtn = document.getElementById('submitOrderBtn');
-
-            if(statusBadge && noticeBox && actionBtn) {
-                if(isShopOpen) {
-                    statusBadge.textContent = "OPEN 🟢";
-                    statusBadge.className = "shop-status-badge open";
-                    noticeBox.classList.add('hidden');
-                    actionBtn.disabled = false;
-                    actionBtn.style.opacity = "1";
-                    actionBtn.style.cursor = "pointer";
+            const badge = document.getElementById('userShopStatus');
+            const box = document.getElementById('storeClosedNoticeBox');
+            const btn = document.getElementById('submitOrderBtn');
+            if(badge && box && btn) {
+                if(open) {
+                    badge.textContent = "OPEN 🟢"; badge.className = "shop-status-badge open";
+                    box.classList.add('hidden'); btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
                 } else {
-                    statusBadge.textContent = "CLOSED 🔴";
-                    statusBadge.className = "shop-status-badge closed";
-                    noticeBox.classList.remove('hidden');
-                    actionBtn.disabled = true;
-                    actionBtn.style.opacity = "0.4";
-                    actionBtn.style.cursor = "not-allowed";
-                    actionBtn.textContent = "❌ Store is Closed";
+                    badge.textContent = "CLOSED 🔴"; badge.className = "shop-status-badge closed";
+                    box.classList.remove('hidden'); btn.disabled = true; btn.style.opacity = "0.4"; btn.style.cursor = "not-allowed"; btn.textContent = "❌ Store is Closed";
                 }
             }
         }
-        setInterval(runNativeFrontClockEngine, 1000);
-        window.addEventListener('load', runNativeFrontClockEngine);
+        setInterval(updateMainAppUIClock, 1000);
+        window.addEventListener('DOMContentLoaded', updateMainAppUIClock);
+
+        // UI Sideways Drawer Controller Loops Functionalities
+        function toggleUserDrawer(open) {
+            document.getElementById('userSideDrawer').classList.toggle('active', open);
+            document.getElementById('drawerOverlay').classList.toggle('active', open);
+        }
+
+        function navigateUserSection(targetId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`user_section_${targetId}`).classList.add('active');
+            if(document.getElementById(`menu_${targetId}`)) document.getElementById(`menu_${targetId}`).classList.add('active');
+            
+            // Adjust layouts structure dynamically if side panels are viewed to maximize horizontal scannability spaces
+            const sidePanelPrice = document.getElementById('sidebarPricingPanel');
+            if(targetId !== 'store') { sidePanelPrice.classList.add('hidden'); document.querySelector('.container').style.gridTemplateColumns = '1fr'; }
+            else { sidePanelPrice.classList.remove('hidden'); if(window.innerWidth > 768) document.querySelector('.container').style.gridTemplateColumns = '2fr 1fr'; }
+            
+            toggleUserDrawer(false);
+        }
     </script>
 
-    <script src="script.js"></script>
-    <div id="marketingPopupModal" style="display: none; position: fixed; z-index: 12000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; padding: 20px; animation: fadeIn 0.3s ease;">
-        <div style="background: #ffffff; padding: 25px; border-radius: 24px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 20px 45px rgba(0,0,0,0.2); border: 2px solid #F4C430; position: relative; animation: popUpScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
-            
+    <!-- Hot Marketing Popup Modal Component Injector -->
+    <div id="marketingPopupModal" style="display: none; position: fixed; z-index: 12000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #ffffff; padding: 25px; border-radius: 24px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 20px 45px rgba(0,0,0,0.2); border: 2px solid #F4C430; position: relative;">
             <span id="closeMarketingPopup" style="position: absolute; top: 12px; right: 18px; font-size: 22px; font-weight: bold; cursor: pointer; color: #a0aec0;">&times;</span>
-            
-            <div id="popupIconBadge" style="font-size: 3.5rem; margin-bottom: 12px; animation: bounce 2s infinite;">🎉</div>
-            
-            <h3 id="popupAlertTitle" style="font-size: 1.4rem; font-weight: 800; color: #1a202c; margin-bottom: 8px; letter-spacing: -0.5px;">Special Offer Alert!</h3>
-            <p id="popupAlertBody" style="font-size: 0.9rem; color: #4a5568; line-height: 1.5; margin-bottom: 20px;">Bhai, aapke liye ek mast surprise offer hai dukan par!</p>
-            
-            <button id="popupActionBtn" style="width: 100%; padding: 12px; background-color: #0C8346; color: #ffffff; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(12,131,70,0.2);" onclick="closeMarketingNotificationBox()">
-                Chalo Print Karte Hain 🚀
-            </button>
+            <div id="popupIconBadge" style="font-size: 3.5rem; margin-bottom: 12px;">🎉</div>
+            <h3 id="popupAlertTitle" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 8px;">Special Offer Alert!</h3>
+            <p id="popupAlertBody" style="font-size: 0.9rem; color: #4a5568; line-height: 1.5; margin-bottom: 20px;"></p>
+            <button style="width: 100%; padding: 12px; background-color: #0C8346; color: #ffffff; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer;" onclick="document.getElementById('marketingPopupModal').style.display='none'">Chalo Print Karte Hain 🚀</button>
         </div>
     </div>
 
-    <style>
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes popUpScale { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-    </style>
+    <script src="script.js"></script>
 </body>
 </html>
