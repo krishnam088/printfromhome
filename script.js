@@ -593,5 +593,92 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {}
     }
     setInterval(checkForNewUpdates, 20000); 
-    checkForNewUpdates(); 
+    checkForNewUpdates();
+    // --- 📢 AUTOMATED MARKETING REMINDER & POPUP CONTROLLER ENGINE ---
+    function triggerSmartMarketingPopup() {
+        const activeUserKey = localStorage.getItem('printAppUser');
+        const popupModal = document.getElementById('marketingPopupModal');
+        const popupTitle = document.getElementById('popupAlertTitle');
+        const popupBody = document.getElementById('popupAlertBody');
+        const popupIcon = document.getElementById('popupIconBadge');
+
+        if (!popupModal || !popupTitle || !popupBody || !popupIcon) return;
+
+        // 📝 CODES FOR ATTRACTIVE CONTEXTUAL REMINDER MESSAGES
+        const offersList = [
+            { title: "🔥 Flash Sale Alert!", body: "Bhai, exam time aa gaya hai! Pure Varanasi ke bacchon ke liye Black & White prints abhi direct live chal rahe hain sirf ₹3.00/page par. Fatafat files select karo aur delivery pao!", icon: "⚡" },
+            { title: "🎁 Surprise Bundle Offer!", body: "Dukan par naya system update hua hai! Multi-file upload chalu hai, saari PDFs ek sath select karo aur copies stepper se direct copies badhao makkhan ki tarah!", icon: "📦" }
+        ];
+
+        // 1. CONDITION A: Agar koi user logged in NAHI hai (General Guest Popup)
+        if (!activeUserKey) {
+            // Pick a random hot offer from schema list array
+            const randomScheme = offersList[Math.floor(Math.random() * offersList.length)];
+            popupTitle.textContent = randomScheme.title;
+            popupBody.textContent = randomScheme.body;
+            popupIcon.textContent = randomScheme.icon;
+            
+            // Show popup after 3.5 seconds of website load to capture attention
+            setTimeout(() => { popupModal.style.display = 'flex'; }, 3500);
+            return;
+        }
+
+        // 2. CONDITION B: Agar user log in hai, toh unke order history cache ka gap track karo
+        const userData = JSON.parse(localStorage.getItem(`user_${activeUserKey}`)) || {};
+        const userName = userData.name || "Bhai";
+        const userContact = activeUserKey; // Fetch direct Gmail or Phone number token
+
+        const rawHistory = localStorage.getItem(`history_${activeUserKey}`);
+        let lastOrderDate = null;
+
+        if (rawHistory) {
+            const parsedHistory = JSON.parse(rawHistory);
+            if (parsedHistory.length > 0) {
+                // Fetch timestamp details of the last placed job logs
+                const latestOrder = parsedHistory[parsedHistory.length - 1];
+                if (latestOrder.date) {
+                    lastOrderDate = new Date(latestOrder.date.split(' ')[0]);
+                }
+            }
+        }
+
+        const now = new Date();
+        let daysSinceLastOrder = 999; // Default infinite scale if never ordered
+
+        if (lastOrderDate) {
+            const differenceInTime = now.getTime() - lastOrderDate.getTime();
+            daysSinceLastOrder = Math.floor(differenceInTime / (1000 * 3600 * 24));
+        }
+
+        // 🔥 DYNAMIC RE-ENGAGEMENT CHECK RULE: If customer is inactive for 3 or more days
+        if (daysSinceLastOrder >= 3) {
+            popupIcon.textContent = "👋";
+            popupTitle.textContent = `We Miss You, ${userName}!`;
+            
+            // Tailored customized messaging utilizing their contact info dynamically
+            popupBody.innerHTML = `Hame pata hai aap <b>(${userContact})</b> se connected hain, par kaafi dino se aapne koi document print nahi kiya bhai! Kal subah <b>7:00 AM</b> dukan khulne se pehle hi apni saari files line up kar lo, <b>First Order Scheme</b> par free delivery abhi bhi active hai!`;
+            
+            setTimeout(() => { popupModal.style.display = 'flex'; }, 3000);
+        } else {
+            // If they are active buyers, show them a premium update announcement alert standard banner
+            popupIcon.textContent = "🚚";
+            popupTitle.textContent = `Hey ${userName}, Fast Delivery Active!`;
+            popupBody.textContent = `Aapka system registered account active hai. Hamara 'HP Smart Tank 580' hardware and automatic local bridge pipeline 100% online hai. Place your order now for hyper-fast doorstep drop!`;
+            
+            setTimeout(() => { popupModal.style.display = 'flex'; }, 4000);
+        }
+
+        // Wire click handler to dismiss layout container box manually
+        document.getElementById('closeMarketingPopup').onclick = () => { popupModal.style.display = 'none'; };
+    }
+
+    // Connect trigger system action inside window loading stream sequence
+    window.addEventListener('load', () => {
+        setTimeout(triggerSmartMarketingPopup, 1000);
+    });
+
+    // Helper visibility mapping handler clear box function
+    window.closeMarketingNotificationBox = function() {
+        document.getElementById('marketingPopupModal').style.display = 'none';
+    };
 });
