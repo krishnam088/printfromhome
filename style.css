@@ -1,14 +1,17 @@
-/* Global Reset Configuration */
+/* Global Reset & Base Fonts Configuration */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: 'Poppins', sans-serif;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
     background-color: #F7F9FC;
     color: #1A202C;
+    overflow-x: hidden; /* Phone par be-wajah horizontally scroll nahi hoga */
+    width: 100%;
 }
 
 /* 💛 STAGE 1: Splash Screen Styles (1000283021_2.jpg reference) */
@@ -16,7 +19,7 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 100vw;
     height: 100vh;
     background-color: #F4C430; /* Blinkit Yellow */
     display: flex;
@@ -28,10 +31,11 @@ body {
 
 .splash-content {
     text-align: center;
+    padding: 20px;
 }
 
 .splash-logo {
-    font-size: 3.8rem;
+    font-size: 2.8rem; /* Mobile-friendly size */
     font-weight: 800;
     color: #000000;
     letter-spacing: -2px;
@@ -43,33 +47,34 @@ body {
 }
 
 .splash-tagline {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #111;
     letter-spacing: 0.2px;
 }
 
-/* 🔐 STAGE 2: Attractive Login/Signup Card Panel */
+/* 🔐 STAGE 2: Attractive Mobile-Friendly Auth Card */
 .auth-container {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 100vw;
     height: 100vh;
     background: linear-gradient(135deg, #F4C430 50%, #F5D050 100%);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 5000;
+    padding: 15px; /* Mobile edges se gap ke liye */
 }
 
 .auth-card {
     background: #FFFFFF;
-    padding: 40px 35px;
+    padding: 30px 20px;
     border-radius: 24px;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-    width: 90%;
-    max-width: 420px;
+    width: 100%;
+    max-width: 380px; /* Phone par fit rahega aur bade screen par phailega nahi */
     text-align: center;
     animation: cardPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -80,16 +85,16 @@ body {
 }
 
 .auth-brand {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     font-weight: 800;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     letter-spacing: -1px;
 }
 
 .brand-black { color: #000; }
 
 .auth-card h2 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     color: #1A202C;
     margin-bottom: 8px;
     font-weight: 700;
@@ -97,30 +102,30 @@ body {
 
 .auth-card p {
     color: #718096;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     line-height: 1.4;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .form-group {
-    margin-bottom: 18px;
+    margin-bottom: 15px;
     text-align: left;
 }
 
 .form-group label {
     display: block;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: #4A5568;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
 }
 
 .form-group input, .form-group select, .form-group textarea {
     width: 100%;
-    padding: 12px 16px;
+    padding: 12px 14px;
     border: 2px solid #E2E8F0;
     border-radius: 12px;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: #2D3748;
     outline: none;
     transition: border-color 0.2s;
@@ -132,25 +137,20 @@ body {
 
 .btn-auth-submit {
     width: 100%;
-    padding: 14px;
+    padding: 12px;
     background-color: #0C8346;
     color: #FFFFFF;
     border: none;
     border-radius: 12px;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
     cursor: pointer;
-    margin-top: 10px;
-    transition: background-color 0.2s;
-}
-
-.btn-auth-submit:hover {
-    background-color: #0A6C3A;
+    margin-top: 5px;
 }
 
 .auth-toggle-text {
-    margin-top: 20px;
-    font-size: 0.9rem;
+    margin-top: 15px;
+    font-size: 0.85rem;
 }
 
 .auth-toggle-text a {
@@ -159,14 +159,15 @@ body {
     font-weight: 700;
 }
 
-/* 📦 STAGE 3: Main App Interface Layout (1000283022_3.jpg reference) */
+/* 📦 STAGE 3: Main App Interface Layout (Mobile View First) */
 .app-header {
     background-color: #FFFFFF;
     border-bottom: 1px solid #E2E8F0;
-    padding: 15px 0;
+    padding: 12px 0;
     position: sticky;
     top: 0;
     z-index: 100;
+    width: 100%;
 }
 
 .header-container {
@@ -179,7 +180,7 @@ body {
 }
 
 .logo {
-    font-size: 1.6rem;
+    font-size: 1.3rem;
     font-weight: 800;
     color: #000;
     letter-spacing: -1px;
@@ -188,11 +189,11 @@ body {
 .header-right {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
 }
 
 .user-welcome {
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: #4A5568;
 }
@@ -201,71 +202,71 @@ body {
     background: #ED8936;
     color: white;
     border: none;
-    padding: 6px 14px;
-    border-radius: 8px;
+    padding: 5px 10px;
+    border-radius: 6px;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     cursor: pointer;
 }
 
+/* Container Structure: By default phone par single-column rahega */
 .container {
-    width: 90%;
+    width: 92%;
     max-width: 1200px;
-    margin: 30px auto;
-    display: grid;
-    grid-template-columns: 7fr 4fr;
-    gap: 30px;
-}
-
-@media(max-width: 768px) {
-    .container { grid-template-columns: 1fr; }
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column; /* Phone layout vertical */
+    gap: 20px;
 }
 
 .order-section, .summary-section {
     background: #FFFFFF;
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    width: 100%;
 }
 
 .store-banner h2 {
-    font-size: 2rem;
+    font-size: 1.6rem;
     font-weight: 800;
 }
 
 .banner-sub {
     color: #718096;
-    font-size: 0.95rem;
-    margin-bottom: 20px;
+    font-size: 0.85rem;
+    margin-bottom: 15px;
 }
 
-/* Promo Card Setup matching Image layout components */
+/* Promo Card Setup (1000283022_3.jpg reference) */
 .document-promo-card {
     background-color: #F8FAF6;
     border: 1px dashed #0C8346;
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 25px;
+    border-radius: 14px;
+    padding: 15px;
+    margin-bottom: 20px;
 }
 
 .promo-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 5px;
 }
 
 .promo-header h3 {
-    font-size: 1.2rem;
+    font-size: 1.05rem;
     font-weight: 700;
 }
 
 .badge-gsm {
     background: #E6F4EA;
     color: #0C8346;
-    padding: 4px 10px;
+    padding: 3px 8px;
     border-radius: 20px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 700;
 }
 
@@ -274,86 +275,148 @@ body {
 }
 
 .promo-list li {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: #4A5568;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
 }
 
-/* File Upload custom container UI button */
+/* File Upload Custom Area */
 .form-group-upload {
     background: #EDF2F7;
     border-radius: 12px;
     padding: 15px;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .upload-custom-btn {
     display: inline-block;
     background: #0C8346;
     color: white;
-    padding: 10px 24px;
-    border-radius: 10px;
+    padding: 8px 20px;
+    border-radius: 8px;
     cursor: pointer;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
 }
 
 #fileUpload { display: none; }
 
 #fileNameDisplay {
-    margin-top: 8px;
-    font-size: 0.85rem;
+    margin-top: 6px;
+    font-size: 0.75rem;
     color: #718096;
+    word-break: break-all;
 }
 
+/* Phone input inputs arrangement grid */
 .form-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    grid-template-columns: 1fr; /* Mobile mein 1 niche 1 aayega */
+    gap: 0;
 }
 
 .btn-submit {
     width: 100%;
-    padding: 15px;
+    padding: 12px;
     background-color: #F4C430;
     color: #000000;
     border: none;
     border-radius: 12px;
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     font-weight: 700;
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 5px;
 }
 
-/* Pricing Card Layout Side panels */
+/* Pricing Card Layout */
 .summary-card {
     background: #F8FAFC;
-    border-radius: 14px;
-    padding: 20px;
-    margin-top: 20px;
+    border-radius: 12px;
+    padding: 15px;
 }
 
 .summary-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     color: #4A5568;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
 }
 
 .summary-divider {
     border: 0;
     border-top: 1px solid #E2E8F0;
-    margin: 15px 0;
+    margin: 12px 0;
 }
 
 .total-row {
     color: #000000;
-    margin-bottom: 0;
 }
 
-/* Utility Hidden Classes handling Views visibility */
+.total-row h3 {
+    font-size: 1.1rem;
+}
+
+/* --- 💻 LAPTOPS & DESKTOPS RESPONSIVE VIEWPORTS OVERRIDE --- */
+@media (min-width: 769px) {
+    .splash-logo {
+        font-size: 3.8rem;
+    }
+    .splash-tagline {
+        font-size: 1.2rem;
+    }
+    .auth-card {
+        padding: 40px 35px;
+        max-width: 420px;
+    }
+    .logo {
+        font-size: 1.6rem;
+    }
+    .user-welcome {
+        font-size: 0.95rem;
+    }
+    .btn-logout {
+        padding: 6px 14px;
+        font-size: 0.85rem;
+    }
+    /* Grid system activated for large screen displays */
+    .container {
+        display: grid;
+        grid-template-columns: 7fr 4fr;
+        gap: 30px;
+        flex-direction: row;
+    }
+    .store-banner h2 {
+        font-size: 2rem;
+    }
+    .banner-sub {
+        font-size: 0.95rem;
+    }
+    .promo-header h3 {
+        font-size: 1.2rem;
+    }
+    .promo-list li {
+        font-size: 0.9rem;
+    }
+    .form-grid {
+        grid-template-columns: 1fr 1fr; /* Desktop par side-by-side do boxes grid banenge */
+        gap: 15px;
+    }
+    .upload-custom-btn {
+        padding: 10px 24px;
+        font-size: 0.95rem;
+    }
+    .btn-submit {
+        padding: 15px;
+        font-size: 1.05rem;
+    }
+    .summary-row {
+        font-size: 0.95rem;
+    }
+}
+
+/* Visibility Helper Toggles */
 .hidden { display: none !important; }
 .app-hidden { display: none; }
 .app-visible {
