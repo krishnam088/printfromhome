@@ -29,14 +29,15 @@
             background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
             padding: 12px; margin-top: 10px; text-align: left; font-size: 0.85rem;
         }
-        /* 🔥 CLOCK & STATUS METRIC STYLES */
+        /* 🕒 DYNAMIC CLOCK STYLES */
         .live-timer-banner {
             display: flex; justify-content: space-between; align-items: center;
-            background: #1e293b; color: white; padding: 8px 15px; font-size: 0.8rem;
+            background: #1e293b; color: white; padding: 10px 15px; font-size: 0.85rem;
             font-weight: 600; width: 100%; border-bottom: 2px solid #F4C430;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1001;
         }
         .shop-status-badge {
-            padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+            padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
         }
         .shop-status-badge.open { background: #0C8346; color: white; }
         .shop-status-badge.closed { background: #ef4444; color: white; }
@@ -45,8 +46,8 @@
 <body>
 
     <div class="live-timer-banner">
-        <div>🕒 System Time: <span id="userLiveClock">00:00:00 AM</span></div>
-        <div>Store Status: <span id="userShopStatus" class="shop-status-badge open">Checking...</span></div>
+        <div>🕒 India Time: <span id="userLiveClock" style="color: #F4C430; font-family: monospace; font-size: 0.95rem;">00:00:00 AM</span></div>
+        <div>Shop Status: <span id="userShopStatus" class="shop-status-badge open">OPEN 🟢</span></div>
     </div>
 
     <div id="splashScreen" class="splash-container">
@@ -87,7 +88,7 @@
     </div>
 
     <div id="mainApp" class="app-hidden">
-        <header class="app-header">
+        <header class="app-header" style="position: relative; z-index: 1000;">
             <div class="header-container">
                 <div class="logo">print<span class="logo-green">from</span>home</div>
                 <div class="header-right">
@@ -111,12 +112,12 @@
                     <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: #78350f; line-height: 1.5;">
                         <li><strong>First Order Scheme:</strong> Print for <strong>₹49.00</strong> or more on your first order & get <strong>FREE Delivery!</strong></li>
                         <li><strong>Regular Scheme:</strong> Get <strong>FREE Delivery</strong> on any regular order above ₹99!</li>
-                        <li style="color:#c2410c;">⏰ <b>Store Timings:</b> Morning 7:00 AM to Night 11:59 PM (Automatic Closing)</li>
+                        <li style="color:#c2410c; font-weight: 700;">⏰ Store Timings: Subah 7:00 AM se Raat 11:59 PM tak (Automatic Open/Close)</li>
                     </ul>
                 </div>
 
                 <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b;">
-                    🚨 <b>Dukan Abhi Band Hai Bhai!</b> We accept printing orders only between 07:00 AM and 11:59 PM. Subah 7 baje aate hi automatic orders chalu ho jayenge!
+                    🚨 <b>Dukan Abhi Band Hai Bhai!</b> We accept printing orders only between 07:00 AM and 11:59 PM. Subah 7 baje dukan automatic khul jayegi.
                 </div>
 
                 <div class="document-promo-card">
@@ -192,6 +193,50 @@
             <div id="previewBody" style="margin-top:15px; display:flex; justify-content:center; align-items:center; min-height:200px;"></div>
         </div>
     </div>
+
+    <script>
+        function runNativeFrontClockEngine() {
+            const now = new Date();
+            
+            // IST Time conversion block handles precise Indian values safely
+            const options = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+            const indiaTimeStr = now.toLocaleTimeString('en-US', options);
+            
+            const clockNode = document.getElementById('userLiveClock');
+            if(clockNode) clockNode.textContent = indiaTimeStr;
+
+            // Strict scheduling hours evaluation engine
+            const formatter = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false });
+            const currentHourIST = parseInt(formatter.format(now));
+
+            let isShopOpen = (currentHourIST >= 7 && currentHourIST < 24); // Subah 7 se raat 11:59
+
+            const statusBadge = document.getElementById('userShopStatus');
+            const noticeBox = document.getElementById('storeClosedNoticeBox');
+            const actionBtn = document.getElementById('submitOrderBtn');
+
+            if(statusBadge && noticeBox && actionBtn) {
+                if(isShopOpen) {
+                    statusBadge.textContent = "OPEN 🟢";
+                    statusBadge.className = "shop-status-badge open";
+                    noticeBox.classList.add('hidden');
+                    actionBtn.disabled = false;
+                    actionBtn.style.opacity = "1";
+                    actionBtn.style.cursor = "pointer";
+                } else {
+                    statusBadge.textContent = "CLOSED 🔴";
+                    statusBadge.className = "shop-status-badge closed";
+                    noticeBox.classList.remove('hidden');
+                    actionBtn.disabled = true;
+                    actionBtn.style.opacity = "0.4";
+                    actionBtn.style.cursor = "not-allowed";
+                    actionBtn.textContent = "❌ Store is Closed";
+                }
+            }
+        }
+        setInterval(runNativeFrontClockEngine, 1000);
+        window.addEventListener('load', runNativeFrontClockEngine);
+    </script>
 
     <script src="script.js"></script>
 </body>

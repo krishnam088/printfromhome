@@ -98,7 +98,7 @@
                 <button class="menu-trigger-btn" onclick="toggleSideDrawer(true)">☰ Menu Tools</button>
                 <h1 id="panelTitleDisplay" style="font-size:1.5rem;">Live Order Queue</h1>
             </div>
-            <span id="adminLiveClockBanner" style="font-size:0.85rem; color:#fff; font-weight:700; background:#1e293b; padding:6px 14px; border-radius:20px;">
+            <span id="adminLiveClockBanner" style="font-size:0.85rem; color:#fff; font-weight:700; background:#1e293b; padding:6px 14px; border-radius:20px; font-family: monospace;">
                 🕒 Clock: 00:00:00 AM
             </span>
         </div>
@@ -115,7 +115,7 @@
                 </div>
                 <div class="stat-card" id="profitCard" style="border-left-color: #10b981;">
                     <p>Net Shop Profit</p>
-                    <h2 id="statProfit">₹0.00</h2>
+                    <h2 id="statProfit">0</h2>
                 </div>
             </div>
             <div class="panel-box">
@@ -170,16 +170,22 @@
     </div>
 
     <script>
+        function runNativeAdminClockEngine() {
+            const now = new Date();
+            const options = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+            const indiaTimeStr = now.toLocaleTimeString('en-US', options);
+            
+            const clockNode = document.getElementById('adminLiveClockBanner');
+            if(clockNode) clockNode.textContent = `🕒 Clock: ${indiaTimeStr}`;
+        }
+        setInterval(runNativeAdminClockEngine, 1000);
+        window.addEventListener('load', runNativeAdminClockEngine);
+    </script>
+
+    <script>
         let businessChartInstance = null;
         let activeGraphDatasetMode = 'revenue'; 
         let globalRawOrdersCache = []; 
-
-        // 🔥 TICKING ADMIN TIME ENGINE RUNNER
-        function tickAdminClock() {
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            document.getElementById('adminLiveClockBanner').textContent = `🕒 Clock: ${timeStr}`;
-        }
-        setInterval(tickAdminClock, 1000);
 
         if(!localStorage.getItem('admin_username')) {
             localStorage.setItem('admin_username', 'bhavishya');
@@ -243,7 +249,6 @@
 
         function rebuildGraphDataEngine() {
             if(!businessChartInstance || globalRawOrdersCache.length === 0) return;
-            const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
             let parsedDataValues = [0, 0, 0, 0, 0, 0, 0];
             const paidOrders = globalRawOrdersCache.filter(o => o.status === 'Paid / Ready for Print');
 
@@ -293,8 +298,16 @@
                 const data = await res.json();
                 document.getElementById('statTotalOrders').textContent = data.totalOrders;
                 document.getElementById('statRevenue').textContent = `₹${data.revenue}`;
+                
                 const profitEl = document.getElementById('statProfit');
                 profitEl.textContent = `₹${data.profitLoss}`;
+                if(parseFloat(data.profitLoss) < 0) {
+                    document.getElementById('profitCard').style.borderLeftColor = "#ef4444";
+                    profitEl.style.color = "#ef4444";
+                } else {
+                    document.getElementById('profitCard').style.borderLeftColor = "#10b981";
+                    profitEl.style.color = "#0C8346";
+                }
             } catch (err) {}
         }
 
@@ -326,10 +339,10 @@
                             <span style="font-size:0.8rem; font-weight:600; color:#4a5568;">🕒 Logged Time: ${order.date || 'N/A'}</span>
                             <div>
                                 <select class="status-select ${selectStatusClass}" onchange="updateDeliveryStatus('${order.orderId}', this)">
-                                    <option value="Pending">⏳ Pending</option>
-                                    <option value="Printing">🖨️ Printing</option>
-                                    <option value="Out for Delivery">🛵 Out for Delivery</option>
-                                    <option value="Delivered">✅ Delivered</option>
+                                    <option value="Pending" ${currentStatus === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
+                                    <option value="Printing" ${currentStatus === 'Printing' ? 'selected' : ''}>🖨️ Printing</option>
+                                    <option value="Out for Delivery" ${currentStatus === 'Out for Delivery' ? 'selected' : ''}>🛵 Out for Delivery</option>
+                                    <option value="Delivered" ${currentStatus === 'Delivered' ? 'selected' : ''}>✅ Delivered</option>
                                 </select>
                             </div>
                         </div>
