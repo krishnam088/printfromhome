@@ -42,17 +42,21 @@
         .drawer-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; color: var(--text-main); cursor: pointer; transition: all 0.2s; }
         .drawer-item:hover, .drawer-item.active { background: #f1f5f9; color: var(--blinkit-green); }
 
-        /* App Navbar Elements Layout */
+        /* App Navbar Layout */
         .app-header { background: var(--surface); padding: 15px 20px; border-bottom: 1px solid var(--border-color); }
         .header-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
         .logo { font-size: 1.4rem; font-weight: 800; letter-spacing: -1px; }
         .logo-green { color: var(--blinkit-green); }
         .menu-toggle-btn { background: #000; color: #fff; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
-        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+        /* 🔥 DYNAMIC MAIN CONTAINER: Swaps layouts depending on invoice status */
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; display: grid; grid-template-columns: 1fr; gap: 25px; transition: all 0.3s ease; }
+        .container.has-invoice { grid-template-columns: 2fr 1fr; }
+        @media (max-width: 768px) { .container.has-invoice { grid-template-columns: 1fr; } }
 
-        .offer-badge-box { background: #fffbeb; border: 1px dashed #d97706; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; }
+        /* 👑 MINIMALIST COMPACT OFFERS BAR STYLE (NO CLUTTER) */
+        .compact-offers-bar { display: flex; align-items: center; gap: 10px; background: #fffbeb; border: 1px solid #fed7aa; padding: 10px 14px; border-radius: 10px; margin-bottom: 20px; font-size: 0.8rem; font-weight: 600; color: #b45309; }
+
         .view-section { display: none; }
         .view-section.active { display: block; animation: fadeView 0.25s ease-in-out; }
         @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -62,7 +66,7 @@
 </head>
 <body>
 
-    <!-- 🕒 TOP REAL-TIME DYNAMIC SYSTEM HEADER CLOCK -->
+    <!-- TOP REAL-TIME DYNAMIC SYSTEM HEADER CLOCK -->
     <div class="live-timer-banner">
         <div>🕒 India Time: <span id="userLiveClock" style="color: var(--blinkit-yellow); font-family: monospace; font-size: 0.95rem;">00:00:00 AM</span></div>
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -74,7 +78,7 @@
     <!-- Background Dimmer Drop Overlay -->
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
-    <!-- 🍔 ULTRA FRIENDLY SLIDING DRAWER MENU -->
+    <!-- SLIDING DRAWER MENU -->
     <nav id="userSideDrawer" class="side-drawer">
         <div class="drawer-header">
             <h2 style="font-size:1.2rem; font-weight:800;">Account Menu</h2>
@@ -99,7 +103,7 @@
         </div>
     </div>
 
-    <!-- STAGE 2: Secure Access Gate Authentication View -->
+    <!-- STAGE 2: Authentication View -->
     <div id="authScreen" class="auth-container app-hidden">
         <div class="auth-card">
             <div class="auth-brand">print<span class="brand-green">from</span>home</div>
@@ -124,36 +128,35 @@
         </div>
     </div>
 
-    <!-- STAGE 3: Main Dynamic App Environment Workspace -->
+    <!-- STAGE 3: Main App Workspace -->
     <div id="mainApp" class="app-hidden">
         <header class="app-header">
             <div class="header-container">
                 <div class="logo">print<span class="logo-green">from</span>home</div>
                 <div style="display:flex; align-items:center; gap:15px;">
                     <span id="userGreeting" style="font-size:0.9rem; font-weight:700;">Hi, User</span>
-                    <!-- 🍔 Sliding toggle button trigger -->
                     <button class="menu-toggle-btn" onclick="toggleUserDrawer(true)">☰ Menu Sidebar</button>
                 </div>
             </div>
         </header>
 
-        <!-- Dynamic Viewports Sections Split Split Frame Work -->
-        <div class="container">
+        <!-- Main Window Container Setup -->
+        <div class="container" id="mainLayoutAppContainer">
             
-            <!-- VIEW BLOCK 1: CORE PRINT STORE SUBMISSION ENGINE -->
-            <div id="user_section_store" class="view-section active">
+            <!-- VIEW BLOCK 1: STORE FRONTEND ENTRIES -->
+            <div id="user_section_store" class="view-section active" style="width: 100%;">
                 <section class="order-section" style="width:100%;">
                     <div class="store-banner">
                         <h2>Print Store Workspace</h2>
                         <p class="banner-sub">Upload documents and configure layout specifications instantly</p>
                     </div>
 
-                    <div class="offer-badge-box">
-                        <h4 style="margin: 0 0 6px 0; color: #b45309;">🎉 Printing Schemes & Active Offers</h4>
-                        <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: #78350f; line-height: 1.5;">
-                            <li><strong>First Order Offer:</strong> Print for <b>₹49.00</b> or more & get <b>FREE Delivery!</b></li>
-                            <li><strong>Regular Scheme:</strong> Get <b>FREE Delivery</b> on any order above ₹99!</li>
-                        </ul>
+                    <!-- 👑 CLEAN ULTRA-COMPACT OFFERS LAYOUT (NO CROWD) -->
+                    <div class="compact-offers-bar">
+                        <span>📢 <b>Active Schemes:</b></span>
+                        <marquee scrollamount="3" style="width: 100%;">
+                            ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!
+                        </marquee>
                     </div>
 
                     <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b;">
@@ -176,8 +179,8 @@
                 </section>
             </div>
 
-            <!-- VIEW BLOCK 2: SLIDED PROFILE ORDER HISTORIES LOGS -->
-            <div id="user_section_history" class="view-section">
+            <!-- VIEW BLOCK 2: SLIDED ACCOUNT ORDERS HISTORIES -->
+            <div id="user_section_history" class="view-section" style="width: 100%;">
                 <section class="order-section" style="width:100%;">
                     <h3>📋 Your Printing Jobs & Delivery Status</h3>
                     <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:15px;">Real-time shipment parcel tracking and logs details</p>
@@ -187,8 +190,8 @@
                 </section>
             </div>
 
-            <!-- VIEW BLOCK 3: SLIDED HELP AND TRUBLESHOOT CENTER -->
-            <div id="user_section_help" class="view-section">
+            <!-- VIEW BLOCK 3: SLIDED HELP AND SUPPORT CARD -->
+            <div id="user_section_help" class="view-section" style="width: 100%;">
                 <section class="order-section" style="width:100%;">
                     <h3>❓ Help Center & Customer Care Support</h3>
                     <div style="margin-top:15px; line-height:1.7; font-size:0.9rem; color:#4a5568;">
@@ -199,8 +202,8 @@
                 </section>
             </div>
 
-            <!-- VIEW BLOCK 4: SLIDED TERMS AND CONDITIONS MANUALS -->
-            <div id="user_section_terms" class="view-section">
+            <!-- VIEW BLOCK 4: SLIDED LEGAL CONDITIONS MANUALS -->
+            <div id="user_section_terms" class="view-section" style="width: 100%;">
                 <section class="order-section" style="width:100%;">
                     <h3>📜 Store Terms & Service Conditions</h3>
                     <div style="margin-top:15px; font-size:0.85rem; color:var(--text-sub); line-height:1.7;">
@@ -211,8 +214,8 @@
                 </section>
             </div>
 
-            <!-- Right Fixed Pricing Panel Sidebar Node Viewport -->
-            <section class="summary-section" id="sidebarPricingPanel" style="width:100%; height: fit-content;">
+            <!-- 🔥 INVOICE BILLING TAB SIDEBAR: Natively locked hidden until file interaction triggers -->
+            <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; animation: fadeView 0.3s ease;">
                 <h2>Order Invoice Summary</h2>
                 <div class="summary-card">
                     <div class="summary-row"><span>Printing Sheet Cost</span><span id="summaryPrint">₹0.00</span></div>
@@ -226,7 +229,7 @@
         </div>
     </div>
 
-    <!-- Document Popups View Modal Panel Wrapper -->
+    <!-- Popups Document Modal -->
     <div id="previewModal" class="preview-modal">
         <div class="preview-content">
             <span id="closePreview" class="close-preview">&times;</span>
@@ -235,7 +238,7 @@
         </div>
     </div>
 
-    <!-- Independent Time Clock Synchronization script -->
+    <!-- Global Layout Visibility Controllers Script -->
     <script>
         function updateMainAppUIClock() {
             const now = new Date();
@@ -261,7 +264,6 @@
         setInterval(updateMainAppUIClock, 1000);
         window.addEventListener('DOMContentLoaded', updateMainAppUIClock);
 
-        // UI Sideways Drawer Controller Loops Functionalities
         function toggleUserDrawer(open) {
             document.getElementById('userSideDrawer').classList.toggle('active', open);
             document.getElementById('drawerOverlay').classList.toggle('active', open);
@@ -274,16 +276,23 @@
             document.getElementById(`user_section_${targetId}`).classList.add('active');
             if(document.getElementById(`menu_${targetId}`)) document.getElementById(`menu_${targetId}`).classList.add('active');
             
-            // Adjust layouts structure dynamically if side panels are viewed to maximize horizontal scannability spaces
+            // Re-evaluates visibility matrices matching chosen menu indices mapping bounds
             const sidePanelPrice = document.getElementById('sidebarPricingPanel');
-            if(targetId !== 'store') { sidePanelPrice.classList.add('hidden'); document.querySelector('.container').style.gridTemplateColumns = '1fr'; }
-            else { sidePanelPrice.classList.remove('hidden'); if(window.innerWidth > 768) document.querySelector('.container').style.gridTemplateColumns = '2fr 1fr'; }
+            const mainLayoutWrapper = document.getElementById('mainLayoutAppContainer');
             
+            if(targetId !== 'store') { 
+                sidePanelPrice.classList.add('hidden'); 
+                mainLayoutWrapper.classList.remove('has-invoice');
+                mainLayoutWrapper.style.gridTemplateColumns = '1fr'; 
+            } else {
+                // If switching back to store tab, let the native file-check logic determine layout layout width
+                if(typeof window.refreshInvoiceTabState === 'function') { window.refreshInvoiceTabState(); }
+            }
             toggleUserDrawer(false);
         }
     </script>
 
-    <!-- Hot Marketing Popup Modal Component Injector -->
+    <!-- Marketing Notification Modal -->
     <div id="marketingPopupModal" style="display: none; position: fixed; z-index: 12000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; padding: 20px;">
         <div style="background: #ffffff; padding: 25px; border-radius: 24px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 20px 45px rgba(0,0,0,0.2); border: 2px solid #F4C430; position: relative;">
             <span id="closeMarketingPopup" style="position: absolute; top: 12px; right: 18px; font-size: 22px; font-weight: bold; cursor: pointer; color: #a0aec0;">&times;</span>
