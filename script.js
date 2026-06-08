@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let masterFilesArray = []; 
     let isFirstTimeUser = true; 
 
-    // 🔥 AUTOMATED SCREEN DIVERTOR & PAGE ISOLATION MATRIX (IMAGE 1000283099.jpg COMPATIBLE)
+    // --- 🕒 AUTOMATED SCREEN DIVERTOR & SCREEN SCALE SYNC ---
     window.refreshInvoiceTabState = function() {
         const sideInvoicePanel = document.getElementById('sidebarPricingPanel');
         const layoutContainer = document.getElementById('mainLayoutAppContainer');
@@ -45,14 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const activeTabIsStore = activeTabStoreNode && activeTabStoreNode.classList.contains('active');
 
-        // If user navigates out of store tab, don't execute visibility shifts
         if (!activeTabIsStore) return;
-
-        // Force ensure store banners are only active inside store sections boundaries
         if(storeOffersTopBanner) storeOffersTopBanner.classList.remove('hidden');
 
         if (masterFilesArray && masterFilesArray.length > 0) {
-            // Divert step sequence mapping instantly
             if(uploadInitialScreen) uploadInitialScreen.classList.add('hidden');
             if(configWorkspaceScreen) configWorkspaceScreen.classList.remove('hidden');
 
@@ -66,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(layoutContainer) layoutContainer.style.gridTemplateColumns = '1fr';
             }
         } else {
-            // Restore upload triggers layout boundary state if arrays flush
             if(uploadInitialScreen) uploadInitialScreen.classList.remove('hidden');
             if(configWorkspaceScreen) configWorkspaceScreen.classList.add('hidden');
 
@@ -86,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
     }
 
-    // --- ⏳ STAGE 1: SPLASH LOADER ---
+    // --- ⏳ STAGE 1: DYNAMIC SPLASH UNLOCK CONTROLLER ---
     setTimeout(() => {
         if (splashScreen) {
             splashScreen.style.opacity = '0';
@@ -97,7 +92,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const sessionActiveUser = localStorage.getItem('printAppUser');
         if (sessionActiveUser) {
             const userData = JSON.parse(localStorage.getItem(`user_${sessionActiveUser}`));
-            if(userGreeting) userGreeting.textContent = `Hi, ${userData ? userData.name : 'Customer'}`;
+            
+            // 🔥 DYNAMIC NAME CONTROLLER HARDLOCKED FOR "1000283101.jpg" ARCHITECTURE
+            if(userGreeting) {
+                userGreeting.innerHTML = userData ? `Hi, <span style="color:#000000; font-weight:800;">${userData.name}</span>` : `Guest Workspace Mode`;
+            }
             
             const savedHistory = localStorage.getItem(`history_${sessionActiveUser}`);
             isFirstTimeUser = !(savedHistory && JSON.parse(savedHistory).length > 0);
@@ -110,6 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
             loadSavedFilesFromSession();
             renderOrderHistoryUI(sessionActiveUser); 
         } else {
+            // 🔥 DEFAULT BLANK / GUEST BUFFER IF NOT LOGGED IN
+            if(userGreeting) userGreeting.textContent = "Guest Workspace Mode";
             if(authScreen) {
                 authScreen.classList.remove('app-hidden');
                 authScreen.style.display = 'flex';
@@ -157,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem(`user_${identityKey}`, JSON.stringify(userPayload));
                 localStorage.setItem('printAppUser', identityKey);
                 isFirstTimeUser = true; 
-                if(userGreeting) userGreeting.textContent = `Hi, ${inputName}`;
+                if(userGreeting) userGreeting.innerHTML = `Hi, <span style="color:#000000; font-weight:800;">${inputName}</span>`;
                 alert("🎉 Account created successfully! Logging you in...");
             } else {
                 const registeredRecord = localStorage.getItem(`user_${identityKey}`);
@@ -174,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const savedHistory = localStorage.getItem(`history_${identityKey}`);
                 isFirstTimeUser = !(savedHistory && JSON.parse(savedHistory).length > 0);
-                if(userGreeting) userGreeting.textContent = `Hi, ${verifiedObject.name}`;
+                if(userGreeting) userGreeting.innerHTML = `Hi, <span style="color:#000000; font-weight:800;">${verifiedObject.name}</span>`;
             }
             if(authScreen) authScreen.style.display = 'none';
             if(mainApp) {
@@ -197,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
             masterFilesArray = [];
             if(multiFilesContainer) multiFilesContainer.innerHTML = '';
             if(mainApp) mainApp.style.display = 'none';
+            if(userGreeting) userGreeting.textContent = "Guest Workspace Mode";
             if(authScreen) authScreen.style.display = 'flex';
             calculateTotal();
         });
@@ -250,6 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 👑 VERBATIM LAYOUT SELECTION MATRIX CARDS FROM IMAGE "1000283099.jpg"
     function renderFilesUI() {
         if(!multiFilesContainer) return;
         multiFilesContainer.innerHTML = ''; 
@@ -271,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="blinkit-card-row">
                     <div style="text-align:left;">
                         <h4 style="font-size:0.95rem; font-weight:700; color:var(--text-main); word-break:break-all;">📄 ${item.name}</h4>
-                        <span style="font-size:0.75rem; color:var(--text-sub); font-weight:500;">File ${index+1} (Pages Custom Parameters)</span>
+                        <span style="font-size:0.75rem; color:var(--text-sub); font-weight:500;">File ${index+1} (Layout Specs)</span>
                     </div>
                     <button type="button" id="removeFile_${index}" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1.4rem;">&times;</button>
                 </div>
@@ -345,21 +348,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById(`optPort_${index}`).addEventListener('click', () => { item.config.orientation = 'portrait'; renderFilesUI(); });
             document.getElementById(`optLand_${index}`).addEventListener('click', () => { item.config.orientation = 'landscape'; renderFilesUI(); });
 
-            document.getElementById(`plusCopy_${index}`).addEventListener('click', () => {
-                item.config.copies++; saveCurrentFilesToSession(); calculateTotal();
-            });
-            document.getElementById(`minusCopy_${index}`).addEventListener('click', () => {
-                if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); calculateTotal(); }
-            });
-            document.getElementById(`removeFile_${index}`).addEventListener('click', () => {
-                masterFilesArray.splice(index, 1); saveCurrentFilesToSession(); renderFilesUI();
-            });
-            document.getElementById(`pages_${index}`).addEventListener('input', (e) => {
-                item.config.pages = parseInt(e.target.value) || 1; saveCurrentFilesToSession(); calculateTotal();
-            });
-            document.getElementById(`binding_${index}`).addEventListener('change', (e) => {
-                item.config.binding = e.target.value; saveCurrentFilesToSession(); calculateTotal();
-            });
+            document.getElementById(`plusCopy_${index}`).addEventListener('click', () => { item.config.copies++; saveCurrentFilesToSession(); calculateTotal(); });
+            document.getElementById(`minusCopy_${index}`).addEventListener('click', () => { if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); calculateTotal(); } });
+            document.getElementById(`removeFile_${index}`).addEventListener('click', () => { masterFilesArray.splice(index, 1); saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`pages_${index}`).addEventListener('input', (e) => { item.config.pages = parseInt(e.target.value) || 1; saveCurrentFilesToSession(); calculateTotal(); });
+            document.getElementById(`binding_${index}`).addEventListener('change', (e) => { item.config.binding = e.target.value; saveCurrentFilesToSession(); calculateTotal(); });
         });
 
         calculateTotal();
@@ -462,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const verifyRes = await fetch('/api/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: data.order_id, paymentId: response.razorpay_payment_id }) });
                         const verifyData = await verifyRes.json();
                         if(verifyData.success) {
-                            alert('🎉 Payment Successful! Order locked.');
+                            alert('🎉 Payment Successful!');
                             const activeUserToken = localStorage.getItem('printAppUser');
                             const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
                             currentHistoryArray.push({ date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), amount: totalAmountText, status: "Paid / Ready for Print", details: finalMetaConfig });

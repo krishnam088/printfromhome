@@ -18,6 +18,8 @@
             --blinkit-green: #0C8346;
             --blinkit-light-green: #e6f4ea;
             --border-color: #e2e8f0;
+            --gradient-start: #fffae6;
+            --gradient-end: #fffbeb;
         }
         body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; }
 
@@ -25,7 +27,7 @@
         .live-timer-banner {
             display: flex; justify-content: space-between; align-items: center;
             background: #0f172a; color: white; padding: 12px 20px; font-size: 0.85rem;
-            font-weight: 600; width: 100%; border-bottom: 3px solid var(--blinkit-yellow);
+            font-weight: 600; width: 100%; border-bottom: 2px solid var(--blinkit-yellow);
             position: sticky; top: 0; z-index: 1001; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
         .shop-status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; }
@@ -43,50 +45,62 @@
         .drawer-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; font-weight: 600; font-size: 0.9rem; color: var(--text-main); cursor: pointer; transition: all 0.2s; }
         .drawer-item:hover, .drawer-item.active { background: #f1f5f9; color: var(--blinkit-green); }
 
-        /* App Navbar Layout */
-        .app-header { background: var(--surface); padding: 15px 20px; border-bottom: 1px solid var(--border-color); }
-        .header-container { max-width: 100%; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-size: 1.4rem; font-weight: 800; letter-spacing: -1px; }
-        .logo-green { color: var(--blinkit-green); }
-        .menu-toggle-btn { background: #000; color: #fff; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-
-        /* 🔥 DYNAMIC FIT-TO-BORDER GRID SYSTEM (DESKTOP VS PHONE RESPONSIVE) */
-        .container { 
-            width: 100%; 
-            max-width: 100%; 
-            margin: 0; 
-            padding: 15px; 
-            display: grid; 
-            grid-template-columns: 1fr; 
-            gap: 20px; 
-            transition: all 0.3s ease; 
+        /* 📱 EXACT MIRROR BRANDING HEADER SYSTEM FROM "1000283101.jpg" */
+        .brand-premium-header {
+            background: linear-gradient(to bottom, #FFF3B3 0%, #FFFBE6 100%);
+            padding: 20px 16px;
+            width: 100%;
+            border-bottom: 1px solid rgba(244,196,48,0.2);
         }
+        .header-meta-row { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; margin-bottom: 12px; }
+        .delivery-time-title { font-size: 0.95rem; font-weight: 800; color: #000000; line-height: 1.1; }
+        .delivery-time-countdown { font-size: 2.1rem; font-weight: 900; color: #111111; letter-spacing: -0.5px; margin-top: 2px; margin-bottom: 4px; }
+        .distance-badge { background: rgba(12,131,70,0.12); color: var(--blinkit-green); font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(12,131,70,0.15); }
         
-        /* Desktop Mode Grid Rules */
-        @media (min-width: 992px) {
-            .container.has-invoice { 
-                grid-template-columns: 2.5fr 1.2fr; 
-                padding: 25px;
-            }
-        }
+        .header-profile-cluster { display: flex; align-items: center; gap: 10px; }
+        .wallet-micro-badge { background: #ffffff; border-radius: 14px; border: 1px solid var(--border-color); padding: 4px 10px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; }
+        .wallet-icon-label { font-size: 1rem; }
+        .wallet-cash-value { font-size: 0.75rem; font-weight: 800; color: #000000; }
         
-        /* Mobile Viewport Border Optimization Mapping */
-        @media (max-width: 768px) {
-            .container { padding: 10px; gap: 15px; }
-        }
+        .avatar-circle-trigger { width: 42px; height: 42px; background: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.04); border: 1px solid var(--border-color); cursor: pointer; font-size: 1.2rem; }
+        
+        /* Interactive Destination Selector Row */
+        .destination-dropdown-trigger { display: flex; align-items: center; gap: 4px; font-weight: 800; font-size: 0.95rem; color: #222222; text-transform: uppercase; cursor: pointer; text-align: left; }
+        .destination-sub-text { font-weight: 600; color: var(--text-sub); text-transform: none; font-size: 0.9rem; }
+        
+        /* Minimalist Mock Search Field Architecture from Image */
+        .mock-search-wrapper { background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-top: 15px; }
+        .mock-search-input-placeholder { display: flex; align-items: center; gap: 10px; color: var(--text-sub); font-size: 1rem; font-weight: 500; }
+        .search-mic-icon { color: #1a202c; font-size: 1.1rem; border-left: 1px solid var(--border-color); padding-left: 12px; }
 
-        /* 👑 MINIMALIST COMPACT ACTIVE OFFERS RESHAPED */
-        .compact-offers-bar { display: flex; align-items: center; gap: 10px; background: #fffbeb; border: 1px solid #fed7aa; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 0.8rem; font-weight: 600; color: #b45309; width: 100%; box-shadow: 0 2px 5px rgba(0,0,0,0.01); }
+        /* Core Application Container */
+        .container { width: 100%; max-width: 100%; margin: 0; padding: 15px; display: grid; grid-template-columns: 1fr; gap: 20px; transition: all 0.3s ease; }
+        @media (min-width: 992px) { .container.has-invoice { grid-template-columns: 2.5fr 1.2fr; padding: 25px; } }
+        @media (max-width: 768px) { .container { padding: 10px; gap: 15px; } }
 
+        .compact-offers-bar { display: flex; align-items: center; gap: 10px; background: #fffbeb; border: 1px solid #fed7aa; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 0.8rem; font-weight: 600; color: #b45309; width: 100%; }
         .view-section { display: none; width: 100%; }
         .view-section.active { display: block; animation: fadeView 0.25s ease-in-out; }
         @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .hidden { display: none !important; }
         
-        /* 👑 BLINKIT LAYOUT SPECIFICATIONS FROM 1000283099.jpg (FIT TO BORDER CARD) */
+        /* 👑 DOCS CARD DESIGN FROM VERBATIM SCREEN GRAPHIC FILE "1000283101.jpg" */
+        .verbatim-docs-promo-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02); width: 100%; overflow: hidden; position: relative; margin-top: 15px; }
+        .promo-details-block { text-align: left; z-index: 2; max-width: 60%; }
+        .promo-main-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; letter-spacing: -0.5px; }
+        .promo-bullet-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .promo-bullet-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; color: #4a5568; }
+        .promo-bullet-diamond { color: var(--text-sub); font-size: 0.9rem; }
+        
+        .verbatim-upload-btn { background-color: #2e7d32; color: #ffffff; border: none; padding: 12px 28px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: background 0.2s; box-shadow: 0 4px 12px rgba(46,125,50,0.2); display: inline-flex; align-items: center; }
+        .verbatim-upload-btn:hover { background-color: #1b5e20; }
+        
+        .promo-graphic-mockup { position: absolute; right: -10px; bottom: -10px; width: 45%; max-width: 180px; z-index: 1; }
+        .promo-graphic-mockup img { width: 100%; height: auto; display: block; transform: rotate(-5deg); filter: drop-shadow(0 10px 15px rgba(0,0,0,0.05)); }
+
+        /* Configuration Cards Specs */
         .blinkit-file-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-top: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); width: 100%; }
         .blinkit-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 1px dashed var(--border-color); }
-        
         .blinkit-stepper { display: flex; align-items: center; background: var(--blinkit-green); border-radius: 10px; padding: 6px 12px; gap: 16px; color: white; font-weight: bold; width: fit-content; }
         .stepper-btn { background: none; border: none; color: white; font-size: 1.3rem; font-weight: 800; cursor: pointer; }
         
@@ -100,9 +114,7 @@
 
         .history-card-item { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-top: 12px; width: 100%; }
         .back-to-upload-link { background: none; border: none; color: var(--blinkit-green); font-size: 0.9rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 15px; }
-        
-        /* Structural Border Fixes for textareas */
-        .form-group textarea { width: 100%; border: 2px solid var(--border-color); border-radius: 12px; padding: 12px; font-size: 0.9rem; outline: none; transition: border 0.2s; }
+        .form-group textarea { width: 100%; border: 2px solid var(--border-color); border-radius: 12px; padding: 12px; font-size: 0.9rem; outline: none; }
         .form-group textarea:focus { border-color: var(--blinkit-green); }
     </style>
 </head>
@@ -172,23 +184,51 @@
 
     <!-- STAGE 3: Main App Workspace -->
     <div id="mainApp" class="app-hidden">
-        <header class="app-header">
+        
+        <!-- 👑 PREMIUM BRAND HEADER INJECTED DIRECTLY FROM "1000283101.jpg" -->
+        <header class="brand-premium-header">
             <div class="header-container">
-                <div class="logo">print<span class="logo-green">from</span>home</div>
-                <div style="display:flex; align-items:center; gap:15px;">
-                    <span id="userGreeting" style="font-size:0.9rem; font-weight:700;">Hi, User</span>
-                    <button class="menu-toggle-btn" onclick="toggleUserDrawer(true)">☰ Menu Sidebar</button>
+                <div class="header-meta-row">
+                    <div>
+                        <p class="delivery-time-title">Prints in</p>
+                        <h2 class="delivery-time-countdown">15 minutes</h2>
+                        <div class="distance-badge">
+                            🏪 <span>1.7 km away</span>
+                        </div>
+                    </div>
+                    <div class="header-profile-cluster">
+                        <div class="wallet-micro-badge">
+                            <span class="wallet-icon-label">💼</span>
+                            <span class="wallet-cash-value">₹0</span>
+                        </div>
+                        <!-- Profile Icon triggers sliding navigation drawer sidebar menu -->
+                        <div class="avatar-circle-trigger" onclick="toggleUserDrawer(true)">
+                            👤
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🔥 DYNAMIC LOGGED IN ACCOUNT IDENTITY BAR (BLANK UNTIL DATA BUFFERS DETECTED) -->
+                <div class="destination-dropdown-trigger" onclick="toggleUserDrawer(true)">
+                    <span id="userGreeting" class="destination-sub-text">Guest Workspace Mode</span> ▾
+                </div>
+
+                <!-- Verbatim Search Input Block Layout from Image -->
+                <div class="mock-search-wrapper">
+                    <div class="mock-search-input-placeholder">
+                        <span>🔍</span> Search "notebook"
+                    </div>
+                    <span class="search-mic-icon">🎙️</span>
                 </div>
             </div>
         </header>
 
-        <!-- Dynamic Border-Fit Grid Container -->
+        <!-- Dynamic Border-Fit Container -->
         <div class="container" id="mainLayoutAppContainer">
             
             <!-- VIEW BLOCK 1: STORE FRONTEND ENTRIES -->
             <div id="user_section_store" class="view-section active">
                 
-                <!-- 🔥 REDESIGNED OFFERS HEADER: Active Schemes To Active Offers Locked -->
                 <div class="compact-offers-bar" id="storeOffersTopBanner">
                     <span>📢 <b>Active Offers:</b></span>
                     <marquee scrollamount="3" style="width: 100%;">
@@ -200,28 +240,43 @@
                     🚨 <b>Dukan Abhi Band Hai Bhai!</b> Print From Home accepts orders strictly between 07:00 AM and 11:59 PM.
                 </div>
 
-                <!-- SCREEN STATE A: CLEAN UPLOAD ENGINE -->
+                <!-- 🗺️ SCREEN STATE A: CLEAN BRANDEED HOME FROM IMAGE "1000283101.jpg" -->
                 <div id="uploadScreenInitialState" style="width:100%;">
-                    <div class="store-banner" style="text-align: center; padding: 40px 20px; width:100%;">
-                        <h2 style="font-size: 1.8rem; margin-bottom: 8px; font-weight:800;">Print Store</h2>
-                        <p class="banner-sub" style="font-size: 0.95rem; color:var(--text-sub);">Blinkit ensures secure prints at every stage. Select your files to begin configurations.</p>
+                    <div style="text-align: center; padding: 25px 10px; width:100%;">
+                        <h2 style="font-size: 2.3rem; font-weight:800; color:#1a202c; letter-spacing:-1px;">Print Store</h2>
+                        <!-- 👑 FIXED BRAND DIALOUGE LINKED TO printfromhome -->
+                        <p style="font-size: 0.95rem; color:var(--text-sub); font-weight:600; margin-top:2px;">printfromhome ensures secure prints at every stage</p>
                     </div>
-                    <div class="form-group-upload" style="max-width: 450px; margin: 0 auto; width:100%;">
-                        <label class="upload-custom-btn" for="fileUpload" style="padding: 20px; font-size: 1.1rem; border-radius: 16px; cursor:pointer;">
-                            📂 Select Files / Add Files
-                        </label>
-                        <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
+
+                    <!-- 👑 VERBATIM LAYOUT COPIED DIRECTLY FROM THE "1000283101.jpg" GRID SPECIFICATIONS -->
+                    <div class="verbatim-docs-promo-card">
+                        <div class="promo-details-block">
+                            <h3 class="promo-main-title">Documents</h3>
+                            <ul class="promo-bullet-list">
+                                <li class="promo-bullet-item"><span class="promo-bullet-diamond">✦</span> Price starting at ₹3/page</li>
+                                <li class="promo-bullet-item"><span class="promo-bullet-diamond">✦</span> Paper quality: 70 GSM</li>
+                                <li class="promo-bullet-item"><span class="promo-bullet-diamond">✦</span> Single side prints</li>
+                            </ul>
+                            <!-- Real Trigger Upload Action Controller Node -->
+                            <label class="verbatim-upload-btn" for="fileUpload">
+                                Upload Files
+                            </label>
+                            <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
+                        </div>
+                        <!-- Absolute exact replica stacking layout matching visual mockup positions -->
+                        <div class="promo-graphic-mockup">
+                            <img src="https://i.imgur.com/wV8bTz7.png" alt="Document Graphic Representation Stack" onerror="this.src='https://cdn-icons-png.flaticon.com/512/337/337946.png'">
+                        </div>
                     </div>
                 </div>
 
-                <!-- SCREEN STATE B: FULL CONFIGURATION DRAWER WORKSPACE REFERENCE FILE 1000283099.jpg -->
+                <!-- SCREEN STATE B: FULL CONFIGURATION DRAWER WORKSPACE -->
                 <div id="configurationScreenState" class="hidden" style="width:100%;">
                     <button type="button" class="back-to-upload-link" onclick="forceReturnToUploadView()">
                         &larr; Back to Add Files
                     </button>
                     
                     <form id="printForm" enctype="multipart/form-data" style="width:100%;">
-                        <!-- Dynamic Configuration Components Inserted Live Here -->
                         <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
                         
                         <div class="form-group" style="background: var(--surface); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); width:100%; margin-bottom:20px;">
@@ -237,7 +292,7 @@
 
             </div>
 
-            <!-- VIEW BLOCK 2: SLIDED ACCOUNT ORDERS HISTORIES (CLEAN AND EXCLUSIVE LOOK) -->
+            <!-- VIEW BLOCK 2: LOGS HISTORIES -->
             <div id="user_section_history" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
@@ -248,31 +303,28 @@
                 </div>
             </div>
 
-            <!-- VIEW BLOCK 3: TROUBLESHOOT HELP MODULE (EXCLUSIVE CONTENT LOCK) -->
+            <!-- VIEW BLOCK 3: TROUBLESHOOT SUPPORT -->
             <div id="user_section_help" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:15px;">❓ Help Center & Customer Care Support</h3>
                     <div style="line-height:1.7; font-size:0.95rem; color:#4a5568;">
                         <p style="font-weight:700; color:#111; margin-bottom:8px;">💡 Frequently Asked Questions:</p>
                         <p><b>1. Payment complete ho gayi par history me 'Pending' hai?</b><br>Chinta mat karo bhai, agar bank se paise kat gaye hain aur status sync nahi hua, toh hamara system automatic 5 minute me verify karke printer agent ko pass kar dega.</p>
-                        <p style="margin-top:12px;"><b>2. Delivery kitni der me hoti hai Varanasi me?</b><br>Blinkit partner matching algorithms ke raste aapka page print hote hi nearest delivery picker 15-25 minute me hostel ke main gate par drop kar dega.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW BLOCK 4: SERVICE TERMS EXCLUSIVE CONTAINER -->
+            <!-- VIEW BLOCK 4: LEGAL MANUALS -->
             <div id="user_section_terms" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:15px;">📜 Store Terms & Service Conditions</h3>
                     <div style="font-size:0.9rem; color:var(--text-sub); line-height:1.8; display:flex; flex-direction:column; gap:10px;">
                         <p>• We use premium 70 GSM sheets to provide high density laser print ink bindings.</p>
-                        <p>• Raat 11:59 PM ke baad server auto-close configuration active mode me betha hota hai, isliye time fence rules maintain karna anivarya hai.</p>
-                        <p>• Document content confidentiality completely locked hai. Files print buffer processing queue se clear hote hi background cloud storage arrays se permanent shred (delete) kar di jaati hain.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- INVOICE BILLING TAB SIDEBAR (🔥 STRICTLY BOUNDS ONLY TO STORE SECTION TAB) -->
+            <!-- INVOICE BILLING TAB SIDEBAR -->
             <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; background:var(--surface); border:1px solid var(--border-color); padding:20px; border-radius:16px;">
                 <h2>Order Invoice Summary</h2>
                 <div class="summary-card">
@@ -293,71 +345,6 @@
             <span id="closePreview" class="close-preview">&times;</span>
             <h3 id="previewTitle" style="word-break:break-all; font-size:0.95rem;">Document Preview</h3>
             <div id="previewBody" style="min-height:200px; display:flex; justify-content:center; align-items:center;"></div>
-        </div>
-    </div>
-
-    <!-- Active Open Close Timer Scripts Node Frame -->
-    <script>
-        function updateMainAppUIClock() {
-            const now = new Date();
-            const clockString = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-            if(document.getElementById('userLiveClock')) document.getElementById('userLiveClock').textContent = clockString;
-            
-            const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
-            let open = (hoursIST >= 7 && hoursIST < 24);
-
-            const badge = document.getElementById('userShopStatus');
-            const box = document.getElementById('storeClosedNoticeBox');
-            const btn = document.getElementById('submitOrderBtn');
-            if(badge && box && btn) {
-                if(open) {
-                    badge.textContent = "OPEN 🟢"; badge.className = "shop-status-badge open";
-                    box.classList.add('hidden'); btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
-                } else {
-                    badge.textContent = "CLOSED 🔴"; badge.className = "shop-status-badge closed";
-                    box.classList.remove('hidden'); btn.disabled = true; btn.style.opacity = "0.4"; btn.style.cursor = "not-allowed"; btn.textContent = "❌ Store is Closed";
-                }
-            }
-        }
-        setInterval(updateMainAppUIClock, 1000);
-        window.addEventListener('DOMContentLoaded', updateMainAppUIClock);
-
-        function toggleUserDrawer(open) {
-            document.getElementById('userSideDrawer').classList.toggle('active', open);
-            document.getElementById('drawerOverlay').classList.toggle('active', open);
-        }
-
-        // 🔥 CRITICAL NATIVE VIEW ROUTER: CLEANSE EXTRA STUFF WHEN LEAVING MAIN TAB
-        function navigateUserSection(targetId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
-            
-            document.getElementById(`user_section_${targetId}`).classList.add('active');
-            if(document.getElementById(`menu_${targetId}`)) document.getElementById(`menu_${targetId}`).classList.add('active');
-            
-            const sidePanelPrice = document.getElementById('sidebarPricingPanel');
-            const mainLayoutWrapper = document.getElementById('mainLayoutAppContainer');
-            
-            // 🔥 STRICT LOCK: Hide Offers banner and Invoice completely when visiting non-store views
-            if(targetId !== 'store') { 
-                sidePanelPrice.classList.add('hidden'); 
-                mainLayoutWrapper.classList.remove('has-invoice');
-                mainLayoutWrapper.style.gridTemplateColumns = '1fr'; 
-            } else {
-                if(typeof window.refreshInvoiceTabState === 'function') { window.refreshInvoiceTabState(); }
-            }
-            toggleUserDrawer(false);
-        }
-    </script>
-
-    <!-- Marketing Popup Content Modals -->
-    <div id="marketingPopupModal" style="display: none; position: fixed; z-index: 12000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); justify-content: center; align-items: center; padding: 20px;">
-        <div style="background: #ffffff; padding: 25px; border-radius: 24px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 20px 45px rgba(0,0,0,0.2); border: 2px solid #F4C430; position: relative;">
-            <span id="closeMarketingPopup" style="position: absolute; top: 12px; right: 18px; font-size: 22px; font-weight: bold; cursor: pointer; color: #a0aec0;">&times;</span>
-            <div id="popupIconBadge" style="font-size: 3.5rem; margin-bottom: 12px;">🎉</div>
-            <h3 id="popupAlertTitle" style="font-size: 1.4rem; font-weight: 800; margin-bottom: 8px;">Special Offer Alert!</h3>
-            <p id="popupAlertBody" style="font-size: 0.9rem; color: #4a5568; line-height: 1.5; margin-bottom: 20px;"></p>
-            <button style="width: 100%; padding: 12px; background-color: #0C8346; color: #ffffff; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer;" onclick="document.getElementById('marketingPopupModal').style.display='none'">Chalo Print Karte Hain 🚀</button>
         </div>
     </div>
 
