@@ -111,7 +111,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     masterFilesArray.push({ name: file.name, size: file.size, type: file.type, fileData: file, config: { pages: 1, printType: 'bw', orientation: 'portrait', binding: 'none', copies: 1 } });
                 }
             });
-            fileUpload.value = ''; saveCurrentFilesToSession(); renderFilesUI();
+            fileUpload.value = ''; 
+            saveCurrentFilesToSession(); 
+            renderFilesUI();
         });
     }
 
@@ -148,19 +150,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <button type="button" id="removeFile_${index}" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1.2rem; margin-left:auto;">&times;</button>
                 </div>
+                
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px; align-items:center;">
                     <div class="input-group" style="margin-bottom:0;"><label style="font-size:0.65rem; font-weight:700;">Pages:</label><input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding:6px; border-radius:6px; border:2px solid var(--border-color); font-weight:700; font-size:0.75rem; height:28px;" required></div>
-                    <div><label style="font-size:0.65rem; font-weight:700;">Copies:</label><div class="blinkit-stepper"><button type="button" id="minusCopy_${index}" class="stepper-btn">-</button><span id="copyCountLabel_${index}">${item.config.copies}</span><button type="button" id="plusCopy_${index}" class="stepper-btn">+</button></div></div>
+                    <div><label style="font-size:0.65rem; font-weight:700;">Copies:</label><div class="blinkit-stepper"><button type="button" id="minusCopy_${index}" class="stepper-btn">-</button><span id="copyCountLabel_${index}" style="font-size:0.75rem;">${item.config.copies}</span><button type="button" id="plusCopy_${index}" class="stepper-btn">+</button></div></div>
                 </div>
-                <p style="font-size:0.65rem; font-weight:700; margin-bottom:3px;">Print Color</p>
+
+                <p style="font-size:0.65rem; font-weight:700; color:var(--text-sub); margin-bottom:3px;">Print Color</p>
                 <div class="blinkit-grid-options" style="gap: 8px; margin-bottom: 8px;">
-                    <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}"><div class="option-icon">🎨</div><div class="option-meta-text"><span class="option-title">Coloured</span><span class="option-subtitle">₹10/pg</span></div></div>
-                    <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}"><div class="option-icon">🌑</div><div class="option-meta-text"><span class="option-title">B & W</span><span class="option-subtitle">₹3/pg</span></div></div>
+                    <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}" style="padding: 6px 8px; border-radius: 8px;">
+                        <div class="option-icon" style="font-size:1rem;">🎨</div>
+                        <div class="option-meta-text">
+                            <span class="option-title" style="font-size:0.75rem;">Coloured</span>
+                            <span class="option-subtitle" style="font-size:0.62rem;">₹10/pg</span>
+                        </div>
+                    </div>
+                    <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}" style="padding: 6px 8px; border-radius: 8px;">
+                        <div class="option-icon" style="font-size:1rem;">🌑</div>
+                        <div class="option-meta-text">
+                            <span class="option-title" style="font-size:0.75rem;">B & W</span>
+                            <span class="option-subtitle" style="font-size:0.62rem;">₹3/pg</span>
+                        </div>
+                    </div>
                 </div>
-                <p style="font-size:0.65rem; font-weight:700; margin-bottom:3px;">Orientation</p>
-                <div class="blinkit-grid-options">
-                    <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}"><div class="option-icon">📱</div><div class="option-meta-text"><span class="option-title">Portrait</span></div></div>
-                    <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}"><div class="option-icon">💻</div><div class="option-meta-text"><span class="option-title">Landscape</span></div></div>
+
+                <p style="font-size:0.65rem; font-weight:700; color:var(--text-sub); margin-bottom:3px;">Orientation</p>
+                <div class="blinkit-grid-options" style="gap: 8px; margin-bottom: 8px;">
+                    <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}" style="padding: 6px 8px; border-radius: 8px;">
+                        <div class="option-icon" style="font-size:1rem;">📱</div>
+                        <div class="option-meta-text"><span class="option-title" style="font-size:0.75rem;">Portrait</span></div>
+                    </div>
+                    <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}" style="padding: 6px 8px; border-radius: 8px;">
+                        <div class="option-icon" style="font-size:1rem;">💻</div>
+                        <div class="option-meta-text"><span class="option-title" style="font-size:0.75rem;">Landscape</span></div>
+                    </div>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-primary); padding:6px 10px; border-radius:6px; border:1px solid var(--border-color);"><label style="font-size:0.68rem; font-weight:700;">Binding:</label><select id="binding_${index}"><option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option><option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option><option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral (+₹30)</option></select></div>
             `;
@@ -200,20 +223,13 @@ document.addEventListener('DOMContentLoaded', () => {
         summaryTotal.textContent = `₹${(finalDocumentCost + accurateDeliveryCharge).toFixed(2)}`;
     }
 
-    // 🔥 HIGH INTELLIGENCE TIMELINE DEEP REDIRECT LOGIC MAPPING
     window.openOrderDeepTrackingWorkspacePage = function(orderStringPayload) {
         const order = JSON.parse(decodeURIComponent(orderStringPayload));
-        
-        if(typeof navigateDrawerSection === 'function') {
-            navigateDrawerSection('order_tracking'); // Divert screen to isolated tracking panel
-        }
-
-        // Fill semantic static properties records
+        if(typeof navigateDrawerSection === 'function') { navigateDrawerSection('order_tracking'); }
         document.getElementById('trackOrderIdLabel').textContent = `ID Reference: ${order.orderId || 'PFH-' + Date.now()}`;
         document.getElementById('trackGrandTotalBadge').textContent = `₹${order.amount}`;
         document.getElementById('trackShippingAddressLabel').textContent = order.address || 'N/A';
 
-        // Load document rows metadata breakdown checklist
         const listContainer = document.getElementById('trackFilesManifestList');
         listContainer.innerHTML = '';
         if(order.details) {
@@ -225,42 +241,24 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 🔥 CRITICAL RULE: CHECK TIMELINE LIVE VISIBILITY BY STATUS
         const timelineWrapper = document.getElementById('liveTrackingTimelineContainer');
         const normalizeStatus = order.status ? order.status.toLowerCase() : 'pending';
 
         if(normalizeStatus.includes('delivered')) {
-            // Hide the tracking lines parameters completely if delivered
             if(timelineWrapper) timelineWrapper.style.display = 'none';
         } else {
             if(timelineWrapper) timelineWrapper.style.display = 'block';
-            
-            // Flush old completed/active timeline steps layout configurations
-            document.querySelectorAll('.timeline-step').forEach(step => {
-                step.classList.remove('completed', 'active');
-            });
+            document.querySelectorAll('.timeline-step').forEach(step => { step.classList.remove('completed', 'active'); });
 
-            // Set cascade parameters based on cloud memory array logs pointer indices
             const stepPending = document.getElementById('step_pending');
             const stepPaid = document.getElementById('step_paid');
             const stepPrinting = document.getElementById('step_printing');
             const stepDelivery = document.getElementById('step_delivery');
 
-            if(normalizeStatus.includes('pending')) {
-                if(stepPending) stepPending.classList.add('active');
-            } else if(normalizeStatus.includes('paid') || normalizeStatus.includes('ready')) {
-                if(stepPending) stepPending.classList.add('completed');
-                if(stepPaid) stepPaid.classList.add('active');
-            } else if(normalizeStatus.includes('print')) {
-                if(stepPending) stepPending.classList.add('completed');
-                if(stepPaid) stepPaid.classList.add('completed');
-                if(stepPrinting) stepPrinting.classList.add('active');
-            } else if(normalizeStatus.includes('delivery') || normalizeStatus.includes('out')) {
-                if(stepPending) stepPending.classList.add('completed');
-                if(stepPaid) stepPaid.classList.add('completed');
-                if(stepPrinting) stepPrinting.classList.add('completed');
-                if(stepDelivery) stepDelivery.classList.add('active');
-            }
+            if(normalizeStatus.includes('pending')) { if(stepPending) stepPending.classList.add('active'); }
+            else if(normalizeStatus.includes('paid') || normalizeStatus.includes('ready')) { if(stepPending) stepPending.classList.add('completed'); if(stepPaid) stepPaid.classList.add('active'); }
+            else if(normalizeStatus.includes('print')) { if(stepPending) stepPending.classList.add('completed'); if(stepPaid) stepPaid.classList.add('completed'); if(stepPrinting) stepPrinting.classList.add('active'); }
+            else if(normalizeStatus.includes('delivery') || normalizeStatus.includes('out')) { if(stepPending) stepPending.classList.add('completed'); if(stepPaid) stepPaid.classList.add('completed'); if(stepPrinting) stepPrinting.classList.add('completed'); if(stepDelivery) stepDelivery.classList.add('active'); }
         }
     }
 
@@ -276,8 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
         parsedHistory.forEach(order => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'history-card-item';
-            
-            // Encode row elements payload to enable safe native link redirections strings clicks
             const stringifiedPayload = encodeURIComponent(JSON.stringify(order));
             itemDiv.setAttribute('onclick', `openOrderDeepTrackingWorkspacePage('${stringifiedPayload}')`);
 
@@ -293,6 +289,89 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             ordersHistoryContainer.appendChild(itemDiv);
+        });
+    }
+
+    // 🔥 HIGH INTELLIGENCE HYBRID AUTHENTICATION PIPELINE ENGINE (FIXED DEVICE VALIDATION GATE)
+    if(authForm) {
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const identityKey = authIdentity.value.trim().toLowerCase();
+            const inputPassword = authPassword.value;
+
+            // State Alpha: User attempts Signup Registry Flow
+            if (isSignupMode) {
+                const inputName = authName.value.trim() || 'Customer';
+                
+                // Secure server payload generation loop
+                try {
+                    const response = await fetch('/api/auth/signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: inputName, identity: identityKey, password: inputPassword })
+                    });
+                    const data = await response.json();
+                    
+                    // Backup fallback gate validation if API routing is on simulation mode
+                    if (!response.ok || !data.success) {
+                        console.log("PFH Core Engine: Route simulation active, syncing local fallback node cluster maps.");
+                    }
+                } catch (apiErr) {
+                    console.warn("PFH Warning: API Gateway offline, local sandbox synchronization active.");
+                }
+
+                // Sync data local buffers to secure instant session routing bounds across reboots
+                localStorage.setItem(`user_${identityKey}`, JSON.stringify({ name: inputName, id: identityKey, password: inputPassword }));
+                localStorage.setItem('printAppUser', identityKey);
+                isFirstTimeUser = true;
+                
+                if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${inputName}</span>`;
+                alert("🎉 Account created successfully on this device node cluster! Logging you in...");
+
+            } else {
+                // State Beta: User attempts Login Verification Sequence Flow
+                let verifiedObject = null;
+
+                // Sync attempt from cloud engine arrays blocks
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ identity: identityKey, password: inputPassword })
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.success && data.user) {
+                        verifiedObject = data.user;
+                        localStorage.setItem(`user_${identityKey}`, JSON.stringify(verifiedObject));
+                    }
+                } catch (apiErr) {}
+
+                // Deep memory cluster lookup verification gate checks bounds
+                if (!verifiedObject) {
+                    const localRecord = localStorage.getItem(`user_${identityKey}`);
+                    if (!localRecord) {
+                        alert("❌ Id ya Phone Number galat hai bhai, ya fir aapko pehle 'Create Account' karna padega!");
+                        return;
+                    }
+                    verifiedObject = JSON.parse(localRecord);
+                }
+
+                if (verifiedObject.password !== inputPassword) {
+                    alert("❌ Galat Password dala hai aapne bhai! Kripya check karein.");
+                    return;
+                }
+
+                localStorage.setItem('printAppUser', identityKey);
+                if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${verifiedObject.name}</span>`;
+            }
+
+            if(authScreen) authScreen.style.display = 'none';
+            if(mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
+            authForm.reset();
+            loadSavedFilesFromSession();
+            renderOrderHistoryUI(identityKey);
+            synchronizeWalletInterfaceBalance();
+            calculateTotal();
         });
     }
 
@@ -327,23 +406,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             alert('🎉 Payment Successful!');
                             const activeUserToken = localStorage.getItem('printAppUser');
                             const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
-                            
-                            const newOrderPayload = { 
-                                orderId: data.order_id,
-                                date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), 
-                                amount: totalAmountText, 
-                                status: "Paid / Ready for Print", 
-                                details: finalMetaConfig,
-                                address: document.getElementById('address').value 
-                            };
-                            
+                            const newOrderPayload = { orderId: data.order_id, date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), amount: totalAmountText, status: "Paid / Ready for Print", details: finalMetaConfig, address: document.getElementById('address').value };
                             currentHistoryArray.push(newOrderPayload);
                             localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
-                            
                             isFirstTimeUser = false; sessionStorage.removeItem('savedPrintFiles'); printForm.reset(); multiFilesContainer.innerHTML = ''; masterFilesArray = [];
                             renderOrderHistoryUI(activeUserToken); calculateTotal();
-                            
-                            // Instantly fire dynamic open tracking redirect page routing logs parameters
                             openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
                         }
                     }, "theme": { "color": "#F4C430" }
