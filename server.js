@@ -118,8 +118,11 @@ app.get('/download/:filename', (req, res) => {
         res.status(404).send('File not found');
     }
 });
-
+// 🔥 AUTOMATIC UPDATE SYSTEM: Yeh route client ko batayega ki server par kaun sa version chal raha hai
+app.get('/api/version', (req, res) => {
+    res.json({ version: "1.0.1" }); // 👈 Jab bhi aap naya update karo, bas yeh number badal dena (e.g., 1.0.2)
+});
 // Server initiation
 app.listen(PORT, () => {
     console.log(`Blinkit Printing Server running perfectly on port ${PORT}`);
-});
+}); 

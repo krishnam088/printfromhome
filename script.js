@@ -542,4 +542,32 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Payment Gateway unstable at the moment!");
         }
     });
+    // 🔥 AUTOMATIC LIVE REFRESH ENGINE FOR NEW UPDATES
+    let currentLocalVersion = null;
+
+    async function checkForNewUpdates() {
+        try {
+            const res = await fetch('/api/version');
+            const data = await res.json();
+            
+            if (!currentLocalVersion) {
+                // Pehli baar khulne par current version memory mein save karo
+                currentLocalVersion = data.version;
+            } else if (currentLocalVersion !== data.version) {
+                console.log("🚀 Naya Update Mil Gaya! Auto-refreshing website...");
+                
+                // Clear session code tags safety buffer before auto reload
+                currentLocalVersion = data.version;
+                
+                // User friendly small notification check (Optional alert blocks clear)
+                window.location.reload(true); // Forced hard reload from server
+            }
+        } catch (err) {
+            console.log("Background version check error skipped securely.");
+        }
+    }
+
+    // Har 20 second mein background mein check karega ki aapne naya push kiya ya nahi
+    setInterval(checkForNewUpdates, 20000); 
+    checkForNewUpdates(); // Initial prompt check on load
 });
