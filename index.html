@@ -21,42 +21,39 @@
         }
         body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; }
 
-        /* 🕒 TOP STICKY SYSTEM HEADER CLOCK */
-        .live-timer-banner {
-            display: flex; justify-content: space-between; align-items: center;
-            background: #0f172a; color: white; padding: 12px 20px; font-size: 0.85rem;
-            font-weight: 600; width: 100%; border-bottom: 2px solid var(--blinkit-yellow);
-            position: sticky; top: 0; z-index: 1001; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        }
-        .shop-status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; }
-        .shop-status-badge.open { background: var(--blinkit-green); color: white; }
-        .shop-status-badge.closed { background: #ef4444; color: white; }
-
-        /* 📱 PREMIUM BRAND HEADER SYSTEM */
+        /* 📱 PREMIUM BRAND HEADER SYSTEM FROM "1000283101.jpg" - NOW SLIDED TO TOP */
         .brand-premium-header {
             background: linear-gradient(to bottom, #FFF3B3 0%, #FFFBE6 100%);
             padding: 16px 20px;
             width: 100%;
             border-bottom: 1px solid rgba(244,196,48,0.15);
         }
-        .header-container { max-width: 100%; margin: 0 auto; }
-        .header-meta-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .header-container { max-width: 100%; margin: 0 auto; position: relative; }
+        .header-meta-row { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
         
-        /* Left Brand Column: Delivery + Username Side-by-Side */
+        /* Left Brand Column: Delivery + Inline Username Setup */
         .delivery-brand-box { display: flex; flex-direction: column; text-align: left; }
-        .user-greeting-inline { font-size: 0.8rem; font-weight: 700; color: #2d3748; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .user-greeting-inline { font-size: 0.85rem; font-weight: 700; color: #2d3748; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
         .delivery-time-title { font-size: 0.75rem; font-weight: 700; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
-        .delivery-time-countdown { font-size: 1.4rem; font-weight: 900; color: #111111; display: flex; align-items: center; margin-top: -2px; }
+        .delivery-time-countdown { font-size: 1.5rem; font-weight: 900; color: #111111; margin-top: -2px; }
         
-        /* Right Side: Action Cluster System Layout Alignment */
-        .header-profile-cluster { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+        /* Right Side: Cluster Layout Stack */
+        .header-profile-cluster { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
         
-        /* Wallet on Left Side of Icon */
-        .wallet-micro-badge { background: #ffffff; border-radius: 14px; border: 1px solid var(--border-color); padding: 7px 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 6px; cursor: pointer; transition: transform 0.2s; }
+        /* 🔥 NEW POSITION: Small Shop Status Navigation Stack right above profile icon */
+        .status-micro-nav { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
+        .shop-status-text-badge { font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; }
+        .shop-status-text-badge.open { background: var(--blinkit-green); color: white; }
+        .shop-status-text-badge.closed { background: #ef4444; color: white; }
+        .shop-timing-subtext { font-size: 0.65rem; font-weight: 700; color: #718096; }
+
+        .profile-wallet-row { display: flex; align-items: center; gap: 10px; }
+        
+        /* Wallet & Profile Buttons */
+        .wallet-micro-badge { background: #ffffff; border-radius: 14px; border: 1px solid var(--border-color); padding: 6px 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 6px; cursor: pointer; transition: transform 0.2s; }
         .wallet-micro-badge:hover { transform: translateY(-1px); }
         .wallet-cash-value { font-size: 0.85rem; font-weight: 800; color: #000000; }
         
-        /* Profile Icon Push Extreme Side Border Edge */
         .avatar-circle-trigger { width: 44px; height: 44px; background: #000000; color: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; font-size: 1.1rem; border: 2px solid #ffffff; transition: transform 0.2s; }
         .avatar-circle-trigger:hover { transform: scale(1.04); }
 
@@ -68,7 +65,6 @@
         .side-drawer.active { right: 0; }
         .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; }
         
-        /* Drawer Internal Filter Search box */
         .drawer-search-box { position: relative; margin-bottom: 20px; width: 100%; }
         .drawer-search-box input { width: 100%; padding: 10px 14px; padding-left: 36px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 0.85rem; font-weight: 600; outline: none; }
         .drawer-search-box input:focus { border-color: var(--blinkit-green); }
@@ -85,7 +81,7 @@
         .wallet-chip-btn { background: var(--bg-primary); border: 2px solid var(--border-color); padding: 8px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
         .wallet-chip-btn:hover { border-color: var(--blinkit-green); color: var(--blinkit-green); }
 
-        /* Layout Layout Setup Systems */
+        /* Main Workspace Container Layout */
         .container { width: 100%; max-width: 100%; margin: 0; padding: 15px; display: grid; grid-template-columns: 1fr; gap: 20px; transition: all 0.3s ease; }
         @media (min-width: 992px) { .container.has-invoice { grid-template-columns: 2.5fr 1.2fr; padding: 25px; } }
         @media (max-width: 768px) { .container { padding: 10px; gap: 15px; } }
@@ -95,7 +91,7 @@
         .view-section.active { display: block; animation: fadeView 0.25s ease-in-out; }
         @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Verbatim layout features */
+        /* Docs Promo Card Settings from Image 1000283101.jpg */
         .verbatim-docs-promo-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02); width: 100%; overflow: hidden; position: relative; margin-top: 15px; }
         .promo-details-block { text-align: left; z-index: 2; max-width: 60%; }
         .promo-main-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; letter-spacing: -0.5px; }
@@ -121,14 +117,6 @@
     </style>
 </head>
 <body>
-
-    <div class="live-timer-banner">
-        <div>🕒 India Time: <span id="userLiveClock" style="color: var(--blinkit-yellow); font-family: monospace; font-size: 0.95rem;">00:00:00 AM</span></div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 0.75rem; color: var(--text-sub);">Timing: 7AM - 12AM</span>
-            <span id="userShopStatus" class="shop-status-badge open">OPEN 🟢</span>
-        </div>
-    </div>
 
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
@@ -208,19 +196,25 @@
             <div class="header-container">
                 <div class="header-meta-row">
                     <div class="delivery-brand-box">
-                        <div id="userGreeting" class="user-greeting-inline">Guest Mode</div>
+                        <div id="userGreeting" class="user-greeting-inline">GUEST MODE</div>
                         <h2 class="delivery-time-countdown">
                             <span class="delivery-time-title" style="margin-right:6px;">Prints in</span> 15 mins
                         </h2>
                     </div>
 
                     <div class="header-profile-cluster">
-                        <div class="wallet-micro-badge" onclick="toggleWalletPopupGrid(true, event)">
-                            <span>💵</span>
-                            <span class="wallet-cash-value" id="headerWalletDisplayBalance">₹0.00</span>
+                        <div class="status-micro-nav">
+                            <span id="userShopStatus" class="shop-status-text-badge open">OPEN 🟢</span>
+                            <span class="shop-timing-subtext">7AM - 12AM</span>
                         </div>
-                        <div class="avatar-circle-trigger" onclick="toggleUserDrawer(true)">
-                            👤
+                        <div class="profile-wallet-row">
+                            <div class="wallet-micro-badge" onclick="toggleWalletPopupGrid(true, event)">
+                                <span>💵</span>
+                                <span class="wallet-cash-value" id="headerWalletDisplayBalance">₹0.00</span>
+                            </div>
+                            <div class="avatar-circle-trigger" onclick="toggleUserDrawer(true)">
+                                👤
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -235,10 +229,6 @@
                     <marquee scrollamount="3" style="width: 100%;">
                         ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!
                     </marquee>
-                </div>
-
-                <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%;">
-                    🚨 <b>Dukan Abhi Band Hai Bhai!</b> Print From Home accepts orders strictly between 07:00 AM and 11:59 PM.
                 </div>
 
                 <div id="uploadScreenInitialState" style="width:100%;">
@@ -294,7 +284,7 @@
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:15px;">❓ Help Center & Customer Care Support</h3>
                     <div style="line-height:1.7; font-size:0.95rem; color:#4a5568;">
-                        <p><b>Payment complete ho gayi par history me 'Pending' hai?</b><br>Chinta mat karo bhai, hamara system automatic 5 minute me verify karke printer agent ko pass kar dega.</p>
+                        <p><b>Payment complete ho gayi par history me 'Pending' hai?</b><br>Chinta mat karo bhai, agar bank se paise kat gaye hain aur status sync nahi hua, toh hamara system automatic 5 minute me verify karke printer agent ko pass kar dega.</p>
                     </div>
                 </div>
             </div>
@@ -323,29 +313,25 @@
     </div>
 
     <script>
-        function updateMainAppUIClock() {
+        function runSilentIntradaySchedulerGuard() {
             const now = new Date();
-            const clockString = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-            if(document.getElementById('userLiveClock')) document.getElementById('userLiveClock').textContent = clockString;
-            
             const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
             let open = (hoursIST >= 7 && hoursIST < 24);
 
             const badge = document.getElementById('userShopStatus');
-            const box = document.getElementById('storeClosedNoticeBox');
             const btn = document.getElementById('submitOrderBtn');
-            if(badge && box && btn) {
+            if(badge && btn) {
                 if(open) {
-                    badge.textContent = "OPEN 🟢"; badge.className = "shop-status-badge open";
-                    box.classList.add('hidden'); btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
+                    badge.textContent = "OPEN 🟢"; badge.className = "shop-status-text-badge open";
+                    btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
                 } else {
-                    badge.textContent = "CLOSED 🔴"; badge.className = "shop-status-badge closed";
-                    box.classList.remove('hidden'); btn.disabled = true; btn.style.opacity = "0.4"; btn.style.cursor = "not-allowed"; btn.textContent = "❌ Store is Closed";
+                    badge.textContent = "CLOSED 🔴"; badge.className = "shop-status-text-badge closed";
+                    btn.disabled = true; btn.style.opacity = "0.4"; btn.style.cursor = "not-allowed"; btn.textContent = "❌ Store is Closed";
                 }
             }
         }
-        setInterval(updateMainAppUIClock, 1000);
-        window.addEventListener('DOMContentLoaded', updateMainAppUIClock);
+        setInterval(runSilentIntradaySchedulerGuard, 5000);
+        window.addEventListener('DOMContentLoaded', runSilentIntradaySchedulerGuard);
 
         function toggleUserDrawer(open) {
             document.getElementById('userSideDrawer').classList.toggle('active', open);
