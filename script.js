@@ -46,6 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
             isFirstTimeUser = localStorage.getItem(`isFirst_${sessionActiveUser}`) === 'true';
             mainApp.classList.remove('app-hidden');
             mainApp.classList.add('app-visible');
+            
+            // 🔥 REFRESH PERSISTENCE TRICK: Load saved files on page refresh
+            loadSavedFilesFromSession();
         } else {
             authScreen.classList.remove('app-hidden');
         }
@@ -110,14 +113,21 @@ document.addEventListener('DOMContentLoaded', () => {
         mainApp.classList.remove('app-hidden');
         mainApp.classList.add('app-visible');
         authForm.reset();
+        
+        loadSavedFilesFromSession();
         calculateTotal();
     });
 
     logoutBtn.addEventListener('click', () => {
         localStorage.removeItem('printAppUser');
+        sessionStorage.removeItem('savedPrintFiles'); // Clear session cache data on logout
+        masterFilesArray = [];
+        multiFilesContainer.innerHTML = '';
+        fileNameDisplay.textContent = "No files selected yet";
         mainApp.classList.remove('app-visible');
         mainApp.classList.add('app-hidden');
         authScreen.classList.remove('app-hidden');
+        calculateTotal();
     });
 
     // --- 🖨️ FILE EXTENSION PERSISTENCE & PREVIEW ENGINE ---
@@ -125,19 +135,50 @@ document.addEventListener('DOMContentLoaded', () => {
         if (fileUpload.files.length === 0) return;
 
         Array.from(fileUpload.files).forEach(file => {
-            const isDuplicate = masterFilesArray.some(f => f.fileData.name === file.name && f.fileData.size === file.size);
+            const isDuplicate = masterFilesArray.some(f => f.name === file.name && f.size === file.size);
             if (!isDuplicate) {
                 masterFilesArray.push({
-                    fileData: file,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    fileData: file, // Store actual file binary data
                     config: { pages: 1, printType: 'bw', sides: 'single', binding: 'none', copies: 1 }
                 });
             }
         });
 
-        fileNameDisplay.textContent = `✓ Total ${masterFilesArray.length} files in queue`;
         fileUpload.value = ''; 
+        saveCurrentFilesToSession(); // 🔥 Save data to memory
         renderFilesUI();
     });
+
+    // 🔥 Function to Save configurations to session state mapping safely
+    function saveCurrentFilesToSession() {
+        const sessionPayload = masterFilesArray.map(item => ({
+            name: item.name,
+            size: item.size,
+            type: item.type,
+            config: item.config
+        }));
+        sessionStorage.setItem('savedPrintFiles', JSON.stringify(sessionPayload));
+    }
+
+    // 🔥 Function to Load data after browser tab refresh loop executes
+    function loadSavedFilesFromSession() {
+        const rawSessionData = sessionStorage.getItem('savedPrintFiles');
+        if (rawSessionData) {
+            const parsedSessionData = JSON.parse(rawSessionData);
+            masterFilesArray = parsedSessionData.map(item => ({
+                name: item.name,
+                size: item.size,
+                type: item.type,
+                fileData: null, // Refresh erases binary, handles securely during submission
+                config: item.config
+            }));
+            fileNameDisplay.textContent = `✓ Total ${masterFilesArray.length} files in queue`;
+            renderFilesUI();
+        }
+    }
 
     function renderFilesUI() {
         multiFilesContainer.innerHTML = ''; 
@@ -156,11 +197,16 @@ document.addEventListener('DOMContentLoaded', () => {
             fileRow.style.marginTop = '15px';
             fileRow.style.textAlign = 'left';
 
+            // If fileData is missing due to refresh, display alert hint inside button
+            const previewBtnText = item.fileData ? "👁️ Preview" : "🔄 Re-upload File";
+            const previewBtnBg = item.fileData ? "#e2e8f0" : "#fed7d7";
+            const previewBtnColor = item.fileData ? "#2d3748" : "#c53030";
+
             fileRow.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:8px; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
-                    <strong style="font-size:0.9rem; color:#1a202c; word-break:break-all;">📄 ${item.fileData.name}</strong>
+                    <strong style="font-size:0.9rem; color:#1a202c; word-break:break-all;">📄 ${item.name}</strong>
                     <div style="display:flex; align-items:center; gap:12px;">
-                        <button type="button" id="previewBtn_${index}" style="background:#e2e8f0; border:none; border-radius:6px; color:#2d3748; padding:4px 8px; font-size:0.8rem; cursor:pointer; font-weight:600;">👁️ Preview</button>
+                        <button type="button" id="previewBtn_${index}" style="background:${previewBtnBg}; border:none; border-radius:6px; color:${previewBtnColor}; padding:4px 8px; font-size:0.8rem; cursor:pointer; font-weight:600;">${previewBtnText}</button>
                         
                         <div style="display:flex; align-items:center; background:#edf2f7; border-radius:8px; padding:2px 6px; gap:8px;">
                             <button type="button" id="minusCopy_${index}" style="border:none; background:none; font-weight:800; color:#4a5568; cursor:pointer; padding:2px 6px;">-</button>
@@ -208,47 +254,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
             multiFilesContainer.appendChild(fileRow);
 
-            // Trigger modal logic for specific indexed file element
+            // Handler managing re-uploads or previews execution
             document.getElementById(`previewBtn_${index}`).addEventListener('click', () => {
-                openDocumentPreview(item.fileData);
+                if(item.fileData) {
+                    openDocumentPreview(item.fileData, item.name, item.type);
+                } else {
+                    alert(`Bhai, page refresh hone ki wajah se "${item.name}" secure sandbox se hat gayi hai. Bas niche main 'Select Files' button se ise ek baar dubara select kar lo, aapki mapping aur settings as-it-is save rahengi!`);
+                    fileUpload.click();
+                }
             });
 
-            // Copies Counter Stepper configuration
+            // Copies Counter Stepper configurations
             document.getElementById(`plusCopy_${index}`).addEventListener('click', () => {
                 item.config.copies++;
                 document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies;
-                calculateTotal(); // 🔥 Live Calculate Trigger
+                saveCurrentFilesToSession();
+                calculateTotal();
             });
             document.getElementById(`minusCopy_${index}`).addEventListener('click', () => {
                 if (item.config.copies > 1) {
                     item.config.copies--;
                     document.getElementById(`copyCountLabel_${index}`).textContent = item.config.copies;
-                    calculateTotal(); // 🔥 Live Calculate Trigger
+                    saveCurrentFilesToSession();
+                    calculateTotal();
                 }
             });
 
-            // Remove/Delete isolated array entity
+            // Remove isolated entity node item array operations
             document.getElementById(`removeFile_${index}`).addEventListener('click', () => {
                 masterFilesArray.splice(index, 1);
                 fileNameDisplay.textContent = masterFilesArray.length > 0 ? `✓ Total ${masterFilesArray.length} files in queue` : "No files selected yet";
+                saveCurrentFilesToSession();
                 renderFilesUI();
             });
 
-            // Input monitors to save configuration changes and trigger live totals
+            // Input monitors mappings
             document.getElementById(`pages_${index}`).addEventListener('input', (e) => {
                 item.config.pages = parseInt(e.target.value) || 1;
+                saveCurrentFilesToSession();
                 calculateTotal();
             });
             document.getElementById(`printType_${index}`).addEventListener('change', (e) => {
                 item.config.printType = e.target.value;
+                saveCurrentFilesToSession();
                 calculateTotal();
             });
             document.getElementById(`sides_${index}`).addEventListener('change', (e) => {
                 item.config.sides = e.target.value;
+                saveCurrentFilesToSession();
                 calculateTotal();
             });
             document.getElementById(`binding_${index}`).addEventListener('change', (e) => {
                 item.config.binding = e.target.value;
+                saveCurrentFilesToSession();
                 calculateTotal();
             });
         });
@@ -256,21 +314,21 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
     }
 
-    // Live Document Preview Render Core Mechanism
-    function openDocumentPreview(file) {
-        previewTitle.textContent = `Preview: ${file.name}`;
+    // Live Document Preview
+    function openDocumentPreview(file, name, type) {
+        previewTitle.textContent = `Preview: ${name}`;
         previewBody.innerHTML = ''; 
 
         const fileURL = URL.createObjectURL(file);
 
-        if (file.type.startsWith('image/')) {
+        if (type.startsWith('image/')) {
             const img = document.createElement('img');
             img.src = fileURL;
             img.style.maxWidth = '100%';
             img.style.maxHeight = '60vh';
             img.style.borderRadius = '8px';
             previewBody.appendChild(img);
-        } else if (file.type === 'application/pdf') {
+        } else if (type === 'application/pdf') {
             const iframe = document.createElement('iframe');
             iframe.src = fileURL;
             iframe.style.width = '100%';
@@ -282,7 +340,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="text-align:center; padding:20px; color:#4a5568;">
                     <span style="font-size:3rem;">📄</span>
                     <p style="margin-top:10px; font-weight:600;">Preview not directly supported for this format.</p>
-                    <p style="font-size:0.8rem; color:#718096;">Ready to print securely as raw binary.</p>
                 </div>`;
         }
 
@@ -296,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === previewModal) previewModal.style.display = 'none';
     });
 
-    // 🔥 FIXED REAL-TIME CALCULATOR ENGINE
+    // Recalculator Core Engine
     function calculateTotal() {
         let totalPrintCost = 0;
         let totalBindingCost = 0;
@@ -315,7 +372,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         masterFilesArray.forEach((item, index) => {
-            // Strong Data Type Parsing to ensure math variables work smoothly
             const pages = parseInt(item.config.pages) || 1;
             const printType = item.config.printType;
             const binding = item.config.binding;
@@ -330,7 +386,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let fileTotal = filePrintCost + fileBindingCost;
 
-            // Individual Card Cost Update
             const costLabel = document.getElementById(`fileTotalCost_${index}`);
             if (costLabel) costLabel.textContent = `₹${fileTotal.toFixed(2)}`;
 
@@ -339,9 +394,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         let finalDocumentCost = totalPrintCost + totalBindingCost;
-        let accurateDeliveryCharge = 40.00; // Base Delivery Charge
+        let accurateDeliveryCharge = 40.00; 
 
-        // Smart schemes check matrix execution
         if (isFirstTimeUser && finalDocumentCost >= 50.00) {
             accurateDeliveryCharge = 0.00; 
         } else if (finalDocumentCost >= 99.00) {
@@ -350,19 +404,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let grandTotal = finalDocumentCost + accurateDeliveryCharge;
 
-        // 🔥 Updating DOM elements directly for instant recalculations
         summaryPrint.textContent = `₹${totalPrintCost.toFixed(2)}`;
         summaryBinding.textContent = `₹${totalBindingCost.toFixed(2)}`;
         summaryDelivery.textContent = accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`;
         summaryTotal.textContent = `₹${grandTotal.toFixed(2)}`;
     }
 
-    // Form submission processor
+    // Form submission processing pipeline loop integration execution
     const printForm = document.getElementById('printForm');
     printForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         if(masterFilesArray.length === 0) {
             alert("❌ File upload karna zaroori hai bhai!");
+            return;
+        }
+
+        // Check if browser refresh cleared actual file binary streams references
+        const missingBinaries = masterFilesArray.some(f => f.fileData === null);
+        if(missingBinaries) {
+            alert("⚠️ Bhai, page refresh hone ki wajah se browser ne secure data buffer clear kar diya hai. Bas upar 'Select Files' dabake apni files ek baar phir se select kar lijiye, aapki saari custom configurations pehle se hi saved hain!");
             return;
         }
 
@@ -376,7 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const finalMetaConfig = masterFilesArray.map((item) => {
             return {
-                fileName: item.fileData.name,
+                fileName: item.name,
                 pages: item.config.pages,
                 printType: item.config.printType,
                 sides: item.config.sides,
@@ -427,6 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             isFirstTimeUser = false;
                         }
 
+                        sessionStorage.removeItem('savedPrintFiles'); // Clear state caching tokens upon success transaction loop
                         printForm.reset();
                         multiFilesContainer.innerHTML = '';
                         masterFilesArray = [];
