@@ -1,21 +1,19 @@
+// Global scope mein define karo taaki har jagah access ho
+let masterFilesArray = []; 
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Stage Containers
     const fileUpload = document.getElementById('fileUpload');
     const multiFilesContainer = document.getElementById('multiFilesContainer');
     const uploadScreenInitialState = document.getElementById('uploadScreenInitialState');
     const configurationScreenState = document.getElementById('configurationScreenState');
 
-    // --- 🖨️ FILE UPLOAD & DIVERSION LOGIC (FORCE MODE) ---
+    // --- 1. FILE UPLOAD LOGIC ---
     if(fileUpload) {
         fileUpload.addEventListener('change', function() {
             if(this.files.length === 0) return;
-            
-            // Files process
             Array.from(this.files).forEach(file => {
                 masterFilesArray.push({ name: file.name, config: { pages: 1, copies: 1 } });
             });
-            
-            console.log("Files detected, triggering render...");
             renderFilesUI();
         });
     }
@@ -39,16 +37,15 @@ document.addEventListener('DOMContentLoaded', () => {
             multiFilesContainer.appendChild(card);
         });
 
-        // FORCE DISPLAY: style.display ka use kar rahe hain class ke bajaye
+        // UI Diversion
         if(uploadScreenInitialState) uploadScreenInitialState.style.display = 'none';
         if(configurationScreenState) configurationScreenState.style.display = 'block';
     }
 
-    // --- 🛡️ ADMIN STORE STATUS ---
+    // --- 2. ADMIN STORE TOGGLE (Fixed) ---
     window.toggleStoreStatus = function() {
         const isClosed = localStorage.getItem('manual_store_close') === 'true';
         localStorage.setItem('manual_store_close', (!isClosed).toString());
-        alert(!isClosed ? "🛑 Store Band kar diya gaya!" : "✅ Store Khul gaya!");
         window.location.reload(); 
     };
 
@@ -71,6 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.textContent = isOpen ? "Proceed to Payment" : "❌ Store is Closed";
         }
     }
+    
+    // Status update loops
     setInterval(runSilentIntradaySchedulerGuard, 2000);
     runSilentIntradaySchedulerGuard();
 });
