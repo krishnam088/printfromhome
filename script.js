@@ -103,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             if(authScreen) authScreen.classList.remove('app-hidden');
         }
+        runSilentIntradaySchedulerGuard();
     }, 1000);
 
     // --- 🖨️ FILE PROCESSING LOGIC ---
@@ -130,59 +131,44 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             multiFilesContainer.appendChild(card);
         });
+        document.getElementById('configurationScreenState').classList.remove('hidden');
+        document.getElementById('uploadScreenInitialState').classList.add('hidden');
+    }
+
+    // --- 🛡️ STORE STATUS CONTROL ---
+    window.toggleStoreStatus = function() {
+        const isClosed = localStorage.getItem('manual_store_close') === 'true';
+        localStorage.setItem('manual_store_close', (!isClosed).toString());
+        alert(!isClosed ? "🛑 Store Band kar diya gaya!" : "✅ Store Khul gaya!");
+        window.location.reload();
+    };
+
+    function runSilentIntradaySchedulerGuard() {
+        const isManuallyClosed = localStorage.getItem('manual_store_close') === 'true';
+        const now = new Date();
+        const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
+        const isOpen = (hoursIST >= 7 && hoursIST < 24) && !isManuallyClosed;
+
+        const badge = document.getElementById('userShopStatus');
+        const btn = document.getElementById('submitOrderBtn');
         
-        // Divert to Config Screen
-        const configScreen = document.getElementById('configurationScreenState');
-        const uploadScreen = document.getElementById('uploadScreenInitialState');
-        if(configScreen) configScreen.classList.remove('hidden');
-        if(uploadScreen) uploadScreen.classList.add('hidden');
-    }
-
-    window.forceReturnToUploadView = function() {
-        masterFilesArray = [];
-        const configScreen = document.getElementById('configurationScreenState');
-        const uploadScreen = document.getElementById('uploadScreenInitialState');
-        if(configScreen) configScreen.classList.add('hidden');
-        if(uploadScreen) uploadScreen.classList.remove('hidden');
-    }
-    // Store status ko manually toggle karne ke liye
-window.toggleStoreStatus = function() {
-    const isClosed = localStorage.getItem('manual_store_close') === 'true';
-    if (isClosed) {
-        localStorage.setItem('manual_store_close', 'false');
-        alert("✅ Store Khul gaya!");
-    } else {
-        localStorage.setItem('manual_store_close', 'true');
-        alert("🛑 Store Band kar diya gaya!");
-    }
-    window.location.reload(); // Page reload hote hi sabko 'Closed' dikhega
-};
-
-// Scheduler guard me ye check add karo
-function runSilentIntradaySchedulerGuard() {
-    const isManuallyClosed = localStorage.getItem('manual_store_close') === 'true';
-    const now = new Date();
-    const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
-    
-    // Store tabhi open hoga jab time sahi ho AUR admin ne band na kiya ho
-    const isOpen = (hoursIST >= 7 && hoursIST < 24) && !isManuallyClosed;
-
-    const badge = document.getElementById('userShopStatus');
-    const btn = document.getElementById('submitOrderBtn');
-    
-    if(badge) {
-        if(isOpen) {
-            badge.textContent = "OPEN 🟢"; 
-            badge.className = "shop-status-text-badge open";
-            if(btn) btn.disabled = false;
-        } else {
-            badge.textContent = "CLOSED 🔴"; 
-            badge.className = "shop-status-text-badge closed";
-            if(btn) {
-                btn.disabled = true;
-                btn.textContent = "❌ Store is Closed";
-            }
+        if(badge) {
+            badge.textContent = isOpen ? "OPEN 🟢" : "CLOSED 🔴";
+            badge.className = isOpen ? "shop-status-text-badge open" : "shop-status-text-badge closed";
+        }
+        if(btn) {
+            btn.disabled = !isOpen;
+            btn.style.opacity = isOpen ? "1" : "0.5";
+            btn.textContent = isOpen ? "Proceed to Payment" : "❌ Store is Closed";
         }
     }
-}
+
+    // Admin Panel Visibility
+    const adminPanel = document.getElementById('adminControls');
+    if(adminPanel) {
+        const adminId = "bhavishya@artist.com";
+        adminPanel.style.display = (localStorage.getItem('printAppUser') === adminId) ? 'block' : 'none';
+    }
+
+    setInterval(runSilentIntradaySchedulerGuard, 5000);
 });
