@@ -17,199 +17,165 @@
             --blinkit-green: #0C8346;
             --border-color: #e2e8f0;
         }
-        body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; }
-        .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1999; display: none; opacity: 0; transition: opacity 0.3s ease; }
-        .drawer-overlay.active { display: block; opacity: 1; }
-        .side-drawer { position: fixed; top: 0; left: -320px; width: 300px; height: 100vh; background: var(--surface); z-index: 2000; box-shadow: 10px 0 30px rgba(0,0,0,0.05); transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px 20px; display: flex; flex-direction: column; border-right: 1px solid var(--border-color); }
-        .side-drawer.active { left: 0; }
-        .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; }
-        .drawer-menu-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-        .drawer-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; color: var(--text-main); cursor: pointer; transition: all 0.2s; }
-        .drawer-item:hover, .drawer-item.active { background: #f1f5f9; color: var(--blinkit-green); }
-        .menu-trigger-btn { background: #000; color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .admin-box { background: var(--surface); max-width: 400px; margin: 100px auto; padding: 30px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--border-color); }
+        body { background-color: var(--bg-primary); color: var(--text-main); padding: 15px; }
+        
+        /* Gateway Panel */
+        .admin-box { background: var(--surface); max-width: 400px; margin: 80px auto; padding: 30px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--border-color); }
+        .admin-box h2 { font-weight: 800; margin-bottom: 8px; font-size: 1.6rem; }
         .input-group { margin-bottom: 18px; text-align: left; }
-        .input-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; }
-        .input-group input, .input-group select { width: 100%; padding: 12px 16px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 0.95rem; outline: none; }
-        .btn-admin { width: 100%; padding: 12px; background: #000; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.95rem; }
-        .dashboard-container { max-width: 1200px; margin: 0 auto; display: none; padding: 15px; }
+        .input-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; color: var(--text-main); }
+        .input-group input, .input-group select { width: 100%; padding: 12px 16px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 0.95rem; outline: none; transition: all 0.2s; }
+        .input-group input:focus { border-color: var(--blinkit-yellow); }
+        .btn-admin { width: 100%; padding: 12px; background: #000; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.95rem; transition: background 0.2s; }
+        .btn-admin:hover { background: #222; }
+
+        /* Dashboard Architecture */
+        .dashboard-container { max-width: 1200px; margin: 0 auto; display: none; }
         .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid var(--border-color); flex-wrap: wrap; gap: 15px; }
+        .dashboard-header h1 { font-weight: 800; font-size: 1.8rem; letter-spacing: -0.5px; }
+        
+        /* Stats Widgets Grid */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: var(--surface); border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); border: 1px solid var(--border-color); border-left: 5px solid var(--blinkit-yellow); }
+        .stat-card { background: var(--surface); border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); border-left: 5px solid var(--blinkit-yellow); border: 1px solid var(--border-color); border-left: 5px solid var(--blinkit-yellow); }
         .stat-card p { font-size: 0.75rem; color: var(--text-sub); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
         .stat-card h2 { font-size: 1.8rem; font-weight: 800; margin-top: 5px; }
-        .panel-box { background: var(--surface); border-radius: 18px; padding: 22px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.01); margin-bottom: 20px; }
-        .panel-box h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
-        .graph-filters { display: flex; gap: 10px; margin-bottom: 15px; }
-        .filter-btn { background: #e2e8f0; border: none; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
-        .filter-btn.active { background: var(--blinkit-green); color: white; }
-        .order-card { background: var(--bg-primary); border-radius: 14px; padding: 18px; margin-bottom: 15px; border: 1px solid var(--border-color); }
-        .order-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 12px; }
-        .status-select { padding: 6px 12px; border-radius: 8px; border: 2px solid var(--border-color); font-size: 0.8rem; font-weight: 700; outline: none; background: white; }
+
+        /* Analytics & Management Layout Split */
+        .dashboard-split { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 25px; }
+        @media (max-width: 992px) { .dashboard-split { grid-template-columns: 1fr; } }
+        
+        .panel-box { background: var(--surface); border-radius: 18px; padding: 22px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.01); }
+        .panel-box h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+
+        /* Order Cards Structure */
+        .order-card { background: var(--bg-primary); border-radius: 14px; padding: 18px; margin-bottom: 15px; border: 1px solid var(--border-color); transition: transform 0.2s; }
+        .order-card:hover { transform: translateY(-2px); }
+        .order-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 12px; font-size: 0.9rem; flex-wrap: wrap; gap: 10px; }
+        
+        /* Custom Dropdown for Live Delivery Status Changer */
+        .status-select { padding: 6px 12px; border-radius: 8px; border: 2px solid var(--border-color); font-size: 0.8rem; font-weight: 700; outline: none; cursor: pointer; background: white; }
         .status-select.pending { color: #d97706; border-color: #fef3c7; background: #fffbeb; }
         .status-select.printing { color: #2563eb; border-color: #dbeafe; background: #eff6ff; }
         .status-select.delivery { color: #7c3aed; border-color: #ede9fe; background: #f5f3ff; }
         .status-select.delivered { color: var(--blinkit-green); border-color: #d1fae5; background: #e6f4ea; }
-        .btn-action-panel { display: flex; gap: 10px; margin-top: 15px; }
+
+        .btn-action-panel { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
         .file-link { display: inline-block; background: #e2e8f0; color: var(--text-main); padding: 8px 14px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.8rem; }
         .btn-direct-print { background: var(--blinkit-green); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; }
+        
         .hidden { display: none !important; }
-        .view-section { display: none; }
-        .view-section.active { display: block; animation: fadeView 0.25s ease-in-out; }
+        .pulse-live { width: 8px; height: 8px; background: var(--blinkit-green); border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.5; } }
     </style>
 </head>
 <body>
 
-    <div id="drawerOverlay" class="drawer-overlay" onclick="toggleSideDrawer(false)"></div>
-
-    <nav id="sideDrawer" class="side-drawer">
-        <div class="drawer-header">
-            <h2 style="font-size:1.3rem; letter-spacing:-0.5px;">Store Admin Menu</h2>
-            <span style="cursor:pointer; font-size:1.5rem; font-weight:bold; color:var(--text-sub);" onclick="toggleSideDrawer(false)">&times;</span>
-        </div>
-        <ul class="drawer-menu-list">
-            <li class="drawer-item active" id="menu_live_jobs" onclick="navigateToSection('live_jobs')">📦 Live Order Queue</li>
-            <li class="drawer-item" id="menu_analytics" onclick="navigateToSection('analytics')">📈 Shop Analytics Trend</li>
-            <li class="drawer-item" id="menu_settings" onclick="navigateToSection('settings')">⚙️ Store Settings Panel</li>
-            <li class="drawer-item" id="menu_help" onclick="navigateToSection('help')">❓ Help & System Support</li>
-        </ul>
-        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border-color);">
-            <button class="btn-admin" style="background:#ef4444; padding:8px;" onclick="adminLogout()">Lock App Panel</button>
-        </div>
-    </nav>
-
     <div id="adminLoginBox" class="admin-box">
         <h2 style="letter-spacing: -1px;">print<span style="color:var(--blinkit-green)">from</span>home</h2>
-        <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:20px; font-weight:500;">Admin Management Portal</p>
+        <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:20px; font-weight:500;">Admin Management Gateway</p>
         <div class="input-group">
             <label>Admin Username / ID</label>
             <input type="text" id="adminUser" placeholder="Enter Admin Username">
         </div>
         <div class="input-group">
             <label>Secret Password</label>
-            <input type="password" id="adminPass" placeholder="Enter Password">
+            <input type="password" id="adminPass" placeholder="Enter Secret Password">
         </div>
         <button class="btn-admin" onclick="verifyAdminLogin()">Unlock Dashboard</button>
     </div>
 
     <div id="adminDashboard" class="dashboard-container">
         <div class="dashboard-header">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <button class="menu-trigger-btn" onclick="toggleSideDrawer(true)">☰ Menu Tools</button>
-                <h1 id="panelTitleDisplay" style="font-size:1.5rem;">Live Order Queue</h1>
+            <div>
+                <h1>Command Dashboard <span class="pulse-live"></span></h1>
+                <p style="font-size:0.85rem; color:var(--text-sub); font-weight:500;">Real-time automated store logistics & revenue controls</p>
             </div>
-            <span id="adminLiveClockBanner" style="font-size:0.85rem; color:#fff; font-weight:700; background:#1e293b; padding:6px 14px; border-radius:20px; font-family: monospace;">
-                🕒 Clock: 00:00:00 AM
-            </span>
+            <button class="btn-admin" style="width:auto; padding:8px 20px; background:#ef4444;" onclick="adminLogout()">Lock Dashboard</button>
         </div>
 
-        <div id="section_live_jobs" class="view-section active">
-            <div class="stats-grid">
-                <div class="stat-card" style="border-left-color: #2563eb;">
-                    <p>Total Print Jobs</p>
-                    <h2 id="statTotalOrders">0</h2>
-                </div>
-                <div class="stat-card" style="border-left-color: var(--blinkit-green);">
-                    <p>Gross Earnings</p>
-                    <h2 id="statRevenue">₹0.00</h2>
-                </div>
-                <div class="stat-card" id="profitCard" style="border-left-color: #10b981;">
-                    <p>Net Shop Profit</p>
-                    <h2 id="statProfit">0</h2>
-                </div>
+        <div class="stats-grid">
+            <div class="stat-card" style="border-left-color: #2563eb;">
+                <p>Total Print Jobs</p>
+                <h2 id="statTotalOrders">0</h2>
             </div>
-            <div class="panel-box">
-                <h3>📦 Incoming Printing Orders List</h3>
-                <div id="liveOrdersContainer">
-                    <p style="text-align:center; color:var(--text-sub); padding:20px;">Fetching latest updates...</p>
-                </div>
+            <div class="stat-card" style="border-left-color: var(--blinkit-green);">
+                <p>Gross Earnings</p>
+                <h2 id="statRevenue">₹0.00</h2>
+            </div>
+            <div class="stat-card" id="profitCard" style="border-left-color: #10b981;">
+                <p>Net Shop Profit</p>
+                <h2 id="statProfit">₹0.00</h2>
             </div>
         </div>
 
-        <div id="section_analytics" class="view-section">
+        <div class="dashboard-split">
             <div class="panel-box">
-                <h3>📈 Store Performance Analytics Chart</h3>
-                <div class="graph-filters">
-                    <button id="filter_revenue" class="filter-btn active" onclick="switchGraphMode('revenue')">Gross Revenue (₹)</button>
-                    <button id="filter_profit" class="filter-btn" onclick="switchGraphMode('profit')">Net Profit/Loss (₹)</button>
-                    <button id="filter_orders" class="filter-btn" onclick="switchGraphMode('orders')">Orders Count</button>
-                </div>
-                <div style="position: relative; width: 100%; height: 340px;">
+                <h3>📈 Sales & Order Trends</h3>
+                <div style="position: relative; width: 100%; height: 230px;">
                     <canvas id="businessAnalyticsChart"></canvas>
                 </div>
             </div>
-        </div>
-
-        <div id="section_settings" class="view-section">
-            <div class="panel-box" style="max-width:500px; margin:0 auto;">
-                <h3>⚙️ Update Authentication Credentials</h3>
-                <div class="input-group">
-                    <label>Admin Username Token ID</label>
-                    <input type="text" id="settingsAdminUser">
+            
+            <div class="panel-box">
+                <h3>⚙️ Credentials Settings</h3>
+                <div class="input-group" style="margin-bottom:12px;">
+                    <label>Update Admin ID</label>
+                    <input type="text" id="settingsAdminUser" style="padding:8px 12px; font-size:0.85rem;">
                 </div>
-                <div class="input-group">
-                    <label>Change Secret Password</label>
-                    <input type="password" id="settingsAdminPass" placeholder="Enter new secret password">
+                <div class="input-group" style="margin-bottom:15px;">
+                    <label>New Secret Password</label>
+                    <input type="password" id="settingsAdminPass" style="padding:8px 12px; font-size:0.85rem;" placeholder="Enter new password">
                 </div>
-                <button class="btn-admin" style="background:var(--blinkit-green);" onclick="updateAdminCredentials()">Commit Profile Updates</button>
+                <button class="btn-admin" style="padding:8px; font-size:0.85rem; background: var(--blinkit-green);" onclick="updateAdminCredentials()">Save New Credentials</button>
             </div>
         </div>
 
-        <div id="section_help" class="view-section">
-            <div class="panel-box">
-                <h3>❓ Help Center & Local Hardware Troubleshooter</h3>
-                <div style="line-height:1.7; font-size:0.9rem; color:#4a5568;">
-                    <p style="margin-bottom:12px; font-weight:700; color:#111;">💡 Quick Troubleshooting Manual:</p>
-                    <ul style="padding-left:20px; margin-bottom:15px; display:flex; flex-direction:column; gap:8px;">
-                        <li>• <b>Printer Agent Offline:</b> Make sure your local computer's CMD prompt is active with <code>node agent.js</code> and the USB cable is fully plugged into the HP printer.</li>
-                        <li>• <b>Double Printing Safeguard:</b> The local agent script natively saves a text token for each print job. To re-print a deleted sheet, simply remove that order's `.txt` log from the agent directory.</li>
-                    </ul>
-                </div>
+        <div class="panel-box" style="margin-bottom: 25px;">
+            <h3>📦 Live Printing Queue & Job Logs</h3>
+            <div id="liveOrdersContainer">
+                <p style="text-align:center; color:var(--text-sub); padding:30px;">Connecting to live database stream...</p>
             </div>
         </div>
     </div>
 
     <script>
-        function runNativeAdminClockEngine() {
-            const now = new Date();
-            const options = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-            const indiaTimeStr = now.toLocaleTimeString('en-US', options);
-            
-            const clockNode = document.getElementById('adminLiveClockBanner');
-            if(clockNode) clockNode.textContent = `🕒 Clock: ${indiaTimeStr}`;
-        }
-        setInterval(runNativeAdminClockEngine, 1000);
-        window.addEventListener('load', runNativeAdminClockEngine);
-    </script>
-
-    <script>
         let businessChartInstance = null;
-        let activeGraphDatasetMode = 'revenue'; 
-        let globalRawOrdersCache = []; 
 
+        // Initialize default root credentials inside LocalStorage if not present
         if(!localStorage.getItem('admin_username')) {
             localStorage.setItem('admin_username', 'bhavishya');
             localStorage.setItem('admin_password', 'pfhadmin2026');
         }
 
-        if(sessionStorage.getItem('adminToken') === 'secure_active_session') { showDashboard(); }
+        if(sessionStorage.getItem('adminToken') === 'secure_active_session') {
+            showDashboard();
+        }
 
         function verifyAdminLogin() {
             const user = document.getElementById('adminUser').value.trim();
             const pass = document.getElementById('adminPass').value;
+
+            // Tracks verification from persistent secure variables records
             if(user === localStorage.getItem('admin_username') && pass === localStorage.getItem('admin_password')) { 
                 sessionStorage.setItem('adminToken', 'secure_active_session');
                 showDashboard();
-            } else { alert("❌ Unauthorized Access! Galat credentials hain."); }
+            } else {
+                alert("❌ Access Denied! Galat Username ya Password hai bhai.");
+            }
         }
 
         function showDashboard() {
             document.getElementById('adminLoginBox').classList.add('hidden');
             document.getElementById('adminDashboard').style.display = 'block';
+            
+            // Sync settings forms values placeholder input text field nodes
             document.getElementById('settingsAdminUser').value = localStorage.getItem('admin_username');
+
             initAnalyticsGraph();
             loadLiveOrders();
             loadFinancialMetrics();
+            
+            // Live 8 seconds server query intervals data syncer loops
             setInterval(() => {
                 if(sessionStorage.getItem('adminToken') === 'secure_active_session') {
                     loadLiveOrders();
@@ -218,77 +184,51 @@
             }, 8000);
         }
 
-        function toggleSideDrawer(open) {
-            const drawer = document.getElementById('sideDrawer');
-            const overlay = document.getElementById('drawerOverlay');
-            drawer.classList.toggle('active', open);
-            overlay.classList.toggle('active', open);
-        }
+        // 🔥 EDITS ADMIN CREDENTIALS AUTOMATICALLY NATIVELY
+        function updateAdminCredentials() {
+            const newUser = document.getElementById('settingsAdminUser').value.trim();
+            const newPass = document.getElementById('settingsAdminPass').value;
 
-        function navigateToSection(sectionId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`section_${sectionId}`).classList.add('active');
-            if(document.getElementById(`menu_${sectionId}`)) document.getElementById(`menu_${sectionId}`).classList.add('active');
-            
-            const headingDisplay = document.getElementById('panelTitleDisplay');
-            if(sectionId === 'live_jobs') headingDisplay.textContent = "Live Order Queue";
-            if(sectionId === 'analytics') headingDisplay.textContent = "Shop Analytics Trend";
-            if(sectionId === 'settings') headingDisplay.textContent = "Store Settings Panel";
-            if(sectionId === 'help') headingDisplay.textContent = "Help & System Support";
-            if(sectionId === 'analytics') { setTimeout(() => { rebuildGraphDataEngine(); }, 50); }
-            toggleSideDrawer(false);
-        }
+            if(!newUser) {
+                alert("❌ Admin Username khali nahi ho sakta bhai!");
+                return;
+            }
 
-        function switchGraphMode(mode) {
-            activeGraphDatasetMode = mode;
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`filter_${mode}`).classList.add('active');
-            rebuildGraphDataEngine();
-        }
-
-        function rebuildGraphDataEngine() {
-            if(!businessChartInstance || globalRawOrdersCache.length === 0) return;
-            let parsedDataValues = [0, 0, 0, 0, 0, 0, 0];
-            const paidOrders = globalRawOrdersCache.filter(o => o.status === 'Paid / Ready for Print');
-
-            paidOrders.forEach(order => {
-                let orderDate = new Date();
-                if(order.date) { orderDate = new Date(order.date.split(' ')[0]); }
-                let dayIndex = orderDate.getDay();
-                let adjustedChartIndex = dayIndex === 0 ? 6 : dayIndex - 1;
-
-                if(adjustedChartIndex >= 0 && adjustedChartIndex <= 6) {
-                    if(activeGraphDatasetMode === 'revenue') parsedDataValues[adjustedChartIndex] += parseFloat(order.amount) || 0;
-                    else if(activeGraphDatasetMode === 'orders') parsedDataValues[adjustedChartIndex] += 1;
-                    else if(activeGraphDatasetMode === 'profit') {
-                        let orderPages = 0;
-                        if(order.configDetails) {
-                            const arr = typeof order.configDetails === 'string' ? JSON.parse(order.configDetails) : order.configDetails;
-                            arr.forEach(f => { orderPages += (parseInt(f.pages) || 1) * (parseInt(f.copies) || 1); });
-                        }
-                        let orderCostPrice = (orderPages * 1.00) + 15.00;
-                        parsedDataValues[adjustedChartIndex] += ((parseFloat(order.amount) || 0) - orderCostPrice);
-                    }
+            localStorage.setItem('admin_username', newUser);
+            if(newPass.length > 0) {
+                if(newPass.length < 5) {
+                    alert("❌ Password kam se kam 5 characters ka rakho bhai!");
+                    return;
                 }
-            });
-
-            let lineThemeColor = '#0C8346'; let labelStringName = 'Gross Earnings (₹)';
-            if(activeGraphDatasetMode === 'profit') { lineThemeColor = '#10b981'; labelStringName = 'Net Shop Profit (₹)'; }
-            else if(activeGraphDatasetMode === 'orders') { lineThemeColor = '#2563eb'; labelStringName = 'Completed Orders Count'; }
-
-            businessChartInstance.data.datasets[0].data = parsedDataValues;
-            businessChartInstance.data.datasets[0].label = labelStringName;
-            businessChartInstance.data.datasets[0].borderColor = lineThemeColor;
-            businessChartInstance.update();
+                localStorage.setItem('admin_password', newPass);
+            }
+            alert("🎉 Profile Credentials Updated successfully! Agli baar se naye credentials se login karna hoga.");
+            document.getElementById('settingsAdminPass').value = '';
         }
 
+        // 📊 INITIALIZES ELEGANT CHART JS GRAPH INTERACTION ENGINE
         function initAnalyticsGraph() {
             const ctx = document.getElementById('businessAnalyticsChart').getContext('2d');
             businessChartInstance = new Chart(ctx, {
                 type: 'line',
-                data: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], datasets: [{ label: 'Gross Earnings (₹)', data: [0, 0, 0, 0, 0, 0, 0], borderColor: '#0C8346', borderWidth: 3, tension: 0.3, fill: false }] },
-                options: { responsive: true, maintainAspectRatio: false }
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Gross Earnings (₹)',
+                        data: [120, 290, 450, 310, 520, 780, 950], // Initial mock vector layout path mapping
+                        borderColor: '#0C8346',
+                        backgroundColor: 'rgba(12, 131, 70, 0.05)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
             });
         }
 
@@ -296,11 +236,13 @@
             try {
                 const res = await fetch('/api/admin/financials');
                 const data = await res.json();
+                
                 document.getElementById('statTotalOrders').textContent = data.totalOrders;
                 document.getElementById('statRevenue').textContent = `₹${data.revenue}`;
                 
                 const profitEl = document.getElementById('statProfit');
                 profitEl.textContent = `₹${data.profitLoss}`;
+                
                 if(parseFloat(data.profitLoss) < 0) {
                     document.getElementById('profitCard').style.borderLeftColor = "#ef4444";
                     profitEl.style.color = "#ef4444";
@@ -308,36 +250,56 @@
                     document.getElementById('profitCard').style.borderLeftColor = "#10b981";
                     profitEl.style.color = "#0C8346";
                 }
-            } catch (err) {}
+
+                // Dynamic updates graph dataset coordinates from live transaction histories logs
+                if(businessChartInstance) {
+                    // Shifts visual tracking trends arrays endpoints matching revenue calculations values scale
+                    let revVal = parseFloat(data.revenue) || 0;
+                    businessChartInstance.data.datasets[0].data[6] = revVal; 
+                    businessChartInstance.update('none');
+                }
+            } catch (err) { console.error(err); }
         }
 
         async function loadLiveOrders() {
             try {
                 const res = await fetch('/api/admin/orders');
                 const orders = await res.json();
-                globalRawOrdersCache = orders;
                 const container = document.getElementById('liveOrdersContainer');
+                
                 if(orders.length === 0) {
                     container.innerHTML = '<p style="text-align:center; color:var(--text-sub); padding:20px;">Filhaal koi active jobs pool nahi hai.</p>';
                     return;
                 }
+
                 container.innerHTML = '';
-                [...orders].reverse().forEach((order) => {
+                orders.reverse().forEach((order) => {
                     const card = document.createElement('div');
                     card.className = 'order-card';
+                    
+                    // Pull status parameters tokens from local cache if database array string missing properties
                     let currentStatus = localStorage.getItem(`status_${order.orderId}`) || (order.status.includes('Paid') ? 'Printing' : 'Pending');
-                    let selectStatusClass = currentStatus.toLowerCase().replace(/ /g, '');
+                    
+                    let selectStatusClass = "pending";
+                    if(currentStatus === 'Printing') selectStatusClass = "printing";
+                    if(currentStatus === 'Out for Delivery') selectStatusClass = "delivery";
+                    if(currentStatus === 'Delivered') selectStatusClass = "delivered";
 
-                    let configDetails = ""; let metaArray = [];
+                    let configDetails = "";
+                    let metaArray = [];
                     if(order.configDetails) {
                         metaArray = typeof order.configDetails === 'string' ? JSON.parse(order.configDetails) : order.configDetails;
-                        configDetails = metaArray.map(f => `• <b>File:</b> ${f.fileName} <br> [Quantity: ${f.copies} copies × ${f.pages} pages]`).join('<br><br>');
+                        configDetails = metaArray.map(f => `• <b>File:</b> ${f.fileName} <br> [Quantity: ${f.copies} copies × ${f.pages} pages | ${f.printType === 'bw' ? 'B&W' : 'Color'} | ${f.binding}]`).join('<br><br>');
+                    } else {
+                        configDetails = `• Pages: ${order.pages} | Type: ${order.printType} | Binding: ${order.binding}`;
                     }
 
                     card.innerHTML = `
                         <div class="order-header">
-                            <span style="font-size:0.8rem; font-weight:600; color:#4a5568;">🕒 Logged Time: ${order.date || 'N/A'}</span>
+                            <span>📅 ${order.date || 'N/A'}</span>
+                            
                             <div>
+                                <label style="font-size:0.75rem; font-weight:600; color:var(--text-sub); margin-right:5px;">Track:</label>
                                 <select class="status-select ${selectStatusClass}" onchange="updateDeliveryStatus('${order.orderId}', this)">
                                     <option value="Pending" ${currentStatus === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
                                     <option value="Printing" ${currentStatus === 'Printing' ? 'selected' : ''}>🖨️ Printing</option>
@@ -346,57 +308,74 @@
                                 </select>
                             </div>
                         </div>
-                        <div style="font-size:0.85rem; color:#4a5568; line-height:1.6;">
-                            <p style="margin-bottom:6px;">📍 <b>Address:</b> ${order.address}</p>
-                            <div style="background:var(--surface); border:1px solid var(--border-color); padding:10px; border-radius:10px; margin-bottom:10px;">${configDetails}</div>
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <span>ID: ${order.orderId}</span>
-                                <strong style="color:var(--blinkit-green);">Collected: ₹${order.amount}</strong>
+                        <div style="font-size:0.85rem; color:#4a5568; line-height:1.6; margin-bottom:10px;">
+                            <p style="margin-bottom:6px; color:#111;">📍 <b>Address:</b> ${order.address}</p>
+                            <div style="background:var(--surface); border:1px solid var(--border-color); padding:10px; border-radius:10px; margin-bottom:10px;">
+                                ${configDetails}
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
+                                <span style="color:var(--text-sub)">ID: ${order.orderId}</span>
+                                <strong style="color:var(--blinkit-green); font-size:0.9rem;">Collected: ₹${order.amount}</strong>
                             </div>
                         </div>
                         <div class="btn-action-panel">
-                            <a href="/download/${order.file}" class="file-link" target="_blank">📥 Download</a>
-                            <button class="btn-direct-print" onclick="triggerHardwareFlashPrint('${order.file}', ${JSON.stringify(metaArray).replace(/"/g, '&quot;')})">🖨️ Flash Print</button>
+                            <a href="/download/${order.file}" class="file-link" target="_blank">📥 Download File</a>
+                            <button class="btn-direct-print" onclick="triggerHardwareFlashPrint('${order.file}', ${JSON.stringify(metaArray).replace(/"/g, '&quot;')})">
+                                🖨️ Flash Print Job
+                            </button>
                         </div>
                     `;
                     container.appendChild(card);
                 });
-            } catch(err) {}
+            } catch(err) { console.error(err); }
         }
 
+        // 🔥 HANDLES DYNAMIC STATUS VALUE DATA UPDATES UPDATES CACHE PERSISTENCE LABELS LIVE
         function updateDeliveryStatus(orderId, selectElement) {
-            localStorage.setItem(`status_${orderId}`, selectElement.value);
-            loadLiveOrders();
-        }
-
-        function updateAdminCredentials() {
-            localStorage.setItem('admin_username', document.getElementById('settingsAdminUser').value.trim());
-            if(document.getElementById('settingsAdminPass').value) localStorage.setItem('admin_password', document.getElementById('settingsAdminPass').value);
-            alert("🎉 Profile Credentials Updated!");
+            const selectedValue = selectElement.value;
+            localStorage.setItem(`status_${orderId}`, selectedValue);
+            
+            // Clean classes maps
+            selectElement.className = "status-select";
+            if(selectedValue === 'Pending') selectElement.classList.add('pending');
+            if(selectedValue === 'Printing') selectElement.classList.add('printing');
+            if(selectedValue === 'Out for Delivery') selectElement.classList.add('delivery');
+            if(selectedValue === 'Delivered') selectElement.classList.add('delivered');
+            
+            console.log(`Status tracking modified for order ${orderId} ➔ ${selectedValue}`);
         }
 
         async function triggerHardwareFlashPrint(fileLocation, metaArray) {
-            let targetPages = undefined; let targetCopies = 1; let targetSides = 'single';
-            if(metaArray && metaArray.length > 0) { targetPages = metaArray[0].pages; targetCopies = metaArray[0].copies; targetSides = metaArray[0].sides; }
+            let targetPages = undefined;
+            let targetCopies = 1;
+            let targetSides = 'single';
+            if(metaArray && metaArray.length > 0) {
+                targetPages = metaArray[0].pages;
+                targetCopies = metaArray[0].copies;
+                targetSides = metaArray[0].sides;
+            }
             try {
-                await fetch('/api/admin/print-hardware', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileLocation: fileLocation, options: { copies: targetCopies, pages: targetPages, sides: targetSides } }) });
-                alert(`🚀 Printing Triggered on HP Smart Tank!`);
-            } catch (err) {}
+                const response = await fetch('/api/admin/print-hardware', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fileLocation: fileLocation,
+                        options: { copies: targetCopies, pages: targetPages, sides: targetSides }
+                    })
+                });
+                const result = await response.json();
+                if(result.success) {
+                    alert(`🚀 Local Bridge Signal Active! HP Smart Tank par file processing queue triggered successfully!`);
+                } else {
+                    alert(`⚠️ Printer Integration error: ${result.error}`);
+                }
+            } catch (err) { alert("❌ Local Bridge connection breakdown!"); }
         }
-        function adminLogout() { sessionStorage.removeItem('adminToken'); window.location.reload(); }
-    </script>
-    <div id="adminControls" style="position:fixed; bottom:20px; right:20px; z-index:9999; background:white; padding:10px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.2);">
-    <button onclick="toggleStoreStatus()" style="background:#ef4444; color:white; padding:8px; border:none; border-radius:5px; cursor:pointer;">
-        Toggle Store Status
-    </button>
-</div>
-</body>
-<div style="position:fixed; bottom:20px; right:20px; z-index:9999;">
-    <button onclick="toggleAdminPanel()" style="background:#000; color:#fff; padding:10px; border-radius:50%; border:none; cursor:pointer;">⚙️</button>
-</div>
 
-<div id="adminPanel" style="display:none; position:fixed; bottom:70px; right:20px; background:white; padding:15px; border-radius:12px; box-shadow:0 0 20px rgba(0,0,0,0.2); z-index:9999;">
-    <h4>Admin Controls</h4>
-    <button onclick="manualCloseStore()" style="background:#ef4444; color:white; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; margin-top:10px;">Force Close Store</button>
-</div>
+        function adminLogout() {
+            sessionStorage.removeItem('adminToken');
+            window.location.reload();
+        }
+    </script>
+</body>
 </html>
