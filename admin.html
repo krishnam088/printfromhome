@@ -19,7 +19,7 @@
         }
         body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; }
         
-        /* 🍔 SLIDE-OUT NAVIGATION DRAWER SYSTEM */
+        /* Slide-out Navigation Drawer System */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1999; display: none; opacity: 0; transition: opacity 0.3s ease; }
         .drawer-overlay.active { display: block; opacity: 1; }
         
@@ -31,7 +31,6 @@
         .drawer-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; color: var(--text-main); cursor: pointer; transition: all 0.2s; }
         .drawer-item:hover, .drawer-item.active { background: #f1f5f9; color: var(--blinkit-green); }
         
-        /* Menu Hamburger Trigger Button */
         .menu-trigger-btn { background: #000; color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 
         /* Login Gateway Box */
@@ -45,7 +44,6 @@
         .dashboard-container { max-width: 1200px; margin: 0 auto; display: none; padding: 15px; }
         .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid var(--border-color); flex-wrap: wrap; gap: 15px; }
         
-        /* Widgets grids properties mapped */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .stat-card { background: var(--surface); border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); border: 1px solid var(--border-color); border-left: 5px solid var(--blinkit-yellow); }
         .stat-card p { font-size: 0.75rem; color: var(--text-sub); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
@@ -53,6 +51,11 @@
 
         .panel-box { background: var(--surface); border-radius: 18px; padding: 22px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.01); margin-bottom: 20px; }
         .panel-box h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+
+        /* Graph Controls Filter Buttons */
+        .graph-filters { display: flex; gap: 10px; margin-bottom: 15px; }
+        .filter-btn { background: #e2e8f0; border: none; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .filter-btn.active { background: var(--blinkit-green); color: white; }
 
         .order-card { background: var(--bg-primary); border-radius: 14px; padding: 18px; margin-bottom: 15px; border: 1px solid var(--border-color); }
         .order-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 12px; }
@@ -75,8 +78,10 @@
 </head>
 <body>
 
+    <!-- Navigation Drawer Overlay -->
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleSideDrawer(false)"></div>
 
+    <!-- Slideout Sidebar Menu Drawer -->
     <nav id="sideDrawer" class="side-drawer">
         <div class="drawer-header">
             <h2 style="font-size:1.3rem; letter-spacing:-0.5px;">Store Admin Menu</h2>
@@ -93,6 +98,7 @@
         </div>
     </nav>
 
+    <!-- Admin Login Gateway Box -->
     <div id="adminLoginBox" class="admin-box">
         <h2 style="letter-spacing: -1px;">print<span style="color:var(--blinkit-green)">from</span>home</h2>
         <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:20px; font-weight:500;">Admin Management Portal</p>
@@ -107,6 +113,7 @@
         <button class="btn-admin" onclick="verifyAdminLogin()">Unlock Dashboard</button>
     </div>
 
+    <!-- Main Dynamic Dashboard Viewports Container -->
     <div id="adminDashboard" class="dashboard-container">
         <div class="dashboard-header">
             <div style="display:flex; align-items:center; gap:12px;">
@@ -118,6 +125,7 @@
             </span>
         </div>
 
+        <!-- SECTION 1: LIVE ORDERS QUEUE VIEW -->
         <div id="section_live_jobs" class="view-section active">
             <div class="stats-grid">
                 <div class="stat-card" style="border-left-color: #2563eb;">
@@ -141,15 +149,25 @@
             </div>
         </div>
 
+        <!-- SECTION 2: LIVE METRICS TREND GRAPH VIEW -->
         <div id="section_analytics" class="view-section">
             <div class="panel-box">
-                <h3>📈 Store Performance & Revenue Curve Graph</h3>
-                <div style="position: relative; width: 100%; height: 320px;">
+                <h3>📈 Store Performance Analytics Chart</h3>
+                
+                <!-- 🔥 LIVE DYNAMIC FILTERS FOR CHART DATA -->
+                <div class="graph-filters">
+                    <button id="filter_revenue" class="filter-btn active" onclick="switchGraphMode('revenue')">Gross Revenue (₹)</button>
+                    <button id="filter_profit" class="filter-btn" onclick="switchGraphMode('profit')">Net Profit/Loss (₹)</button>
+                    <button id="filter_orders" class="filter-btn" onclick="switchGraphMode('orders')">Orders Count</button>
+                </div>
+
+                <div style="position: relative; width: 100%; height: 340px;">
                     <canvas id="businessAnalyticsChart"></canvas>
                 </div>
             </div>
         </div>
 
+        <!-- SECTION 3: STORE SETTINGS PANEL -->
         <div id="section_settings" class="view-section">
             <div class="panel-box" style="max-width:500px; margin:0 auto;">
                 <h3>⚙️ Update Authentication Credentials</h3>
@@ -167,6 +185,7 @@
             </div>
         </div>
 
+        <!-- SECTION 4: HELP CENTER -->
         <div id="section_help" class="view-section">
             <div class="panel-box">
                 <h3>❓ Help Center & Local Hardware Troubleshooter</h3>
@@ -185,8 +204,9 @@
 
     <script>
         let businessChartInstance = null;
+        let activeGraphDatasetMode = 'revenue'; // Default viewing layer metric
+        let globalRawOrdersCache = []; // Live background synchronized array store
 
-        // Secure state defaults caching definitions loop execution
         if(!localStorage.getItem('admin_username')) {
             localStorage.setItem('admin_username', 'bhavishya');
             localStorage.setItem('admin_password', 'pfhadmin2026');
@@ -214,6 +234,7 @@
             loadLiveOrders();
             loadFinancialMetrics();
             
+            // Fast background synchronization interval hook (8 seconds pool)
             setInterval(() => {
                 if(sessionStorage.getItem('adminToken') === 'secure_active_session') {
                     loadLiveOrders();
@@ -222,7 +243,6 @@
             }, 8000);
         }
 
-        // 🔥 DYNAMIC NAVIGATION DRAWER ANIMATION CONTROLLER
         function toggleSideDrawer(open) {
             const drawer = document.getElementById('sideDrawer');
             const overlay = document.getElementById('drawerOverlay');
@@ -235,37 +255,104 @@
             }
         }
 
-        // 🔥 DYNAMIC SECTION RENDERING ENGINE ENGINE PIPELINE
         function navigateToSection(sectionId) {
-            // Hide all views elements nodes
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
             
-            // Render chosen viewport target properties maps
             document.getElementById(`section_${sectionId}`).classList.add('active');
-            
-            // Highlight list nodes item attributes
             const currentItem = document.getElementById(`menu_${sectionId}`);
             if(currentItem) currentItem.classList.add('active');
             
-            // Set navbar content header title string
             const headingDisplay = document.getElementById('panelTitleDisplay');
             if(sectionId === 'live_jobs') headingDisplay.textContent = "Live Order Queue";
             if(sectionId === 'analytics') headingDisplay.textContent = "Shop Analytics Trend";
             if(sectionId === 'settings') headingDisplay.textContent = "Store Settings Panel";
             if(sectionId === 'help') headingDisplay.textContent = "Help & System Support";
             
-            toggleSideDrawer(false); // Close slider automatically
+            if(sectionId === 'analytics') {
+                setTimeout(() => { rebuildGraphDataEngine(); }, 50); // Refresh visual scaling boundaries securely
+            }
+            toggleSideDrawer(false);
         }
 
-        function updateAdminCredentials() {
-            const newUser = document.getElementById('settingsAdminUser').value.trim();
-            const newPass = document.getElementById('settingsAdminPass').value;
-            if(!newUser) { alert("❌ Username khali nahi ho sakta."); return; }
-            localStorage.setItem('admin_username', newUser);
-            if(newPass.length > 0) localStorage.setItem('admin_password', newPass);
-            alert("🎉 Profile Credentials Updated successfully!");
-            document.getElementById('settingsAdminPass').value = '';
+        // 🔥 DYNAMICALLY SWITCHES VISUAL LAYERS MODE INSIDE GRAPH CHART LIVE
+        function switchGraphMode(mode) {
+            activeGraphDatasetMode = mode;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`filter_${mode}`).classList.add('active');
+            rebuildGraphDataEngine();
+        }
+
+        // 🔥 LIVE GRAPH TIMELINE PARSING ENGINE LOGIC (Processes true real database arrays)
+        function rebuildGraphDataEngine() {
+            if(!businessChartInstance || globalRawOrdersCache.length === 0) return;
+
+            // Group transactions items sequentially into standard week map framework
+            const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            let parsedDataValues = [0, 0, 0, 0, 0, 0, 0];
+
+            // Filter out system failures rows to read clean transactional sheets
+            const paidOrders = globalRawOrdersCache.filter(o => o.status === 'Paid / Ready for Print');
+
+            paidOrders.forEach(order => {
+                let orderDate = new Date(); // Fallback dynamic date initialization
+                if(order.date) {
+                    // Normalize standard string formats arrays safely
+                    const cleanDateStr = order.date.split(',')[0];
+                    orderDate = new Date(cleanDateStr);
+                }
+                
+                // Fetch weekday zero-indexed map marker index allocation (0 is Sunday, 1 is Monday... 6 is Saturday)
+                let dayIndex = orderDate.getDay();
+                // Map system indices array nodes to match horizontal label sets ['Mon', 'Tue' ... 'Sun']
+                let adjustedChartIndex = dayIndex === 0 ? 6 : dayIndex - 1;
+
+                if(adjustedChartIndex >= 0 && adjustedChartIndex <= 6) {
+                    if(activeGraphDatasetMode === 'revenue') {
+                        parsedDataValues[adjustedChartIndex] += parseFloat(order.amount) || 0;
+                    } else if(activeGraphDatasetMode === 'orders') {
+                        parsedDataValues[adjustedChartIndex] += 1;
+                    } else if(activeGraphDatasetMode === 'profit') {
+                        // Calculate specific page node operational printing overhead matrices
+                        let orderPages = 0;
+                        if(order.configDetails && Array.isArray(order.configDetails)) {
+                            order.configDetails.forEach(f => {
+                                orderPages += (parseInt(f.pages) || 1) * (parseInt(f.copies) || 1);
+                            });
+                        } else {
+                            orderPages = (parseInt(order.pages) || 1);
+                        }
+                        // Cost price formulas: ₹1 per page + ₹15 logistics processing asset distribution
+                        let orderCostPrice = (orderPages * 1.00) + 15.00;
+                        let orderNetProfit = (parseFloat(order.amount) || 0) - orderCostPrice;
+                        
+                        parsedDataValues[adjustedChartIndex] += orderNetProfit;
+                    }
+                }
+            });
+
+            // Adjust interface graphic metrics layers rendering configurations
+            let lineThemeColor = '#0C8346';
+            let fillThemeBg = 'rgba(12, 131, 70, 0.05)';
+            let labelStringName = 'Gross Earnings (₹)';
+
+            if(activeGraphDatasetMode === 'profit') {
+                lineThemeColor = '#10b981';
+                fillThemeBg = 'rgba(16, 185, 129, 0.05)';
+                labelStringName = 'Net Shop Profit (₹)';
+            } else if(activeGraphDatasetMode === 'orders') {
+                lineThemeColor = '#2563eb';
+                fillThemeBg = 'rgba(37, 99, 235, 0.05)';
+                labelStringName = 'Completed Orders Count';
+            }
+
+            // Flush data segments direct to viewport canvas wrapper buffer
+            businessChartInstance.data.datasets[0].data = parsedDataValues.map(v => parseFloat(v.toFixed(2)) || v);
+            businessChartInstance.data.datasets[0].label = labelStringName;
+            businessChartInstance.data.datasets[0].borderColor = lineThemeColor;
+            businessChartInstance.data.datasets[0].backgroundColor = fillThemeBg;
+            
+            businessChartInstance.update();
         }
 
         function initAnalyticsGraph() {
@@ -276,7 +363,7 @@
                     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                     datasets: [{
                         label: 'Gross Earnings (₹)',
-                        data: [150, 240, 310, 480, 620, 780, 900],
+                        data: [0, 0, 0, 0, 0, 0, 0],
                         borderColor: '#0C8346',
                         backgroundColor: 'rgba(12, 131, 70, 0.05)',
                         borderWidth: 3,
@@ -284,7 +371,12 @@
                         fill: true
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: true, position: 'top' } },
+                    scales: { y: { beginAtZero: true } }
+                }
             });
         }
 
@@ -292,20 +384,19 @@
             try {
                 const res = await fetch('/api/admin/financials');
                 const data = await res.json();
+                
                 document.getElementById('statTotalOrders').textContent = data.totalOrders;
                 document.getElementById('statRevenue').textContent = `₹${data.revenue}`;
+                
                 const profitEl = document.getElementById('statProfit');
                 profitEl.textContent = `₹${data.profitLoss}`;
+                
                 if(parseFloat(data.profitLoss) < 0) {
                     document.getElementById('profitCard').style.borderLeftColor = "#ef4444";
                     profitEl.style.color = "#ef4444";
                 } else {
                     document.getElementById('profitCard').style.borderLeftColor = "#10b981";
                     profitEl.style.color = "#0C8346";
-                }
-                if(businessChartInstance) {
-                    businessChartInstance.data.datasets[0].data[6] = parseFloat(data.revenue) || 0;
-                    businessChartInstance.update('none');
                 }
             } catch (err) { console.error(err); }
         }
@@ -314,13 +405,19 @@
             try {
                 const res = await fetch('/api/admin/orders');
                 const orders = await res.json();
+                
+                // Cache responses list array locally to wire calculation charts engine seamlessly
+                globalRawOrdersCache = orders;
+
                 const container = document.getElementById('liveOrdersContainer');
                 if(orders.length === 0) {
                     container.innerHTML = '<p style="text-align:center; color:var(--text-sub); padding:20px;">Filhaal koi active jobs pool nahi hai.</p>';
                     return;
                 }
+                
                 container.innerHTML = '';
-                orders.reverse().forEach((order) => {
+                // Render list rows cards loop
+                [...orders].reverse().forEach((order) => {
                     const card = document.createElement('div');
                     card.className = 'order-card';
                     let currentStatus = localStorage.getItem(`status_${order.orderId}`) || (order.status.includes('Paid') ? 'Printing' : 'Pending');
@@ -367,6 +464,11 @@
                     `;
                     container.appendChild(card);
                 });
+
+                // Updates active graph dimensions smoothly if the viewer is currently on the analytics section
+                const graphTabActive = document.getElementById('section_analytics').classList.contains('active');
+                if(graphTabActive) { rebuildGraphDataEngine(); }
+
             } catch(err) { console.error(err); }
         }
 
@@ -378,6 +480,17 @@
             if(selectedValue === 'Printing') selectElement.classList.add('printing');
             if(selectedValue === 'Out for Delivery') selectElement.classList.add('delivery');
             if(selectedValue === 'Delivered') selectElement.classList.add('delivered');
+            rebuildGraphDataEngine(); // Refresh calculations mapping instantly
+        }
+
+        function updateAdminCredentials() {
+            const newUser = document.getElementById('settingsAdminUser').value.trim();
+            const newPass = document.getElementById('settingsAdminPass').value;
+            if(!newUser) { alert("❌ Username khali nahi ho sakta."); return; }
+            localStorage.setItem('admin_username', newUser);
+            if(newPass.length > 0) localStorage.setItem('admin_password', newPass);
+            alert("🎉 Profile Credentials Updated successfully!");
+            document.getElementById('settingsAdminPass').value = '';
         }
 
         async function triggerHardwareFlashPrint(fileLocation, metaArray) {
