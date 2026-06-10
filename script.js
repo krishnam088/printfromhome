@@ -95,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(userGreeting) userGreeting.innerHTML = userData ? `HI, <span style="color:#000000; font-weight:800;">${userData.name}</span>` : `GUEST MODE`;
             if(mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
             loadSavedFilesFromSession();
+            renderOrderHistoryUI(sessionActiveUser);
             synchronizeWalletInterfaceBalance();
         } else {
             if(authScreen) { authScreen.classList.remove('app-hidden'); authScreen.style.display = 'flex'; }
@@ -128,11 +129,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 👑 ULTRA COMPACT AND HIGH-DENSITY GRID RENDER PIPELINE
     function renderFilesUI() {
         if(!multiFilesContainer) return; multiFilesContainer.innerHTML = ''; 
         refreshInvoiceTabState();
-        if (masterFilesArray.length === 0) return;
+        if (masterFilesArray === 0) return;
 
         masterFilesArray.forEach((item, index) => {
             const fileRow = document.createElement('div');
@@ -151,7 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button type="button" id="removeFile_${index}" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1.2rem; margin-left:auto;">&times;</button>
                 </div>
                 
-                <!-- Shrunk inputs grid frame layout -->
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px; align-items:center;">
                     <div class="input-group" style="margin-bottom:0;">
                         <label style="font-size:0.65rem; font-weight:700; color:var(--text-sub); margin-bottom:2px; display:block;">Pages:</label>
@@ -167,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
 
-                <!-- Shrunk Option Grid Items -->
                 <p style="font-size:0.65rem; font-weight:700; color:var(--text-sub); margin-bottom:3px;">Print Color</p>
                 <div class="blinkit-grid-options" style="gap: 8px; margin-bottom: 8px;">
                     <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}" style="padding: 6px 8px; border-radius: 8px;">
@@ -204,14 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-primary); padding:6px 10px; border-radius:6px; border:1px solid var(--border-color);">
-                    <label style="font-size:0.68rem; font-weight:700;">Binding:</label>
-                    <select id="binding_${index}" style="padding:2px 4px; font-size:0.68rem; font-weight:700; outline:none; border-radius:4px; border:1px solid var(--border-color); height:24px;">
-                        <option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option>
-                        <option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option>
-                        <option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral (+₹30)</option>
-                    </select>
-                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-primary); padding:6px 10px; border-radius:6px; border:1px solid var(--border-color);"><label style="font-size:0.68rem; font-weight:700;">Binding:</label><select id="binding_${index}" style="padding:2px 4px; font-size:0.68rem; font-weight:700; outline:none; border-radius:4px; border:1px solid var(--border-color); height:24px;"><option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option><option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option><option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral (+₹30)</option></select></div>
             `;
             multiFilesContainer.appendChild(fileRow);
 
@@ -249,6 +240,30 @@ document.addEventListener('DOMContentLoaded', () => {
         summaryTotal.textContent = `₹${(finalDocumentCost + accurateDeliveryCharge).toFixed(2)}`;
     }
 
+    function renderOrderHistoryUI(userId) {
+        if(!ordersHistoryContainer) return;
+        const rawHistory = localStorage.getItem(`history_${userId}`);
+        if (!rawHistory || JSON.parse(rawHistory).length === 0) {
+            ordersHistoryContainer.innerHTML = `<p style="font-size:0.85rem; color:#718096; text-align:center; padding:15px;">No orders placed yet.</p>`;
+            return;
+        }
+        const parsedHistory = JSON.parse(rawHistory).reverse(); 
+        ordersHistoryContainer.innerHTML = '';
+        parsedHistory.forEach(order => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'history-card-item';
+            let filesDetailsHtml = order.details.map(f => `• ${f.fileName} (${f.copies} copies, ${f.printType === 'bw' ? 'B&W' : 'Color'})`).join('<br>');
+            itemDiv.innerHTML = `
+                <div style="display:flex; justify-content:space-between; font-weight:700; color:#1a202c; border-bottom:1px solid #e2e8f0; padding-bottom:4px; margin-bottom:6px;">
+                    <span>📅 ${order.date}</span> <span style="color:#0C8346;">₹${order.amount}</span>
+                </div>
+                <div style="color:#4a5568; line-height:1.4; font-size:0.8rem; margin-bottom:4px;">${filesDetailsHtml}</div>
+                <div style="font-size:0.75rem; color:#e67e22; font-weight:600; text-align:right;">Status: <span style="background:#fff3e0; padding:2px 6px; border-radius:4px;">${order.status}</span></div>
+            `;
+            ordersHistoryContainer.appendChild(itemDiv);
+        });
+    }
+
     const printForm = document.getElementById('printForm');
     if(printForm) {
         printForm.addEventListener('submit', async (e) => {
@@ -282,8 +297,20 @@ document.addEventListener('DOMContentLoaded', () => {
                             const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
                             currentHistoryArray.push({ date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), amount: totalAmountText, status: "Paid / Ready for Print", details: finalMetaConfig });
                             localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
-                            isFirstTimeUser = false; sessionStorage.removeItem('savedPrintFiles'); printForm.reset(); multiFilesContainer.innerHTML = ''; masterFilesArray = [];
-                            renderOrderHistoryUI(activeUserToken); calculateTotal();
+                            
+                            // 🚀 FIXED: Dynamic redirect to live history block inside dashboard bounds
+                            isFirstTimeUser = false; 
+                            sessionStorage.removeItem('savedPrintFiles'); 
+                            printForm.reset(); 
+                            multiFilesContainer.innerHTML = ''; 
+                            masterFilesArray = [];
+                            
+                            // Re-triggers data arrays updates instantly and loads native section panels
+                            renderOrderHistoryUI(activeUserToken); 
+                            calculateTotal();
+                            if(typeof window.navigateDrawerSection === 'function') {
+                                window.navigateDrawerSection('history');
+                            }
                         }
                     }, "theme": { "color": "#F4C430" }
                 };
