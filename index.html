@@ -37,7 +37,6 @@
         .delivery-time-countdown { font-size: 1.5rem; font-weight: 900; color: #111111; margin-top: -2px; }
         
         .header-profile-cluster { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-        
         .status-micro-nav { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
         .shop-status-text-badge { font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; }
         .shop-status-text-badge.open { background: var(--blinkit-green); color: white; }
@@ -45,12 +44,9 @@
         .shop-timing-subtext { font-size: 0.65rem; font-weight: 700; color: #718096; }
 
         .profile-wallet-row { display: flex; align-items: center; gap: 10px; }
-        
         .wallet-micro-badge { background: #ffffff; border-radius: 14px; border: 1px solid var(--border-color); padding: 6px 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 6px; cursor: pointer; transition: transform 0.2s; }
-        .wallet-micro-badge:hover { transform: translateY(-1px); }
         .wallet-cash-value { font-size: 0.85rem; font-weight: 800; color: #000000; }
-        
-        .avatar-circle-trigger { width: 44px; height: 44px; background: #000000; color: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; font-size: 1.1rem; border: 2px solid #ffffff; transition: transform 0.2s; }
+        .avatar-circle-trigger { width: 44px; height: 44px; background: #000000; color: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; font-size: 1.1rem; border: 2px solid #ffffff; }
 
         /* USER SLIDING SIDEBAR DRAWER */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1999; display: none; opacity: 0; transition: opacity 0.3s ease; }
@@ -80,7 +76,7 @@
         .wallet-chip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
         .wallet-chip-btn { background: var(--bg-primary); border: 2px solid var(--border-color); padding: 8px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
 
-        /* Dynamic Fit-to-Border Main Containers Workspace Grid */
+        /* Main Workspace Container Layout */
         .container { width: 100%; max-width: 100%; margin: 0; padding: 15px; display: grid; grid-template-columns: 1fr; gap: 20px; transition: all 0.3s ease; }
         @media (min-width: 992px) { .container.has-invoice { grid-template-columns: 2.5fr 1.2fr; padding: 25px; } }
         @media (max-width: 768px) { .container { padding: 10px; gap: 15px; } }
@@ -91,7 +87,7 @@
         @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .hidden { display: none !important; }
         
-        /* Verbatim Docs Home Card Settings */
+        /* Branded Cards Specs */
         .verbatim-docs-promo-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02); width: 100%; overflow: hidden; position: relative; margin-top: 15px; }
         .promo-details-block { text-align: left; z-index: 2; max-width: 60%; }
         .promo-main-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; letter-spacing: -0.5px; }
@@ -99,30 +95,36 @@
         .promo-bullet-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; color: #4a5568; }
         .verbatim-upload-btn { background-color: #2e7d32; color: #ffffff; border: none; padding: 12px 28px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; }
         .promo-graphic-mockup { position: absolute; right: -10px; bottom: -10px; width: 45%; max-width: 180px; z-index: 1; }
-        .promo-graphic-mockup img { width: 100%; height: auto; display: block; transform: rotate(-5deg); }
 
-        /* 👑 COMPACT BLINKIT CARD DESIGN & SHRUNK PARAMETERS */
         .blinkit-file-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 14px; padding: 15px; margin-top: 12px; width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.01); }
         .blinkit-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); }
-        
-        /* Shrunk Typography Parameters for Perfect Fit Alignment */
-        .blinkit-stepper { display: flex; align-items: center; background: var(--blinkit-green); border-radius: 8px; padding: 4px 10px; gap: 12px; color: white; font-weight: bold; width: fit-content; }
+        .blinkit-stepper { display: flex; align-items: center; background: var(--blinkit-green); border-radius: 10px; padding: 4px 10px; gap: 12px; color: white; font-weight: bold; width: fit-content; }
         .stepper-btn { background: none; border: none; color: white; font-size: 1.1rem; font-weight: 800; cursor: pointer; }
         
         .blinkit-grid-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; width: 100%; }
         .blinkit-option-box { border: 2px solid var(--border-color); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 8px; cursor: pointer; background: var(--surface); width: 100%; }
         .blinkit-option-box.active { border-color: var(--blinkit-green); background-color: var(--blinkit-light-green); }
-        .option-icon { font-size: 1.1rem; }
-        .option-meta-text { display: flex; flex-direction: column; text-align: left; }
         .option-title { font-size: 0.8rem; font-weight: 700; color: var(--text-main); }
         .option-subtitle { font-size: 0.7rem; color: var(--text-sub); font-weight: 500; }
 
-        .history-card-item { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-top: 12px; width: 100%; }
+        .history-card-item { background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-top: 12px; width: 100%; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
+        .history-card-item:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.04); }
         .form-group textarea { width: 100%; border: 2px solid var(--border-color); border-radius: 12px; padding: 12px; font-size: 0.9rem; outline: none; }
-        
-        /* 👑 SLEEK SHORTCUT TRIGGER FOR ADDING MORE STREAMS QUEUE IN HEADER CARD */
-        .add-more-inline-card-btn { background: var(--blinkit-light-green); color: var(--blinkit-green); border: 1px solid rgba(12,131,70,0.2); border-radius: 8px; padding: 4px 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 3px; }
-        .add-more-inline-card-btn:hover { background: var(--blinkit-green); color: white; }
+        .add-more-inline-card-btn { background: var(--blinkit-light-green); color: var(--blinkit-green); border: 1px solid rgba(12,131,70,0.2); border-radius: 8px; padding: 4px 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+
+        /* 👑 DYNAMIC BLINKIT-STYLE TRACKING TIMELINE MODULE */
+        .tracking-timeline-box { display: flex; flex-direction: column; gap: 20px; margin: 20px 0; padding-left: 10px; position: relative; }
+        .tracking-timeline-box::before { content: ''; position: absolute; left: 19px; top: 10px; bottom: 10px; width: 3px; background: #cbd5e1; z-index: 1; }
+        .timeline-step { display: flex; align-items: center; gap: 15px; position: relative; z-index: 2; opacity: 0.4; transition: all 0.3s ease; }
+        .timeline-step.completed { opacity: 1; }
+        .timeline-step.active { opacity: 1; font-weight: bold; }
+        .step-node-dot { width: 22px; height: 22px; border-radius: 50%; background: #94a3b8; border: 4px solid #f1f5f9; }
+        .timeline-step.completed .step-node-dot { background: var(--blinkit-green); }
+        .timeline-step.active .step-node-dot { background: #f59e0b; animation: pulseNode 1.5s infinite; }
+        @keyframes pulseNode { 0% { box-shadow: 0 0 0 0 rgba(245,158,11,0.5); } 100% { box-shadow: 0 0 0 8px rgba(245,158,11,0); } }
+        .step-meta-details { text-align: left; }
+        .step-main-label { font-size: 0.88rem; color: var(--text-main); font-weight: 700; }
+        .step-desc-label { font-size: 0.75rem; color: var(--text-sub); }
     </style>
 </head>
 <body>
@@ -170,15 +172,12 @@
             <a href="https://wa.me/91XXXXXXXXXX?text=Hi" target="_blank" class="whatsapp-support-btn">
                 <span>💬</span> Chat on WhatsApp Support
             </a>
-            <div style="line-height:1.5; font-size:0.78rem; color:#4a5568; margin-top:15px; background:#f8fafc; padding:12px; border-radius:10px; border:1px solid var(--border-color);">
-                <p><b>Payment complete ho gayi par order show nahi ho raha?</b><br>Chinta mat kijiye bhai, automatic server verification 5 minutes me confirm karke update kar dega.</p>
-            </div>
         </div>
 
         <div id="drawer_panel_terms" class="drawer-subpanel-content">
             <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:12px; color:var(--text-main); padding-bottom:4px; border-bottom:1px solid var(--border-color);">Terms of Service</h4>
             <div style="font-size:0.78rem; color:var(--text-sub); line-height:1.6;">
-                <p style="margin-bottom:6px;">• We use premium 70 GSM sheets to provide high density laser print bindings.</p>
+                <p>• We use premium 70 GSM sheets to provide high density laser print bindings.</p>
             </div>
         </div>
 
@@ -262,7 +261,6 @@
 
         <div class="container" id="mainLayoutAppContainer">
             <div id="user_section_store" class="view-section active">
-
                 <div id="uploadScreenInitialState" style="width:100%;">
                     <div class="compact-offers-bar" id="storeOffersTopBanner" style="margin-top:10px;">
                         <span>📢 <b>Active Offers:</b></span>
@@ -270,16 +268,13 @@
                             ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!
                         </marquee>
                     </div>
-
                     <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%;">
                         🚨 <b>Dukan Abhi Band Hai Bhai!</b> Print From Home accepts orders strictly between 07:00 AM and 11:59 PM.
                     </div>
-
                     <div style="text-align: center; padding: 25px 10px; width:100%;">
                         <h2 style="font-size: 2.3rem; font-weight:800; color:#1a202c; letter-spacing:-1px;">Print Store</h2>
                         <p style="font-size: 0.95rem; color:var(--text-sub); font-weight:600; margin-top:2px;">printfromhome ensures secure prints at every stage</p>
                     </div>
-
                     <div class="verbatim-docs-promo-card">
                         <div class="promo-details-block">
                             <h3 class="promo-main-title">Documents</h3>
@@ -292,23 +287,19 @@
                             <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
                         </div>
                         <div class="promo-graphic-mockup">
-                            <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" alt="Stack Image Mockup Representation">
+                            <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" alt="Stack">
                         </div>
                     </div>
                 </div>
 
                 <div id="configurationScreenState" class="hidden" style="width:100%;">
                     <form id="printForm" enctype="multipart/form-data" style="width:100%;">
-                        <div id="multiFilesContainer" style="margin-bottom: 20px; width:100%;"></div>
-                        
-                        <div class="form-group" style="background: var(--surface); padding: 16px; border-radius: 14px; border: 1px solid var(--border-color); width:100%; margin-bottom:15px;">
-                            <label style="font-weight: 700; margin-bottom:6px; display: block; font-size: 0.85rem;">Delivery Address details:</label>
-                            <textarea id="address" name="address" rows="3" placeholder="Enter full hostel room or campus delivery coordinates address" required style="border-radius:10px; font-size:0.85rem; padding:10px; border:2px solid var(--border-color); outline:none; width:100%;"></textarea>
+                        <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
+                        <div class="form-group" style="background: var(--surface); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); width:100%; margin-bottom:20px;">
+                            <label style="font-weight: 700; margin-bottom:8px; display: block; font-size: 0.9rem;">Delivery Address details:</label>
+                            <textarea id="address" name="address" rows="3" placeholder="Enter full address" required></textarea>
                         </div>
-                        
-                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 12px; font-size: 0.95rem; border-radius: 10px; background: var(--blinkit-green); font-weight: 700; width: 100%;">
-                            Proceed to Payment
-                        </button>
+                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">Proceed to Payment</button>
                     </form>
                 </div>
             </div>
@@ -318,6 +309,50 @@
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
                     <div id="ordersHistoryContainer" style="width:100%;">
                         <p style="text-align:center; padding:20px; color:var(--text-sub);">No print jobs recorded yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="user_section_order_tracking" class="view-section">
+                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%; text-align:left;">
+                    <button type="button" class="back-to-upload-link" onclick="navigateDrawerSection('history')">&larr; Back to All Orders</button>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-bottom:2px solid var(--border-color); padding-bottom:12px;">
+                        <div>
+                            <h3 style="font-weight:800; font-size:1.2rem;">Order Details Matrix</h3>
+                            <p id="trackOrderIdLabel" style="font-size:0.75rem; color:var(--text-sub); font-weight:600;"></p>
+                        </div>
+                        <div id="trackGrandTotalBadge" style="font-size:1.4rem; font-weight:900; color:var(--blinkit-green);">₹0.00</div>
+                    </div>
+
+                    <div id="liveTrackingTimelineContainer">
+                        <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); margin-top:20px; text-transform:uppercase;">📦 Real-Time Package Journey</h4>
+                        <div class="tracking-timeline-box">
+                            <div class="timeline-step" id="step_pending">
+                                <div class="step-node-dot"></div>
+                                <div class="step-meta-details"><p class="step-main-label">Order Received</p><p class="step-desc-label">Awaiting verification parameters sync</p></div>
+                            </div>
+                            <div class="timeline-step" id="step_paid">
+                                <div class="step-node-dot"></div>
+                                <div class="step-meta-details"><p class="step-main-label">Payment Confirmed</p><p class="step-desc-label">Order routed successfully to hardware arrays</p></div>
+                            </div>
+                            <div class="timeline-step" id="step_printing">
+                                <div class="step-node-dot"></div>
+                                <div class="step-meta-details"><p class="step-main-label">Printing Document</p><p class="step-desc-label">HP Smart Tank laser engines running active logs</p></div>
+                            </div>
+                            <div class="timeline-step" id="step_delivery">
+                                <div class="step-node-dot"></div>
+                                <div class="step-meta-details"><p class="step-main-label">Out For Delivery</p><p class="step-desc-label">Blinkit courier picker arriving at gate drop locations</p></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); margin-top:25px; text-transform:uppercase; border-bottom:1px dashed var(--border-color); padding-bottom:6px;">📄 Printable Items Summary</h4>
+                    <div id="trackFilesManifestList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+                    
+                    <div style="margin-top:20px; background:var(--bg-primary); padding:15px; border-radius:12px; border:1px dashed var(--border-color);">
+                        <p style="font-size:0.8rem; font-weight:700; color:var(--text-main);">📍 Shipping Gate Destination:</p>
+                        <p id="trackShippingAddressLabel" style="font-size:0.8rem; color:var(--text-sub); margin-top:2px; font-weight:500;"></p>
                     </div>
                 </div>
             </div>
@@ -332,14 +367,6 @@
                     <div class="summary-row total-row"><h3>Grand Total Amount</h3><h3 id="summaryTotal">₹0.00</h3></div>
                 </div>
             </section>
-        </div>
-    </div>
-
-    <div id="previewModal" class="preview-modal">
-        <div class="preview-content">
-            <span id="closePreview" class="close-preview">&times;</span>
-            <h3 id="previewTitle" style="word-break:break-all; font-size:0.95rem;">Document Preview</h3>
-            <div id="previewBody" style="min-height:200px; display:flex; justify-content:center; align-items:center;"></div>
         </div>
     </div>
 
@@ -384,12 +411,7 @@
             if(show) { modal.style.display = 'flex'; } else { if(event.target === modal) modal.style.display = 'none'; }
         }
         function setWalletQuickAmount(amt) { document.getElementById('walletCustomAmountInput').value = amt; }
-
-        // Helper trigger to handle inline configuration link activations 
-        window.triggerInlineFileUploadClick = function() {
-            const upBtn = document.getElementById('fileUpload');
-            if(upBtn) upBtn.click();
-        }
+        window.triggerInlineFileUploadClick = function() { const upBtn = document.getElementById('fileUpload'); if(upBtn) upBtn.click(); }
 
         function navigateDrawerSection(targetId) {
             document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
@@ -399,9 +421,11 @@
             const sidePanelPrice = document.getElementById('sidebarPricingPanel');
             const mainLayoutWrapper = document.getElementById('mainLayoutAppContainer');
 
-            if (targetId === 'store' || targetId === 'history') {
+            // Handle views split targets arrays logs structures
+            if (targetId === 'store' || targetId === 'history' || targetId === 'order_tracking') {
                 document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
                 document.getElementById(`user_section_${targetId}`).classList.add('active');
+                
                 if(targetId !== 'store') {
                     sidePanelPrice.classList.add('hidden');
                     mainLayoutWrapper.classList.remove('has-invoice');
