@@ -537,6 +537,34 @@
             if(el) el.classList.add(stateModeClass);
         }
 
+        // 🔥 COMPATIBILITY CORE FIXED: STANDALONE BACKGROUND REAL-TIME LIVE OVERRIDE POOL
+        // Yeh block backend server se order array directly fetch karega aur live tracker update karega!
+        setInterval(async () => {
+            const trackingPanel = document.getElementById('user_section_order_tracking');
+            if (trackingPanel && trackingPanel.classList.contains('active')) {
+                const currentActiveTrackingId = document.getElementById('trackOrderIdLabel')?.textContent?.replace('ID: ', '')?.trim();
+                
+                if (currentActiveTrackingId) {
+                    try {
+                        const cloudApiUrl = window.location.origin;
+                        const res = await fetch(`${cloudApiUrl}/api/admin/orders`);
+                        if (!res.ok) return;
+                        const latestOrdersCache = await res.json();
+                        
+                        if (Array.isArray(latestOrdersCache)) {
+                            const currentLiveMatchOrderNode = latestOrdersCache.find(o => o.orderId === currentActiveTrackingId);
+                            if (currentLiveMatchOrderNode) {
+                                console.log(`📡 Independent Stepper Pipe Synced: ${currentLiveMatchOrderNode.status}`);
+                                executeLiveTimelineStateStepper(currentLiveMatchOrderNode.status);
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Live timeline scheduler background sync fail:", err);
+                    }
+                }
+            }
+        }, 4000);
+
         function toggleUserDrawer(open) {
             document.getElementById('userSideDrawer').classList.toggle('active', open);
             document.getElementById('drawerOverlay').classList.toggle('active', open);
@@ -579,14 +607,18 @@
                     if(typeof window.refreshInvoiceTabState === 'function') { window.refreshInvoiceTabState(); }
                 }
                 
-                // Trigger timeline sync immediately if entering the order tracking viewport
                 if(targetId === 'order_tracking') {
                     const currentActiveTrackingId = document.getElementById('trackOrderIdLabel')?.textContent?.replace('ID: ', '')?.trim();
-                    if(currentActiveTrackingId && Array.isArray(window.globalRawOrdersCache || globalRawOrdersCache)) {
-                        const currentLiveMatchOrderNode = globalRawOrdersCache.find(o => o.orderId === currentActiveTrackingId);
-                        if(currentLiveMatchOrderNode) {
-                            executeLiveTimelineStateStepper(currentLiveMatchOrderNode.status);
-                        }
+                    // Fallback to instantly trigger initial styling state from dynamic pool
+                    if(currentActiveTrackingId) {
+                        fetch(`${window.location.origin}/api/admin/orders`)
+                            .then(res => res.json())
+                            .then(latestOrdersCache => {
+                                if (Array.isArray(latestOrdersCache)) {
+                                    const match = latestOrdersCache.find(o => o.orderId === currentActiveTrackingId);
+                                    if(match) executeLiveTimelineStateStepper(match.status);
+                                }
+                            }).catch(err => console.error(err));
                     }
                 }
                 toggleUserDrawer(false);
