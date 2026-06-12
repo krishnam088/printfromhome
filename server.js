@@ -18,8 +18,7 @@ app.use(express.static(__dirname));
 
 // 🔥 PERMANENT DATABASE FILES FOR CLOUD CORES
 const USERS_FILE = path.join(__dirname, 'users.json');
-let orders = [];
-global.autoPrintModeEnabled = false;
+let orders = [];autoPrintModeEnabled = false;
 
 // 🔥 GLOBAL RAM CACHE FOR INSTANT CROSS-DEVICE VALIDATION
 let globalUsersDatabaseArray = [];
