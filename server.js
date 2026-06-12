@@ -21,6 +21,9 @@ const USERS_FILE = path.join(__dirname, 'users.json');
 let orders = [];
 let autoPrintModeEnabled = false;
 
+// 🔥 STORE LIVE OPERATIONS MASTER TOGGLE (ON/OFF SWITCH)
+let isStoreOpenGlobal = true; 
+
 // 🔥 GLOBAL RAM CACHE FOR INSTANT CROSS-DEVICE VALIDATION
 let globalUsersDatabaseArray = [];
 
@@ -70,6 +73,30 @@ const razorpay = new Razorpay({
 // 🌐 Web entry routes
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/admin-panel', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
+
+// ====================================================================
+// 🏪 REMOTE STORE OPERATION CONFIGURATIONS (ON/OFF APIs)
+// ====================================================================
+
+// 1. Fetch current status of store for Frontend UI Rendering
+app.get('/api/store-status', (req, res) => {
+    res.json({ success: true, isOpen: isStoreOpenGlobal });
+});
+
+// 2. Toggle status endpoints securely controlled from Admin Console
+app.post('/api/store-status/toggle', (req, res) => {
+    try {
+        const { isOpen } = req.body;
+        if (typeof isOpen !== 'boolean') {
+            return res.status(400).json({ success: false, message: "Invalid flag configurations!" });
+        }
+        isStoreOpenGlobal = isOpen;
+        console.log(`🏪 Operations Parameter Overwritten by Admin: ${isStoreOpenGlobal ? 'OPEN' : 'CLOSED'}`);
+        res.json({ success: true, isOpen: isStoreOpenGlobal, message: `Store infrastructure synced to ${isStoreOpenGlobal ? 'OPEN' : 'CLOSED'}` });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 // ====================================================================
 // 🔥 UNLIMITED AUTH API SYSTEMS (SIGN UP & LOGIN - DEVICE SYNC FIXED)
@@ -145,6 +172,10 @@ app.post('/api/auth/login', (req, res) => {
 
 app.post('/api/create-order', upload.array('document', 20), async (req, res) => {
     try {
+        if (!isStoreOpenGlobal) {
+            return res.status(403).json({ success: false, message: "🚨 Dukan abhi band hai bhai! Direct cloud orders blocked." });
+        }
+
         const { totalAmount, configDetails, address } = req.body;
         const finalAmount = totalAmount ? totalAmount.trim() : "42";
         const amountInPaise = Math.round(parseFloat(finalAmount) * 100);
@@ -187,6 +218,43 @@ app.post('/api/verify-payment', async (req, res) => {
             return res.json({ success: true, message: "Payment verified successfully!" });
         }
         res.status(404).json({ success: false, message: "Order not found" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 🔥 FIXED PATHWAY: ADMIN LIVE FINANCIAL STATISTICS CALCULATOR ENDPOINT
+app.get('/api/admin/financials', (req, res) => {
+    try {
+        const paidOrders = orders.filter(o => o.status === 'Paid / Ready for Print' || o.status === 'Delivered' || o.status === 'Printing' || o.status === 'Out for Delivery');
+        let totalRevenue = 0;
+        let totalCostPrice = 0;
+
+        paidOrders.forEach(order => {
+            const amt = parseFloat(order.amount) || 0;
+            totalRevenue += amt;
+
+            // Calculate operational print costs dynamically
+            let orderPages = 0;
+            if (order.configDetails && Array.isArray(order.configDetails)) {
+                order.configDetails.forEach(f => {
+                    orderPages += (parseInt(f.pages) || 1) * (parseInt(f.copies) || 1);
+                });
+            } else {
+                orderPages = 1;
+            }
+            // Overhead: ₹1 per sheet paper asset + ₹15 dispatch logistics packaging cost
+            totalCostPrice += (orderPages * 1.00) + 15.00;
+        });
+
+        const netProfitLoss = totalRevenue - totalCostPrice;
+
+        res.json({
+            success: true,
+            totalOrders: orders.length,
+            revenue: totalRevenue.toFixed(2),
+            profitLoss: netProfitLoss.toFixed(2)
+        });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
