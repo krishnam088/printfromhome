@@ -498,7 +498,7 @@
             if (typeof originalInlineUploadTrigger === 'function') originalInlineUploadTrigger();
         };
 
-        // 🔥 DYNAMIC BLINKIT-STYLE REAL-TIME USER TRACKING TIMELINE MODULE
+        // 🔥 DYNAMIC BLINKIT-STYLE REAL-TIME USER TRACKING TIMELINE MODULE (STRICT LAYER OVERRIDE)
         function executeLiveTimelineStateStepper(activeStatus) {
             const nodesIdsList = ['step_pending', 'step_paid', 'step_printing', 'step_delivery'];
             nodesIdsList.forEach(id => {
@@ -506,6 +506,10 @@
                 if(el) el.className = "timeline-step"; 
             });
 
+            const deliveryLabel = document.querySelector('#step_delivery .step-main-label');
+            if(deliveryLabel) deliveryLabel.textContent = "Out For Delivery";
+
+            // State Machine Logic Routing Map Safely 🏁
             if (activeStatus === 'Pending Payment' || activeStatus === 'Pending') {
                 setStepStatusMarkup('step_pending', 'active');
             } 
@@ -518,17 +522,18 @@
                 setStepStatusMarkup('step_paid', 'completed');
                 setStepStatusMarkup('step_printing', 'active');
             } 
-            else if (activeStatus === 'Out for Delivery' || activeStatus === 'Delivered') {
+            else if (activeStatus === 'Out for Delivery') {
                 setStepStatusMarkup('step_pending', 'completed');
                 setStepStatusMarkup('step_paid', 'completed');
                 setStepStatusMarkup('step_printing', 'completed');
                 setStepStatusMarkup('step_delivery', 'active');
-                
-                if(activeStatus === 'Delivered') {
-                    setStepStatusMarkup('step_delivery', 'completed');
-                    const targetBadgeText = document.querySelector('#step_delivery .step-main-label');
-                    if(targetBadgeText) targetBadgeText.textContent = "✅ Order Delivered Successfully!";
-                }
+            }
+            else if (activeStatus === 'Delivered') {
+                setStepStatusMarkup('step_pending', 'completed');
+                setStepStatusMarkup('step_paid', 'completed');
+                setStepStatusMarkup('step_printing', 'completed');
+                setStepStatusMarkup('step_delivery', 'completed');
+                if(deliveryLabel) deliveryLabel.textContent = "✅ Order Delivered Successfully!";
             }
         }
 
@@ -537,8 +542,7 @@
             if(el) el.classList.add(stateModeClass);
         }
 
-        // 🔥 COMPATIBILITY CORE FIXED: STANDALONE BACKGROUND REAL-TIME LIVE OVERRIDE POOL
-        // Yeh block backend server se order array directly fetch karega aur live tracker update karega!
+        // 🔥 STANDALONE CORES POOL: BACKGROUND AUTOMATIC SYNC LOOPER REFRESH RATE HOOK
         setInterval(async () => {
             const trackingPanel = document.getElementById('user_section_order_tracking');
             if (trackingPanel && trackingPanel.classList.contains('active')) {
@@ -609,7 +613,6 @@
                 
                 if(targetId === 'order_tracking') {
                     const currentActiveTrackingId = document.getElementById('trackOrderIdLabel')?.textContent?.replace('ID: ', '')?.trim();
-                    // Fallback to instantly trigger initial styling state from dynamic pool
                     if(currentActiveTrackingId) {
                         fetch(`${window.location.origin}/api/admin/orders`)
                             .then(res => res.json())
