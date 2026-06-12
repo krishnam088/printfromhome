@@ -394,23 +394,65 @@
     </div>
 
     <script>
-        function runSilentIntradaySchedulerGuard() {
-            const now = new Date();
-            const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
-            let open = (hoursIST >= 7 && hoursIST < 24);
+        // 🔥 REAL-TIME CLOUD STORE STATUS GUARD (SYNCED WITH ADMIN PARAMETERS)
+        async function runSilentIntradaySchedulerGuard() {
             const badge = document.getElementById('userShopStatus');
             const btn = document.getElementById('submitOrderBtn');
-            if(badge && btn) {
-                if(open) {
-                    badge.textContent = "OPEN 🟢"; badge.className = "shop-status-text-badge open";
-                    btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
-                } else {
-                    badge.textContent = "CLOSED 🔴"; badge.className = "shop-status-text-badge closed";
-                    btn.disabled = true; btn.style.opacity = "0.4"; btn.style.cursor = "not-allowed"; btn.textContent = "❌ Store is Closed";
+            const noticeBox = document.getElementById('storeClosedNoticeBox');
+            
+            if (!badge || !btn) return;
+
+            try {
+                // Get the exact location base origin dynamically
+                const cloudApiUrl = window.location.origin;
+                const response = await fetch(`${cloudApiUrl}/api/store-status`);
+                const data = await response.json();
+                
+                // 1. Check if Admin manually flipped switch to CLOSED
+                if (data.success && data.isOpen === false) {
+                    badge.textContent = "CLOSED 🔴"; 
+                    badge.className = "shop-status-text-badge closed";
+                    btn.disabled = true; 
+                    btn.style.opacity = "0.4"; 
+                    btn.style.cursor = "not-allowed"; 
+                    btn.textContent = "❌ Store Closed by Admin";
+                    if (noticeBox) noticeBox.classList.remove('hidden');
+                    return;
                 }
+
+                // 2. If open in admin settings, double check the automated night scheduler parameters
+                const now = new Date();
+                const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
+                let isTimeOpen = (hoursIST >= 7 && hoursIST < 24);
+
+                if (isTimeOpen) {
+                    badge.textContent = "OPEN 🟢"; 
+                    badge.className = "shop-status-text-badge open";
+                    btn.disabled = false; 
+                    btn.style.opacity = "1"; 
+                    btn.style.cursor = "pointer";
+                    // Only restore default message if button wasn't customized by another active module
+                    if(btn.textContent.includes('Store Closed')) {
+                        btn.textContent = "Proceed to Payment";
+                    }
+                    if (noticeBox) noticeBox.classList.add('hidden');
+                } else {
+                    badge.textContent = "CLOSED 🔴"; 
+                    badge.className = "shop-status-text-badge closed";
+                    btn.disabled = true; 
+                    btn.style.opacity = "0.4"; 
+                    btn.style.cursor = "not-allowed"; 
+                    btn.textContent = "❌ Store is Closed (7AM - 12AM)";
+                    if (noticeBox) noticeBox.classList.remove('hidden');
+                }
+
+            } catch (err) {
+                console.error("Store status sync fallback error:", err);
             }
         }
-        setInterval(runSilentIntradaySchedulerGuard, 5000);
+        
+        // Fast background pooling cycle hook (4 seconds pool execution rate)
+        setInterval(runSilentIntradaySchedulerGuard, 4000);
         window.addEventListener('DOMContentLoaded', runSilentIntradaySchedulerGuard);
 
         function toggleUserDrawer(open) {
