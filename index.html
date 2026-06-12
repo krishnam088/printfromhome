@@ -332,10 +332,10 @@
                         <div class="form-group" style="background: var(--surface); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); width:100%; margin-bottom:20px;">
                             <label style="font-weight: 700; margin-bottom:8px; display: block; font-size: 0.9rem;">📍 Drag Pin to Your Delivery Location:</label>
                             
-                            <div id="userDeliveryMap" style="width: 100%; height: 280px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 12px; z-index: 10;"></div>
+                            <div id="userDeliveryMap" style="width: 100%; height: 280px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 12px; position: relative; z-index: 999;"></div>
                             
                             <label style="font-weight: 700; margin-bottom:4px; display: block; font-size: 0.8rem; color: var(--text-sub);">Selected Address / Landmarks:</label>
-                            <textarea id="address" name="address" rows="3" placeholder="Map se location select karein ya khud apna full address yahan likhein..." required></textarea>
+                            <textarea id="address" name="address" rows="3" placeholder="Map se pin drag karein ya apna full address yahan likhein..." required></textarea>
                         </div>
                         
                         <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">Proceed to Payment</button>
@@ -406,6 +406,22 @@
                     <div class="summary-row total-row"><h3>Grand Total Amount</h3><h3 id="summaryTotal">₹0.00</h3></div>
                 </div>
             </section>
+        </div>
+    </div>
+
+    <div id="storeClosedPopupModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 999999; display: none; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #ffffff; border-radius: 24px; padding: 30px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 3px solid #ef4444; intent: animation; animation: popupBounceAnimation 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <div style="font-size: 3.5rem; margin-bottom: 10px;">🏪🚨</div>
+            <h3 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 8px; letter-spacing: -0.5px;">Store is Currently Closed</h3>
+            <p style="font-size: 0.88rem; color: #64748b; line-height: 1.6; margin-bottom: 20px; font-weight: 500;">
+                We are currently not accepting any print jobs at the moment. Please visit us back when the store infrastructure is back online!
+            </p>
+            <div style="background: #fff5f5; border: 1px dashed #fca5a5; padding: 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; color: #b91c1c; margin-bottom: 20px;">
+                ⏰ Standard Timings: 07:00 AM - 12:00 AM
+            </div>
+            <button type="button" onclick="closeStoreClosedPopup()" style="width: 100%; padding: 12px; background: #0f172a; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.2s;">
+                Understood, Got It!
+            </button>
         </div>
     </div>
 
@@ -491,45 +507,76 @@
             if (typeof originalInlineUploadTrigger === 'function') originalInlineUploadTrigger();
         };
 
-        // 🗺️ FREE DYNAMIC MAP SYSTEM CONFIGURATION ENGINE
-        let deliveryMap;
-        let deliveryMarker;
+        // 🔥 MAP OPERATION GLOBAL POOL HOOKS
+        let deliveryMap = null;
+        let deliveryMarker = null;
 
         function initBlinkitStyleMap() {
-            if(deliveryMap) return; // Prevent double initialization collisions
-            
-            // Varanasi Central Coordinates Array Layout
-            const defaultVaranasiLat = 25.3176;
-            const defaultVaranasiLng = 82.9739;
+            if (deliveryMap) return; // Collision guard switch bypass
 
-            deliveryMap = L.map('userDeliveryMap').setView([defaultVaranasiLat, defaultVaranasiLng], 14);
+            // Default fallback centered array coordinates (Varanasi Central)
+            let centerLat = 25.3176;
+            let centerLng = 82.9739;
+
+            // Map init object initialization with global scroll/drag permissions enabled
+            deliveryMap = L.map('userDeliveryMap', {
+                center: [centerLat, centerLng],
+                zoom: 15,
+                dragging: true,
+                touchZoom: true,
+                scrollWheelZoom: true
+            });
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(deliveryMap);
 
-            deliveryMarker = L.marker([defaultVaranasiLat, defaultVaranasiLng], {
-                draggable: true
-            }).addTo(deliveryMap);
+            // Marker locked option with absolute manual user draggable attributes
+            deliveryMarker = L.marker([centerLat, centerLng], { draggable: true }).addTo(deliveryMap);
 
-            // Trigger dynamic text box geocoding on drag drop release
-            deliveryMarker.on('dragend', async function () {
+            // Fetch initial geocoding metrics string on map creation
+            updateAddressFromCoords(centerLat, centerLng);
+
+            // Bind trigger event framework sequence on marker release
+            deliveryMarker.on('dragend', function () {
                 const position = deliveryMarker.getLatLng();
-                try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.lat}&lon=${position.lng}`);
-                    const data = await res.json();
-                    if(data && data.display_name) {
-                        document.getElementById('address').value = data.display_name;
-                    }
-                } catch (err) {
-                    document.getElementById('address').value = `Lat: ${position.lat.toFixed(4)}, Lng: ${position.lng.toFixed(4)}`;
-                }
+                updateAddressFromCoords(position.lat, position.lng);
             });
+
+            // 🔥 DYNAMIC LOCATION AUTOMATIC DETECTION GATEWAY
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    const gpsLat = position.coords.latitude;
+                    const gpsLng = position.coords.longitude;
+                    
+                    console.log("📡 GPS Geolocation Matrix Resolved Successfully:", gpsLat, gpsLng);
+                    
+                    if(deliveryMap && deliveryMarker) {
+                        deliveryMap.setView([gpsLat, gpsLng], 16);
+                        deliveryMarker.setLatLng([gpsLat, gpsLng]);
+                        updateAddressFromCoords(gpsLat, gpsLng);
+                    }
+                }, function (error) {
+                    console.warn("Geolocation token rejected or timed out: " + error.message);
+                }, { enableHighAccuracy: true, timeout: 8000 });
+            }
             
             setTimeout(() => { deliveryMap.invalidateSize(); }, 400);
         }
 
-        // 🔥 STRICT DYNAMIC BLINKIT-STYLE REAL-TIME USER TRACKING TIMELINE MODULE (STRICT LAYER OVERRIDE)
+        async function updateAddressFromCoords(lat, lng) {
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                const data = await response.json();
+                if (data && data.display_name) {
+                    document.getElementById('address').value = data.display_name;
+                }
+            } catch (err) {
+                document.getElementById('address').value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            }
+        }
+
+        // 🔥 STRICT STAGE STATE ENGINE MATRIX (ALIGNED WITH EXACT SERVERS STRINGS)
         function executeLiveTimelineStateStepper(activeStatus) {
             const nodesIdsList = ['step_pending', 'step_paid', 'step_printing', 'step_delivery'];
             nodesIdsList.forEach(id => {
@@ -541,7 +588,7 @@
             if(deliveryLabel) deliveryLabel.textContent = "Out For Delivery";
 
             const currentCleanStatus = activeStatus ? activeStatus.trim() : "";
-            console.log("🔍 Live Matrix Stepper Processing Status:", currentCleanStatus);
+            console.log("🖨️ Pipeline State Step Processing:", currentCleanStatus);
 
             if (currentCleanStatus === 'Pending Payment' || currentCleanStatus === 'Pending') {
                 setStepStatusMarkup('step_pending', 'active');
@@ -575,11 +622,11 @@
             if(el) el.classList.add(stateModeClass);
         }
 
-        // 🔥 BULLETPROOF INDEPENDENT LIVE SYNC: Pulls data fresh from cloud database array
+        // 🔥 BULLETPROOF INDEPENDENT SYNC BACKGROUND FETCH ENGINE POOL
         setInterval(async () => {
             const trackingPanel = document.getElementById('user_section_order_tracking');
             if (trackingPanel && trackingPanel.classList.contains('active')) {
-                const currentActiveTrackingId = document.getElementById('trackOrderIdLabel')?.textContent?.replace('ID: ', '')?.trim();
+                const currentActiveTrackingId = document.getElementById('trackOrderIdLabel')?.textContent?.replace('ID Reference: ', '')?.replace('ID: ', '')?.trim();
                 
                 if (currentActiveTrackingId) {
                     try {
@@ -591,12 +638,11 @@
                         if (Array.isArray(latestOrdersCache)) {
                             const currentLiveMatchOrderNode = latestOrdersCache.find(o => o.orderId === currentActiveTrackingId);
                             if (currentLiveMatchOrderNode) {
-                                console.log(`📡 Independent Stepper Pipe Synced: ${currentLiveMatchOrderNode.status}`);
                                 executeLiveTimelineStateStepper(currentLiveMatchOrderNode.status);
                             }
                         }
                     } catch (err) {
-                        console.error("Live timeline scheduler background sync fail:", err);
+                        console.error("Live tracking sync failed:", err);
                     }
                 }
             }
@@ -645,7 +691,7 @@
                 }
                 
                 if(targetId === 'order_tracking') {
-                    const currentActiveTrackingId = document.getElementById('trackOrderIdLabel')?.textContent?.replace('ID: ', '')?.trim();
+                    const currentActiveTrackingId = document.getElementById('trackOrderIdLabel')?.textContent?.replace('ID Reference: ', '')?.replace('ID: ', '')?.trim();
                     if(currentActiveTrackingId) {
                         fetch(`${window.location.origin}/api/admin/orders`)
                             .then(res => res.json())
@@ -681,8 +727,7 @@
             setTimeout(() => { alertSuccess.style.display = 'none'; }, 3500);
         });
 
-        // 🔥 TRIGGER MAP INITIALIZATION SAFELY WHEN THE CONFIGURATION SCREEN IS SHOWN BY SCRIPT.JS
-        // Yeh block ensure kareg ki jab bhi configuration screen unhide ho, Leaflet map size auto-fix hokar render ho jaye
+        // 🔥 OBSERVER MUTATION EYE TO TRIGGER INDEPENDENT MAP RE-RENDER ON DEMAND
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.attributeName === 'class') {
