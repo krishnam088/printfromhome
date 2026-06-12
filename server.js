@@ -18,7 +18,8 @@ app.use(express.static(__dirname));
 
 // 🔥 PERMANENT DATABASE FILES FOR CLOUD CORES
 const USERS_FILE = path.join(__dirname, 'users.json');
-let orders = [];autoPrintModeEnabled = false;
+let orders = [];
+let autoPrintModeEnabled = false;
 
 // 🔥 GLOBAL RAM CACHE FOR INSTANT CROSS-DEVICE VALIDATION
 let globalUsersDatabaseArray = [];
@@ -83,10 +84,8 @@ app.post('/api/auth/signup', (req, res) => {
         }
 
         const usersFromFile = readUsersFromDatabase();
-        // Merge file system storage and active server session RAM array
         const combinedUsers = [...usersFromFile, ...globalUsersDatabaseArray];
         
-        // Check duplication safely across all indices
         const userExists = combinedUsers.some(u => u.identity.toLowerCase() === identity.toLowerCase().trim());
         if (userExists) {
             return res.status(400).json({ success: false, message: "Yeh Gmail/Phone pehle se registered hai bhai!" });
@@ -99,7 +98,6 @@ app.post('/api/auth/signup', (req, res) => {
             dateCreated: new Date().toLocaleString()
         };
 
-        // Push to both active RAM arrays and static files database
         globalUsersDatabaseArray.push(newUser);
         
         const freshFileUsers = readUsersFromDatabase();
@@ -124,7 +122,6 @@ app.post('/api/auth/login', (req, res) => {
         }
 
         const usersFromFile = readUsersFromDatabase();
-        // Combine active storage footprints to authorize cross-device networks
         const combinedUsers = [...usersFromFile, ...globalUsersDatabaseArray];
 
         const user = combinedUsers.find(u => u.identity.toLowerCase() === identity.toLowerCase().trim() && u.password === password);
@@ -187,4 +184,31 @@ app.post('/api/verify-payment', async (req, res) => {
         if (order) {
             order.status = 'Paid / Ready for Print';
             order.paymentId = paymentId; 
-            return res.
+            return res.json({ success: true, message: "Payment verified successfully!" });
+        }
+        res.status(404).json({ success: false, message: "Order not found" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get('/api/admin/orders', (req, res) => { res.json(orders); });
+
+app.post('/api/admin/orders/update-status', (req, res) => {
+    const { orderId, status } = req.body;
+    const order = orders.find(o => o.orderId === orderId);
+    if (order) {
+        order.status = status;
+        return res.json({ success: true, message: "Status updated!" });
+    }
+    res.status(404).json({ success: false, message: "Order not found" });
+});
+
+app.get('/download/:filename', (req, res) => {
+    const filePath = path.join(uploadsDir, req.params.filename);
+    if (fs.existsSync(filePath)) { res.download(filePath); } else { res.status(404).send('File missing'); }
+});
+
+app.listen(PORT, () => {
+    console.log(`Blinkit Printing Server running perfectly on port ${PORT}`);
+});
