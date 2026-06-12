@@ -23,7 +23,50 @@ document.addEventListener('DOMContentLoaded', () => {
     let isFirstTimeUser = true; 
 
     // 🔥 LIVE RE-ROUTE CONFIGS
-    const LIVE_SERVER_URL = "https://printfromhome.onrender.com";
+    const LIVE_SERVER_URL = window.location.origin;
+
+    // 🔥 CRITICAL LIVE INTERCEPTOR CACHE ARRAY CORES
+    window.globalRawOrdersCache = [];
+
+    // Background engine to update global orders array cache every 4 seconds for instant real-time sync
+    async function silentlySyncOrdersArrayCache() {
+        try {
+            const res = await fetch(`${LIVE_SERVER_URL}/api/admin/orders`);
+            if (!res.ok) return;
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                window.globalRawOrdersCache = data;
+                
+                // Keep active tracking layout reactive to loops mapping changes
+                const currentActiveTrackingId = document.getElementById('trackOrderIdLabel')?.textContent?.replace('ID Reference: ', '')?.replace('ID: ', '')?.trim();
+                if (currentActiveTrackingId && typeof window.executeLiveTimelineStateStepper === 'function') {
+                    const match = data.find(o => o.orderId === currentActiveTrackingId);
+                    if (match) {
+                        window.executeLiveTimelineStateStepper(match.status);
+                        
+                        // Dynamically mirror incoming parameters inside historical badge views arrays
+                        const activeUserToken = localStorage.getItem('printAppUser');
+                        const localHistory = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
+                        let historyUpdated = false;
+                        localHistory.forEach(item => {
+                            if(item.orderId === currentActiveTrackingId && item.status !== match.status) {
+                                item.status = match.status;
+                                historyUpdated = true;
+                            }
+                        });
+                        if(historyUpdated) {
+                            localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(localHistory));
+                            renderOrderHistoryUI(activeUserToken, false); // Quiet render bypass
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Cache system pooling delay: ", err.message);
+        }
+    }
+    setInterval(silentlySyncOrdersArrayCache, 4000);
+    setTimeout(silentlySyncOrdersArrayCache, 500);
 
     function synchronizeWalletInterfaceBalance() {
         const sessionActiveUser = localStorage.getItem('printAppUser');
@@ -104,9 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
     }, 2500);
 
-    // ====================================================================
-    // 🔥 LIVE ROUTE CONTROLLER FOR UNLIMITED USERS (SIGN UP & LOGIN)
-    // ====================================================================
     if (authForm) {
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -184,9 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ====================================================================
-    // 📁 MULTI-FILE MANIFEST ENGINE & SELECTION CORES
-    // ====================================================================
     if(fileUpload) {
         fileUpload.addEventListener('change', () => {
             if (fileUpload.files.length === 0) return;
@@ -287,6 +324,15 @@ document.addEventListener('DOMContentLoaded', () => {
     window.openOrderDeepTrackingWorkspacePage = function(orderStringPayload) {
         const order = JSON.parse(decodeURIComponent(orderStringPayload));
         
+        // Find if naye pool engine mein server se status mil raha hai
+        let liveCloudStatus = order.status;
+        if (window.globalRawOrdersCache && window.globalRawOrdersCache.length > 0) {
+            const realTimeMatchNode = window.globalRawOrdersCache.find(o => o.orderId === order.orderId);
+            if (realTimeMatchNode) {
+                liveCloudStatus = realTimeMatchNode.status;
+            }
+        }
+
         if(typeof navigateDrawerSection === 'function') {
             navigateDrawerSection('order_tracking'); 
         }
@@ -306,42 +352,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        const timelineWrapper = document.getElementById('liveTrackingTimelineContainer');
-        const normalizeStatus = order.status ? order.status.toLowerCase() : 'pending';
-
-        if(normalizeStatus.includes('delivered')) {
-            if(timelineWrapper) timelineWrapper.style.display = 'none';
-        } else {
-            if(timelineWrapper) timelineWrapper.style.display = 'block';
-            
-            document.querySelectorAll('.timeline-step').forEach(step => {
-                step.classList.remove('completed', 'active');
-            });
-
-            const stepPending = document.getElementById('step_pending');
-            const stepPaid = document.getElementById('step_paid');
-            const stepPrinting = document.getElementById('step_printing');
-            const stepDelivery = document.getElementById('step_delivery');
-
-            if(normalizeStatus.includes('pending')) {
-                if(stepPending) stepPending.classList.add('active');
-            } else if(normalizeStatus.includes('paid') || normalizeStatus.includes('ready')) {
-                if(stepPending) stepPending.classList.add('completed');
-                if(stepPaid) stepPaid.classList.add('active');
-            } else if(normalizeStatus.includes('print')) {
-                if(stepPending) stepPending.classList.add('completed');
-                if(stepPaid) stepPaid.classList.add('completed');
-                if(stepPrinting) stepPrinting.classList.add('active');
-            } else if(normalizeStatus.includes('delivery') || normalizeStatus.includes('out')) {
-                if(stepPending) stepPending.classList.add('completed');
-                if(stepPaid) stepPaid.classList.add('completed');
-                if(stepPrinting) stepPrinting.classList.add('completed');
-                if(stepDelivery) stepDelivery.classList.add('active');
-            }
+        // 🔥 Trigger dynamic workflow layout state stepper directly
+        if(typeof window.executeLiveTimelineStateStepper === 'function') {
+            window.executeLiveTimelineStateStepper(liveCloudStatus);
         }
     }
 
-    function renderOrderHistoryUI(userId) {
+    function renderOrderHistoryUI(userId, renderHistoryContainerClean = true) {
         if(!ordersHistoryContainer) return;
         const rawHistory = localStorage.getItem(`history_${userId}`);
         if (!rawHistory || JSON.parse(rawHistory).length === 0) {
@@ -349,11 +366,33 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const parsedHistory = JSON.parse(rawHistory).reverse(); 
-        ordersHistoryContainer.innerHTML = '';
+        
+        if (renderHistoryContainerClean) {
+            ordersHistoryContainer.innerHTML = '';
+        } else {
+            // Keep user layout safe during internal loops override sync
+            const activeCardsList = ordersHistoryContainer.querySelectorAll('.history-card-item');
+            if (activeCardsList.length === parsedHistory.length) {
+                parsedHistory.forEach((order, idx) => {
+                    const badge = activeCardsList[idx].querySelector('span[style*="background:#fff3e0"]');
+                    if(badge) badge.textContent = order.status || 'Paid / Ready for Print';
+                });
+                return;
+            }
+            ordersHistoryContainer.innerHTML = '';
+        }
+
         parsedHistory.forEach(order => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'history-card-item';
             
+            // Sync initial state data properties securely
+            let currentStatus = order.status || 'Paid / Ready for Print';
+            if (window.globalRawOrdersCache && window.globalRawOrdersCache.length > 0) {
+                const match = window.globalRawOrdersCache.find(o => o.orderId === order.orderId);
+                if (match) currentStatus = match.status;
+            }
+
             const stringifiedPayload = encodeURIComponent(JSON.stringify(order));
             itemDiv.setAttribute('onclick', `openOrderDeepTrackingWorkspacePage('${stringifiedPayload}')`);
 
@@ -365,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="color:#4a5568; line-height:1.4; font-size:0.78rem; margin-bottom:6px;">${filesDetailsHtml}</div>
                 <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
                     <span style="color:var(--blinkit-green); font-weight:700;">👁️ Tap to View Details &rarr;</span>
-                    <span style="background:#fff3e0; padding:2px 6px; border-radius:4px; color:#e67e22; font-weight:600;">${order.status || 'Paid / Ready for Print'}</span>
+                    <span style="background:#fff3e0; padding:2px 6px; border-radius:4px; color:#e67e22; font-weight:600;">${currentStatus}</span>
                 </div>
             `;
             ordersHistoryContainer.appendChild(itemDiv);
@@ -389,8 +428,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     sides: item.config.orientation === 'portrait' ? 'single' : 'landscape', 
                     binding: item.config.binding, 
                     copies: item.config.copies,
-                    orientation: item.config.orientation, // 🔥 ADDED SECURELY FOR COPIES DRIFT MATRIX
-                    colorMode: item.config.printType       // 🔥 SYNC WITH AGENT KEYWORD LOOKUPS
+                    orientation: item.config.orientation, 
+                    colorMode: item.config.printType       
                 };
             });
 
