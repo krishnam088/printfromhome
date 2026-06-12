@@ -58,7 +58,7 @@
         .filter-btn.active { background: var(--blinkit-green); color: white; }
 
         .order-card { background: var(--bg-primary); border-radius: 14px; padding: 18px; margin-bottom: 15px; border: 1px solid var(--border-color); }
-        .order-card-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 12px; }
+        .order-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 12px; }
         
         .status-select { padding: 6px 12px; border-radius: 8px; border: 2px solid var(--border-color); font-size: 0.8rem; font-weight: 700; outline: none; background: white; }
         .status-select.pending { color: #d97706; border-color: #fef3c7; background: #fffbeb; }
@@ -212,12 +212,11 @@
             showDashboard();
         }
 
-        // 🔥 MASTER CROSS-DEVICE SYNCHRONIZED LOGIC GATEWAY
+        // 🔥 MASTER CROSS-DEVICE SYNCHRONIZED LOGIC GATEWAY (HARDCODED CENTRAL SYNC)
         function verifyAdminLogin() {
             const user = document.getElementById('adminUser').value.trim();
             const pass = document.getElementById('adminPass').value;
             
-            // Hardcoded central master credentials verification array bypass
             if(user === 'bhavishya' && pass === 'pfhadmin2026') { 
                 sessionStorage.setItem('adminToken', 'secure_active_session');
                 localStorage.setItem('admin_username', user);
@@ -463,7 +462,7 @@
                 [...orders].reverse().forEach((order) => {
                     const card = document.createElement('div');
                     card.className = 'order-card';
-                    let currentStatus = localStorage.getItem(`status_${order.orderId}`) || (order.status.includes('Paid') ? 'Printing' : 'Pending');
+                    let currentStatus = order.status;
                     let selectStatusClass = "pending";
                     if(currentStatus === 'Printing') selectStatusClass = "printing";
                     if(currentStatus === 'Out for Delivery') selectStatusClass = "delivery";
@@ -483,7 +482,7 @@
                             <span>📅 ${order.date || 'N/A'}</span>
                             <div>
                                 <select class="status-select ${selectStatusClass}" onchange="updateDeliveryStatus('${order.orderId}', this)">
-                                    <option value="Pending" ${currentStatus === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
+                                    <option value="Paid / Ready for Print" ${currentStatus === 'Paid / Ready for Print' ? 'selected' : ''}>⏳ Pending</option>
                                     <option value="Printing" ${currentStatus === 'Printing' ? 'selected' : ''}>🖨️ Printing</option>
                                     <option value="Out for Delivery" ${currentStatus === 'Out for Delivery' ? 'selected' : ''}>🛵 Out for Delivery</option>
                                     <option value="Delivered" ${currentStatus === 'Delivered' ? 'selected' : ''}>✅ Delivered</option>
@@ -514,15 +513,31 @@
             } catch(err) { console.error(err); }
         }
 
-        function updateDeliveryStatus(orderId, selectElement) {
+        // 🔥 RE-ENGINEERED: PUSH DROPDOWN STATE LIVE TO CENTRAL DATABASE CORES
+        async function updateDeliveryStatus(orderId, selectElement) {
             const selectedValue = selectElement.value;
-            localStorage.setItem(`status_${orderId}`, selectedValue);
+            
             selectElement.className = "status-select";
-            if(selectedValue === 'Pending') selectElement.classList.add('pending');
+            if(selectedValue === 'Paid / Ready for Print') selectElement.classList.add('pending');
             if(selectedValue === 'Printing') selectElement.classList.add('printing');
             if(selectedValue === 'Out for Delivery') selectElement.classList.add('delivery');
             if(selectedValue === 'Delivered') selectElement.classList.add('delivered');
-            rebuildGraphDataEngine();
+
+            try {
+                const response = await fetch(`${cloudApiBaseUrl}/api/admin/orders/update-status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: orderId, status: selectedValue })
+                });
+                const result = await response.json();
+                if(!result.success) {
+                    alert("⚠️ Tracking sync delayed on cloud infrastructure parameters.");
+                }
+                rebuildGraphDataEngine(); 
+            } catch(err) {
+                console.error(err);
+                alert("❌ Failed to broadcast tracking updates to live backend servers.");
+            }
         }
 
         function updateAdminCredentials() {

@@ -498,6 +498,45 @@
             if (typeof originalInlineUploadTrigger === 'function') originalInlineUploadTrigger();
         };
 
+        // 🔥 DYNAMIC BLINKIT-STYLE REAL-TIME USER TRACKING TIMELINE MODULE
+        function executeLiveTimelineStateStepper(activeStatus) {
+            const nodesIdsList = ['step_pending', 'step_paid', 'step_printing', 'step_delivery'];
+            nodesIdsList.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.className = "timeline-step"; 
+            });
+
+            if (activeStatus === 'Pending Payment' || activeStatus === 'Pending') {
+                setStepStatusMarkup('step_pending', 'active');
+            } 
+            else if (activeStatus === 'Paid / Ready for Print' || activeStatus === 'Paid') {
+                setStepStatusMarkup('step_pending', 'completed');
+                setStepStatusMarkup('step_paid', 'active');
+            } 
+            else if (activeStatus === 'Printing') {
+                setStepStatusMarkup('step_pending', 'completed');
+                setStepStatusMarkup('step_paid', 'completed');
+                setStepStatusMarkup('step_printing', 'active');
+            } 
+            else if (activeStatus === 'Out for Delivery' || activeStatus === 'Delivered') {
+                setStepStatusMarkup('step_pending', 'completed');
+                setStepStatusMarkup('step_paid', 'completed');
+                setStepStatusMarkup('step_printing', 'completed');
+                setStepStatusMarkup('step_delivery', 'active');
+                
+                if(activeStatus === 'Delivered') {
+                    setStepStatusMarkup('step_delivery', 'completed');
+                    const targetBadgeText = document.querySelector('#step_delivery .step-main-label');
+                    if(targetBadgeText) targetBadgeText.textContent = "✅ Order Delivered Successfully!";
+                }
+            }
+        }
+
+        function setStepStatusMarkup(elementId, stateModeClass) {
+            const el = document.getElementById(elementId);
+            if(el) el.classList.add(stateModeClass);
+        }
+
         function toggleUserDrawer(open) {
             document.getElementById('userSideDrawer').classList.toggle('active', open);
             document.getElementById('drawerOverlay').classList.toggle('active', open);
@@ -538,6 +577,17 @@
                     mainLayoutWrapper.style.gridTemplateColumns = '1fr';
                 } else {
                     if(typeof window.refreshInvoiceTabState === 'function') { window.refreshInvoiceTabState(); }
+                }
+                
+                // Trigger timeline sync immediately if entering the order tracking viewport
+                if(targetId === 'order_tracking') {
+                    const currentActiveTrackingId = document.getElementById('trackOrderIdLabel')?.textContent?.replace('ID: ', '')?.trim();
+                    if(currentActiveTrackingId && Array.isArray(window.globalRawOrdersCache || globalRawOrdersCache)) {
+                        const currentLiveMatchOrderNode = globalRawOrdersCache.find(o => o.orderId === currentActiveTrackingId);
+                        if(currentLiveMatchOrderNode) {
+                            executeLiveTimelineStateStepper(currentLiveMatchOrderNode.status);
+                        }
+                    }
                 }
                 toggleUserDrawer(false);
             } else {

@@ -262,14 +262,20 @@ app.get('/api/admin/financials', (req, res) => {
 
 app.get('/api/admin/orders', (req, res) => { res.json(orders); });
 
+// 🔥 FULLY LIVE TRACKING SYSTEM: UPDATE ORDER STATUS IN CENTRAL ARRAY
 app.post('/api/admin/orders/update-status', (req, res) => {
     const { orderId, status } = req.body;
+    if (!orderId || !status) {
+        return res.status(400).json({ success: false, message: "Missing tracking parameters!" });
+    }
+
     const order = orders.find(o => o.orderId === orderId);
     if (order) {
-        order.status = status;
-        return res.json({ success: true, message: "Status updated!" });
+        order.status = status; // Central data parameter updated live
+        console.log(`🛵 Order ${orderId} Status Synced Live To: ${status}`);
+        return res.json({ success: true, message: `Tracking infrastructure updated to ${status}` });
     }
-    res.status(404).json({ success: false, message: "Order not found" });
+    res.status(404).json({ success: false, message: "Order data missing inside central cores." });
 });
 
 app.get('/download/:filename', (req, res) => {
