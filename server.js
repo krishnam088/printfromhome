@@ -21,6 +21,9 @@ const USERS_FILE = path.join(__dirname, 'users.json');
 let orders = [];
 global.autoPrintModeEnabled = false;
 
+// 🔥 GLOBAL RAM CACHE FOR INSTANT CROSS-DEVICE VALIDATION
+let globalUsersDatabaseArray = [];
+
 // Initialize permanent users file if absent
 if (!fs.existsSync(USERS_FILE)) {
     fs.writeFileSync(USERS_FILE, JSON.stringify([]));
@@ -69,7 +72,7 @@ app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); }
 app.get('/admin-panel', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
 
 // ====================================================================
-// 🔥 UNLIMITED AUTH API SYSTEMS (SIGN UP & LOGIN)
+// 🔥 UNLIMITED AUTH API SYSTEMS (SIGN UP & LOGIN - DEVICE SYNC FIXED)
 // ====================================================================
 
 // 1. CREATE ACCOUNT (SIGN UP) ENDPOINT
@@ -80,27 +83,32 @@ app.post('/api/auth/signup', (req, res) => {
             return res.status(400).json({ success: false, message: "Sabhi fields bharna zaroori hai!" });
         }
 
-        const users = readUsersFromDatabase();
+        const usersFromFile = readUsersFromDatabase();
+        // Merge file system storage and active server session RAM array
+        const combinedUsers = [...usersFromFile, ...globalUsersDatabaseArray];
         
-        // Check if user already exists
-        const userExists = users.some(u => u.identity.toLowerCase() === identity.toLowerCase());
+        // Check duplication safely across all indices
+        const userExists = combinedUsers.some(u => u.identity.toLowerCase() === identity.toLowerCase().trim());
         if (userExists) {
             return res.status(400).json({ success: false, message: "Yeh Gmail/Phone pehle se registered hai bhai!" });
         }
 
-        // Add new user object
         const newUser = {
             name: name.trim(),
-            identity: identity.trim(),
+            identity: identity.toLowerCase().trim(),
             password: password,
             dateCreated: new Date().toLocaleString()
         };
 
-        users.push(newUser);
-        saveUsersToDatabase(users);
+        // Push to both active RAM arrays and static files database
+        globalUsersDatabaseArray.push(newUser);
+        
+        const freshFileUsers = readUsersFromDatabase();
+        freshFileUsers.push(newUser);
+        saveUsersToDatabase(freshFileUsers);
 
-        console.log(`👤 New User Registered: ${newUser.name} (${newUser.identity})`);
-        res.status(201).json({ success: true, message: "Account created successfully!", userId: newUser.identity });
+        console.log(`👤 New User Registered Successfully: ${newUser.name} (${newUser.identity})`);
+        res.status(201).json({ success: true, message: "Account created successfully!", userId: newUser.identity, name: newUser.name });
 
     } catch (err) {
         console.error("Signup error:", err);
@@ -112,15 +120,21 @@ app.post('/api/auth/signup', (req, res) => {
 app.post('/api/auth/login', (req, res) => {
     try {
         const { identity, password } = req.body;
-        const users = readUsersFromDatabase();
+        if (!identity || !password) {
+            return res.status(400).json({ success: false, message: "Identity aur password zaroori hain!" });
+        }
 
-        const user = users.find(u => u.identity.toLowerCase() === identity.toLowerCase() && u.password === password);
+        const usersFromFile = readUsersFromDatabase();
+        // Combine active storage footprints to authorize cross-device networks
+        const combinedUsers = [...usersFromFile, ...globalUsersDatabaseArray];
+
+        const user = combinedUsers.find(u => u.identity.toLowerCase() === identity.toLowerCase().trim() && u.password === password);
         
         if (!user) {
             return res.status(401).json({ success: false, message: "Galat Credentials! Sahi password daalo bhai." });
         }
 
-        console.log(`🔓 User Logged In successfully: ${user.name}`);
+        console.log(`🔓 Cross-Device Login Approved: ${user.name}`);
         res.json({ success: true, message: "Login successful!", name: user.name, identity: user.identity });
 
     } catch (err) {
@@ -174,31 +188,4 @@ app.post('/api/verify-payment', async (req, res) => {
         if (order) {
             order.status = 'Paid / Ready for Print';
             order.paymentId = paymentId; 
-            return res.json({ success: true, message: "Payment verified successfully!" });
-        }
-        res.status(404).json({ success: false, message: "Order not found" });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
-
-app.get('/api/admin/orders', (req, res) => { res.json(orders); });
-
-app.post('/api/admin/orders/update-status', (req, res) => {
-    const { orderId, status } = req.body;
-    const order = orders.find(o => o.orderId === orderId);
-    if (order) {
-        order.status = status;
-        return res.json({ success: true, message: "Status updated!" });
-    }
-    res.status(404).json({ success: false, message: "Order not found" });
-});
-
-app.get('/download/:filename', (req, res) => {
-    const filePath = path.join(uploadsDir, req.params.filename);
-    if (fs.existsSync(filePath)) { res.download(filePath); } else { res.status(404).send('File missing'); }
-});
-
-app.listen(PORT, () => {
-    console.log(`Blinkit Printing Server running perfectly on port ${PORT}`);
-});
+            return res.
