@@ -19,9 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const multiFilesContainer = document.getElementById('multiFilesContainer');
     const ordersHistoryContainer = document.getElementById('ordersHistoryContainer');
 
-    let isSignupMode = false;
     let masterFilesArray = []; 
     let isFirstTimeUser = true; 
+
+    // 🔥 LIVE RE-ROUTE CONFIGS
+    const LIVE_SERVER_URL = "https://printfromhome.onrender.com";
 
     function synchronizeWalletInterfaceBalance() {
         const sessionActiveUser = localStorage.getItem('printAppUser');
@@ -91,8 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (splashScreen) splashScreen.classList.add('hidden');
         const sessionActiveUser = localStorage.getItem('printAppUser');
         if (sessionActiveUser) {
-            const userData = JSON.parse(localStorage.getItem(`user_${sessionActiveUser}`));
-            if(userGreeting) userGreeting.innerHTML = userData ? `HI, <span style="color:#000000; font-weight:800;">${userData.name}</span>` : `GUEST MODE`;
+            if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${sessionActiveUser}</span>`;
             if(mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
             loadSavedFilesFromSession();
             renderOrderHistoryUI(sessionActiveUser);
@@ -103,6 +104,89 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
     }, 2500);
 
+    // ====================================================================
+    // 🔥 LIVE ROUTE CONTROLLER FOR UNLIMITED USERS (SIGN UP & LOGIN)
+    // ====================================================================
+    if (authForm) {
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const isSignUpModeActive = !signupOnlyFields[0].classList.contains('hidden');
+            const targetApiUrl = isSignUpModeActive ? '/api/auth/signup' : '/api/auth/login';
+
+            const payloadData = {
+                identity: authIdentity.value.trim(),
+                password: authPassword.value
+            };
+
+            if (isSignUpModeActive) {
+                payloadData.name = authName.value.trim();
+            }
+
+            try {
+                authBtn.innerText = "Processing... Please Wait";
+                authBtn.disabled = true;
+
+                const response = await fetch(`${LIVE_SERVER_URL}${targetApiUrl}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payloadData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const activeUserName = data.name || authIdentity.value.trim();
+                    localStorage.setItem('printAppUser', activeUserName);
+                    
+                    if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${activeUserName}</span>`;
+                    
+                    if (authScreen) authScreen.classList.add('app-hidden');
+                    if (mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
+                    
+                    renderOrderHistoryUI(activeUserName);
+                    synchronizeWalletInterfaceBalance();
+                } else {
+                    alert(`⚠️ Oye Bhai: ${data.message}`);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("❌ Connection Breakdown! Backend up nahi hai shayad.");
+            } finally {
+                authBtn.innerText = isSignUpModeActive ? "Log In" : "Register & Sign Up";
+                authBtn.disabled = false;
+            }
+        });
+    }
+
+    if (toggleAuthLink) {
+        toggleAuthLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const isLoginViewNow = signupOnlyFields[0].classList.contains('hidden');
+            if (isLoginViewNow) {
+                signupOnlyFields.forEach(el => el.classList.remove('hidden'));
+                authTitle.textContent = "Create Account";
+                authBtn.textContent = "Register & Sign Up";
+                toggleAuthLink.textContent = "Log In Here";
+            } else {
+                signupOnlyFields.forEach(el => el.classList.add('hidden'));
+                authTitle.textContent = "Welcome Back!";
+                authBtn.textContent = "Log In";
+                toggleAuthLink.textContent = "Create Account";
+            }
+        });
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('printAppUser');
+            window.location.reload();
+        });
+    }
+
+    // ====================================================================
+    // 📁 MULTI-FILE MANIFEST ENGINE & SELECTION CORES
+    // ====================================================================
     if(fileUpload) {
         fileUpload.addEventListener('change', () => {
             if (fileUpload.files.length === 0) return;
@@ -166,12 +250,12 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             multiFilesContainer.appendChild(fileRow);
 
-            document.getElementById(`optColor_${index}`).addEventListener('click', () => { item.config.printType = 'color'; renderFilesUI(); });
-            document.getElementById(`optBw_${index}`).addEventListener('click', () => { item.config.printType = 'bw'; renderFilesUI(); });
-            document.getElementById(`optPort_${index}`).addEventListener('click', () => { item.config.orientation = 'portrait'; renderFilesUI(); });
-            document.getElementById(`optLand_${index}`).addEventListener('click', () => { item.config.orientation = 'landscape'; renderFilesUI(); });
-            document.getElementById(`plusCopy_${index}`).addEventListener('click', () => { item.config.copies++; saveCurrentFilesToSession(); calculateTotal(); });
-            document.getElementById(`minusCopy_${index}`).addEventListener('click', () => { if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); calculateTotal(); } });
+            document.getElementById(`optColor_${index}`).addEventListener('click', () => { item.config.printType = 'color'; saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`optBw_${index}`).addEventListener('click', () => { item.config.printType = 'bw'; saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`optPort_${index}`).addEventListener('click', () => { item.config.orientation = 'portrait'; saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`optLand_${index}`).addEventListener('click', () => { item.config.orientation = 'landscape'; saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`plusCopy_${index}`).addEventListener('click', () => { item.config.copies++; saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`minusCopy_${index}`).addEventListener('click', () => { if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); renderFilesUI(); } });
             document.getElementById(`removeFile_${index}`).addEventListener('click', () => { masterFilesArray.splice(index, 1); saveCurrentFilesToSession(); renderFilesUI(); });
             document.getElementById(`pages_${index}`).addEventListener('input', (e) => { item.config.pages = parseInt(e.target.value) || 1; saveCurrentFilesToSession(); calculateTotal(); });
             document.getElementById(`binding_${index}`).addEventListener('change', (e) => { item.config.binding = e.target.value; saveCurrentFilesToSession(); calculateTotal(); });
@@ -200,20 +284,17 @@ document.addEventListener('DOMContentLoaded', () => {
         summaryTotal.textContent = `₹${(finalDocumentCost + accurateDeliveryCharge).toFixed(2)}`;
     }
 
-    // 🔥 HIGH INTELLIGENCE TIMELINE DEEP REDIRECT LOGIC MAPPING
     window.openOrderDeepTrackingWorkspacePage = function(orderStringPayload) {
         const order = JSON.parse(decodeURIComponent(orderStringPayload));
         
         if(typeof navigateDrawerSection === 'function') {
-            navigateDrawerSection('order_tracking'); // Divert screen to isolated tracking panel
+            navigateDrawerSection('order_tracking'); 
         }
 
-        // Fill semantic static properties records
         document.getElementById('trackOrderIdLabel').textContent = `ID Reference: ${order.orderId || 'PFH-' + Date.now()}`;
         document.getElementById('trackGrandTotalBadge').textContent = `₹${order.amount}`;
         document.getElementById('trackShippingAddressLabel').textContent = order.address || 'N/A';
 
-        // Load document rows metadata breakdown checklist
         const listContainer = document.getElementById('trackFilesManifestList');
         listContainer.innerHTML = '';
         if(order.details) {
@@ -225,22 +306,18 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 🔥 CRITICAL RULE: CHECK TIMELINE LIVE VISIBILITY BY STATUS
         const timelineWrapper = document.getElementById('liveTrackingTimelineContainer');
         const normalizeStatus = order.status ? order.status.toLowerCase() : 'pending';
 
         if(normalizeStatus.includes('delivered')) {
-            // Hide the tracking lines parameters completely if delivered
             if(timelineWrapper) timelineWrapper.style.display = 'none';
         } else {
             if(timelineWrapper) timelineWrapper.style.display = 'block';
             
-            // Flush old completed/active timeline steps layout configurations
             document.querySelectorAll('.timeline-step').forEach(step => {
                 step.classList.remove('completed', 'active');
             });
 
-            // Set cascade parameters based on cloud memory array logs pointer indices
             const stepPending = document.getElementById('step_pending');
             const stepPaid = document.getElementById('step_paid');
             const stepPrinting = document.getElementById('step_printing');
@@ -277,7 +354,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'history-card-item';
             
-            // Encode row elements payload to enable safe native link redirections strings clicks
             const stringifiedPayload = encodeURIComponent(JSON.stringify(order));
             itemDiv.setAttribute('onclick', `openOrderDeepTrackingWorkspacePage('${stringifiedPayload}')`);
 
@@ -306,7 +382,16 @@ document.addEventListener('DOMContentLoaded', () => {
             masterFilesArray.forEach((item) => { if(item.fileData) formData.append('document', item.fileData); });
 
             const finalMetaConfig = masterFilesArray.map((item) => {
-                return { fileName: item.name, pages: item.config.pages, printType: item.config.printType, sides: item.config.orientation === 'portrait' ? 'single' : 'landscape', binding: item.config.binding, copies: item.config.copies };
+                return { 
+                    fileName: item.name, 
+                    pages: item.config.pages, 
+                    printType: item.config.printType, 
+                    sides: item.config.orientation === 'portrait' ? 'single' : 'landscape', 
+                    binding: item.config.binding, 
+                    copies: item.config.copies,
+                    orientation: item.config.orientation, // 🔥 ADDED SECURELY FOR COPIES DRIFT MATRIX
+                    colorMode: item.config.printType       // 🔥 SYNC WITH AGENT KEYWORD LOOKUPS
+                };
             });
 
             formData.append('totalAmount', totalAmountText);
@@ -343,7 +428,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             isFirstTimeUser = false; sessionStorage.removeItem('savedPrintFiles'); printForm.reset(); multiFilesContainer.innerHTML = ''; masterFilesArray = [];
                             renderOrderHistoryUI(activeUserToken); calculateTotal();
                             
-                            // Instantly fire dynamic open tracking redirect page routing logs parameters
                             openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
                         }
                     }, "theme": { "color": "#F4C430" }
