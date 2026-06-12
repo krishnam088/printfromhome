@@ -147,6 +147,13 @@
         .auth-toggle-text { font-size: 0.8rem; font-weight: 600; color: var(--text-sub); margin-top: 15px; }
         .auth-toggle-text a { color: var(--blinkit-green); text-decoration: none; font-weight: 700; }
         .app-hidden { display: none !important; }
+
+        /* 🚨 ATTRACIVE BOUNCE ANIMATION FOR STORE CLOSED POPUP */
+        @keyframes popupBounceAnimation {
+            0% { transform: scale(0.7); opacity: 0; }
+            80% { transform: scale(1.05); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -393,6 +400,22 @@
         </div>
     </div>
 
+    <div id="storeClosedPopupModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 999999; display: none; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #ffffff; border-radius: 24px; padding: 30px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 3px solid #ef4444; intent: animation; animation: popupBounceAnimation 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <div style="font-size: 3.5rem; margin-bottom: 10px;">🏪🚨</div>
+            <h3 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 8px; letter-spacing: -0.5px;">Store is Currently Closed</h3>
+            <p style="font-size: 0.88rem; color: #64748b; line-height: 1.6; margin-bottom: 20px; font-weight: 500;">
+                We are currently not accepting any print jobs at the moment. Please visit us back when the store infrastructure is back online!
+            </p>
+            <div style="background: #fff5f5; border: 1px dashed #fca5a5; padding: 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; color: #b91c1c; margin-bottom: 20px;">
+                ⏰ Standard Timings: 07:00 AM - 12:00 AM
+            </div>
+            <button type="button" onclick="closeStoreClosedPopup()" style="width: 100%; padding: 12px; background: #0f172a; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.2s;">
+                Understood, Got It!
+            </button>
+        </div>
+    </div>
+
     <script>
         // 🔥 REAL-TIME CLOUD STORE STATUS GUARD (SYNCED WITH ADMIN PARAMETERS)
         async function runSilentIntradaySchedulerGuard() {
@@ -403,12 +426,10 @@
             if (!badge || !btn) return;
 
             try {
-                // Get the exact location base origin dynamically
                 const cloudApiUrl = window.location.origin;
                 const response = await fetch(`${cloudApiUrl}/api/store-status`);
                 const data = await response.json();
                 
-                // 1. Check if Admin manually flipped switch to CLOSED
                 if (data.success && data.isOpen === false) {
                     badge.textContent = "CLOSED 🔴"; 
                     badge.className = "shop-status-text-badge closed";
@@ -420,7 +441,6 @@
                     return;
                 }
 
-                // 2. If open in admin settings, double check the automated night scheduler parameters
                 const now = new Date();
                 const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
                 let isTimeOpen = (hoursIST >= 7 && hoursIST < 24);
@@ -431,7 +451,6 @@
                     btn.disabled = false; 
                     btn.style.opacity = "1"; 
                     btn.style.cursor = "pointer";
-                    // Only restore default message if button wasn't customized by another active module
                     if(btn.textContent.includes('Store Closed')) {
                         btn.textContent = "Proceed to Payment";
                     }
@@ -451,9 +470,33 @@
             }
         }
         
-        // Fast background pooling cycle hook (4 seconds pool execution rate)
         setInterval(runSilentIntradaySchedulerGuard, 4000);
         window.addEventListener('DOMContentLoaded', runSilentIntradaySchedulerGuard);
+
+        // 🔥 POPUP MODAL TOGGLE LOGIC
+        function closeStoreClosedPopup() {
+            document.getElementById('storeClosedPopupModal').style.display = 'none';
+        }
+
+        // 🔥 ATTACH INTERCEPTORS TO SECURITY GUARDS
+        document.getElementById('fileUpload').addEventListener('click', function(e) {
+            const badge = document.getElementById('userShopStatus');
+            if (badge && badge.textContent.includes('CLOSED')) {
+                e.preventDefault(); 
+                document.getElementById('storeClosedPopupModal').style.display = 'flex';
+                return false;
+            }
+        });
+
+        const originalInlineUploadTrigger = window.triggerInlineFileUploadClick;
+        window.triggerInlineFileUploadClick = function() {
+            const badge = document.getElementById('userShopStatus');
+            if (badge && badge.textContent.includes('CLOSED')) {
+                document.getElementById('storeClosedPopupModal').style.display = 'flex';
+                return;
+            }
+            if (typeof originalInlineUploadTrigger === 'function') originalInlineUploadTrigger();
+        };
 
         function toggleUserDrawer(open) {
             document.getElementById('userSideDrawer').classList.toggle('active', open);
@@ -476,7 +519,6 @@
             if(show) { modal.style.display = 'flex'; } else { if(event.target === modal) modal.style.display = 'none'; }
         }
         function setWalletQuickAmount(amt) { document.getElementById('walletCustomAmountInput').value = amt; }
-        window.triggerInlineFileUploadClick = function() { const upBtn = document.getElementById('fileUpload'); if(upBtn) upBtn.click(); }
 
         function navigateDrawerSection(targetId) {
             document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
