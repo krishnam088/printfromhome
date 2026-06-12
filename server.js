@@ -4,7 +4,7 @@ const path = require('path');
 const Razorpay = require('razorpay');
 const cors = require('cors'); 
 const fs = require('fs');
-const pt = require('pdf-to-printer'); 
+//const pt = require('pdf-to-printer'); 
 require('dotenv').config();
 
 const app = express();
