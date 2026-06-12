@@ -58,7 +58,7 @@
         .filter-btn.active { background: var(--blinkit-green); color: white; }
 
         .order-card { background: var(--bg-primary); border-radius: 14px; padding: 18px; margin-bottom: 15px; border: 1px solid var(--border-color); }
-        .order-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 12px; }
+        .order-card-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 12px; }
         
         .status-select { padding: 6px 12px; border-radius: 8px; border: 2px solid var(--border-color); font-size: 0.8rem; font-weight: 700; outline: none; background: white; }
         .status-select.pending { color: #d97706; border-color: #fef3c7; background: #fffbeb; }
@@ -207,28 +207,31 @@
         // 🔥 GLOBAL HOST PARSER
         const cloudApiBaseUrl = window.location.origin;
 
-        if(!localStorage.getItem('admin_username')) {
-            localStorage.setItem('admin_username', 'bhavishya');
-            localStorage.setItem('admin_password', 'pfhadmin2026');
-        }
-
+        // 🔥 CHECK ACTIVE SESSION SECURITY FOOTPRINT
         if(sessionStorage.getItem('adminToken') === 'secure_active_session') {
             showDashboard();
         }
 
+        // 🔥 MASTER CROSS-DEVICE SYNCHRONIZED LOGIC GATEWAY
         function verifyAdminLogin() {
             const user = document.getElementById('adminUser').value.trim();
             const pass = document.getElementById('adminPass').value;
-            if(user === localStorage.getItem('admin_username') && pass === localStorage.getItem('admin_password')) { 
+            
+            // Hardcoded central master credentials verification array bypass
+            if(user === 'bhavishya' && pass === 'pfhadmin2026') { 
                 sessionStorage.setItem('adminToken', 'secure_active_session');
+                localStorage.setItem('admin_username', user);
+                localStorage.setItem('admin_password', pass);
                 showDashboard();
-            } else { alert("❌ Unauthorized Access! Galat credentials hain."); }
+            } else { 
+                alert("❌ Unauthorized Access! Sahi credentials daalo bhai."); 
+            }
         }
 
         function showDashboard() {
             document.getElementById('adminLoginBox').classList.add('hidden');
             document.getElementById('adminDashboard').style.display = 'block';
-            document.getElementById('settingsAdminUser').value = localStorage.getItem('admin_username');
+            document.getElementById('settingsAdminUser').value = 'bhavishya';
             
             initAnalyticsGraph();
             loadLiveOrders();
@@ -243,7 +246,6 @@
             }, 8000);
         }
 
-        // 🔥 SYNC INITIAL OPERATIONAL STATE ON UI MOUNT
         async function checkCurrentStoreStatus() {
             try {
                 const response = await fetch(`${cloudApiBaseUrl}/api/store-status`);
@@ -255,7 +257,6 @@
             }
         }
 
-        // 🔥 DYNAMIC BULLETPROOF TOGGLE CLIENT INTERFACE
         async function toggleLiveStoreInfrastructureState() {
             const btn = document.getElementById('storeMasterToggleBtn');
             if(!btn) return;
