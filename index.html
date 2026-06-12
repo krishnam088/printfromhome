@@ -498,7 +498,7 @@
             if (typeof originalInlineUploadTrigger === 'function') originalInlineUploadTrigger();
         };
 
-        // 🔥 DYNAMIC BLINKIT-STYLE REAL-TIME USER TRACKING TIMELINE MODULE (STRICT LAYER OVERRIDE)
+        // 🔥 STRICT STEP STATE ENGINE MATRIX
         function executeLiveTimelineStateStepper(activeStatus) {
             const nodesIdsList = ['step_pending', 'step_paid', 'step_printing', 'step_delivery'];
             nodesIdsList.forEach(id => {
@@ -509,26 +509,28 @@
             const deliveryLabel = document.querySelector('#step_delivery .step-main-label');
             if(deliveryLabel) deliveryLabel.textContent = "Out For Delivery";
 
-            // State Machine Logic Routing Map Safely 🏁
-            if (activeStatus === 'Pending Payment' || activeStatus === 'Pending') {
+            // Trim matching spaces for ultimate reliability check
+            const currentCleanStatus = activeStatus ? activeStatus.trim() : "";
+
+            if (currentCleanStatus === 'Pending Payment' || currentCleanStatus === 'Pending') {
                 setStepStatusMarkup('step_pending', 'active');
             } 
-            else if (activeStatus === 'Paid / Ready for Print' || activeStatus === 'Paid') {
+            else if (currentCleanStatus === 'Paid / Ready for Print' || currentCleanStatus === 'Paid') {
                 setStepStatusMarkup('step_pending', 'completed');
                 setStepStatusMarkup('step_paid', 'active');
             } 
-            else if (activeStatus === 'Printing') {
+            else if (currentCleanStatus === 'Printing') {
                 setStepStatusMarkup('step_pending', 'completed');
                 setStepStatusMarkup('step_paid', 'completed');
                 setStepStatusMarkup('step_printing', 'active');
             } 
-            else if (activeStatus === 'Out for Delivery') {
+            else if (currentCleanStatus === 'Out for Delivery') {
                 setStepStatusMarkup('step_pending', 'completed');
                 setStepStatusMarkup('step_paid', 'completed');
                 setStepStatusMarkup('step_printing', 'completed');
                 setStepStatusMarkup('step_delivery', 'active');
             }
-            else if (activeStatus === 'Delivered') {
+            else if (currentCleanStatus === 'Delivered') {
                 setStepStatusMarkup('step_pending', 'completed');
                 setStepStatusMarkup('step_paid', 'completed');
                 setStepStatusMarkup('step_printing', 'completed');
@@ -542,7 +544,7 @@
             if(el) el.classList.add(stateModeClass);
         }
 
-        // 🔥 STANDALONE CORES POOL: BACKGROUND AUTOMATIC SYNC LOOPER REFRESH RATE HOOK
+        // 🔥 BULLETPROOF INDEPENDENT LIVE SYNC: Pulls data fresh from cloud database array
         setInterval(async () => {
             const trackingPanel = document.getElementById('user_section_order_tracking');
             if (trackingPanel && trackingPanel.classList.contains('active')) {
