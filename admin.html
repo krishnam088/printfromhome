@@ -201,8 +201,11 @@
 
     <script>
         let businessChartInstance = null;
-        let activeGraphDatasetMode = 'revenue'; // Default viewing layer metric
-        let globalRawOrdersCache = []; // Live background synchronized array store
+        let activeGraphDatasetMode = 'revenue'; 
+        let globalRawOrdersCache = []; 
+        
+        // 🔥 GLOBAL HOST PARSER
+        const cloudApiBaseUrl = window.location.origin;
 
         if(!localStorage.getItem('admin_username')) {
             localStorage.setItem('admin_username', 'bhavishya');
@@ -230,9 +233,8 @@
             initAnalyticsGraph();
             loadLiveOrders();
             loadFinancialMetrics();
-            checkCurrentStoreStatus(); // Sync store ON/OFF button on startup
+            checkCurrentStoreStatus(); 
             
-            // Fast background synchronization interval hook (8 seconds pool)
             setInterval(() => {
                 if(sessionStorage.getItem('adminToken') === 'secure_active_session') {
                     loadLiveOrders();
@@ -241,10 +243,11 @@
             }, 8000);
         }
 
-        // 🔥 FETCH AND SYNC CONTROLLER SWITCH SYSTEM FROM SERVER MATRIX
+        // 🔥 SYNC INITIAL OPERATIONAL STATE ON UI MOUNT
         async function checkCurrentStoreStatus() {
             try {
-                const response = await fetch('/api/store-status');
+                const response = await fetch(`${cloudApiBaseUrl}/api/store-status`);
+                if(!response.ok) throw new Error("Fetch failed");
                 const data = await response.json();
                 updateStoreButtonUI(data.isOpen);
             } catch (err) {
@@ -252,26 +255,36 @@
             }
         }
 
-        // 🔥 TOGGLE INFRASTRUCTURE STATE REMOTE TRIGGER INTERFACE
+        // 🔥 DYNAMIC BULLETPROOF TOGGLE CLIENT INTERFACE
         async function toggleLiveStoreInfrastructureState() {
             const btn = document.getElementById('storeMasterToggleBtn');
+            if(!btn) return;
+
             const isCurrentlyOpen = btn.classList.contains('open');
             const targetNextState = !isCurrentlyOpen;
 
+            btn.disabled = true;
+            btn.textContent = "WAITING... ⏳";
+
             try {
-                const response = await fetch('/api/store-status/toggle', {
+                const response = await fetch(`${cloudApiBaseUrl}/api/store-status/toggle`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ isOpen: targetNextState })
                 });
+                
+                if(!response.ok) throw new Error("Network response code error");
                 const data = await response.json();
                 updateStoreButtonUI(data.isOpen);
             } catch (err) {
-                alert("❌ Server status update fail ho gaya bhai!");
+                console.error(err);
+                alert("❌ Server status update fail ho gaya bhai! Network pipeline refresh karo.");
+                updateStoreButtonUI(isCurrentlyOpen);
+            } finally {
+                btn.disabled = false;
             }
         }
 
-        // 🔥 UPDATES INTERFACE RECOGNITION BADGE GRAPHICS SLOTS
         function updateStoreButtonUI(isOpen) {
             const btn = document.getElementById('storeMasterToggleBtn');
             if(!btn) return;
@@ -311,12 +324,11 @@
             if(sectionId === 'help') headingDisplay.textContent = "Help & System Support";
             
             if(sectionId === 'analytics') {
-                setTimeout(() => { rebuildGraphDataEngine(); }, 50); // Refresh visual scaling boundaries securely
+                setTimeout(() => { rebuildGraphDataEngine(); }, 50); 
             }
             toggleSideDrawer(false);
         }
 
-        // Dynamic switches visual layers mode inside graph chart live
         function switchGraphMode(mode) {
             activeGraphDatasetMode = mode;
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -324,7 +336,6 @@
             rebuildGraphDataEngine();
         }
 
-        // Live graph timeline parsing engine logic
         function rebuildGraphDataEngine() {
             if(!businessChartInstance || globalRawOrdersCache.length === 0) return;
 
@@ -414,8 +425,8 @@
 
         async function loadFinancialMetrics() {
             try {
-                const res = await fetch('/api/admin/financials');
-                if(!res.ok) return; // Silent guard if route layout is not present
+                const res = await fetch(`${cloudApiBaseUrl}/api/admin/financials`);
+                if(!res.ok) return; 
                 const data = await res.json();
                 
                 document.getElementById('statTotalOrders').textContent = data.totalOrders;
@@ -436,7 +447,7 @@
 
         async function loadLiveOrders() {
             try {
-                const res = await fetch('/api/admin/orders');
+                const res = await fetch(`${cloudApiBaseUrl}/api/admin/orders`);
                 const orders = await res.json();
                 
                 globalRawOrdersCache = orders;
@@ -527,7 +538,7 @@
             let targetPages = undefined; let targetCopies = 1; let targetSides = 'single';
             if(metaArray && metaArray.length > 0) { targetPages = metaArray[0].pages; targetCopies = metaArray[0].copies; targetSides = metaArray[0].sides; }
             try {
-                const response = await fetch('/api/admin/print-hardware', {
+                const response = await fetch(`${cloudApiBaseUrl}/api/admin/print-hardware`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ fileLocation: fileLocation, options: { copies: targetCopies, pages: targetPages, sides: targetSides } })
