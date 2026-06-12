@@ -125,6 +125,28 @@
         .step-meta-details { text-align: left; }
         .step-main-label { font-size: 0.88rem; color: var(--text-main); font-weight: 700; }
         .step-desc-label { font-size: 0.75rem; color: var(--text-sub); }
+
+        /* Auth Screen Styling Cores */
+        .splash-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--blinkit-yellow); display: flex; justify-content: center; align-items: center; z-index: 99999; transition: opacity 0.5s ease; }
+        .splash-content { text-align: center; }
+        .splash-logo { font-size: 2.5rem; font-weight: 800; color: #000000; }
+        .logo-green { color: var(--blinkit-green); }
+        .splash-tagline { font-size: 1rem; font-weight: 600; color: #1e293b; margin-top: 5px; }
+        
+        .auth-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .auth-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; }
+        .auth-brand { font-size: 1.8rem; font-weight: 800; color: #000000; margin-bottom: 10px; }
+        .brand-green { color: var(--blinkit-green); }
+        .auth-card h2 { font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 20px; }
+        .form-group { text-align: left; margin-bottom: 15px; width: 100%; }
+        .form-group label { font-size: 0.8rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 4px; }
+        .form-group input { width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 0.9rem; font-weight: 600; outline: none; transition: border-color 0.2s; }
+        .form-group input:focus { border-color: var(--blinkit-green); }
+        .btn-auth-submit { width: 100%; padding: 14px; background: var(--blinkit-green); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: opacity 0.2s; }
+        .btn-auth-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .auth-toggle-text { font-size: 0.8rem; font-weight: 600; color: var(--text-sub); margin-top: 15px; }
+        .auth-toggle-text a { color: var(--blinkit-green); text-decoration: none; font-weight: 700; }
+        .app-hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -201,3 +223,262 @@
             </div>
             <button class="btn-admin" style="background:var(--blinkit-green); margin-top:10px;" onclick="executeWalletRazorpayDeposit()">Pay & Add Cash</button>
         </div>
+    </div>
+
+    <div id="splashScreen" class="splash-container">
+        <div class="splash-content">
+            <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
+            <p class="splash-tagline">India's Last Minute Printing App</p>
+        </div>
+    </div>
+
+    <div id="authScreen" class="auth-container app-hidden">
+        <div class="auth-card">
+            <div class="auth-brand">print<span class="brand-green">from</span>home</div>
+            <h2 id="authTitle">Welcome Back!</h2>
+            <form id="authForm">
+                <div class="form-group signup-only hidden">
+                    <label>Full Name</label>
+                    <input type="text" id="authName" placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label>Gmail or Phone Number</label>
+                    <input type="text" id="authIdentity" placeholder="e.g., name@gmail.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="authPassword" placeholder="Minimum 6 characters" required>
+                </div>
+                <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
+            </form>
+            <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
+        </div>
+    </div>
+
+    <div id="mainApp" class="app-hidden">
+        <header class="brand-premium-header">
+            <div class="header-container">
+                <div class="header-meta-row">
+                    <div class="delivery-brand-box">
+                        <div id="userGreeting" class="user-greeting-inline">GUEST MODE</div>
+                        <h2 class="delivery-time-countdown">
+                            <span class="delivery-time-title" style="margin-right:6px;">Prints in</span> 15 mins
+                        </h2>
+                    </div>
+                    <div class="header-profile-cluster">
+                        <div class="status-micro-nav">
+                            <span id="userShopStatus" class="shop-status-text-badge open">OPEN 🟢</span>
+                            <span class="shop-timing-subtext">7AM - 12AM</span>
+                        </div>
+                        <div class="profile-wallet-row">
+                            <div class="wallet-micro-badge" onclick="toggleWalletPopupGrid(true, event)">
+                                <span>💵</span> <span class="wallet-cash-value" id="headerWalletDisplayBalance">₹0.00</span>
+                            </div>
+                            <div class="avatar-circle-trigger" onclick="toggleUserDrawer(true)">👤</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container" id="mainLayoutAppContainer">
+            <div id="user_section_store" class="view-section active">
+                <div id="uploadScreenInitialState" style="width:100%;">
+                    <div class="compact-offers-bar" id="storeOffersTopBanner" style="margin-top:10px;">
+                        <span>📢 <b>Active Offers:</b></span>
+                        <marquee scrollamount="3" style="width: 100%;">
+                            ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!
+                        </marquee>
+                    </div>
+                    <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%;">
+                        🚨 <b>Dukan Abhi Band Hai Bhai!</b> Print From Home accepts orders strictly between 07:00 AM and 11:59 PM.
+                    </div>
+                    <div style="text-align: center; padding: 25px 10px; width:100%;">
+                        <h2 style="font-size: 2.3rem; font-weight:800; color:#1a202c; letter-spacing:-1px;">Print Store</h2>
+                        <p style="font-size: 0.95rem; color:var(--text-sub); font-weight:600; margin-top:2px;">printfromhome ensures secure prints at every stage</p>
+                    </div>
+                    <div class="verbatim-docs-promo-card">
+                        <div class="promo-details-block">
+                            <h3 class="promo-main-title">Documents</h3>
+                            <ul class="promo-bullet-list">
+                                <li class="promo-bullet-item">✦ Price starting at ₹3/page</li>
+                                <li class="promo-bullet-item">✦ Paper quality: 70 GSM</li>
+                                <li class="promo-bullet-item">✦ Dynamic Customization Controls</li>
+                            </ul>
+                            <label class="verbatim-upload-btn" for="fileUpload">Upload Files</label>
+                            <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
+                        </div>
+                        <div class="promo-graphic-mockup">
+                            <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" alt="Stack">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="configurationScreenState" class="hidden" style="width:100%;">
+                    <form id="printForm" enctype="multipart/form-data" style="width:100%;">
+                        <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
+                        
+                        <div class="form-group" style="background: var(--surface); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); width:100%; margin-bottom:20px;">
+                            <label style="font-weight: 700; margin-bottom:8px; display: block; font-size: 0.9rem;">Delivery Address details:</label>
+                            <textarea id="address" name="address" rows="3" placeholder="Enter full address" required></textarea>
+                        </div>
+                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">Proceed to Payment</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="user_section_history" class="view-section">
+                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
+                    <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
+                    <div id="ordersHistoryContainer" style="width:100%;">
+                        <p style="text-align:center; padding:20px; color:var(--text-sub);">No print jobs recorded yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="user_section_order_tracking" class="view-section">
+                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%; text-align:left;">
+                    <button type="button" class="back-to-upload-link" onclick="navigateDrawerSection('history')">&larr; Back to All Orders</button>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-bottom:2px solid var(--border-color); padding-bottom:12px;">
+                        <div>
+                            <h3 style="font-weight:800; font-size:1.2rem;">Order Details Matrix</h3>
+                            <p id="trackOrderIdLabel" style="font-size:0.75rem; color:var(--text-sub); font-weight:600;"></p>
+                        </div>
+                        <div id="trackGrandTotalBadge" style="font-size:1.4rem; font-weight:900; color:var(--blinkit-green);">₹0.00</div>
+                    </div>
+
+                    <div id="liveTrackingTimelineContainer">
+                        <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); margin-top:20px; text-transform:uppercase;">📦 Real-Time Package Journey</h4>
+                        <div class="tracking-timeline-box">
+                            <div class="timeline-step" id="step_pending">
+                                <div class="step-node-dot"></div>
+                                <div class="step-meta-details"><p class="step-main-label">Order Received</p><p class="step-desc-label">Awaiting verification parameters sync</p></div>
+                            </div>
+                            <div class="timeline-step" id="step_paid">
+                                <div class="step-node-dot"></div>
+                                <div class="step-meta-details"><p class="step-main-label">Payment Confirmed</p><p class="step-desc-label">Order routed successfully to hardware arrays</p></div>
+                            </div>
+                            <div class="timeline-step" id="step_printing">
+                                <div class="step-node-dot"></div>
+                                <div class="step-meta-details"><p class="step-main-label">Printing Document</p><p class="step-desc-label">HP Smart Tank laser engines running active logs</p></div>
+                            </div>
+                            <div class="timeline-step" id="step_delivery">
+                                <div class="step-node-dot"></div>
+                                <div class="step-meta-details"><p class="step-main-label">Out For Delivery</p><p class="step-desc-label">Blinkit courier picker arriving at gate drop locations</p></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); margin-top:25px; text-transform:uppercase; border-bottom:1px dashed var(--border-color); padding-bottom:6px;">📄 Printable Items Summary</h4>
+                    <div id="trackFilesManifestList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+                    
+                    <div style="margin-top:20px; background:var(--bg-primary); padding:15px; border-radius:12px; border:1px dashed var(--border-color);">
+                        <p style="font-size:0.8rem; font-weight:700; color:var(--text-main);">📍 Shipping Gate Destination:</p>
+                        <p id="trackShippingAddressLabel" style="font-size:0.8rem; color:var(--text-sub); margin-top:2px; font-weight:500;"></p>
+                    </div>
+                </div>
+            </div>
+
+            <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; background:var(--surface); border:1px solid var(--border-color); padding:20px; border-radius:16px;">
+                <h2>Order Invoice Summary</h2>
+                <div class="summary-card">
+                    <div class="summary-row"><span>Printing Sheet Cost</span><span id="summaryPrint">₹0.00</span></div>
+                    <div class="summary-row"><span>Binding Cost Allocation</span><span id="summaryBinding">₹0.00</span></div>
+                    <div class="summary-row"><span>Delivery Logistics Fee</span><span id="summaryDelivery">₹0.00</span></div>
+                    <hr class="summary-divider">
+                    <div class="summary-row total-row"><h3>Grand Total Amount</h3><h3 id="summaryTotal">₹0.00</h3></div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        function runSilentIntradaySchedulerGuard() {
+            const now = new Date();
+            const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
+            let open = (hoursIST >= 7 && hoursIST < 24);
+            const badge = document.getElementById('userShopStatus');
+            const btn = document.getElementById('submitOrderBtn');
+            if(badge && btn) {
+                if(open) {
+                    badge.textContent = "OPEN 🟢"; badge.className = "shop-status-text-badge open";
+                    btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
+                } else {
+                    badge.textContent = "CLOSED 🔴"; badge.className = "shop-status-text-badge closed";
+                    btn.disabled = true; btn.style.opacity = "0.4"; btn.style.cursor = "not-allowed"; btn.textContent = "❌ Store is Closed";
+                }
+            }
+        }
+        setInterval(runSilentIntradaySchedulerGuard, 5000);
+        window.addEventListener('DOMContentLoaded', runSilentIntradaySchedulerGuard);
+
+        function toggleUserDrawer(open) {
+            document.getElementById('userSideDrawer').classList.toggle('active', open);
+            document.getElementById('drawerOverlay').classList.toggle('active', open);
+            if(open) {
+                const currentSessionUser = localStorage.getItem('printAppUser');
+                if(currentSessionUser) {
+                    const userData = JSON.parse(localStorage.getItem(`user_${currentSessionUser}`));
+                    if(userData) {
+                        document.getElementById('drawerEditName').value = userData.name || '';
+                        document.getElementById('drawerEditPassword').value = userData.password || '';
+                        document.getElementById('drawerEditAlternateMobile').value = userData.altMobile || '';
+                    }
+                }
+            }
+        }
+        function toggleWalletPopupGrid(show, event) {
+            const modal = document.getElementById('walletDepositModal');
+            if(!modal) return;
+            if(show) { modal.style.display = 'flex'; } else { if(event.target === modal) modal.style.display = 'none'; }
+        }
+        function setWalletQuickAmount(amt) { document.getElementById('walletCustomAmountInput').value = amt; }
+        window.triggerInlineFileUploadClick = function() { const upBtn = document.getElementById('fileUpload'); if(upBtn) upBtn.click(); }
+
+        function navigateDrawerSection(targetId) {
+            document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
+            if(document.getElementById(`menu_${targetId}`)) document.getElementById(`menu_${targetId}`).classList.add('active');
+            document.querySelectorAll('.drawer-subpanel-content').forEach(el => el.classList.remove('active'));
+
+            const sidePanelPrice = document.getElementById('sidebarPricingPanel');
+            const mainLayoutWrapper = document.getElementById('mainLayoutAppContainer');
+
+            if (targetId === 'store' || targetId === 'history' || targetId === 'order_tracking') {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                document.getElementById(`user_section_${targetId}`).classList.add('active');
+                
+                if(targetId !== 'store') {
+                    sidePanelPrice.classList.add('hidden');
+                    mainLayoutWrapper.classList.remove('has-invoice');
+                    mainLayoutWrapper.style.gridTemplateColumns = '1fr';
+                } else {
+                    if(typeof window.refreshInvoiceTabState === 'function') { window.refreshInvoiceTabState(); }
+                }
+                toggleUserDrawer(false);
+            } else {
+                const activeSubPanel = document.getElementById(`drawer_panel_${targetId}`);
+                if(activeSubPanel) activeSubPanel.classList.add('active');
+            }
+        }
+
+        document.getElementById('drawerProfileUpdateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const currentSessionUser = localStorage.getItem('printAppUser');
+            if(!currentSessionUser) return;
+            const updatedName = document.getElementById('drawerEditName').value.trim();
+            const updatedPassword = document.getElementById('drawerEditPassword').value;
+            const updatedAltMobile = document.getElementById('drawerEditAlternateMobile').value.trim();
+            const userRecord = JSON.parse(localStorage.getItem(`user_${currentSessionUser}`)) || {};
+            userRecord.name = updatedName; userRecord.password = updatedPassword; userRecord.altMobile = updatedAltMobile;
+            localStorage.setItem(`user_${currentSessionUser}`, JSON.stringify(userRecord));
+            const userGreeting = document.getElementById('userGreeting');
+            if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${updatedName}</span>`;
+            const alertSuccess = document.getElementById('profileUpdateSuccessMsg');
+            alertSuccess.style.display = 'block';
+            setTimeout(() => { alertSuccess.style.display = 'none'; }, 3500);
+        });
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
