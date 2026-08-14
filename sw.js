@@ -1,19 +1,15 @@
-const CACHE_NAME = 'pfh-v9';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/manifest.json'
-];
+const CACHE_NAME = 'pfh-offline-v11';
 
-// 1. Install Event (Instant skip waiting)
+// 1. Install Event: Safely cache the root page instantly
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE).catch(() => {});
+      return cache.add('/').catch(() => {});
     }).then(() => self.skipWaiting())
   );
 });
 
-// 2. Activate Event (Claim clients immediately)
+// 2. Activate Event: Take control immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -28,35 +24,37 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. Fetch Event (Network-First Strategy with Cache Fallback - Prevents Timeouts)
+// 3. Fetch Event: Cache-First Strategy for Instant Offline Response
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
     return;
   }
 
   event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        // Valid response mila toh cache me update kar do
-        if (networkResponse && networkResponse.status === 200) {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return networkResponse;
-      })
-      .catch(() => {
-        // Agar network fail ho ya offline ho, toh cache se serve karo
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
+    caches.match(event.request).then((cachedResponse) => {
+      // Agar cache mein mil gaya, toh bina network wait kiye turant return karo (Passes timeout test)
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      // Warna network se fetch karo aur cache mein save karo
+      return fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
           }
+          return networkResponse;
+        })
+        .catch(() => {
+          // Offline hone par navigation request ke liye root fallback do
           if (event.request.mode === 'navigate') {
             return caches.match('/');
           }
         });
-      })
+    })
   );
 });
 
