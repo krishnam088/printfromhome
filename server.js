@@ -138,15 +138,28 @@ app.post('/api/auth/login', (req, res) => {
     }
 });
 
-// Orders & Payments
+// Orders & Payments (Secured & Fixed)
 app.post('/api/create-order', upload.array('document', 20), async (req, res) => {
     try {
         const storeConf = getStoreConfig();
         if (!storeConf.isOpen) return res.status(403).json({ success: false, message: "Store is closed" });
 
         const { totalAmount, configDetails, address, customerName, phone } = req.body;
-        const finalAmount = totalAmount ? totalAmount.trim() : "42";
-        const razorpayOrder = await razorpay.orders.create({ amount: Math.round(parseFloat(finalAmount) * 100), currency: "INR", receipt: `rcpt_${Date.now()}` });
+        
+        // Safe string conversion to avoid trim() type error
+        const finalAmount = totalAmount ? totalAmount.toString().trim() : "42";
+        
+        let razorpayOrder;
+        try {
+            razorpayOrder = await razorpay.orders.create({ 
+                amount: Math.round(parseFloat(finalAmount) * 100), 
+                currency: "INR", 
+                receipt: `rcpt_${Date.now()}` 
+            });
+        } catch (rzpErr) {
+            console.error("Razorpay API Error:", rzpErr);
+            return res.status(500).json({ success: false, message: "Payment gateway error" });
+        }
         
         const filesMappedList = req.files ? req.files.map(f => ({ name: f.originalname, filename: f.filename, url: `/uploads/${f.filename}` })) : [];
         let parsedConfig = [];
@@ -178,7 +191,8 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
 
         res.status(201).json({ success: true, order_id: razorpayOrder.id, amount: razorpayOrder.amount, key_id: razorpay.key_id });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Order failed" });
+        console.error("Create Order Error:", error);
+        res.status(500).json({ success: false, message: error.message || "Order creation failed" });
     }
 });
 
