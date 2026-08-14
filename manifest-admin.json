@@ -6,12 +6,17 @@
   "id": "/admin-panel",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#111111",
   "theme_color": "#111111",
   "orientation": "portrait",
+  "lang": "en",
+  "dir": "ltr",
   "categories": ["business", "productivity", "utilities"],
   "prefer_related_applications": false,
   "related_applications": [],
+  "scope_extensions": [],
+  "iarc_rating_id": "0",
   "icons": [
     {
       "src": "/app_icon_512.png",
@@ -31,7 +36,15 @@
       "src": "/app_icon_512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "label": "Print Admin Dashboard Overview"
+      "form_factor": "wide",
+      "label": "Print Admin Dashboard Wide View"
+    },
+    {
+      "src": "/app_icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Print Admin Dashboard Mobile View"
     }
   ]
 }
