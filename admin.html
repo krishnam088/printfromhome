@@ -3,720 +3,1101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print From Home - Admin Control Center</title>
+    <title>Print From Home - India's Last Minute Printing App</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     
-    <!-- Isolated PWA Manifest for Admin App -->
-    <link rel="manifest" href="/manifest-admin.json">
-    <meta name="theme-color" content="#0070f3">
-
+    <!-- 🗺️ LEAFLET MAP ENGINE DEPENDENCIES -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- 📱 PWA WEB APP CAPABILITIES & MOBILE APP META TAGS -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#F4C430">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PrintFromHome">
+    <link rel="apple-touch-icon" href="/app_icon_512.png">
+    
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         :root {
-            --bg-dark: #0f172a;
-            --surface-card: #1e293b;
-            --surface-card-hover: #273549;
-            --accent-blue: #0070f3;
-            --accent-green: #10b981;
-            --accent-yellow: #f59e0b;
-            --accent-red: #ef4444;
-            --text-main: #f8fafc;
-            --text-sub: #94a3b8;
-            --border-color: #334155;
+            --bg-primary: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --blinkit-yellow: #F4C430;
+            --blinkit-green: #0C8346;
+            --blinkit-light-green: #e6f4ea;
+            --border-color: #e2e8f0;
+        }
+        body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; }
+
+        /* PREMIUM BRAND HEADER SYSTEM */
+        .brand-premium-header {
+            background: linear-gradient(to bottom, #FFF3B3 0%, #FFFBE6 100%);
+            padding: 16px 20px;
+            width: 100%;
+            border-bottom: 1px solid rgba(244,196,48,0.15);
+        }
+        .header-container { max-width: 100%; margin: 0 auto; position: relative; }
+        .header-meta-row { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
+        
+        .delivery-brand-box { display: flex; flex-direction: column; text-align: left; }
+        .user-greeting-inline { font-size: 0.85rem; font-weight: 700; color: #2d3748; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .delivery-time-title { font-size: 0.75rem; font-weight: 700; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
+        .delivery-time-countdown { font-size: 1.5rem; font-weight: 900; color: #111111; margin-top: -2px; }
+        
+        .header-profile-cluster { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+        .status-micro-nav { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
+        .shop-status-text-badge { font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; }
+        .shop-status-text-badge.open { background: var(--blinkit-green); color: white; }
+        .shop-status-text-badge.closed { background: #ef4444; color: white; }
+        .shop-timing-subtext { font-size: 0.65rem; font-weight: 700; color: #718096; }
+
+        .profile-wallet-row { display: flex; align-items: center; gap: 10px; }
+        .wallet-micro-badge { background: #ffffff; border-radius: 14px; border: 1px solid var(--border-color); padding: 6px 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 6px; cursor: pointer; transition: transform 0.2s; }
+        .wallet-cash-value { font-size: 0.85rem; font-weight: 800; color: #000000; }
+        .avatar-circle-trigger { width: 44px; height: 44px; background: #000000; color: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; font-size: 1.1rem; border: 2px solid #ffffff; }
+
+        /* USER SLIDING SIDEBAR DRAWER */
+        .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1999; display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .drawer-overlay.active { display: block; opacity: 1; }
+        
+        .side-drawer { position: fixed; top: 0; right: -360px; width: 350px; height: 100vh; background: var(--surface); z-index: 2000; box-shadow: -10px 0 30px rgba(0,0,0,0.08); transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px 18px; display: flex; flex-direction: column; border-left: 1px solid var(--border-color); }
+        .side-drawer.active { right: 0; }
+        .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; }
+        
+        .drawer-menu-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; }
+        .drawer-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; font-weight: 600; font-size: 0.85rem; color: var(--text-main); cursor: pointer; transition: all 0.2s; }
+        .drawer-item:hover, .drawer-item.active { background: #f1f5f9; color: var(--blinkit-green); }
+
+        .drawer-subpanel-content { flex: 1; overflow-y: auto; display: none; padding-right: 2px; }
+        .drawer-subpanel-content.active { display: block; }
+        
+        .drawer-input-group { margin-bottom: 12px; text-align: left; }
+        .drawer-input-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 4px; }
+        .drawer-input-group input { width: 100%; padding: 10px 12px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 0.85rem; font-weight: 600; outline: none; }
+        
+        .btn-drawer-action { width: 100%; padding: 10px; background: var(--blinkit-green); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; margin-top: 5px; }
+        .whatsapp-support-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background-color: #25D366; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; text-decoration: none; margin-top: 15px; box-shadow: 0 4px 12px rgba(37,211,102,0.25); }
+
+        /* Wallet Deposit Popup Modal Frame */
+        .wallet-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 15000; display: none; justify-content: center; align-items: center; padding: 20px; }
+        .wallet-modal-card { background: var(--surface); border-radius: 24px; padding: 25px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 2px solid var(--blinkit-yellow); }
+        .wallet-chip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+        .wallet-chip-btn { background: var(--bg-primary); border: 2px solid var(--border-color); padding: 8px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+
+        /* Main Workspace Container Layout */
+        .container { width: 100%; max-width: 100%; margin: 0; padding: 15px; display: grid; grid-template-columns: 1fr; gap: 20px; transition: all 0.3s ease; }
+        @media (min-width: 992px) { .container.has-invoice { grid-template-columns: 2.5fr 1.2fr; padding: 25px; } }
+        @media (max-width: 768px) { .container { padding: 10px; gap: 15px; } }
+
+        .compact-offers-bar { display: flex; align-items: center; gap: 10px; background: #fffbeb; border: 1px solid #fed7aa; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 0.8rem; font-weight: 600; color: #b45309; width: 100%; }
+        .view-section { display: none; width: 100%; }
+        .view-section.active { display: block; animation: fadeView 0.25s ease-in-out; }
+        @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden { display: none !important; }
+        
+        /* Branded Cards Specs */
+        .verbatim-docs-promo-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02); width: 100%; overflow: hidden; position: relative; margin-top: 15px; }
+        .promo-details-block { text-align: left; z-index: 2; max-width: 60%; }
+        .promo-main-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; letter-spacing: -0.5px; }
+        .promo-bullet-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .promo-bullet-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; color: #4a5568; }
+        .verbatim-upload-btn { background-color: #2e7d32; color: #ffffff; border: none; padding: 12px 28px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; }
+        .promo-graphic-mockup { position: absolute; right: -10px; bottom: -10px; width: 45%; max-width: 180px; z-index: 1; }
+
+        .blinkit-file-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 14px; padding: 15px; margin-top: 12px; width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.01); text-align: left; }
+        .blinkit-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--border-color); }
+        .blinkit-stepper { display: flex; align-items: center; background: var(--blinkit-green); border-radius: 10px; padding: 4px 10px; gap: 12px; color: white; font-weight: bold; width: fit-content; }
+        .stepper-btn { background: none; border: none; color: white; font-size: 1.1rem; font-weight: 800; cursor: pointer; outline: none; }
+        
+        .blinkit-grid-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; width: 100%; }
+        .blinkit-option-box { border: 2px solid var(--border-color); border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 8px; cursor: pointer; background: var(--surface); width: 100%; transition: all 0.2s; }
+        .blinkit-option-box.active { border-color: var(--blinkit-green); background-color: var(--blinkit-light-green); }
+        .option-title { font-size: 0.8rem; font-weight: 700; color: var(--text-main); }
+        .option-subtitle { font-size: 0.7rem; color: var(--text-sub); font-weight: 500; }
+
+        .history-card-item { background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-top: 12px; width: 100%; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
+        .history-card-item:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.04); }
+        .form-group textarea { width: 100%; border: 2px solid var(--border-color); border-radius: 12px; padding: 12px; font-size: 0.9rem; outline: none; }
+        .add-more-inline-card-btn { background: var(--blinkit-light-green); color: var(--blinkit-green); border: 1px solid rgba(12,131,70,0.2); border-radius: 8px; padding: 4px 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+
+        /* 👑 DYNAMIC BLINKIT-STYLE TRACKING TIMELINE MODULE */
+        .tracking-timeline-box { display: flex; flex-direction: column; gap: 20px; margin: 20px 0; padding-left: 10px; position: relative; }
+        .tracking-timeline-box::before { content: ''; position: absolute; left: 19px; top: 10px; bottom: 10px; width: 3px; background: #cbd5e1; z-index: 1; }
+        .timeline-step { display: flex; align-items: center; gap: 15px; position: relative; z-index: 2; opacity: 0.4; transition: all 0.3s ease; }
+        .timeline-step.completed { opacity: 1; }
+        .timeline-step.active { opacity: 1; font-weight: bold; }
+        .step-node-dot { width: 22px; height: 22px; border-radius: 50%; background: #94a3b8; border: 4px solid #f1f5f9; }
+        .timeline-step.completed .step-node-dot { background: var(--blinkit-green); }
+        .timeline-step.active .step-node-dot { background: #f59e0b; animation: pulseNode 1.5s infinite; }
+        @keyframes pulseNode { 0% { box-shadow: 0 0 0 0 rgba(245,158,11,0.5); } 100% { box-shadow: 0 0 0 8px rgba(245,158,11,0); } }
+        .step-meta-details { text-align: left; }
+        .step-main-label { font-size: 0.88rem; color: var(--text-main); font-weight: 700; }
+        .step-desc-label { font-size: 0.75rem; color: var(--text-sub); }
+
+        /* Auth Screen Styling Cores */
+        .splash-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--blinkit-yellow); display: flex; justify-content: center; align-items: center; z-index: 99999; transition: opacity 0.5s ease; }
+        .splash-content { text-align: center; }
+        .splash-logo { font-size: 2.5rem; font-weight: 800; color: #000000; }
+        .logo-green { color: var(--blinkit-green); }
+        .splash-tagline { font-size: 1rem; font-weight: 600; color: #1e293b; margin-top: 5px; }
+        
+        .auth-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .auth-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; }
+        .auth-brand { font-size: 1.8rem; font-weight: 800; color: #000000; margin-bottom: 10px; }
+        .brand-green { color: var(--blinkit-green); }
+        .auth-card h2 { font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 20px; }
+        .form-group { text-align: left; margin-bottom: 15px; width: 100%; }
+        .form-group label { font-size: 0.8rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 4px; }
+        .form-group input { width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 0.9rem; font-weight: 600; outline: none; transition: border-color 0.2s; }
+        .form-group input:focus { border-color: var(--blinkit-green); }
+        .btn-auth-submit { width: 100%; padding: 14px; background: var(--blinkit-green); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: opacity 0.2s; }
+        .btn-auth-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .auth-toggle-text { font-size: 0.8rem; font-weight: 600; color: var(--text-sub); margin-top: 15px; }
+        .auth-toggle-text a { color: var(--blinkit-green); text-decoration: none; font-weight: 700; }
+        .app-hidden { display: none !important; }
+
+        /* 🚨 BOUNCE ANIMATION FOR STORE CLOSED POPUP */
+        @keyframes popupBounceAnimation {
+            0% { transform: scale(0.7); opacity: 0; }
+            80% { transform: scale(1.05); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            padding: 16px;
+        /* 📱 PLAY STORE STYLE BOTTOM SHEET */
+        .native-app-install-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            border-top-left-radius: 28px;
+            border-top-right-radius: 28px;
+            padding: 22px 20px 26px 20px;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
+            z-index: 1000000;
+            transform: translateY(110%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            border-top: 1px solid #f1f5f9;
         }
-
-        .dashboard-wrapper {
-            max-width: 1200px;
-            margin: 0 auto;
+        .native-app-install-sheet.active {
+            transform: translateY(0);
         }
-
-        /* HEADER & TOP CONTROLS */
-        .admin-header {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--surface-card);
-            padding: 18px 24px;
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 20px;
-            gap: 15px;
-        }
-
-        .brand-title h1 {
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .brand-title h1 span { color: var(--accent-blue); }
-        .brand-title p { font-size: 0.75rem; color: var(--text-sub); margin-top: 2px; }
-
-        .header-action-group {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* TOGGLE BUTTONS & BADGES */
-        .toggle-badge-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
+        .sheet-drag-handle {
+            width: 44px;
+            height: 5px;
+            background: #cbd5e1;
             border-radius: 10px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s ease;
+            margin: 0 auto 16px auto;
         }
-        .btn-store-open { background: var(--accent-green); color: white; }
-        .btn-store-closed { background: var(--accent-red); color: white; }
-        .btn-autoprint-on { background: #0284c7; color: white; }
-        .btn-autoprint-off { background: #475569; color: #cbd5e1; }
-
-        #btnInstallAdmin {
-            display: none;
-            padding: 8px 16px;
-            background: var(--accent-blue);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,112,243,0.3);
-        }
-
-        /* STATS OVERVIEW CARDS */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 14px;
-            margin-bottom: 22px;
-        }
-        .stat-card {
-            background: var(--surface-card);
-            border: 1px solid var(--border-color);
-            padding: 16px;
-            border-radius: 14px;
+        .app-meta-card {
             display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .stat-title { font-size: 0.78rem; font-weight: 600; color: var(--text-sub); text-transform: uppercase; }
-        .stat-num { font-size: 1.6rem; font-weight: 800; color: var(--text-main); }
-
-        /* LIVE ORDER QUEUE CONTAINER */
-        .section-heading-bar {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 14px;
-            padding: 0 4px;
-        }
-        .section-heading-bar h2 { font-size: 1.15rem; font-weight: 800; }
-        .audio-test-btn {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-sub);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        .audio-test-btn:hover { color: var(--text-main); border-color: var(--text-sub); }
-
-        .order-queue-list {
-            display: flex;
-            flex-direction: column;
             gap: 16px;
-        }
-
-        .order-card {
-            background: var(--surface-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            transition: border-color 0.2s ease;
+            text-align: left;
             position: relative;
+        }
+        .app-native-icon {
+            width: 66px;
+            height: 66px;
+            border-radius: 18px;
+            box-shadow: 0 6px 16px rgba(244, 196, 48, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
             overflow: hidden;
         }
-        .order-card.new-order-pulse {
-            border-color: var(--accent-yellow);
-            box-shadow: 0 0 20px rgba(245,158,11,0.2);
+        .app-native-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.3px;
+            line-height: 1.2;
         }
-
-        .order-card-header {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: flex-start;
-            border-bottom: 1px dashed var(--border-color);
-            padding-bottom: 12px;
-            gap: 10px;
-        }
-        .order-id-meta h3 { font-size: 1.05rem; font-weight: 800; color: var(--text-main); }
-        .order-time { font-size: 0.72rem; color: var(--text-sub); margin-top: 2px; }
-
-        .order-customer-box {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 12px;
-            background: rgba(15, 23, 42, 0.6);
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 0.82rem;
-        }
-        .cust-field b { color: var(--text-sub); font-size: 0.72rem; display: block; text-transform: uppercase; }
-
-        /* PRINT SPECS CONTAINER */
-        .specs-container {
-            background: rgba(0, 112, 243, 0.05);
-            border: 1px solid rgba(0, 112, 243, 0.2);
-            border-radius: 12px;
-            padding: 14px;
-        }
-        .specs-title { font-size: 0.8rem; font-weight: 800; color: var(--accent-blue); text-transform: uppercase; margin-bottom: 8px; }
-        .specs-tags-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-        .spec-tag {
-            background: var(--surface-card);
-            border: 1px solid var(--border-color);
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 0.75rem;
+        .app-native-dev {
+            font-size: 0.76rem;
             font-weight: 700;
+            color: var(--blinkit-green);
+            margin-top: 2px;
+        }
+        .app-specs-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+        .spec-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .spec-divider {
+            width: 3px;
+            height: 3px;
+            background: #94a3b8;
+            border-radius: 50%;
+        }
+        .sheet-close-cross {
+            position: absolute;
+            top: -6px;
+            right: 0;
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #94a3b8;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .app-install-cta-btn {
+            width: 100%;
+            margin-top: 18px;
+            padding: 14px 20px;
+            background: #01875f;
+            color: #ffffff;
+            border: none;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(1, 135, 95, 0.3);
+            transition: background 0.2s, transform 0.1s;
+        }
+        .app-install-cta-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 📱 MOBILE ONLY MODAL DISPLAY CONTROL */
+        .smart-install-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 2000000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        @media (min-width: 768px) {
+            .smart-install-modal-overlay, .native-app-install-sheet {
+                display: none !important;
+            }
+        }
+
+        .smart-install-modal-card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 28px 24px;
+            max-width: 360px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            border: 2px solid var(--blinkit-yellow);
+            animation: popupBounceAnimation 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .step-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            background: #f8fafc;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            font-weight: 600;
             color: var(--text-main);
         }
-        .spec-tag.highlight {
-            background: rgba(16, 185, 129, 0.15);
-            border-color: var(--accent-green);
-            color: var(--accent-green);
-        }
-
-        .file-action-row {
+        .step-num {
+            width: 26px;
+            height: 26px;
+            background: var(--blinkit-green);
+            color: white;
+            border-radius: 50%;
             display: flex;
-            flex-wrap: wrap;
             align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin-top: 6px;
-        }
-        .btn-download-file {
-            background: #334155;
-            color: white;
-            text-decoration: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-download-file:hover { background: #475569; }
-        .btn-manual-print {
-            background: var(--accent-blue);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        /* STATUS STEPPER CONTROLS */
-        .stepper-actions-bar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px;
-            padding-top: 10px;
-            border-top: 1px dashed var(--border-color);
-        }
-        .stepper-label { font-size: 0.75rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; margin-right: 4px; }
-        .btn-step {
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            cursor: pointer;
-            border: 1px solid var(--border-color);
-            background: var(--surface-card);
-            color: var(--text-sub);
-            transition: all 0.15s ease;
-        }
-        .btn-step:hover { color: var(--text-main); border-color: var(--text-sub); }
-        .btn-step.active {
-            background: var(--accent-green);
-            color: white;
-            border-color: var(--accent-green);
-        }
-        .btn-step.current-phase {
-            background: var(--accent-yellow);
-            color: black;
-            border-color: var(--accent-yellow);
+            justify-content: center;
             font-weight: 800;
+            font-size: 0.8rem;
+            flex-shrink: 0;
         }
 
-        /* SILENT PRINT IFRAME (HIDDEN) */
-        #silentPrintFrame {
-            display: none;
-            width: 0;
-            height: 0;
-            border: 0;
+        /* 🎉 DOWNLOADED & INSTALLED SUCCESS TOAST NOTIFICATION */
+        .pwa-success-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-150%);
+            background: #0C8346;
+            color: #ffffff;
+            padding: 14px 24px;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            box-shadow: 0 10px 30px rgba(12,131,70,0.4);
+            z-index: 10000000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .pwa-success-toast.show {
+            transform: translateX(-50%) translateY(0) !important;
         }
     </style>
 </head>
 <body>
 
-    <!-- Hidden Iframe for Direct Silent Auto-Printing -->
-    <iframe id="silentPrintFrame"></iframe>
+    <!-- 🎉 DOWNLOADED / INSTALLED SUCCESS TOAST NOTIFICATION -->
+    <div id="pwaSuccessToast" class="pwa-success-toast">
+        <span>✅</span> Print From Home App Downloaded & Installed!
+    </div>
 
-    <div class="dashboard-wrapper">
-        
-        <!-- HEADER ROW -->
-        <header class="admin-header">
-            <div class="brand-title">
-                <h1>Print From Home <span>Control Center</span></h1>
-                <p>Real-Time Hardware Dispatch & Laser Print Operations</p>
+    <!-- 📱 SMART INSTALL GUIDE POPUP MODAL (MOBILE ONLY) -->
+    <div id="smartInstallModal" class="smart-install-modal-overlay">
+        <div class="smart-install-modal-card">
+            <div style="font-size: 3rem; margin-bottom: 6px;">📱⚡</div>
+            <h3 id="modalInstallTitle" style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin-bottom: 6px;">Install App</h3>
+            <p style="font-size: 0.82rem; color: var(--text-sub); margin-bottom: 18px; font-weight: 500;">
+                Get instant home screen access for lightning-fast prints!
+            </p>
+            
+            <div id="installStepsContainer"></div>
+
+            <button type="button" onclick="closeSmartInstallModal()" style="width: 100%; margin-top: 10px; padding: 12px; background: #01875f; color: white; border: none; border-radius: 12px; font-weight: 800; font-size: 0.9rem; cursor: pointer;">
+                Got It, Let's Go!
+            </button>
+        </div>
+    </div>
+
+    <!-- 📱 PLAY STORE STYLE BOTTOM SHEET (MOBILE ONLY) -->
+    <div id="nativeAppSheet" class="native-app-install-sheet">
+        <div class="sheet-drag-handle"></div>
+        <div class="app-meta-card">
+            <div class="app-native-icon">
+                <img src="/app_icon_512.png" style="width: 52px; height: 52px;" alt="App Icon">
             </div>
+            <div>
+                <h3 class="app-native-title">Print From Home</h3>
+                <p class="app-native-dev">Verified Business • PrintFromHome</p>
+                <div class="app-specs-row">
+                    <span class="spec-item"><span style="color:#f59e0b;">★</span> 4.9</span>
+                    <span class="spec-divider"></span>
+                    <span class="spec-item">5.2 MB</span>
+                    <span class="spec-divider"></span>
+                    <span class="spec-item">10K+ Downloads</span>
+                </div>
+            </div>
+            <span class="sheet-close-cross" onclick="dismissAppSheet()">&times;</span>
+        </div>
+        <button type="button" id="nativeInstallCta" class="app-install-cta-btn">
+            <span>⬇️</span> Install Official App
+        </button>
+    </div>
 
-            <div class="header-action-group">
-                <!-- Auto-Print Toggle -->
-                <button type="button" id="autoPrintToggleBtn" class="toggle-badge-btn btn-autoprint-on" onclick="toggleAutoPrintEngine()">
-                    🖨️ Auto-Print: <span id="autoPrintStatusText">ON</span>
-                </button>
+    <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
-                <!-- Store Status Toggle -->
-                <button type="button" id="storeStatusToggleBtn" class="toggle-badge-btn btn-store-open" onclick="toggleStoreStatus()">
-                    🏪 Store: <span id="storeStatusStateText">OPEN</span>
-                </button>
+    <nav id="userSideDrawer" class="side-drawer">
+        <div class="drawer-header">
+            <h2 style="font-size:1.1rem; font-weight:800;">Account Menu</h2>
+            <span style="cursor:pointer; font-size:1.6rem; font-weight:bold; color:var(--text-sub);" onclick="toggleUserDrawer(false)">&times;</span>
+        </div>
 
-                <!-- PWA Install Button -->
-                <button type="button" id="btnInstallAdmin">📥 Install Admin App</button>
+        <ul class="drawer-menu-list" id="sidebarMenuContainerList">
+            <li class="drawer-item active" id="menu_store" onclick="navigateDrawerSection('store')">🛒 Order Print Store</li>
+            <li class="drawer-item" id="menu_profile_edit" onclick="navigateDrawerSection('profile_edit')">⚙️ Edit Profile Settings</li>
+            <li class="drawer-item" id="menu_history" onclick="navigateDrawerSection('history')">📋 Order Status & History</li>
+            <li class="drawer-item" id="menu_help" onclick="navigateDrawerSection('help')">❓ Help Center & Support</li>
+            <li class="drawer-item" id="menu_terms" onclick="navigateDrawerSection('terms')">📜 Terms & Manuals</li>
+        </ul>
+
+        <div id="drawer_panel_profile_edit" class="drawer-subpanel-content">
+            <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:12px; color:var(--text-main); padding-bottom:4px; border-bottom:1px solid var(--border-color);">Account Settings</h4>
+            <form id="drawerProfileUpdateForm">
+                <div class="drawer-input-group">
+                    <label>Change Username / Name</label>
+                    <input type="text" id="drawerEditName" placeholder="Enter new name" required>
+                </div>
+                <div class="drawer-input-group">
+                    <label>Alternate Mobile Number</label>
+                    <input type="tel" id="drawerEditAlternateMobile" placeholder="e.g., +91 98765xxxxx">
+                </div>
+                <div class="drawer-input-group">
+                    <label>Change Account Password</label>
+                    <input type="password" id="drawerEditPassword" placeholder="Enter new password" required>
+                </div>
+                <button type="submit" class="btn-drawer-action">Update Account Info</button>
+            </form>
+            <div id="profileUpdateSuccessMsg" style="display:none; color:var(--blinkit-green); font-size:0.75rem; font-weight:700; margin-top:8px; text-align:center;">
+                ✅ Account Parameters Updated Successfully!
+            </div>
+        </div>
+
+        <div id="drawer_panel_help" class="drawer-subpanel-content">
+            <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:12px; color:var(--text-main); padding-bottom:4px; border-bottom:1px solid var(--border-color);">Help Desk & Support</h4>
+            <a href="https://wa.me/91XXXXXXXXXX?text=Hi" target="_blank" class="whatsapp-support-btn">
+                <span>💬</span> Chat on WhatsApp Support
+            </a>
+        </div>
+
+        <div id="drawer_panel_terms" class="drawer-subpanel-content">
+            <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:12px; color:var(--text-main); padding-bottom:4px; border-bottom:1px solid var(--border-color);">Terms of Service</h4>
+            <div style="font-size:0.78rem; color:var(--text-sub); line-height:1.6;">
+                <p>• We use premium 70 GSM sheets to provide high density laser print bindings.</p>
+            </div>
+        </div>
+
+        <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border-color);">
+            <button id="logoutBtn" class="btn-auth-submit" style="background:#ef4444; padding:10px; font-size:0.85rem; border-radius:10px; width:100%; color:white; border:none; font-weight:700; cursor:pointer;">Logout Account</button>
+        </div>
+    </nav>
+
+    <div id="walletDepositModal" class="wallet-modal-overlay" onclick="toggleWalletPopupGrid(false, event)">
+        <div class="wallet-modal-card">
+            <h3 style="font-size:1.3rem; font-weight:800; margin-bottom:6px;">💰 Recharge Print Wallet</h3>
+            <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:15px;">Add cash balance for seamless dispatches</p>
+            <div class="form-group" style="text-align:left;">
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-main);">Enter Custom Amount (₹):</label>
+                <input type="number" id="walletCustomAmountInput" value="100" style="width:100%; padding:12px; border:2px solid var(--border-color); border-radius:12px; font-weight:700; font-size:1rem; outline:none; margin-top:4px;">
+            </div>
+            <div class="wallet-chip-grid">
+                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(100)">+ ₹100</button>
+                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(200)">+ ₹200</button>
+                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(500)">+ ₹500</button>
+            </div>
+            <button class="btn-admin" style="background:var(--blinkit-green); margin-top:10px;" onclick="executeWalletRazorpayDeposit()">Pay & Add Cash</button>
+        </div>
+    </div>
+
+    <div id="splashScreen" class="splash-container">
+        <div class="splash-content">
+            <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
+            <p class="splash-tagline">India's Last Minute Printing App</p>
+        </div>
+    </div>
+
+    <div id="authScreen" class="auth-container app-hidden">
+        <div class="auth-card">
+            <div class="auth-brand">print<span class="brand-green">from</span>home</div>
+            <h2 id="authTitle">Welcome Back!</h2>
+            <form id="authForm">
+                <div class="form-group signup-only hidden">
+                    <label>Full Name</label>
+                    <input type="text" id="authName" placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label>Gmail or Phone Number</label>
+                    <input type="text" id="authIdentity" placeholder="e.g., name@gmail.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="authPassword" placeholder="Minimum 6 characters" required>
+                </div>
+                <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
+            </form>
+            <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
+        </div>
+    </div>
+
+    <div id="mainApp" class="app-hidden">
+        <header class="brand-premium-header">
+            <div class="header-container">
+                <div class="header-meta-row">
+                    <div class="delivery-brand-box">
+                        <div id="userGreeting" class="user-greeting-inline">GUEST MODE</div>
+                        <h2 class="delivery-time-countdown">
+                            <span class="delivery-time-title" style="margin-right:6px;">Prints in</span> 15 mins
+                        </h2>
+                    </div>
+                    <div class="header-profile-cluster">
+                        <div class="status-micro-nav">
+                            <span id="userShopStatus" class="shop-status-text-badge open">OPEN 🟢</span>
+                            <span class="shop-timing-subtext">7AM - 12AM</span>
+                        </div>
+                        <div class="profile-wallet-row">
+                            <div class="wallet-micro-badge" onclick="toggleWalletPopupGrid(true, event)">
+                                <span>💵</span> <span class="wallet-cash-value" id="headerWalletDisplayBalance">₹0.00</span>
+                            </div>
+                            <div class="avatar-circle-trigger" onclick="toggleUserDrawer(true)">👤</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <!-- STATS OVERVIEW -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <span class="stat-title">Total Orders</span>
-                <span class="stat-num" id="statTotalOrders">0</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-title">Pending / Ready to Print</span>
-                <span class="stat-num" id="statReadyPrint" style="color: var(--accent-yellow);">0</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-title">Out for Delivery</span>
-                <span class="stat-num" id="statOutDelivery" style="color: #38bdf8;">0</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-title">Completed Orders</span>
-                <span class="stat-num" id="statCompleted" style="color: var(--accent-green);">0</span>
-            </div>
-        </div>
+        <div class="container" id="mainLayoutAppContainer">
+            <div id="user_section_store" class="view-section active">
+                <div id="uploadScreenInitialState" style="width:100%;">
+                    <div class="compact-offers-bar" id="storeOffersTopBanner" style="margin-top:10px;">
+                        <span>📢 <b>Active Offers:</b></span>
+                        <marquee scrollamount="3" style="width: 100%;">
+                            ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!
+                        </marquee>
+                    </div>
+                    <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%;">
+                        🚨 <b>Store is Closed!</b> We are not taking print orders currently.
+                    </div>
+                    <div style="text-align: center; padding: 25px 10px; width:100%;">
+                        <h2 style="font-size: 2.3rem; font-weight:800; color:#1a202c; letter-spacing:-1px;">Print Store</h2>
+                        <p style="font-size: 0.95rem; color:var(--text-sub); font-weight:600; margin-top:2px;">printfromhome ensures secure prints at every stage</p>
+                    </div>
+                    <div class="verbatim-docs-promo-card">
+                        <div class="promo-details-block">
+                            <h3 class="promo-main-title">Documents</h3>
+                            <ul class="promo-bullet-list">
+                                <li class="promo-bullet-item">✦ Price starting at ₹3/page</li>
+                                <li class="promo-bullet-item">✦ Paper quality: 70 GSM</li>
+                                <li class="promo-bullet-item">✦ Dynamic Customization Controls</li>
+                            </ul>
+                            <label class="verbatim-upload-btn" for="fileUpload">Upload Files</label>
+                            <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
+                        </div>
+                        <div class="promo-graphic-mockup">
+                            <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" alt="Stack">
+                        </div>
+                    </div>
+                </div>
 
-        <!-- ORDER QUEUE HEADING -->
-        <div class="section-heading-bar">
-            <h2>📦 Live Hardware Print Queue</h2>
-            <button type="button" class="audio-test-btn" onclick="playLoudOrderChime(true)">🔔 Test Sound Alert</button>
-        </div>
-
-        <!-- LIVE ORDERS CONTAINER -->
-        <div class="order-queue-list" id="adminOrderQueue">
-            <div style="text-align: center; padding: 40px; color: var(--text-sub);">
-                ⏳ Connecting to print stream & fetching orders...
+                <div id="configurationScreenState" class="hidden" style="width:100%;">
+                    <form id="printForm" enctype="multipart/form-data" style="width:100%;">
+                        <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
+                        
+                        <!-- DYNAMIC MAP LOCATION CONTAINER FIELD -->
+                        <div class="form-group" style="background: var(--surface); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); width:100%; margin-bottom:20px;">
+                            <label style="font-weight: 700; margin-bottom:8px; display: block; font-size: 0.9rem;">📍 Drag Pin to Your Delivery Location:</label>
+                            
+                            <!-- Draggable Leaflet Window Container -->
+                            <div id="userDeliveryMap" style="width: 100%; height: 280px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 12px; position: relative; z-index: 999;"></div>
+                            
+                            <label style="font-weight: 700; margin-bottom:4px; display: block; font-size: 0.8rem; color: var(--text-sub);">Selected Address / Landmarks:</label>
+                            <textarea id="address" name="address" rows="3" placeholder="Map se pin drag karein ya apna full address yahan likhein..." required></textarea>
+                        </div>
+                        
+                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">Proceed to Payment</button>
+                    </form>
+                </div>
             </div>
-        </div>
 
+            <div id="user_section_history" class="view-section">
+                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
+                    <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
+                    <div id="ordersHistoryContainer" style="width:100%;">
+                        <p style="text-align:center; padding:20px; color:var(--text-sub);">No print jobs recorded yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="user_section_order_tracking" class="view-section">
+                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%; text-align:left;">
+                    <button type="button" class="back-to-upload-link" onclick="navigateDrawerSection('history')">&larr; Back to All Orders</button>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-bottom:2px solid var(--border-color); padding-bottom:12px;">
+                        <div>
+                            <h3 style="font-weight:800; font-size:1.2rem;">Order Details Matrix</h3>
+                            <p id="trackOrderIdLabel" style="font-size:0.75rem; color:var(--text-sub); font-weight:600;"></p>
+                        </div>
+                        <div id="trackGrandTotalBadge" style="font-size:1.4rem; font-weight:900; color:var(--blinkit-green);">₹0.00</div>
+                    </div>
+
+                    <div id="liveTrackingTimelineContainer">
+                        <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); margin-top:20px; text-transform:uppercase;">📦 Real-Time Package Journey</h4>
+                        <div class="tracking-timeline-box">
+                            <div class="timeline-step" id="step_pending">
+                                <div class="step-node-dot"></div>
+                                <div class="step-meta-details"><p class="step-main-label">Order Received</p><p class="step-desc-label">Awaiting verification parameters sync</p></div>
+                            </div>
+                            <div class="timeline-step" id="step_paid">
+                                <div class="step-node-dot"></div>
+                                <div class="step-meta-details"><p class="step-main-label">Payment Confirmed</p><p class="step-desc-label">Order routed successfully to hardware arrays</p></div>
+                            </div>
+                            <div class="timeline-step" id="step_printing">
+                                <div class="step-node-dot"></div>
+                                <div class="step-meta-details"><p class="step-main-label">Printing Document</p><p class="step-desc-label">HP Smart Tank laser engines running active logs</p></div>
+                            </div>
+                            <div class="timeline-step" id="step_delivery">
+                                <div class="step-node-dot"></div>
+                                <div class="step-meta-details"><p class="step-main-label">Out For Delivery</p><p class="step-desc-label">Blinkit courier picker arriving at gate drop locations</p></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); margin-top:25px; text-transform:uppercase; border-bottom:1px dashed var(--border-color); padding-bottom:6px;">📄 Printable Items Summary</h4>
+                    <div id="trackFilesManifestList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+                    
+                    <div style="margin-top:20px; background:var(--bg-primary); padding:15px; border-radius:12px; border:1px dashed var(--border-color);">
+                        <p style="font-size:0.8rem; font-weight:700; color:var(--text-main);">📍 Shipping Gate Destination:</p>
+                        <p id="trackShippingAddressLabel" style="font-size:0.8rem; color:var(--text-sub); margin-top:2px; font-weight:500;"></p>
+                    </div>
+                </div>
+            </div>
+
+            <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; background:var(--surface); border:1px solid var(--border-color); padding:20px; border-radius:16px;">
+                <h2>Order Invoice Summary</h2>
+                <div class="summary-card">
+                    <div class="summary-row"><span>Printing Sheet Cost</span><span id="summaryPrint">₹0.00</span></div>
+                    <div class="summary-row"><span>Binding Cost Allocation</span><span id="summaryBinding">₹0.00</span></div>
+                    <div class="summary-row"><span>Delivery Logistics Fee</span><span id="summaryDelivery">₹0.00</span></div>
+                    <hr class="summary-divider">
+                    <div class="summary-row total-row"><h3>Grand Total Amount</h3><h3 id="summaryTotal">₹0.00</h3></div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- 🚨 MASTER PREMIUM STORE CLOSED POPUP MODAL FRAME -->
+    <div id="storeClosedPopupModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 999999; display: none; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #ffffff; border-radius: 24px; padding: 30px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 3px solid #ef4444; animation: popupBounceAnimation 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <div style="font-size: 3.5rem; margin-bottom: 10px;">🏪🚨</div>
+            <h3 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 8px; letter-spacing: -0.5px;">Store is Currently Closed</h3>
+            <p style="font-size: 0.88rem; color: #64748b; line-height: 1.6; margin-bottom: 20px; font-weight: 500;">
+                We are currently not accepting any print jobs at the moment. Please visit us back when the store infrastructure is back online!
+            </p>
+            <div style="background: #fff5f5; border: 1px dashed #fca5a5; padding: 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; color: #b91c1c; margin-bottom: 20px;">
+                ⏰ Standard Timings: 07:00 AM - 12:00 AM
+            </div>
+            <button type="button" onclick="closeStoreClosedPopup()" style="width: 100%; padding: 12px; background: #0f172a; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.2s;">
+                Understood, Got It!
+            </button>
+        </div>
     </div>
 
     <script>
-        // ==========================================
-        // 🔔 1. LOUD SOUND ALERT ENGINE (SYNTHESIZED BELL)
-        // ==========================================
-        let audioCtx = null;
+        // 🔥 REAL-TIME CLOUD STORE STATUS GUARD (ADMIN MASTER OVERRIDE)
+        async function runSilentIntradaySchedulerGuard() {
+            const badge = document.getElementById('userShopStatus');
+            const btn = document.getElementById('submitOrderBtn');
+            const noticeBox = document.getElementById('storeClosedNoticeBox');
+            
+            if (!badge || !btn) return;
 
-        function getAudioContext() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-            return audioCtx;
-        }
-
-        // Play loud 2-tone chime on new order
-        function playLoudOrderChime(isTest = false) {
             try {
-                const ctx = getAudioContext();
-                const now = ctx.currentTime;
+                const response = await fetch('/api/store-status');
+                const data = await response.json();
+                
+                // 🔴 1. If Admin manually set CLOSED -> strictly CLOSED
+                if (data.success && data.isOpen === false) {
+                    badge.textContent = "CLOSED 🔴"; 
+                    badge.className = "shop-status-text-badge closed";
+                    btn.disabled = true; 
+                    btn.style.opacity = "0.4"; 
+                    btn.style.cursor = "not-allowed"; 
+                    btn.textContent = "❌ Store Closed by Admin";
+                    if (noticeBox) noticeBox.classList.remove('hidden');
+                    return;
+                }
 
-                // High pitch beep 1
-                const osc1 = ctx.createOscillator();
-                const gain1 = ctx.createGain();
-                osc1.type = 'triangle';
-                osc1.frequency.setValueAtTime(880, now); // Note A5
-                gain1.gain.setValueAtTime(0.4, now);
-                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-                osc1.connect(gain1);
-                gain1.connect(ctx.destination);
-                osc1.start(now);
-                osc1.stop(now + 0.35);
+                // ⏰ 2. If Admin allowed OPEN -> Check 7AM - 12AM IST hours
+                const now = new Date();
+                const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
+                let isTimeOpen = (hoursIST >= 7 && hoursIST < 24);
 
-                // High pitch beep 2 (Louder bell finish)
-                const osc2 = ctx.createOscillator();
-                const gain2 = ctx.createGain();
-                osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(1320, now + 0.2); // Note E6
-                gain2.gain.setValueAtTime(0.6, now + 0.2);
-                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-                osc2.connect(gain2);
-                gain2.connect(ctx.destination);
-                osc2.start(now + 0.2);
-                osc2.stop(now + 0.8);
-            } catch (e) {
-                console.warn("Audio unlock required: Click anywhere on dashboard", e);
+                if (isTimeOpen && data.isOpen !== false) {
+                    badge.textContent = "OPEN 🟢"; 
+                    badge.className = "shop-status-text-badge open";
+                    btn.disabled = false; 
+                    btn.style.opacity = "1"; 
+                    btn.style.cursor = "pointer";
+                    if(btn.textContent.includes('Store Closed') || btn.textContent.includes('Store is Closed')) {
+                        btn.textContent = "Proceed to Payment";
+                    }
+                    if (noticeBox) noticeBox.classList.add('hidden');
+                } else {
+                    badge.textContent = "CLOSED 🔴"; 
+                    badge.className = "shop-status-text-badge closed";
+                    btn.disabled = true; 
+                    btn.style.opacity = "0.4"; 
+                    btn.style.cursor = "not-allowed"; 
+                    btn.textContent = "❌ Store is Closed (7AM - 12AM)";
+                    if (noticeBox) noticeBox.classList.remove('hidden');
+                }
+
+            } catch (err) {
+                console.error("Store status sync error:", err);
             }
         }
+        
+        setInterval(runSilentIntradaySchedulerGuard, 3000);
+        window.addEventListener('DOMContentLoaded', runSilentIntradaySchedulerGuard);
 
-        // Unlock Web Audio on first click
-        window.addEventListener('click', () => { getAudioContext(); }, { once: true });
-
-        // ==========================================
-        // 🖨️ 2. AUTO-PRINT SYSTEM & DISPATCH ENGINE
-        // ==========================================
-        let autoPrintEnabled = localStorage.getItem('admin_autoprint') !== 'false';
-        const processedAutoPrintOrderIds = new Set(JSON.parse(localStorage.getItem('printed_orders') || '[]'));
-
-        function toggleAutoPrintEngine() {
-            autoPrintEnabled = !autoPrintEnabled;
-            localStorage.setItem('admin_autoprint', autoPrintEnabled);
-            updateAutoPrintButtonUI();
+        // 🔥 POPUP MODAL TOGGLE LOGIC
+        function closeStoreClosedPopup() {
+            document.getElementById('storeClosedPopupModal').style.display = 'none';
         }
 
-        function updateAutoPrintButtonUI() {
-            const btn = document.getElementById('autoPrintToggleBtn');
-            const txt = document.getElementById('autoPrintStatusText');
-            if (autoPrintEnabled) {
-                btn.className = "toggle-badge-btn btn-autoprint-on";
-                txt.textContent = "ON";
-            } else {
-                btn.className = "toggle-badge-btn btn-autoprint-off";
-                txt.textContent = "OFF";
+        function closeSmartInstallModal() {
+            document.getElementById('smartInstallModal').style.display = 'none';
+        }
+
+        // 🔥 ATTACH INTERCEPTORS TO SECURITY GUARDS
+        document.getElementById('fileUpload').addEventListener('click', function(e) {
+            const badge = document.getElementById('userShopStatus');
+            if (badge && badge.textContent.includes('CLOSED')) {
+                e.preventDefault(); 
+                document.getElementById('storeClosedPopupModal').style.display = 'flex';
+                return false;
             }
-        }
-        updateAutoPrintButtonUI();
+        });
 
-        // Trigger hardware print for a given document URL
-        function triggerPrintJob(fileUrl, orderId) {
-            if (!fileUrl) {
-                alert("File URL not found for this order!");
+        const originalInlineUploadTrigger = window.triggerInlineFileUploadClick;
+        window.triggerInlineFileUploadClick = function() {
+            const badge = document.getElementById('userShopStatus');
+            if (badge && badge.textContent.includes('CLOSED')) {
+                document.getElementById('storeClosedPopupModal').style.display = 'flex';
                 return;
             }
+            if (typeof originalInlineUploadTrigger === 'function') originalInlineUploadTrigger();
+        };
 
-            const frame = document.getElementById('silentPrintFrame');
-            frame.src = fileUrl;
-            frame.onload = function () {
-                try {
-                    frame.contentWindow.focus();
-                    frame.contentWindow.print();
-                } catch (e) {
-                    console.log("Direct iframe print blocked by CORS, opening print tab...");
-                    window.open(fileUrl, '_blank');
-                }
-            };
+        // 🔥 MAP OPERATION GLOBAL POOL HOOKS
+        let deliveryMap = null;
+        let deliveryMarker = null;
 
-            // Record as processed
-            if (orderId) {
-                processedAutoPrintOrderIds.add(orderId);
-                localStorage.setItem('printed_orders', JSON.stringify(Array.from(processedAutoPrintOrderIds)));
+        function initBlinkitStyleMap() {
+            if (deliveryMap) return;
+
+            let centerLat = 25.3176;
+            let centerLng = 82.9739;
+
+            deliveryMap = L.map('userDeliveryMap', {
+                center: [centerLat, centerLng],
+                zoom: 15,
+                dragging: true,
+                touchZoom: true,
+                scrollWheelZoom: true
+            });
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(deliveryMap);
+
+            deliveryMarker = L.marker([centerLat, centerLng], { draggable: true }).addTo(deliveryMap);
+
+            updateAddressFromCoords(centerLat, centerLng);
+
+            deliveryMarker.on('dragend', function () {
+                const position = deliveryMarker.getLatLng();
+                updateAddressFromCoords(position.lat, position.lng);
+            });
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    const gpsLat = position.coords.latitude;
+                    const gpsLng = position.coords.longitude;
+                    
+                    if(deliveryMap && deliveryMarker) {
+                        deliveryMap.setView([gpsLat, gpsLng], 16);
+                        deliveryMarker.setLatLng([gpsLat, gpsLng]);
+                        updateAddressFromCoords(gpsLat, gpsLng);
+                    }
+                }, function (error) {
+                    console.warn("Geolocation fallback: " + error.message);
+                }, { enableHighAccuracy: true, timeout: 8000 });
             }
+            
+            setTimeout(() => { deliveryMap.invalidateSize(); }, 400);
         }
 
-        // ==========================================
-        // 🏪 3. STORE OPEN/CLOSED CONTROLLER
-        // ==========================================
-        let isStoreOpen = true;
-
-        async function fetchStoreStatus() {
+        async function updateAddressFromCoords(lat, lng) {
             try {
-                const res = await fetch('/api/store-status');
-                const data = await res.json();
-                if (data.success !== undefined) {
-                    isStoreOpen = data.isOpen;
-                    updateStoreButtonUI();
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                const data = await response.json();
+                if (data && data.display_name) {
+                    document.getElementById('address').value = data.display_name;
                 }
             } catch (err) {
-                console.error("Store status fetch error:", err);
+                document.getElementById('address').value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
             }
         }
 
-        async function toggleStoreStatus() {
-            const nextState = !isStoreOpen;
-            try {
-                const res = await fetch('/api/admin/toggle-store', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ isOpen: nextState })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    isStoreOpen = data.isOpen;
-                    updateStoreButtonUI();
-                }
-            } catch (e) {
-                // Fallback direct toggle
-                isStoreOpen = nextState;
-                updateStoreButtonUI();
+        // 🔥 STRICT STAGE STATE ENGINE MATRIX
+        function executeLiveTimelineStateStepper(activeStatus) {
+            const nodesIdsList = ['step_pending', 'step_paid', 'step_printing', 'step_delivery'];
+            nodesIdsList.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.className = "timeline-step"; 
+            });
+
+            const deliveryLabel = document.querySelector('#step_delivery .step-main-label');
+            if(deliveryLabel) deliveryLabel.textContent = "Out For Delivery";
+
+            const currentCleanStatus = activeStatus ? activeStatus.trim() : "";
+
+            if (currentCleanStatus === 'Pending Payment' || currentCleanStatus === 'Pending') {
+                setStepStatusMarkup('step_pending', 'active');
+            } 
+            else if (currentCleanStatus === 'Paid / Ready for Print' || currentCleanStatus === 'Paid') {
+                setStepStatusMarkup('step_pending', 'completed');
+                setStepStatusMarkup('step_paid', 'active');
+            } 
+            else if (currentCleanStatus === 'Printing') {
+                setStepStatusMarkup('step_pending', 'completed');
+                setStepStatusMarkup('step_paid', 'completed');
+                setStepStatusMarkup('step_printing', 'active');
+            } 
+            else if (currentCleanStatus === 'Out for Delivery') {
+                setStepStatusMarkup('step_pending', 'completed');
+                setStepStatusMarkup('step_paid', 'completed');
+                setStepStatusMarkup('step_printing', 'completed');
+                setStepStatusMarkup('step_delivery', 'active');
+            }
+            else if (currentCleanStatus === 'Delivered') {
+                setStepStatusMarkup('step_pending', 'completed');
+                setStepStatusMarkup('step_paid', 'completed');
+                setStepStatusMarkup('step_printing', 'completed');
+                setStepStatusMarkup('step_delivery', 'completed');
+                if(deliveryLabel) deliveryLabel.textContent = "✅ Order Delivered Successfully!";
             }
         }
 
-        function updateStoreButtonUI() {
-            const btn = document.getElementById('storeStatusToggleBtn');
-            const txt = document.getElementById('storeStatusStateText');
-            if (isStoreOpen) {
-                btn.className = "toggle-badge-btn btn-store-open";
-                txt.textContent = "OPEN";
-            } else {
-                btn.className = "toggle-badge-btn btn-store-closed";
-                txt.textContent = "CLOSED";
-            }
+        function setStepStatusMarkup(elementId, stateModeClass) {
+            const el = document.getElementById(elementId);
+            if(el) el.classList.add(stateModeClass);
         }
 
-        // ==========================================
-        // 🔄 4. ORDER STATUS STEPPER SYNC
-        // ==========================================
-        async function updateOrderStatus(orderId, newStatus) {
-            try {
-                const res = await fetch(`/api/admin/orders/${orderId}/status`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: newStatus })
-                });
+        setInterval(async () => {
+            const trackingPanel = document.getElementById('user_section_order_tracking');
+            if (trackingPanel && trackingPanel.classList.contains('active')) {
+                const currentActiveTrackingId = document.getElementById('trackOrderIdLabel')?.textContent?.replace('ID Reference: ', '')?.replace('ID: ', '')?.trim();
                 
-                // Immediately refresh view
-                fetchLiveOrdersStream();
-            } catch (err) {
-                console.error("Failed to update status:", err);
-                fetchLiveOrdersStream();
-            }
-        }
-
-        // ==========================================
-        // 📦 5. LIVE ORDER QUEUE & REAL-TIME FETCH
-        // ==========================================
-        let previousOrderCount = -1;
-
-        async function fetchLiveOrdersStream() {
-            try {
-                const res = await fetch('/api/admin/orders');
-                if (!res.ok) return;
-                const orders = await res.json();
-
-                if (!Array.isArray(orders)) return;
-
-                // Update Stats
-                document.getElementById('statTotalOrders').textContent = orders.length;
-                document.getElementById('statReadyPrint').textContent = orders.filter(o => o.status === 'Paid / Ready for Print' || o.status === 'Pending').length;
-                document.getElementById('statOutDelivery').textContent = orders.filter(o => o.status === 'Out for Delivery').length;
-                document.getElementById('statCompleted').textContent = orders.filter(o => o.status === 'Delivered').length;
-
-                // Sound Alert on New Order Arrival
-                if (previousOrderCount !== -1 && orders.length > previousOrderCount) {
-                    playLoudOrderChime();
-                }
-                previousOrderCount = orders.length;
-
-                renderOrdersList(orders);
-
-                // Auto-Print Trigger Check
-                if (autoPrintEnabled) {
-                    orders.forEach(order => {
-                        const isReady = order.status === 'Paid / Ready for Print' || order.status === 'Paid';
-                        if (isReady && !processedAutoPrintOrderIds.has(order.orderId)) {
-                            console.log(`🤖 Auto-Printing Job for Order: ${order.orderId}`);
-                            const fileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '';
-                            if (fileUrl) {
-                                triggerPrintJob(fileUrl, order.orderId);
+                if (currentActiveTrackingId) {
+                    try {
+                        const res = await fetch(`/api/admin/orders`);
+                        if (!res.ok) return;
+                        const latestOrdersCache = await res.json();
+                        
+                        if (Array.isArray(latestOrdersCache)) {
+                            const currentLiveMatchOrderNode = latestOrdersCache.find(o => o.orderId === currentActiveTrackingId);
+                            if (currentLiveMatchOrderNode) {
+                                executeLiveTimelineStateStepper(currentLiveMatchOrderNode.status);
                             }
                         }
-                    });
+                    } catch (err) {
+                        console.error("Live tracking sync failed:", err);
+                    }
                 }
+            }
+        }, 3000);
 
-            } catch (err) {
-                console.error("Order stream sync error:", err);
+        function toggleUserDrawer(open) {
+            document.getElementById('userSideDrawer').classList.toggle('active', open);
+            document.getElementById('drawerOverlay').classList.toggle('active', open);
+            if(open) {
+                const currentSessionUser = localStorage.getItem('printAppUser');
+                if(currentSessionUser) {
+                    const userData = JSON.parse(localStorage.getItem(`user_${currentSessionUser}`));
+                    if(userData) {
+                        document.getElementById('drawerEditName').value = userData.name || '';
+                        document.getElementById('drawerEditPassword').value = userData.password || '';
+                        document.getElementById('drawerEditAlternateMobile').value = userData.altMobile || '';
+                    }
+                }
+            }
+        }
+        function toggleWalletPopupGrid(show, event) {
+            const modal = document.getElementById('walletDepositModal');
+            if(!modal) return;
+            if(show) { modal.style.display = 'flex'; } else { if(event.target === modal) modal.style.display = 'none'; }
+        }
+        function setWalletQuickAmount(amt) { document.getElementById('walletCustomAmountInput').value = amt; }
+
+        function navigateDrawerSection(targetId) {
+            document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
+            if(document.getElementById(`menu_${targetId}`)) document.getElementById(`menu_${targetId}`).classList.add('active');
+            document.querySelectorAll('.drawer-subpanel-content').forEach(el => el.classList.remove('active'));
+
+            const sidePanelPrice = document.getElementById('sidebarPricingPanel');
+            const mainLayoutWrapper = document.getElementById('mainLayoutAppContainer');
+
+            if (targetId === 'store' || targetId === 'history' || targetId === 'order_tracking') {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                document.getElementById(`user_section_${targetId}`).classList.add('active');
+                
+                if(targetId !== 'store') {
+                    sidePanelPrice.classList.add('hidden');
+                    mainLayoutWrapper.classList.remove('has-invoice');
+                    mainLayoutWrapper.style.gridTemplateColumns = '1fr';
+                } else {
+                    if(typeof window.refreshInvoiceTabState === 'function') { window.refreshInvoiceTabState(); }
+                }
+                
+                if(targetId === 'order_tracking') {
+                    const currentActiveTrackingId = document.getElementById('trackOrderIdLabel')?.textContent?.replace('ID Reference: ', '')?.replace('ID: ', '')?.trim();
+                    if(currentActiveTrackingId) {
+                        fetch(`/api/admin/orders`)
+                            .then(res => res.json())
+                            .then(latestOrdersCache => {
+                                if (Array.isArray(latestOrdersCache)) {
+                                    const match = latestOrdersCache.find(o => o.orderId === currentActiveTrackingId);
+                                    if(match) executeLiveTimelineStateStepper(match.status);
+                                }
+                            }).catch(err => console.error(err));
+                    }
+                }
+                toggleUserDrawer(false);
+            } else {
+                const activeSubPanel = document.getElementById(`drawer_panel_${targetId}`);
+                if(activeSubPanel) activeSubPanel.classList.add('active');
             }
         }
 
-        function renderOrdersList(orders) {
-            const container = document.getElementById('adminOrderQueue');
-            if (orders.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 40px; background: var(--surface-card); border-radius: 16px; border: 1px solid var(--border-color);">
-                        <div style="font-size: 2.5rem; margin-bottom: 8px;">📭</div>
-                        <h3>No Active Print Orders</h3>
-                        <p style="color: var(--text-sub); font-size: 0.85rem; margin-top: 4px;">Orders placed on the store will appear here with auto-print alerts.</p>
-                    </div>
-                `;
-                return;
-            }
+        document.getElementById('drawerProfileUpdateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const currentSessionUser = localStorage.getItem('printAppUser');
+            if(!currentSessionUser) return;
+            const updatedName = document.getElementById('drawerEditName').value.trim();
+            const updatedPassword = document.getElementById('drawerEditPassword').value;
+            const updatedAltMobile = document.getElementById('drawerEditAlternateMobile').value.trim();
+            const userRecord = JSON.parse(localStorage.getItem(`user_${currentSessionUser}`)) || {};
+            userRecord.name = updatedName; userRecord.password = updatedPassword; userRecord.altMobile = updatedAltMobile;
+            localStorage.setItem(`user_${currentSessionUser}`, JSON.stringify(userRecord));
+            const userGreeting = document.getElementById('userGreeting');
+            if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${updatedName}</span>`;
+            const alertSuccess = document.getElementById('profileUpdateSuccessMsg');
+            alertSuccess.style.display = 'block';
+            setTimeout(() => { alertSuccess.style.display = 'none'; }, 3500);
+        });
 
-            // Sort newest first
-            const sorted = [...orders].reverse();
-
-            container.innerHTML = sorted.map(order => {
-                const currentStatus = order.status || 'Pending';
-                const fileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '#';
-                const fileName = order.fileName || (order.files && order.files[0]?.name) || 'Print_Document.pdf';
-                const pages = order.pages || order.pageCount || 1;
-                const copies = order.copies || 1;
-                const printType = order.printType || (order.isColor ? 'Color' : 'Black & White');
-                const binding = order.binding || order.bindingType || 'None';
-                const totalAmt = order.totalAmount || order.grandTotal || 0;
-
-                const isNew = currentStatus === 'Pending' || currentStatus === 'Paid / Ready for Print';
-
-                return `
-                    <div class="order-card ${isNew ? 'new-order-pulse' : ''}" id="card_${order.orderId}">
-                        <div class="order-card-header">
-                            <div class="order-id-meta">
-                                <h3>Order #${order.orderId}</h3>
-                                <div class="order-time">Received: ${order.timestamp ? new Date(order.timestamp).toLocaleTimeString() : 'Just now'}</div>
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-green);">₹${totalAmt}</div>
-                                <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase;">${order.paymentMethod || 'Razorpay / Prepaid'}</span>
-                            </div>
-                        </div>
-
-                        <!-- Customer Meta -->
-                        <div class="order-customer-box">
-                            <div class="cust-field">
-                                <b>Customer Name</b>
-                                <span>${order.customerName || order.userName || 'Customer'}</span>
-                            </div>
-                            <div class="cust-field">
-                                <b>Contact Number</b>
-                                <span><a href="tel:${order.phone || ''}" style="color: #38bdf8; text-decoration: none;">${order.phone || 'N/A'}</a></span>
-                            </div>
-                            <div class="cust-field" style="grid-column: 1 / -1;">
-                                <b>📍 Gate / Delivery Address</b>
-                                <span>${order.address || 'Standard Delivery Location'}</span>
-                            </div>
-                        </div>
-
-                        <!-- Print Hardware Specifications -->
-                        <div class="specs-container">
-                            <div class="specs-title">🖨️ Hardware Specifications</div>
-                            <div class="specs-tags-row">
-                                <div class="spec-tag highlight">📑 ${pages} Pages</div>
-                                <div class="spec-tag highlight">✖️ ${copies} Copies</div>
-                                <div class="spec-tag">🎨 ${printType}</div>
-                                <div class="spec-tag">📎 Binding: ${binding}</div>
-                            </div>
-
-                            <div class="file-action-row">
-                                <a href="${fileUrl}" target="_blank" download class="btn-download-file">
-                                    📥 Download File (${fileName.substring(0, 24)}...)
-                                </a>
-                                <button type="button" class="btn-manual-print" onclick="triggerPrintJob('${fileUrl}', '${order.orderId}')">
-                                    🖨️ Print Document Now
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- 4-Stage Stepper -->
-                        <div class="stepper-actions-bar">
-                            <span class="stepper-label">Set Status:</span>
-                            
-                            <button type="button" class="btn-step ${currentStatus === 'Paid / Ready for Print' || currentStatus === 'Pending' ? 'current-phase' : ''}" 
-                                onclick="updateOrderStatus('${order.orderId}', 'Paid / Ready for Print')">
-                                1. Ready
-                            </button>
-
-                            <button type="button" class="btn-step ${currentStatus === 'Printing' ? 'current-phase' : ''}" 
-                                onclick="updateOrderStatus('${order.orderId}', 'Printing')">
-                                2. 🖨️ Printing
-                            </button>
-
-                            <button type="button" class="btn-step ${currentStatus === 'Out for Delivery' ? 'current-phase' : ''}" 
-                                onclick="updateOrderStatus('${order.orderId}', 'Out for Delivery')">
-                                3. 🛵 Out for Delivery
-                            </button>
-
-                            <button type="button" class="btn-step ${currentStatus === 'Delivered' ? 'active' : ''}" 
-                                onclick="updateOrderStatus('${order.orderId}', 'Delivered')">
-                                4. ✅ Delivered
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+        // 🔥 OBSERVER MUTATION EYE TO TRIGGER MAP RE-RENDER ON DEMAND
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    const configScreen = document.getElementById('configurationScreenState');
+                    if (configScreen && !configScreen.classList.contains('hidden')) {
+                        initBlinkitStyleMap();
+                    }
+                }
+            });
+        });
+        
+        const targetConfigScreen = document.getElementById('configurationScreenState');
+        if(targetConfigScreen) {
+            observer.observe(targetConfigScreen, { attributes: true });
         }
 
-        // ==========================================
-        // 📱 6. PWA SERVICE WORKER & INSTALL LISTENER
-        // ==========================================
-        let adminDeferredPrompt;
-        const btnInstallAdmin = document.getElementById('btnInstallAdmin');
+        // 📱 SAFE PWA SERVICE WORKER REGISTRATION
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((reg) => console.log('✅ PWA Worker Registered Successfully! Scope: ', reg.scope))
+                    .catch((err) => console.warn('PWA Worker Registration Delay: ', err));
+            });
+        }
+
+        // 📱 STRICT MOBILE-ONLY INSTALL ENGINE (DESKTOP AUTO BYPASS)
+        let deferredPwaPrompt = null;
+        const appSheet = document.getElementById('nativeAppSheet');
+        const installCta = document.getElementById('nativeInstallCta');
+        const smartModal = document.getElementById('smartInstallModal');
+        const successToast = document.getElementById('pwaSuccessToast');
+
+        function isDesktop() {
+            return window.innerWidth >= 768;
+        }
+
+        function isIOSDevice() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+
+        function isCurrentlyRunningAsApp() {
+            return window.matchMedia('(display-mode: standalone)').matches || 
+                   window.navigator.standalone === true;
+        }
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
-            adminDeferredPrompt = e;
-            if (btnInstallAdmin) btnInstallAdmin.style.display = 'inline-flex';
-        });
-
-        btnInstallAdmin?.addEventListener('click', () => {
-            if (adminDeferredPrompt) {
-                adminDeferredPrompt.prompt();
-                adminDeferredPrompt.userChoice.then((choiceResult) => {
-                    adminDeferredPrompt = null;
-                });
+            deferredPwaPrompt = e;
+            if (!isDesktop() && !isCurrentlyRunningAsApp() && appSheet) {
+                appSheet.classList.add('active');
             }
         });
 
-        window.addEventListener('appinstalled', () => {
-            if (btnInstallAdmin) btnInstallAdmin.style.display = 'none';
+        window.addEventListener('load', () => {
+            if (!isDesktop() && !isCurrentlyRunningAsApp() && appSheet) {
+                setTimeout(() => {
+                    appSheet.classList.add('active');
+                }, 1000);
+            }
+            
+            if (!isDesktop() && isIOSDevice() && !isCurrentlyRunningAsApp() && appSheet) {
+                setTimeout(() => {
+                    appSheet.classList.add('active');
+                }, 1200);
+            }
         });
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw-admin.js')
-                .then(() => console.log('Admin Service Worker Active'))
-                .catch((err) => console.log('Admin SW Error:', err));
+        if (installCta) {
+            installCta.addEventListener('click', async () => {
+                if (isDesktop()) return;
+
+                if (deferredPwaPrompt) {
+                    deferredPwaPrompt.prompt();
+                    const choiceResult = await deferredPwaPrompt.userChoice;
+                    if (choiceResult.outcome === 'accepted') {
+                        dismissAppSheet();
+                        showInstalledToast();
+                    }
+                    deferredPwaPrompt = null;
+                } else {
+                    dismissAppSheet();
+                    if (smartModal) {
+                        const stepsContainer = document.getElementById('installStepsContainer');
+                        const modalTitle = document.getElementById('modalInstallTitle');
+                        
+                        if (isIOSDevice()) {
+                            modalTitle.textContent = "Install on iPhone (Safari)";
+                            stepsContainer.innerHTML = `
+                                <div class="step-row"><div class="step-num">1</div><div>Tap the <b>Share button ⎋</b> at bottom of Safari</div></div>
+                                <div class="step-row"><div class="step-num">2</div><div>Scroll down and select <b>"Add to Home Screen"</b></div></div>
+                            `;
+                        } else {
+                            modalTitle.textContent = "Install App in 1 Click";
+                            stepsContainer.innerHTML = `
+                                <div class="step-row"><div class="step-num">1</div><div>Tap browser menu icon <b>(Top-Right 3 Dots ⋮)</b></div></div>
+                                <div class="step-row"><div class="step-num">2</div><div>Select <b>"Install app"</b> or <b>"Add to Home screen"</b></div></div>
+                            `;
+                        }
+                        smartModal.style.display = 'flex';
+                    }
+                }
+            });
         }
 
-        // Init Polling Cycles
-        fetchStoreStatus();
-        fetchLiveOrdersStream();
-        setInterval(fetchLiveOrdersStream, 3500); // 3.5s Live Polling
+        function dismissAppSheet() {
+            if (appSheet) appSheet.classList.remove('active');
+        }
+
+        function showInstalledToast() {
+            if (successToast) {
+                successToast.classList.add('show');
+                setTimeout(() => {
+                    successToast.classList.remove('show');
+                }, 4000);
+            }
+        }
+
+        window.addEventListener('appinstalled', () => {
+            dismissAppSheet();
+            showInstalledToast();
+            deferredPwaPrompt = null;
+        });
     </script>
+    <script src="script.js"></script>
 </body>
 </html>

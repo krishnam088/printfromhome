@@ -14,37 +14,43 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname)); 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 🔥 PERMANENT DATABASE FILES FOR CLOUD CORES
 const USERS_FILE = path.join(__dirname, 'users.json');
-let orders = [];
+const ORDERS_FILE = path.join(__dirname, 'orders.json');
+const STORE_CONFIG_FILE = path.join(__dirname, 'store_config.json');
 
-// 🔥 STORE LIVE OPERATIONS MASTER TOGGLE
-let isStoreOpenGlobal = true; 
+// Initialize files if they don't exist
+if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, JSON.stringify([]));
+if (!fs.existsSync(ORDERS_FILE)) fs.writeFileSync(ORDERS_FILE, JSON.stringify([]));
+if (!fs.existsSync(STORE_CONFIG_FILE)) fs.writeFileSync(STORE_CONFIG_FILE, JSON.stringify({ isOpen: true }));
 
-// 🔥 GLOBAL RAM CACHE
-let globalUsersDatabaseArray = [];
-
-if (!fs.existsSync(USERS_FILE)) {
-    fs.writeFileSync(USERS_FILE, JSON.stringify([]));
-}
-
+// Helpers for File DB
 function readUsersFromDatabase() {
-    try {
-        const data = fs.readFileSync(USERS_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch (e) {
-        return [];
-    }
+    try { return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')); } catch (e) { return []; }
+}
+function saveUsersToDatabase(usersArray) {
+    try { fs.writeFileSync(USERS_FILE, JSON.stringify(usersArray, null, 2)); } catch (e) { console.error("❌ DB write failure:", e); }
 }
 
-function saveUsersToDatabase(usersArray) {
-    try {
-        fs.writeFileSync(USERS_FILE, JSON.stringify(usersArray, null, 2));
-    } catch (e) {
-        console.error("❌ Database write failure:", e);
-    }
+function readOrdersFromDatabase() {
+    try { return JSON.parse(fs.readFileSync(ORDERS_FILE, 'utf8')); } catch (e) { return []; }
 }
+function saveOrdersToDatabase(ordersArray) {
+    try { fs.writeFileSync(ORDERS_FILE, JSON.stringify(ordersArray, null, 2)); } catch (e) { console.error("❌ Orders write failure:", e); }
+}
+
+function getStoreConfig() {
+    try { return JSON.parse(fs.readFileSync(STORE_CONFIG_FILE, 'utf8')); } catch (e) { return { isOpen: true }; }
+}
+function saveStoreConfig(config) {
+    try { fs.writeFileSync(STORE_CONFIG_FILE, JSON.stringify(config, null, 2)); } catch (e) { console.error("❌ Config write failure:", e); }
+}
+
+// In-Memory Fallbacks
+let globalUsersDatabaseArray = [];
+let orders = readOrdersFromDatabase();
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)){
@@ -55,12 +61,11 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => { cb(null, uploadsDir); },
     filename: (req, file, cb) => { cb(null, Date.now() + '-' + file.originalname); }
 });
-
 const upload = multer({ storage: storage });
 
 const razorpay = new Razorpay({
-    key_id: 'rzp_test_Sz27MnobxedYSU', 
-    key_secret: 'PcaWJEUMGjhn7Cfa04IlzYd9'
+    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_Sz27MnobxedYSU', 
+    key_secret: process.env.RAZORPAY_KEY_SECRET || 'PcaWJEUMGjhn7Cfa04IlzYd9'
 });
 
 // 🌐 Web entry & isolated app routing
@@ -71,26 +76,32 @@ app.get('/sw-admin.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw-ad
 app.get('/sw.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw.js')); });
 
 // ====================================================================
-// 🏪 REMOTE STORE OPERATION CONFIGURATIONS
+// 🏪 REMOTE STORE OPERATION CONFIGURATIONS (PERSISTENT)
 // ====================================================================
 
 app.get('/api/store-status', (req, res) => {
-    res.json({ success: true, isOpen: isStoreOpenGlobal });
+    const config = getStoreConfig();
+    res.json({ success: true, isOpen: config.isOpen });
 });
 
-app.post('/api/store-status/toggle', (req, res) => {
+// Toggle handler supporting both routes
+const handleStoreToggle = (req, res) => {
     try {
         const { isOpen } = req.body;
         if (typeof isOpen !== 'boolean') {
             return res.status(400).json({ success: false, message: "Invalid flag configurations!" });
         }
-        isStoreOpenGlobal = isOpen;
-        console.log(`🏪 Operations Parameter Overwritten by Admin: ${isStoreOpenGlobal ? 'OPEN' : 'CLOSED'}`);
-        res.json({ success: true, isOpen: isStoreOpenGlobal, message: `Store infrastructure synced to ${isStoreOpenGlobal ? 'OPEN' : 'CLOSED'}` });
+        const updatedConfig = { isOpen: isOpen, updatedAt: new Date().toISOString() };
+        saveStoreConfig(updatedConfig);
+        console.log(`🏪 Operations Parameter Overwritten by Admin: ${isOpen ? 'OPEN' : 'CLOSED'}`);
+        res.json({ success: true, isOpen: updatedConfig.isOpen, message: `Store infrastructure synced to ${isOpen ? 'OPEN' : 'CLOSED'}` });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
-});
+};
+
+app.post('/api/store-status/toggle', handleStoreToggle);
+app.post('/api/admin/toggle-store', handleStoreToggle);
 
 // ====================================================================
 // 🔥 UNLIMITED AUTH API SYSTEMS
@@ -160,11 +171,12 @@ app.post('/api/auth/login', (req, res) => {
 
 app.post('/api/create-order', upload.array('document', 20), async (req, res) => {
     try {
-        if (!isStoreOpenGlobal) {
+        const storeConf = getStoreConfig();
+        if (!storeConf.isOpen) {
             return res.status(403).json({ success: false, message: "🚨 Dukan abhi band hai bhai! Direct cloud orders blocked." });
         }
 
-        const { totalAmount, configDetails, address } = req.body;
+        const { totalAmount, configDetails, address, customerName, phone } = req.body;
         const finalAmount = totalAmount ? totalAmount.trim() : "42";
         const amountInPaise = Math.round(parseFloat(finalAmount) * 100);
 
@@ -175,22 +187,43 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
         };
 
         const razorpayOrder = await razorpay.orders.create(options);
-        const filesMappedList = req.files ? req.files.map(f => ({ savedName: f.filename, originalName: f.originalname })) : [];
+        const filesMappedList = req.files ? req.files.map(f => ({
+            name: f.originalname,
+            filename: f.filename,
+            url: `/uploads/${f.filename}`
+        })) : [];
+
+        let parsedConfig = [];
+        try { parsedConfig = configDetails ? JSON.parse(configDetails) : []; } catch(e){}
 
         const newOrder = {
             orderId: razorpayOrder.id,
+            customerName: customerName || 'Customer',
+            phone: phone || 'N/A',
             files: filesMappedList,
-            file: req.files && req.files.length > 0 ? req.files[0].filename : 'No file uploaded',
-            configDetails: configDetails ? JSON.parse(configDetails) : [],
+            fileUrl: filesMappedList.length > 0 ? filesMappedList[0].url : '',
+            fileName: filesMappedList.length > 0 ? filesMappedList[0].name : 'Document.pdf',
+            configDetails: parsedConfig,
+            pages: parsedConfig.length > 0 ? (parsedConfig[0].pages || 1) : 1,
+            copies: parsedConfig.length > 0 ? (parsedConfig[0].copies || 1) : 1,
+            printType: parsedConfig.length > 0 ? (parsedConfig[0].isColor ? 'Color' : 'Black & White') : 'Black & White',
+            binding: parsedConfig.length > 0 ? (parsedConfig[0].binding || 'None') : 'None',
             address: address || 'N/A',
             amount: finalAmount,
+            totalAmount: finalAmount,
+            paymentMethod: 'Prepaid (Razorpay)',
             status: 'Pending Payment',
-            date: new Date().toLocaleString()
+            date: new Date().toLocaleString(),
+            timestamp: new Date().toISOString()
         };
 
+        orders = readOrdersFromDatabase();
         orders.push(newOrder);
+        saveOrdersToDatabase(orders);
+
         res.status(201).json({ success: true, order_id: razorpayOrder.id, amount: razorpayOrder.amount, key_id: razorpay.key_id });
     } catch (error) {
+        console.error("Order creation failed:", error);
         res.status(500).json({ success: false, message: "Order creation failed." });
     }
 });
@@ -198,11 +231,13 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
 app.post('/api/verify-payment', async (req, res) => {
     try {
         const { orderId, paymentId } = req.body;
+        orders = readOrdersFromDatabase();
         const order = orders.find(o => o.orderId === orderId);
         
         if (order) {
             order.status = 'Paid / Ready for Print';
             order.paymentId = paymentId; 
+            saveOrdersToDatabase(orders);
             return res.json({ success: true, message: "Payment verified successfully!" });
         }
         res.status(404).json({ success: false, message: "Order not found" });
@@ -213,12 +248,13 @@ app.post('/api/verify-payment', async (req, res) => {
 
 app.get('/api/admin/financials', (req, res) => {
     try {
+        orders = readOrdersFromDatabase();
         const paidOrders = orders.filter(o => o.status === 'Paid / Ready for Print' || o.status === 'Delivered' || o.status === 'Printing' || o.status === 'Out for Delivery');
         let totalRevenue = 0;
         let totalCostPrice = 0;
 
         paidOrders.forEach(order => {
-            const amt = parseFloat(order.amount) || 0;
+            const amt = parseFloat(order.amount || order.totalAmount) || 0;
             totalRevenue += amt;
 
             let orderPages = 0;
@@ -227,7 +263,7 @@ app.get('/api/admin/financials', (req, res) => {
                     orderPages += (parseInt(f.pages) || 1) * (parseInt(f.copies) || 1);
                 });
             } else {
-                orderPages = 1;
+                orderPages = (parseInt(order.pages) || 1) * (parseInt(order.copies) || 1);
             }
             totalCostPrice += (orderPages * 1.00) + 15.00;
         });
@@ -245,21 +281,33 @@ app.get('/api/admin/financials', (req, res) => {
     }
 });
 
-app.get('/api/admin/orders', (req, res) => { res.json(orders); });
+app.get('/api/admin/orders', (req, res) => { 
+    orders = readOrdersFromDatabase();
+    res.json(orders); 
+});
 
-app.post('/api/admin/orders/update-status', (req, res) => {
-    const { orderId, status } = req.body;
+// Update order status (support both endpoint patterns)
+const handleStatusUpdate = (req, res) => {
+    const orderId = req.params.orderId || req.body.orderId;
+    const status = req.body.status;
+    
     if (!orderId || !status) {
         return res.status(400).json({ success: false, message: "Missing tracking parameters!" });
     }
 
+    orders = readOrdersFromDatabase();
     const order = orders.find(o => o.orderId === orderId);
     if (order) {
         order.status = status; 
+        saveOrdersToDatabase(orders);
+        console.log(`📦 Order #${orderId} status set to: ${status}`);
         return res.json({ success: true, message: `Tracking infrastructure updated to ${status}` });
     }
     res.status(404).json({ success: false, message: "Order data missing inside central cores." });
-});
+};
+
+app.post('/api/admin/orders/update-status', handleStatusUpdate);
+app.post('/api/admin/orders/:orderId/status', handleStatusUpdate);
 
 app.get('/download/:filename', (req, res) => {
     const filePath = path.join(uploadsDir, req.params.filename);
@@ -267,5 +315,5 @@ app.get('/download/:filename', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Blinkit Printing Server running perfectly on port ${PORT}`);
+    console.log(`🚀 Print From Home Server running perfectly on port ${PORT}`);
 });
