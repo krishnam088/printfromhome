@@ -168,7 +168,7 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* 📱 100% ORIGINAL GOOGLE PLAY STORE / APP-LIKE BOTTOM SHEET */
+        /* 📱 PLAY STORE STYLE BOTTOM SHEET */
         .native-app-install-sheet {
             position: fixed;
             bottom: 0;
@@ -313,7 +313,6 @@
         <div class="sheet-drag-handle"></div>
         <div class="app-meta-card">
             <div class="app-native-icon">
-                <!-- 🎨 CUSTOM BRANDED STORE LOGO WITH 'PRINT FROM HOME' TEXT -->
                 <svg width="66" height="66" viewBox="0 0 512 512">
                     <defs>
                         <linearGradient id="sheetBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -946,19 +945,16 @@
         const installCta = document.getElementById('nativeInstallCta');
         const successToast = document.getElementById('pwaSuccessToast');
 
-        // Only check if currently running inside the installed app window
         function isCurrentlyRunningAsApp() {
             return window.matchMedia('(display-mode: standalone)').matches || 
                    window.navigator.standalone === true;
         }
 
-        // 🎯 Auto-Catch Prompt on Web Open / After App Uninstall
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPwaPrompt = e;
             console.log('✅ Dynamic Native Install Prompt is ready!');
 
-            // If user opened site in browser and app is not active
             if (!isCurrentlyRunningAsApp() && appSheet) {
                 setTimeout(() => {
                     appSheet.classList.add('active');
@@ -966,7 +962,6 @@
             }
         });
 
-        // 🚀 Auto-Trigger Install on Click
         if (installCta) {
             installCta.addEventListener('click', async () => {
                 if (deferredPwaPrompt) {
@@ -1001,7 +996,6 @@
             }
         }
 
-        // When installation completes
         window.addEventListener('appinstalled', () => {
             dismissAppSheet();
             showInstalledToast();
