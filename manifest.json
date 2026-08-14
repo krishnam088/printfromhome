@@ -1,12 +1,13 @@
 {
-  "name": "Print From Home - India's Last Minute Printing App",
+  "name": "Print From Home",
   "short_name": "PrintFromHome",
+  "description": "India's Last Minute Printing App",
   "start_url": "/",
-  "id": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#F4C430",
   "theme_color": "#F4C430",
-  "orientation": "portrait-primary",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "https://img.icons8.com/color/192/printer--v1.png",
