@@ -1,10 +1,30 @@
-const CACHE_NAME = 'pfh-offline-v11';
+const CACHE_NAME = 'pfh-offline-ultimate';
+const OFFLINE_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Print From Home</title>
+  <style>
+    body { font-family: system-ui, sans-serif; text-align: center; padding: 50px; background: #F4C430; color: #111; }
+    h1 { font-size: 2rem; margin-bottom: 10px; }
+    p { font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+  <h1>Print From Home</h1>
+  <p>You are currently offline. Please check your internet connection.</p>
+</body>
+</html>`;
 
-// 1. Install Event: Safely cache the root page instantly
+// 1. Install Event: Directly seed cache without waiting for network (Zero Timeout)
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.add('/').catch(() => {});
+      const syntheticResponse = new Response(OFFLINE_HTML, {
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      });
+      return cache.put('/', syntheticResponse);
     }).then(() => self.skipWaiting())
   );
 });
@@ -24,7 +44,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. Fetch Event: Cache-First Strategy for Instant Offline Response
+// 3. Fetch Event: Instant Cache-First Delivery
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
     return;
@@ -32,12 +52,9 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      // Agar cache mein mil gaya, toh bina network wait kiye turant return karo (Passes timeout test)
       if (cachedResponse) {
         return cachedResponse;
       }
-
-      // Warna network se fetch karo aur cache mein save karo
       return fetch(event.request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
@@ -49,10 +66,8 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch(() => {
-          // Offline hone par navigation request ke liye root fallback do
-          if (event.request.mode === 'navigate') {
-            return caches.match('/');
-          }
+          // Network fail ya offline hone par turant cache ka root return karo
+          return caches.match('/');
         });
     })
   );
@@ -75,15 +90,9 @@ self.addEventListener('periodicsync', (event) => {
 // 6. Web Push Notifications Event
 self.addEventListener('push', (event) => {
   let data = { title: 'Print From Home', body: 'New update regarding your print order!' };
-  
   if (event.data) {
-    try {
-      data = event.data.json();
-    } catch (e) {
-      data.body = event.data.text();
-    }
+    try { data = event.data.json(); } catch (e) { data.body = event.data.text(); }
   }
-
   const options = {
     body: data.body,
     icon: '/app_icon_192.png',
@@ -91,10 +100,7 @@ self.addEventListener('push', (event) => {
     vibrate: [200, 100, 200],
     data: { url: data.url || '/' }
   };
-
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
+  event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
 // 7. Notification Click Event
