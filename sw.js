@@ -1,14 +1,18 @@
-const CACHE_NAME = 'pfh-v7';
+const CACHE_NAME = 'pfh-v8';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json'
 ];
 
-// 1. Install Event (Pre-cache core assets for instant offline support)
+// 1. Install Event (Safe Pre-caching using allSettled to prevent timeouts)
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      return Promise.allSettled(
+        ASSETS_TO_CACHE.map((asset) => 
+          cache.add(asset).catch((err) => console.log('Cache failed for:', asset, err))
+        )
+      );
     }).then(() => self.skipWaiting())
   );
 });
@@ -56,18 +60,14 @@ self.addEventListener('fetch', (event) => {
 // 4. Background Sync Event
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-print-orders') {
-    event.waitUntil(
-      Promise.resolve()
-    );
+    event.waitUntil(Promise.resolve());
   }
 });
 
 // 5. Periodic Background Sync Event
 self.addEventListener('periodicsync', (event) => {
   if (event.tag === 'update-store-status') {
-    event.waitUntil(
-      Promise.resolve()
-    );
+    event.waitUntil(Promise.resolve());
   }
 });
 
