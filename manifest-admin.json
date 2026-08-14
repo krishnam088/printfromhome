@@ -11,6 +11,7 @@
   "orientation": "portrait",
   "categories": ["business", "productivity", "utilities"],
   "prefer_related_applications": false,
+  "related_applications": [],
   "icons": [
     {
       "src": "/app_icon_512.png",
