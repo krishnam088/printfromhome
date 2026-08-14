@@ -168,7 +168,7 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* 📱 PLAY STORE STYLE BOTTOM SHEET */
+        /* 📱 100% ORIGINAL APP PLAY STORE STYLE BOTTOM SHEET */
         .native-app-install-sheet {
             position: fixed;
             bottom: 0;
@@ -178,7 +178,7 @@
             border-top-left-radius: 28px;
             border-top-right-radius: 28px;
             padding: 22px 20px 26px 20px;
-            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
             z-index: 1000000;
             transform: translateY(110%);
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -313,29 +313,7 @@
         <div class="sheet-drag-handle"></div>
         <div class="app-meta-card">
             <div class="app-native-icon">
-                <svg width="66" height="66" viewBox="0 0 512 512">
-                    <defs>
-                        <linearGradient id="sheetBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#FEE140"/>
-                            <stop offset="100%" stop-color="#F4C430"/>
-                        </linearGradient>
-                        <linearGradient id="sheetPaperGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#FFFFFF"/>
-                            <stop offset="100%" stop-color="#E2E8F0"/>
-                        </linearGradient>
-                    </defs>
-                    <rect width="512" height="512" rx="128" fill="url(#sheetBgGrad)"/>
-                    <path d="M170 60h172v70H170z" fill="url(#sheetPaperGrad)" rx="8"/>
-                    <path d="M120 120h272c20 0 36 16 36 36v100c0 20-16 36-36 36H120c-20 0-36-16-36-36V156c0-20 16-36 36-36z" fill="#111827"/>
-                    <rect x="150" y="180" width="212" height="120" rx="10" fill="url(#sheetPaperGrad)"/>
-                    <rect x="176" y="210" width="160" height="14" rx="7" fill="#0C8346"/>
-                    <rect x="176" y="236" width="120" height="12" rx="6" fill="#94A3B8"/>
-                    <rect x="176" y="260" width="140" height="12" rx="6" fill="#94A3B8"/>
-                    <circle cx="380" cy="160" r="10" fill="#22C55E"/>
-                    <text x="256" y="380" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="62" text-anchor="middle" fill="#111827" letter-spacing="-1">PRINT</text>
-                    <rect x="106" y="406" width="300" height="58" rx="29" fill="#0C8346"/>
-                    <text x="256" y="448" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="34" text-anchor="middle" fill="#FFFFFF" letter-spacing="3">FROM HOME</text>
-                </svg>
+                <img src="https://img.icons8.com/color/512/printer--v1.png" style="width: 52px; height: 52px;" alt="App Icon">
             </div>
             <div>
                 <h3 class="app-native-title">Print From Home</h3>
@@ -939,7 +917,7 @@
             });
         }
 
-        // 📱 DYNAMIC REAL-TIME PWA INSTALL ENGINE (AUTO-RESTORES ON APP UNINSTALL)
+        // 📱 REAL-TIME GUARANTEED BOTTOM SHEET TRIGGER
         let deferredPwaPrompt = null;
         const appSheet = document.getElementById('nativeAppSheet');
         const installCta = document.getElementById('nativeInstallCta');
@@ -950,18 +928,27 @@
                    window.navigator.standalone === true;
         }
 
+        // 🎯 Catch Native Prompt
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPwaPrompt = e;
-            console.log('✅ Dynamic Native Install Prompt is ready!');
-
+            console.log('✅ Native Install Prompt Ready!');
+            
             if (!isCurrentlyRunningAsApp() && appSheet) {
-                setTimeout(() => {
-                    appSheet.classList.add('active');
-                }, 800);
+                appSheet.classList.add('active');
             }
         });
 
+        // 🚀 Auto-Show Fallback (1s after page load in regular browser)
+        window.addEventListener('load', () => {
+            if (!isCurrentlyRunningAsApp() && appSheet) {
+                setTimeout(() => {
+                    appSheet.classList.add('active');
+                }, 1000);
+            }
+        });
+
+        // ⚡ Direct Click Action
         if (installCta) {
             installCta.addEventListener('click', async () => {
                 if (deferredPwaPrompt) {
@@ -975,10 +962,8 @@
                     }
                     deferredPwaPrompt = null;
                 } else {
-                    installCta.innerHTML = '<span>⏳</span> Launching Installer...';
-                    setTimeout(() => {
-                        installCta.innerHTML = '<span>⬇️</span> Install Official App';
-                    }, 2000);
+                    // Agar browser ne prompt hold kiya ho toh reload se direct catch karega
+                    window.location.reload();
                 }
             });
         }
