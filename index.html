@@ -135,7 +135,7 @@
         .promo-bullet-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
         .promo-bullet-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; color: #4a5568; }
         .verbatim-upload-btn { background-color: #2e7d32; color: #ffffff; border: none; padding: 12px 28px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; }
-        .promo-graphic-mockup { position: absolute; right: -10px; bottom: -10px; width: 45%; max-width: 180px; z-index: 1; }
+        .promo-graphic-mockup { position: absolute; right: 10px; bottom: 10px; width: 45%; max-width: 130px; z-index: 1; }
 
         .tracking-timeline-box { display: flex; flex-direction: column; gap: 20px; margin: 20px 0; padding-left: 10px; position: relative; }
         .tracking-timeline-box::before { content: ''; position: absolute; left: 19px; top: 10px; bottom: 10px; width: 3px; background: #cbd5e1; z-index: 1; }
@@ -312,7 +312,7 @@
                             <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
                         </div>
                         <div class="promo-graphic-mockup">
-                            <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" alt="Stack">
+                            <img src="/printer-icon.png" alt="HP Smart Tank Printer" style="width: 100%; filter: grayscale(100%);">
                         </div>
                     </div>
                 </div>
@@ -422,8 +422,8 @@
                 banner.innerHTML = `<span>${icon} <b>${offerTitle}:</b></span> <marquee>${offerMessage}</marquee>`;
                 if (header) header.style.background = headerGrad;
                 if (body) {
-                    body.className = ""; // reset previous classes
-                    body.classList.add(bodyThemeClass); // apply full festive background class
+                    body.className = ""; 
+                    body.classList.add(bodyThemeClass); 
                 }
             }
 
@@ -443,7 +443,6 @@
             else if (isEventActive(8, 14, 8, 15)) {
                 applyFestiveTheme("linear-gradient(to right, #FF9933, #FFFFFF, #138808)", "linear-gradient(to bottom, #ffe0cc, #ffffff)", "theme-festive-republic", "Independence Day Special", "Happy Independence Day! Celebrate Azadi with 25% OFF on all prints & FREE Delivery! Use Code: AZADI25", "🇮🇳");
                 
-                // Trigger celebratory confetti for Independence Day
                 const script = document.createElement('script');
                 script.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js";
                 script.onload = () => { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); };
