@@ -74,6 +74,9 @@ const razorpay = new Razorpay({
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/admin-panel', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
 
+// 🔥 ADMIN PWA MANIFEST ROUTE (Added)
+app.get('/manifest-admin.json', (req, res) => { res.sendFile(path.join(__dirname, 'manifest-admin.json')); });
+
 // ====================================================================
 // 🏪 REMOTE STORE OPERATION CONFIGURATIONS (ON/OFF APIs)
 // ====================================================================
@@ -234,7 +237,6 @@ app.get('/api/admin/financials', (req, res) => {
             const amt = parseFloat(order.amount) || 0;
             totalRevenue += amt;
 
-            // Calculate operational print costs dynamically
             let orderPages = 0;
             if (order.configDetails && Array.isArray(order.configDetails)) {
                 order.configDetails.forEach(f => {
@@ -243,7 +245,6 @@ app.get('/api/admin/financials', (req, res) => {
             } else {
                 orderPages = 1;
             }
-            // Overhead: ₹1 per sheet paper asset + ₹15 dispatch logistics packaging cost
             totalCostPrice += (orderPages * 1.00) + 15.00;
         });
 
@@ -262,7 +263,6 @@ app.get('/api/admin/financials', (req, res) => {
 
 app.get('/api/admin/orders', (req, res) => { res.json(orders); });
 
-// 🔥 FULLY LIVE TRACKING SYSTEM: UPDATE ORDER STATUS IN CENTRAL ARRAY
 app.post('/api/admin/orders/update-status', (req, res) => {
     const { orderId, status } = req.body;
     if (!orderId || !status) {
@@ -271,7 +271,7 @@ app.post('/api/admin/orders/update-status', (req, res) => {
 
     const order = orders.find(o => o.orderId === orderId);
     if (order) {
-        order.status = status; // Central data parameter updated live
+        order.status = status; 
         console.log(`🛵 Order ${orderId} Status Synced Live To: ${status}`);
         return res.json({ success: true, message: `Tracking infrastructure updated to ${status}` });
     }

@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print From Home - Advanced Admin Command Center</title>
+    <title>Print From Home - Admin Command Center</title>
+    <!-- PWA Manifest & Theme Configuration -->
+    <link rel="manifest" href="/manifest-admin.json">
+    <meta name="theme-color" content="#111111">
+    <link rel="apple-touch-icon" href="/app_icon_192.png">
+    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -52,7 +57,6 @@
         .panel-box { background: var(--surface); border-radius: 18px; padding: 22px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.01); margin-bottom: 20px; }
         .panel-box h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
 
-        /* Graph Controls Filter Buttons */
         .graph-filters { display: flex; gap: 10px; margin-bottom: 15px; }
         .filter-btn { background: #e2e8f0; border: none; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .filter-btn.active { background: var(--blinkit-green); color: white; }
@@ -75,7 +79,6 @@
         .view-section.active { display: block; animation: fadeView 0.25s ease-in-out; }
         @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 🔥 BLINKIT MASTER CONTROLLER SWITCH STYLING */
         .master-toggle-btn { padding: 8px 16px; font-size: 0.85rem; font-weight: 800; border: none; border-radius: 20px; cursor: pointer; color: white; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-transform: uppercase; letter-spacing: 0.3px; }
         .master-toggle-btn.open { background: var(--blinkit-green); }
         .master-toggle-btn.closed { background: #ef4444; }
@@ -189,7 +192,7 @@
                 <div style="line-height:1.7; font-size:0.9rem; color:#4a5568;">
                     <p style="margin-bottom:12px; font-weight:700; color:#111;">💡 Quick Troubleshooting Manual:</p>
                     <ul style="padding-left:20px; margin-bottom:15px; display:flex; flex-direction:column; gap:8px;">
-                        <li>• <b>Printer Agent Offline:</b> Make sure your local computer's CMD prompt is active with <code>node agent.js</code> and the USB cable is fully plugged into the HP printer.</li>
+                        <li>• <b>Printer Agent Offline:</b> Make sure your local computer's CMD prompt is active with <code>node agent.js</code> and the USB cable is fully plugged into the printer.</li>
                         <li>• <b>Double Printing Safeguard:</b> The local agent script natively saves a text token for each print job. To re-print a deleted sheet, simply remove that order's `.txt` log from the agent directory.</li>
                         <li>• <b>Customer Refund Matrix:</b> If a print crashes or fails, you can copy the Razorpay Payment ID from the specific log entry and process the cash rollback directly from your dashboard inside the Razorpay console.</li>
                     </ul>
@@ -200,19 +203,25 @@
     </div>
 
     <script>
+        // Register Service Worker for PWA support on Admin Panel
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Admin Service Worker registered!', reg))
+                    .catch(err => console.log('Admin Service Worker registration failed:', err));
+            });
+        }
+
         let businessChartInstance = null;
         let activeGraphDatasetMode = 'revenue'; 
         let globalRawOrdersCache = []; 
         
-        // 🔥 GLOBAL HOST PARSER
         const cloudApiBaseUrl = window.location.origin;
 
-        // 🔥 CHECK ACTIVE SESSION SECURITY FOOTPRINT
         if(sessionStorage.getItem('adminToken') === 'secure_active_session') {
             showDashboard();
         }
 
-        // 🔥 MASTER CROSS-DEVICE SYNCHRONIZED LOGIC GATEWAY (HARDCODED CENTRAL SYNC)
         function verifyAdminLogin() {
             const user = document.getElementById('adminUser').value.trim();
             const pass = document.getElementById('adminPass').value;
@@ -513,7 +522,6 @@
             } catch(err) { console.error(err); }
         }
 
-        // 🔥 RE-ENGINEERED: PUSH DROPDOWN STATE LIVE TO CENTRAL DATABASE CORES
         async function updateDeliveryStatus(orderId, selectElement) {
             const selectedValue = selectElement.value;
             
