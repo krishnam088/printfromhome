@@ -35,6 +35,12 @@
   "launch_handler": {
     "client_mode": "navigate-existing"
   },
+  "tab_strip": {
+    "home_tab": {
+      "scope": "/"
+    },
+    "visibility": "auto"
+  },
   "protocol_handlers": [
     {
       "protocol": "web+print",
