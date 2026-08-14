@@ -10,6 +10,11 @@
   "background_color": "#F4C430",
   "theme_color": "#F4C430",
   "orientation": "portrait",
+  "categories": [
+    "shopping",
+    "utilities",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "/app_icon_512.png",
