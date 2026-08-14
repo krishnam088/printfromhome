@@ -6,7 +6,12 @@
   "id": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "fullscreen", "minimal-ui"],
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "fullscreen",
+    "minimal-ui"
+  ],
   "background_color": "#F4C430",
   "theme_color": "#F4C430",
   "orientation": "portrait",
