@@ -18,7 +18,6 @@
         const manifestTag = document.createElement('link');
         manifestTag.rel = 'manifest';
         
-        // Check if Independence Day (14-15 Aug) or Diwali (7-8 Nov)
         const isFestiveSeason = (nowCheck.getMonth() === 7 && nowCheck.getDate() >= 14 && nowCheck.getDate() <= 15) || 
                                  (nowCheck.getMonth() === 10 && nowCheck.getDate() >= 7 && nowCheck.getDate() <= 8);
         
@@ -45,6 +44,28 @@
             --border-color: #e2e8f0;
         }
         body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; transition: background-color 0.5s ease; }
+
+        /* 🎨 FESTIVE THEME FULL BACKGROUND & CARD OVERRIDES */
+        body.theme-festive-republic { background-color: #fffaf5 !important; }
+        body.theme-festive-holi { background-color: #fffbeb !important; }
+        body.theme-festive-diwali { background-color: #fefce8 !important; }
+        body.theme-festive-christmas { background-color: #fef2f2 !important; }
+
+        body.theme-festive-diwali .verbatim-docs-promo-card,
+        body.theme-festive-diwali .auth-card,
+        body.theme-festive-diwali .side-drawer,
+        body.theme-festive-diwali .wallet-modal-card {
+            background-color: #fffbeb !important;
+            border-color: #fde047 !important;
+        }
+
+        body.theme-festive-republic .verbatim-docs-promo-card,
+        body.theme-festive-republic .auth-card,
+        body.theme-festive-republic .side-drawer,
+        body.theme-festive-republic .wallet-modal-card {
+            background-color: #fffaf5 !important;
+            border-color: #fed7aa !important;
+        }
 
         .brand-premium-header {
             background: linear-gradient(to bottom, #FFF3B3 0%, #FFFBE6 100%);
@@ -108,7 +129,7 @@
         @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .hidden { display: none !important; }
         
-        .verbatim-docs-promo-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02); width: 100%; overflow: hidden; position: relative; margin-top: 15px; }
+        .verbatim-docs-promo-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02); width: 100%; overflow: hidden; position: relative; margin-top: 15px; transition: background 0.5s ease; }
         .promo-details-block { text-align: left; z-index: 2; max-width: 60%; }
         .promo-main-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 12px; letter-spacing: -0.5px; }
         .promo-bullet-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
@@ -135,8 +156,8 @@
         .logo-green { color: var(--blinkit-green); }
         .splash-tagline { font-size: 1rem; font-weight: 600; color: #1e293b; margin-top: 5px; }
         
-        .auth-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .auth-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; }
+        .auth-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-primary); display: flex; justify-content: center; align-items: center; z-index: 9999; transition: background 0.5s ease; }
+        .auth-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; transition: background 0.5s ease; }
         .auth-brand { font-size: 1.8rem; font-weight: 800; color: #000000; margin-bottom: 10px; }
         .brand-green { color: var(--blinkit-green); }
         .auth-card h2 { font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 20px; }
@@ -378,7 +399,7 @@
 
     <script>
         // ==========================================
-        // 🎨 ADVANCED FESTIVE THEME & BANNER ENGINE (2026)
+        // 🎨 ADVANCED FESTIVE THEME & FULL BACKGROUND ENGINE (2026)
         // ==========================================
         window.addEventListener('DOMContentLoaded', () => {
             const banner = document.getElementById('storeOffersTopBanner');
@@ -395,29 +416,32 @@
                 return now >= startDate && now <= endDate;
             }
 
-            function applyFestiveTheme(bannerBg, headerGrad, bodyBg, offerTitle, offerMessage, icon) {
+            function applyFestiveTheme(bannerBg, headerGrad, bodyThemeClass, offerTitle, offerMessage, icon) {
                 banner.style.background = bannerBg;
                 banner.style.color = "#000";
                 banner.innerHTML = `<span>${icon} <b>${offerTitle}:</b></span> <marquee>${offerMessage}</marquee>`;
                 if (header) header.style.background = headerGrad;
-                if (body && bodyBg) body.style.backgroundColor = bodyBg;
+                if (body) {
+                    body.className = ""; // reset previous classes
+                    body.classList.add(bodyThemeClass); // apply full festive background class
+                }
             }
 
             // 1. Republic Day (25 Jan - 26 Jan)
             if (isEventActive(1, 25, 1, 26)) {
-                applyFestiveTheme("linear-gradient(to right, #FF9933, #FFFFFF, #138808)", "linear-gradient(to bottom, #ffe0cc, #ffffff)", "#fffaf5", "Republic Day Special", "Happy Republic Day! Celebrate freedom with 20% OFF on all document prints. Use Code: REPUBLIC20", "🇮🇳");
+                applyFestiveTheme("linear-gradient(to right, #FF9933, #FFFFFF, #138808)", "linear-gradient(to bottom, #ffe0cc, #ffffff)", "theme-festive-republic", "Republic Day Special", "Happy Republic Day! Celebrate freedom with 20% OFF on all document prints. Use Code: REPUBLIC20", "🇮🇳");
             }
             // 2. Holi (03 Mar - 04 Mar)
             else if (isEventActive(3, 3, 3, 4)) {
-                applyFestiveTheme("#fef3c7", "linear-gradient(to bottom, #fde047, #fef9c3)", "#fffbeb", "Holi Rang Barse Offer", "Wishing you a vibrant & colorful Holi! Enjoy flat discounts and express deliveries today.", "🎨");
+                applyFestiveTheme("#fef3c7", "linear-gradient(to bottom, #fde047, #fef9c3)", "theme-festive-holi", "Holi Rang Barse Offer", "Wishing you a vibrant & colorful Holi! Enjoy flat discounts and express deliveries today.", "🎨");
             }
             // 3. Eid-ul-Fitr (20 Mar - 21 Mar)
             else if (isEventActive(3, 20, 3, 21)) {
-                applyFestiveTheme("#e6f4ea", "linear-gradient(to bottom, #d1fae5, #ecfdf5)", "#f0fdf4", "Eid Mubarak Celebration", "Eid Mubarak! Avail special festive savings and priority home print dispatch now.", "🌙");
+                applyFestiveTheme("#e6f4ea", "linear-gradient(to bottom, #d1fae5, #ecfdf5)", "theme-festive-holi", "Eid Mubarak Celebration", "Eid Mubarak! Avail special festive savings and priority home print dispatch now.", "🌙");
             }
-            // 4. Independence Day (14 Aug - 15 Aug) [ACTIVE RIGHT NOW!]
+            // 4. Independence Day (14 Aug - 15 Aug) [ACTIVE NOW!]
             else if (isEventActive(8, 14, 8, 15)) {
-                applyFestiveTheme("linear-gradient(to right, #FF9933, #FFFFFF, #138808)", "linear-gradient(to bottom, #ffe0cc, #ffffff)", "#fffaf5", "Independence Day Special", "Happy Independence Day! Celebrate Azadi with 25% OFF on all prints & FREE Delivery! Use Code: AZADI25", "🇮🇳");
+                applyFestiveTheme("linear-gradient(to right, #FF9933, #FFFFFF, #138808)", "linear-gradient(to bottom, #ffe0cc, #ffffff)", "theme-festive-republic", "Independence Day Special", "Happy Independence Day! Celebrate Azadi with 25% OFF on all prints & FREE Delivery! Use Code: AZADI25", "🇮🇳");
                 
                 // Trigger celebratory confetti for Independence Day
                 const script = document.createElement('script');
@@ -427,23 +451,23 @@
             }
             // 5. Raksha Bandhan (27 Aug - 28 Aug)
             else if (isEventActive(8, 27, 8, 28)) {
-                applyFestiveTheme("#fce7f3", "linear-gradient(to bottom, #fbcfe8, #fdf2f8)", "#fdf2f8", "Raksha Bandhan Special", "Happy Raksha Bandhan! Send customized photo prints & special gifts to your siblings with free shipping.", "🎁");
+                applyFestiveTheme("#fce7f3", "linear-gradient(to bottom, #fbcfe8, #fdf2f8)", "theme-festive-holi", "Raksha Bandhan Special", "Happy Raksha Bandhan! Send customized photo prints & special gifts to your siblings with free shipping.", "🎁");
             }
             // 6. Ganesh Chaturthi (13 Sep - 14 Sep)
             else if (isEventActive(9, 13, 9, 14)) {
-                applyFestiveTheme("#ffedd5", "linear-gradient(to bottom, #fed7aa, #fff7ed)", "#fff7ed", "Ganesh Chaturthi Offer", "Ganpati Bappa Morya! Special discounts on all creative poster prints and holy booklets.", "📿");
+                applyFestiveTheme("#ffedd5", "linear-gradient(to bottom, #fed7aa, #fff7ed)", "theme-festive-holi", "Ganesh Chaturthi Offer", "Ganpati Bappa Morya! Special discounts on all creative poster prints and holy booklets.", "📿");
             }
             // 7. Dussehra & Gandhi Jayanti (01 Oct - 20 Oct)
             else if (isEventActive(10, 1, 10, 20)) {
-                applyFestiveTheme("#fef3c7", "linear-gradient(to bottom, #fde68a, #fffbeb)", "#fffbeb", "Festive Season Dhamaka", "Dussehra & Gandhi Jayanti Special: Extra savings on all spiral and hard-bound document printing jobs!", "🏹");
+                applyFestiveTheme("#fef3c7", "linear-gradient(to bottom, #fde68a, #fffbeb)", "theme-festive-holi", "Festive Season Dhamaka", "Dussehra & Gandhi Jayanti Special: Extra savings on all spiral and hard-bound document printing jobs!", "🏹");
             }
             // 8. Diwali (07 Nov - 08 Nov)
             else if (isEventActive(11, 7, 11, 8)) {
-                applyFestiveTheme("#fef08a", "linear-gradient(to bottom, #fde047, #fef9c3)", "#fefce8", "Diwali Mega Dhamaka", "Shubh Deepavali! Light up your work with flat discounts and zero delivery fees on all print orders!", "🪔");
+                applyFestiveTheme("#fef08a", "linear-gradient(to bottom, #fde047, #fef9c3)", "theme-festive-diwali", "Diwali Mega Dhamaka", "Shubh Deepavali! Light up your work with flat discounts and zero delivery fees on all print orders!", "🪔");
             }
             // 9. Christmas & New Year (24 Dec - 1 Jan)
             else if (isEventActive(12, 24, 1, 1)) {
-                applyFestiveTheme("#fecaca", "linear-gradient(to bottom, #f87171, #fee2e2)", "#fef2f2", "Christmas & New Year Bash", "Merry Christmas & Happy New Year! Get 30% OFF on all creative prints. Let's start the year with a bang!", "🎄");
+                applyFestiveTheme("#fecaca", "linear-gradient(to bottom, #f87171, #fee2e2)", "theme-festive-christmas", "Christmas & New Year Bash", "Merry Christmas & Happy New Year! Get 30% OFF on all creative prints. Let's start the year with a bang!", "🎄");
             }
             // 10. Default Normal Days
             else {
