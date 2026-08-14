@@ -11,6 +11,7 @@
   "theme_color": "#F4C430",
   "orientation": "portrait",
   "prefer_related_applications": false,
+  "related_applications": [],
   "categories": [
     "shopping",
     "utilities",
