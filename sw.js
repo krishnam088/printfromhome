@@ -41,7 +41,17 @@ self.addEventListener('sync', (event) => {
   }
 });
 
-// 5. Web Push Notifications Event
+// 5. Periodic Background Sync Event
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'update-store-status') {
+    event.waitUntil(
+      // Fetch latest print store status/orders in the background
+      Promise.resolve()
+    );
+  }
+});
+
+// 6. Web Push Notifications Event
 self.addEventListener('push', (event) => {
   let data = { title: 'Print From Home', body: 'New update regarding your print order!' };
   
@@ -66,7 +76,7 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// 6. Notification Click Event
+// 7. Notification Click Event
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
