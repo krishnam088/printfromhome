@@ -278,7 +278,7 @@
             transform: scale(0.98);
         }
 
-        /* 📱 UNIVERSAL SMART INSTALL MODAL (ANDROID / IPHONE / DESKTOP SUPPORT) */
+        /* 📱 MOBILE ONLY MODAL DISPLAY CONTROL */
         .smart-install-modal-overlay {
             position: fixed;
             top: 0;
@@ -293,6 +293,14 @@
             align-items: center;
             padding: 20px;
         }
+        
+        /* 🛑 DESKTOP PAR PROMPT & SHEET DONO HAMESHA HIDE RAHENGE */
+        @media (min-width: 768px) {
+            .smart-install-modal-overlay, .native-app-install-sheet {
+                display: none !important;
+            }
+        }
+
         .smart-install-modal-card {
             background: #ffffff;
             border-radius: 24px;
@@ -363,7 +371,7 @@
         <span>✅</span> Print From Home App Downloaded & Installed!
     </div>
 
-    <!-- 📱 UNIVERSAL SMART INSTALL GUIDE POPUP MODAL -->
+    <!-- 📱 SMART INSTALL GUIDE POPUP MODAL (MOBILE ONLY) -->
     <div id="smartInstallModal" class="smart-install-modal-overlay">
         <div class="smart-install-modal-card">
             <div style="font-size: 3rem; margin-bottom: 6px;">📱⚡</div>
@@ -372,9 +380,7 @@
                 Get instant home screen access for lightning-fast prints!
             </p>
             
-            <div id="installStepsContainer">
-                <!-- Dynamic steps injected via JS depending on Android / iPhone / Desktop -->
-            </div>
+            <div id="installStepsContainer"></div>
 
             <button type="button" onclick="closeSmartInstallModal()" style="width: 100%; margin-top: 10px; padding: 12px; background: #01875f; color: white; border: none; border-radius: 12px; font-weight: 800; font-size: 0.9rem; cursor: pointer;">
                 Got It, Let's Go!
@@ -382,7 +388,7 @@
         </div>
     </div>
 
-    <!-- 📱 PLAY STORE STYLE BOTTOM SHEET -->
+    <!-- 📱 PLAY STORE STYLE BOTTOM SHEET (MOBILE ONLY) -->
     <div id="nativeAppSheet" class="native-app-install-sheet">
         <div class="sheet-drag-handle"></div>
         <div class="app-meta-card">
@@ -995,12 +1001,16 @@
             });
         }
 
-        // 📱 UNIVERSAL MULTI-DEVICE INSTALL ENGINE (ANDROID, IPHONE, DESKTOP)
+        // 📱 STRICT MOBILE-ONLY INSTALL ENGINE (DESKTOP AUTO BYPASS)
         let deferredPwaPrompt = null;
         const appSheet = document.getElementById('nativeAppSheet');
         const installCta = document.getElementById('nativeInstallCta');
         const smartModal = document.getElementById('smartInstallModal');
         const successToast = document.getElementById('pwaSuccessToast');
+
+        function isDesktop() {
+            return window.innerWidth >= 768;
+        }
 
         function isIOSDevice() {
             return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -1014,20 +1024,19 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPwaPrompt = e;
-            if (!isCurrentlyRunningAsApp() && appSheet) {
+            if (!isDesktop() && !isCurrentlyRunningAsApp() && appSheet) {
                 appSheet.classList.add('active');
             }
         });
 
         window.addEventListener('load', () => {
-            if (!isCurrentlyRunningAsApp() && appSheet) {
+            if (!isDesktop() && !isCurrentlyRunningAsApp() && appSheet) {
                 setTimeout(() => {
                     appSheet.classList.add('active');
                 }, 1000);
             }
             
-            // Agar iPhone user hai aur standalone mode mein nahi hai, toh sheet auto dikha sakte hain
-            if (isIOSDevice() && !isCurrentlyRunningAsApp() && appSheet) {
+            if (!isDesktop() && isIOSDevice() && !isCurrentlyRunningAsApp() && appSheet) {
                 setTimeout(() => {
                     appSheet.classList.add('active');
                 }, 1200);
@@ -1036,6 +1045,8 @@
 
         if (installCta) {
             installCta.addEventListener('click', async () => {
+                if (isDesktop()) return; // Desktop par click disable rahega kyunki wahan zaroorat nahi hai
+
                 if (deferredPwaPrompt) {
                     deferredPwaPrompt.prompt();
                     const choiceResult = await deferredPwaPrompt.userChoice;
