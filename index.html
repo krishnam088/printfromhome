@@ -123,7 +123,10 @@
         .container { width: 100%; max-width: 100%; margin: 0; padding: 15px; display: grid; grid-template-columns: 1fr; gap: 20px; transition: all 0.3s ease; }
         @media (min-width: 992px) { .container.has-invoice { grid-template-columns: 2.5fr 1.2fr; padding: 25px; } }
 
-        .compact-offers-bar { display: flex; align-items: center; gap: 10px; background: #fffbeb; border: 1px solid #fed7aa; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 0.8rem; font-weight: 600; color: #b45309; width: 100%; transition: all 0.5s ease; }
+        /* 📱 RESPONSIVE & MOBILE-FRIENDLY OFFERS BAR STYLING */
+        .compact-offers-bar { display: flex; align-items: center; gap: 8px; background: #fffbeb; border: 1px solid #fed7aa; padding: 10px 14px; border-radius: 12px; margin-bottom: 20px; font-size: 0.78rem; font-weight: 600; color: #b45309; width: 100%; overflow: hidden; transition: all 0.5s ease; }
+        .compact-offers-bar marquee { width: 100%; font-weight: 600; letter-spacing: -0.2px; }
+
         .view-section { display: none; width: 100%; }
         .view-section.active { display: block; animation: fadeView 0.25s ease-in-out; }
         @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -288,8 +291,8 @@
             <div id="user_section_store" class="view-section active">
                 <div id="uploadScreenInitialState" style="width:100%;">
                     <div class="compact-offers-bar" id="storeOffersTopBanner" style="margin-top:10px;">
-                        <span>📢 <b>Active Offers:</b></span>
-                        <marquee scrollamount="3" style="width: 100%;">
+                        <span>📢 <b>Offers:</b></span>
+                        <marquee scrollamount="4" style="width: 100%;">
                             ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!
                         </marquee>
                     </div>
@@ -419,7 +422,7 @@
             function applyFestiveTheme(bannerBg, headerGrad, bodyThemeClass, offerTitle, offerMessage, icon) {
                 banner.style.background = bannerBg;
                 banner.style.color = "#000";
-                banner.innerHTML = `<span>${icon} <b>${offerTitle}:</b></span> <marquee>${offerMessage}</marquee>`;
+                banner.innerHTML = `<span style="white-space:nowrap; flex-shrink:0;">${icon} <b>${offerTitle}:</b></span> <marquee scrollamount="4">${offerMessage}</marquee>`;
                 if (header) header.style.background = headerGrad;
                 if (body) {
                     body.className = ""; 
@@ -429,19 +432,19 @@
 
             // 1. Republic Day (25 Jan - 26 Jan)
             if (isEventActive(1, 25, 1, 26)) {
-                applyFestiveTheme("linear-gradient(to right, #FF9933, #FFFFFF, #138808)", "linear-gradient(to bottom, #ffe0cc, #ffffff)", "theme-festive-republic", "Republic Day Special", "Happy Republic Day! Celebrate freedom with 20% OFF on all document prints. Use Code: REPUBLIC20", "🇮🇳");
+                applyFestiveTheme("linear-gradient(to right, #FF9933, #FFFFFF, #138808)", "linear-gradient(to bottom, #ffe0cc, #ffffff)", "theme-festive-republic", "Republic Day", "Happy Republic Day! Get 20% OFF. Code: REPUBLIC20", "🇮🇳");
             }
             // 2. Holi (03 Mar - 04 Mar)
             else if (isEventActive(3, 3, 3, 4)) {
-                applyFestiveTheme("#fef3c7", "linear-gradient(to bottom, #fde047, #fef9c3)", "theme-festive-holi", "Holi Rang Barse Offer", "Wishing you a vibrant & colorful Holi! Enjoy flat discounts and express deliveries today.", "🎨");
+                applyFestiveTheme("#fef3c7", "linear-gradient(to bottom, #fde047, #fef9c3)", "theme-festive-holi", "Holi Offer", "Wishing you a colorful Holi! Enjoy flat discounts & express deliveries.", "🎨");
             }
             // 3. Eid-ul-Fitr (20 Mar - 21 Mar)
             else if (isEventActive(3, 20, 3, 21)) {
-                applyFestiveTheme("#e6f4ea", "linear-gradient(to bottom, #d1fae5, #ecfdf5)", "theme-festive-holi", "Eid Mubarak Celebration", "Eid Mubarak! Avail special festive savings and priority home print dispatch now.", "🌙");
+                applyFestiveTheme("#e6f4ea", "linear-gradient(to bottom, #d1fae5, #ecfdf5)", "theme-festive-holi", "Eid Mubarak", "Eid Mubarak! Avail special festive savings & priority home print dispatch.", "🌙");
             }
             // 4. Independence Day (14 Aug - 15 Aug) [ACTIVE NOW!]
             else if (isEventActive(8, 14, 8, 15)) {
-                applyFestiveTheme("linear-gradient(to right, #FF9933, #FFFFFF, #138808)", "linear-gradient(to bottom, #ffe0cc, #ffffff)", "theme-festive-republic", "Independence Day Special", "Happy Independence Day! Celebrate Azadi with 25% OFF on all prints & FREE Delivery! Use Code: AZADI25", "🇮🇳");
+                applyFestiveTheme("linear-gradient(to right, #FF9933, #FFFFFF, #138808)", "linear-gradient(to bottom, #ffe0cc, #ffffff)", "theme-festive-republic", "Independence Day", "Happy Independence Day! 25% OFF & FREE Delivery! Code: AZADI25", "🇮🇳");
                 
                 const script = document.createElement('script');
                 script.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js";
@@ -450,30 +453,30 @@
             }
             // 5. Raksha Bandhan (27 Aug - 28 Aug)
             else if (isEventActive(8, 27, 8, 28)) {
-                applyFestiveTheme("#fce7f3", "linear-gradient(to bottom, #fbcfe8, #fdf2f8)", "theme-festive-holi", "Raksha Bandhan Special", "Happy Raksha Bandhan! Send customized photo prints & special gifts to your siblings with free shipping.", "🎁");
+                applyFestiveTheme("#fce7f3", "linear-gradient(to bottom, #fbcfe8, #fdf2f8)", "theme-festive-holi", "Rakhi Special", "Happy Raksha Bandhan! Send photo prints with free shipping.", "🎁");
             }
             // 6. Ganesh Chaturthi (13 Sep - 14 Sep)
             else if (isEventActive(9, 13, 9, 14)) {
-                applyFestiveTheme("#ffedd5", "linear-gradient(to bottom, #fed7aa, #fff7ed)", "theme-festive-holi", "Ganesh Chaturthi Offer", "Ganpati Bappa Morya! Special discounts on all creative poster prints and holy booklets.", "📿");
+                applyFestiveTheme("#ffedd5", "linear-gradient(to bottom, #fed7aa, #fff7ed)", "theme-festive-holi", "Ganpati Special", "Ganpati Bappa Morya! Special discounts on poster prints & booklets.", "📿");
             }
             // 7. Dussehra & Gandhi Jayanti (01 Oct - 20 Oct)
             else if (isEventActive(10, 1, 10, 20)) {
-                applyFestiveTheme("#fef3c7", "linear-gradient(to bottom, #fde68a, #fffbeb)", "theme-festive-holi", "Festive Season Dhamaka", "Dussehra & Gandhi Jayanti Special: Extra savings on all spiral and hard-bound document printing jobs!", "🏹");
+                applyFestiveTheme("#fef3c7", "linear-gradient(to bottom, #fde68a, #fffbeb)", "theme-festive-holi", "Festive Dhamaka", "Dussehra & Gandhi Jayanti Special: Extra savings on spiral bindings!", "🏹");
             }
             // 8. Diwali (07 Nov - 08 Nov)
             else if (isEventActive(11, 7, 11, 8)) {
-                applyFestiveTheme("#fef08a", "linear-gradient(to bottom, #fde047, #fef9c3)", "theme-festive-diwali", "Diwali Mega Dhamaka", "Shubh Deepavali! Light up your work with flat discounts and zero delivery fees on all print orders!", "🪔");
+                applyFestiveTheme("#fef08a", "linear-gradient(to bottom, #fde047, #fef9c3)", "theme-festive-diwali", "Diwali Dhamaka", "Shubh Deepavali! Flat discounts & zero delivery fees on all prints!", "🪔");
             }
             // 9. Christmas & New Year (24 Dec - 1 Jan)
             else if (isEventActive(12, 24, 1, 1)) {
-                applyFestiveTheme("#fecaca", "linear-gradient(to bottom, #f87171, #fee2e2)", "theme-festive-christmas", "Christmas & New Year Bash", "Merry Christmas & Happy New Year! Get 30% OFF on all creative prints. Let's start the year with a bang!", "🎄");
+                applyFestiveTheme("#fecaca", "linear-gradient(to bottom, #f87171, #fee2e2)", "theme-festive-christmas", "New Year Bash", "Merry Christmas & Happy New Year! Get 30% OFF on creative prints.", "🎄");
             }
             // 10. Default Normal Days
             else {
                 banner.style.background = "#fffbeb";
                 banner.style.border = "1px solid #fed7aa";
                 banner.style.color = "#b45309";
-                banner.innerHTML = `<span>📢 <b>Active Offers:</b></span> <marquee>⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!</marquee>`;
+                banner.innerHTML = `<span style="white-space:nowrap; flex-shrink:0;">📢 <b>Offers:</b></span> <marquee scrollamount="4">⚡ First Order: Print for ₹49+ & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery above ₹99!</marquee>`;
             }
         });
 
@@ -528,7 +531,6 @@
             }
         });
 
-        // Map and navigation hooks
         let deliveryMap = null;
         let deliveryMarker = null;
 
@@ -548,7 +550,7 @@
                 const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
                 const data = await res.json();
                 if (data && data.display_name) document.getElementById('address').value = data.display_name;
-            } catch (e) { document.getElementById('address').value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`; }
+            } catch (e) { document.getElementById('address'].value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`; }
         }
 
         function toggleUserDrawer(open) {
