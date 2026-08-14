@@ -22,7 +22,6 @@ self.addEventListener('activate', (event) => {
 
 // 3. Fetch Event (Safe HTTP/HTTPS only bypass)
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests with HTTP/HTTPS (Avoid chrome-extension:// & POST requests)
   if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
     return;
   }
@@ -31,4 +30,14 @@ self.addEventListener('fetch', (event) => {
     fetch(event.request)
       .catch(() => caches.match(event.request))
   );
+});
+
+// 4. Background Sync Event
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-print-orders') {
+    event.waitUntil(
+      // Background sync processing for pending print orders
+      Promise.resolve()
+    );
+  }
 });
