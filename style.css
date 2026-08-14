@@ -7,6 +7,15 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
+::selection {
+    background-color: #F4C430;
+    color: #000;
+}
+
 body {
     background-color: #F7F9FC;
     color: #1A202C;
@@ -14,7 +23,7 @@ body {
     width: 100%;
 }
 
-/* 💛 STAGE 1: Splash Screen Styles (1000283021_2.jpg reference) */
+/* 💛 STAGE 1: Splash Screen Styles */
 .splash-container {
     position: fixed;
     top: 0;
@@ -238,7 +247,7 @@ body {
     margin-bottom: 15px;
 }
 
-/* Promo Card Setup (1000283022_3.jpg reference) */
+/* Promo Card Setup */
 .document-promo-card {
     background-color: #F8FAF6;
     border: 1px dashed #0C8346;
@@ -287,6 +296,12 @@ body {
     padding: 15px;
     text-align: center;
     margin-bottom: 15px;
+    transition: background-color 0.2s, border 0.2s;
+}
+
+.form-group-upload.file-selected {
+    background-color: #E6F4EA;
+    border: 2px dashed #0C8346;
 }
 
 .upload-custom-btn {
