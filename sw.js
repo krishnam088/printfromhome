@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pfh-v2';
+const CACHE_NAME = 'pfh-v3';
 
 // Network-First Strategy: Pehle live server se latest data layega,
 // agar internet offline ho tabhi cache use karega.
