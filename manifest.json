@@ -29,6 +29,12 @@
   "launch_handler": {
     "client_mode": "navigate-existing"
   },
+  "protocol_handlers": [
+    {
+      "protocol": "web+print",
+      "url": "/?print=%s"
+    }
+  ],
   "categories": [
     "shopping",
     "utilities",
