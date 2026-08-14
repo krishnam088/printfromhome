@@ -147,8 +147,8 @@
         .logo-green { color: var(--blinkit-green); }
         .splash-tagline { font-size: 1rem; font-weight: 600; color: #1e293b; margin-top: 5px; }
         
-        .auth-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .auth-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; }
+        .auth-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-primary); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
+        .auth-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 30px; max-width: 400px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; }
         .auth-brand { font-size: 1.8rem; font-weight: 800; color: #000000; margin-bottom: 10px; }
         .brand-green { color: var(--blinkit-green); }
         .auth-card h2 { font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 20px; }
@@ -253,7 +253,20 @@
         </div>
     </div>
 
+    <!-- 🔐 ORIGINAL AUTH SCREEN (NOW WITH INSTANT INSTALL OPTION BEFORE LOGIN) -->
     <div id="authScreen" class="auth-container app-hidden">
+        <!-- 📱 INSTALL BAR BEFORE LOGIN -->
+        <div id="authPwaInstallBanner" style="display: none; background: #ffffff; border: 2px solid var(--blinkit-green); padding: 10px 14px; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); justify-content: space-between; align-items: center; max-width: 400px; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <img src="https://img.icons8.com/color/512/printer--v1.png" style="width: 32px; height: 32px; border-radius: 6px;" alt="Printer">
+                <div style="text-align: left;">
+                    <p style="font-size: 0.8rem; font-weight: 800; color: var(--text-main); margin: 0;">Install App</p>
+                    <p style="font-size: 0.68rem; font-weight: 600; color: var(--text-sub); margin: 0;">1-tap install on phone</p>
+                </div>
+            </div>
+            <button type="button" class="pwa-trigger-btn" style="background: var(--blinkit-green); color: #ffffff; border: none; padding: 6px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 800; cursor: pointer;">Install</button>
+        </div>
+
         <div class="auth-card">
             <div class="auth-brand">print<span class="brand-green">from</span>home</div>
             <h2 id="authTitle">Welcome Back!</h2>
@@ -306,8 +319,8 @@
             <div id="user_section_store" class="view-section active">
                 <div id="uploadScreenInitialState" style="width:100%;">
                     
-                    <!-- 📱 DYNAMIC PWA ONE-CLICK INSTALL PROMPT BANNER -->
-                    <div id="pwaInstallBanner" style="display: none; background: #ffffff; border: 2px solid var(--blinkit-green); padding: 12px 16px; border-radius: 14px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); justify-content: space-between; align-items: center; width: 100%;">
+                    <!-- 📱 INSTALL BANNER AFTER LOGIN -->
+                    <div id="storePwaInstallBanner" style="display: none; background: #ffffff; border: 2px solid var(--blinkit-green); padding: 12px 16px; border-radius: 14px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); justify-content: space-between; align-items: center; width: 100%;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <img src="https://img.icons8.com/color/512/printer--v1.png" style="width: 38px; height: 38px; border-radius: 8px;" alt="Printer">
                             <div style="text-align: left;">
@@ -315,7 +328,7 @@
                                 <p style="font-size: 0.72rem; font-weight: 600; color: var(--text-sub);">Fast 1-tap ordering experience</p>
                             </div>
                         </div>
-                        <button id="pwaCustomInstallBtn" style="background: var(--blinkit-green); color: #ffffff; border: none; padding: 8px 16px; border-radius: 10px; font-size: 0.82rem; font-weight: 800; cursor: pointer;">Install App</button>
+                        <button type="button" class="pwa-trigger-btn" style="background: var(--blinkit-green); color: #ffffff; border: none; padding: 8px 16px; border-radius: 10px; font-size: 0.82rem; font-weight: 800; cursor: pointer;">Install App</button>
                     </div>
 
                     <div class="compact-offers-bar" id="storeOffersTopBanner" style="margin-top:10px;">
@@ -538,13 +551,11 @@
         let deliveryMarker = null;
 
         function initBlinkitStyleMap() {
-            if (deliveryMap) return; // Collision guard switch bypass
+            if (deliveryMap) return;
 
-            // Default fallback centered array coordinates (Varanasi Central)
             let centerLat = 25.3176;
             let centerLng = 82.9739;
 
-            // Map init object initialization with global scroll/drag permissions enabled
             deliveryMap = L.map('userDeliveryMap', {
                 center: [centerLat, centerLng],
                 zoom: 15,
@@ -557,25 +568,19 @@
                 attribution: '© OpenStreetMap contributors'
             }).addTo(deliveryMap);
 
-            // Marker locked option with absolute manual user draggable attributes
             deliveryMarker = L.marker([centerLat, centerLng], { draggable: true }).addTo(deliveryMap);
 
-            // Fetch initial geocoding metrics string on map creation
             updateAddressFromCoords(centerLat, centerLng);
 
-            // Bind trigger event framework sequence on marker release
             deliveryMarker.on('dragend', function () {
                 const position = deliveryMarker.getLatLng();
                 updateAddressFromCoords(position.lat, position.lng);
             });
 
-            // 🔥 DYNAMIC LOCATION AUTOMATIC DETECTION GATEWAY
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function (position) {
                     const gpsLat = position.coords.latitude;
                     const gpsLng = position.coords.longitude;
-                    
-                    console.log("📡 GPS Geolocation Matrix Resolved Successfully:", gpsLat, gpsLng);
                     
                     if(deliveryMap && deliveryMarker) {
                         deliveryMap.setView([gpsLat, gpsLng], 16);
@@ -583,7 +588,7 @@
                         updateAddressFromCoords(gpsLat, gpsLng);
                     }
                 }, function (error) {
-                    console.warn("Geolocation token rejected or timed out: " + error.message);
+                    console.warn("Geolocation fallback: " + error.message);
                 }, { enableHighAccuracy: true, timeout: 8000 });
             }
             
@@ -602,7 +607,7 @@
             }
         }
 
-        // 🔥 STRICT STAGE STATE ENGINE MATRIX (ALIGNED WITH EXACT SERVERS STRINGS)
+        // 🔥 STRICT STAGE STATE ENGINE MATRIX
         function executeLiveTimelineStateStepper(activeStatus) {
             const nodesIdsList = ['step_pending', 'step_paid', 'step_printing', 'step_delivery'];
             nodesIdsList.forEach(id => {
@@ -614,7 +619,6 @@
             if(deliveryLabel) deliveryLabel.textContent = "Out For Delivery";
 
             const currentCleanStatus = activeStatus ? activeStatus.trim() : "";
-            console.log("🖨️ Pipeline State Step Processing:", currentCleanStatus);
 
             if (currentCleanStatus === 'Pending Payment' || currentCleanStatus === 'Pending') {
                 setStepStatusMarkup('step_pending', 'active');
@@ -648,7 +652,6 @@
             if(el) el.classList.add(stateModeClass);
         }
 
-        // 🔥 BULLETPROOF INDEPENDENT SYNC BACKGROUND FETCH ENGINE POOL
         setInterval(async () => {
             const trackingPanel = document.getElementById('user_section_order_tracking');
             if (trackingPanel && trackingPanel.classList.contains('active')) {
@@ -779,33 +782,34 @@
             });
         }
 
-        // 📱 REAL-TIME PWA PROMPT CAPTURE LOGIC
+        // 📱 REAL-TIME PWA PROMPT CAPTURE LOGIC (BOTH BEFORE & AFTER LOGIN)
         let deferredPwaPrompt;
-        const pwaBanner = document.getElementById('pwaInstallBanner');
-        const pwaBtn = document.getElementById('pwaCustomInstallBtn');
+        const authBanner = document.getElementById('authPwaInstallBanner');
+        const storeBanner = document.getElementById('storePwaInstallBanner');
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPwaPrompt = e;
-            if (pwaBanner) {
-                pwaBanner.style.display = 'flex';
-            }
+            if (authBanner) authBanner.style.display = 'flex';
+            if (storeBanner) storeBanner.style.display = 'flex';
         });
 
-        if (pwaBtn) {
-            pwaBtn.addEventListener('click', async () => {
+        document.querySelectorAll('.pwa-trigger-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
                 if (deferredPwaPrompt) {
                     deferredPwaPrompt.prompt();
                     const { outcome } = await deferredPwaPrompt.userChoice;
                     console.log(`PWA Prompt Outcome: ${outcome}`);
                     deferredPwaPrompt = null;
-                    if (pwaBanner) pwaBanner.style.display = 'none';
+                    if (authBanner) authBanner.style.display = 'none';
+                    if (storeBanner) storeBanner.style.display = 'none';
                 }
             });
-        }
+        });
 
         window.addEventListener('appinstalled', () => {
-            if (pwaBanner) pwaBanner.style.display = 'none';
+            if (authBanner) authBanner.style.display = 'none';
+            if (storeBanner) storeBanner.style.display = 'none';
             console.log('🎉 Print From Home PWA successfully installed!');
         });
     </script>
