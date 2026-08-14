@@ -277,6 +277,60 @@
             transform: scale(0.98);
         }
 
+        /* 📱 SLEEK 1-TAP SMART INSTALL POPUP MODAL */
+        .smart-install-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 2000000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .smart-install-modal-card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 28px 24px;
+            max-width: 360px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            border: 2px solid var(--blinkit-yellow);
+            animation: popupBounceAnimation 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .step-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            background: #f8fafc;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .step-num {
+            width: 26px;
+            height: 26px;
+            background: var(--blinkit-green);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
         /* 🎉 DOWNLOADED & INSTALLED SUCCESS TOAST NOTIFICATION */
         .pwa-success-toast {
             position: fixed;
@@ -308,12 +362,36 @@
         <span>✅</span> Print From Home App Downloaded & Installed!
     </div>
 
+    <!-- 📱 SMART INSTALL GUIDE POPUP MODAL (WORKS EVERY TIME) -->
+    <div id="smartInstallModal" class="smart-install-modal-overlay">
+        <div class="smart-install-modal-card">
+            <div style="font-size: 3rem; margin-bottom: 6px;">📱⚡</div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin-bottom: 6px;">Install App in 1 Click</h3>
+            <p style="font-size: 0.82rem; color: var(--text-sub); margin-bottom: 18px; font-weight: 500;">
+                Get instant desktop & home screen access for lightning-fast prints!
+            </p>
+            
+            <div class="step-row">
+                <div class="step-num">1</div>
+                <div>Tap browser menu icon <b>(Top-Right 3 Dots ⋮)</b></div>
+            </div>
+            <div class="step-row">
+                <div class="step-num">2</div>
+                <div>Select <b>"Install app"</b> or <b>"Add to Home screen"</b></div>
+            </div>
+
+            <button type="button" onclick="closeSmartInstallModal()" style="width: 100%; margin-top: 10px; padding: 12px; background: #01875f; color: white; border: none; border-radius: 12px; font-weight: 800; font-size: 0.9rem; cursor: pointer;">
+                Got It, Let's Go!
+            </button>
+        </div>
+    </div>
+
     <!-- 📱 100% ORIGINAL APP PLAY STORE STYLE BOTTOM SHEET -->
     <div id="nativeAppSheet" class="native-app-install-sheet">
         <div class="sheet-drag-handle"></div>
         <div class="app-meta-card">
             <div class="app-native-icon">
-                <img src="https://img.icons8.com/color/512/printer--v1.png" style="width: 52px; height: 52px;" alt="App Icon">
+                <img src="/app_icon_512.png" style="width: 52px; height: 52px;" alt="App Icon">
             </div>
             <div>
                 <h3 class="app-native-title">Print From Home</h3>
@@ -661,6 +739,10 @@
             document.getElementById('storeClosedPopupModal').style.display = 'none';
         }
 
+        function closeSmartInstallModal() {
+            document.getElementById('smartInstallModal').style.display = 'none';
+        }
+
         // 🔥 ATTACH INTERCEPTORS TO SECURITY GUARDS
         document.getElementById('fileUpload').addEventListener('click', function(e) {
             const badge = document.getElementById('userShopStatus');
@@ -917,10 +999,11 @@
             });
         }
 
-        // 📱 RAW ORIGINAL 1-TAP INSTALL ENGINE
+        // 📱 1-TAP SMART INSTALL FLOW ENGINE
         let deferredPwaPrompt = null;
         const appSheet = document.getElementById('nativeAppSheet');
         const installCta = document.getElementById('nativeInstallCta');
+        const smartModal = document.getElementById('smartInstallModal');
         const successToast = document.getElementById('pwaSuccessToast');
 
         function isCurrentlyRunningAsApp() {
@@ -959,8 +1042,11 @@
                     }
                     deferredPwaPrompt = null;
                 } else {
-                    // Raw fallback reload to force browser re-evaluate install state
-                    window.location.reload();
+                    // SMART FALLBACK MODAL: 100% reliable clean popup instruction
+                    dismissAppSheet();
+                    if (smartModal) {
+                        smartModal.style.display = 'flex';
+                    }
                 }
             });
         }
