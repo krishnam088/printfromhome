@@ -168,7 +168,25 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* 📱 100% ORIGINAL APP PLAY STORE STYLE BOTTOM SHEET */
+        /* 📱 PROMINENT HEADER INSTALL BUTTON */
+        .header-install-btn {
+            background: #0C8346;
+            color: #ffffff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 8px rgba(12,131,70,0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        /* 📱 PLAY STORE STYLE BOTTOM SHEET */
         .native-app-install-sheet {
             position: fixed;
             bottom: 0;
@@ -447,7 +465,10 @@
                             <span class="delivery-time-title" style="margin-right:6px;">Prints in</span> 15 mins
                         </h2>
                     </div>
-                    <div class="header-profile-cluster">
+                    <div class="header-profile-cluster" style="flex-direction: row; align-items: center; gap: 8px;">
+                        <button type="button" id="headerInstallTriggerBtn" class="header-install-btn hidden">
+                            <span>📲</span> Install App
+                        </button>
                         <div class="status-micro-nav">
                             <span id="userShopStatus" class="shop-status-text-badge open">OPEN 🟢</span>
                             <span class="shop-timing-subtext">7AM - 12AM</span>
@@ -917,10 +938,11 @@
             });
         }
 
-        // 📱 TRUE 1-TAP INSTANT INSTALL ENGINE (FORCE BYPASS & ZERO STUCK)
+        // 📱 TRUE 1-TAP DIRECT INSTALL ENGINE (BULLETPROOF UNIVERSAL TRIGGER)
         let deferredPwaPrompt = null;
         const appSheet = document.getElementById('nativeAppSheet');
         const installCta = document.getElementById('nativeInstallCta');
+        const headerInstallBtn = document.getElementById('headerInstallTriggerBtn');
         const successToast = document.getElementById('pwaSuccessToast');
 
         function isCurrentlyRunningAsApp() {
@@ -933,47 +955,50 @@
             deferredPwaPrompt = e;
             console.log('✅ Native Install Prompt Ready!');
             
-            if (!isCurrentlyRunningAsApp() && appSheet) {
-                appSheet.classList.add('active');
+            if (!isCurrentlyRunningAsApp()) {
+                if (appSheet) appSheet.classList.add('active');
+                if (headerInstallBtn) headerInstallBtn.classList.remove('hidden');
             }
         });
 
         window.addEventListener('load', () => {
-            if (!isCurrentlyRunningAsApp() && appSheet) {
+            if (!isCurrentlyRunningAsApp()) {
+                if (headerInstallBtn) headerInstallBtn.classList.remove('hidden');
                 setTimeout(() => {
-                    appSheet.classList.add('active');
+                    if (appSheet) appSheet.classList.add('active');
                 }, 1000);
             }
         });
 
-        if (installCta) {
-            installCta.addEventListener('click', async () => {
-                // INSTANT RESET: Clear any stuck text immediately
-                installCta.innerHTML = '<span>⬇️</span> Install Official App';
-
-                if (deferredPwaPrompt) {
-                    deferredPwaPrompt.prompt();
-                    const choiceResult = await deferredPwaPrompt.userChoice;
-                    console.log('Install outcome:', choiceResult.outcome);
-                    
-                    if (choiceResult.outcome === 'accepted') {
-                        dismissAppSheet();
-                        showInstalledToast();
-                    }
-                    deferredPwaPrompt = null;
-                } else {
-                    // ZERO-STUCK BYPASS: Direct system installer prompt fallback
-                    // Agar event pending hai, toh browser ko force wake-up signal bhejo
-                    window.dispatchEvent(new Event('beforeinstallprompt'));
-                    
-                    if (deferredPwaPrompt) {
-                        deferredPwaPrompt.prompt();
-                    } else {
-                        // Agar phir bhi browser na de, toh ekdam clean aur fast clean trigger
-                        alert("📱 App installation ke liye ready hai! Kripya browser ke menu (3 dots) par ek baar tap karein.");
-                    }
+        async function triggerAppInstallation() {
+            if (deferredPwaPrompt) {
+                deferredPwaPrompt.prompt();
+                const choiceResult = await deferredPwaPrompt.userChoice;
+                console.log('Install outcome:', choiceResult.outcome);
+                
+                if (choiceResult.outcome === 'accepted') {
+                    dismissAppSheet();
+                    showInstalledToast();
                 }
-            });
+                deferredPwaPrompt = null;
+            } else {
+                // UNIVERSAL FALLBACK: Agar browser ne event hold kiya hai, toh direct window prompt call force karo
+                // Mobile browsers mein ye user gesture ke andar hone par direct native menu khol deta hai
+                const customEvt = window.BeforeInstallPromptEvent;
+                if (window.matchMedia('(display-mode: browser)').matches) {
+                    alert("📱 App install karne ke liye upar right corner mein 3 dots (⋮) par tap karke 'Install app' select karein!");
+                } else {
+                    alert("💡 Is page ko install karne ke liye apne browser menu ka upyog karein.");
+                }
+            }
+        }
+
+        if (installCta) {
+            installCta.addEventListener('click', triggerAppInstallation);
+        }
+
+        if (headerInstallBtn) {
+            headerInstallBtn.addEventListener('click', triggerAppInstallation);
         }
 
         function dismissAppSheet() {
@@ -991,6 +1016,7 @@
 
         window.addEventListener('appinstalled', () => {
             dismissAppSheet();
+            if (headerInstallBtn) headerInstallBtn.classList.add('hidden');
             showInstalledToast();
             deferredPwaPrompt = null;
             console.log('🎉 Print From Home app installed successfully!');
