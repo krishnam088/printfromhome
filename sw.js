@@ -1,9 +1,17 @@
-const CACHE_NAME = 'pfh-v3';
+const CACHE_NAME = 'pfh-cache-v4';
 
-// Network-First Strategy: Pehle live server se latest data layega,
-// agar internet offline ho tabhi cache use karega.
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(clients.claim());
+});
+
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
+    })
   );
 });
