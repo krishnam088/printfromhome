@@ -168,9 +168,48 @@
             80% { transform: scale(1.05); opacity: 0.9; }
             100% { transform: scale(1); opacity: 1; }
         }
+
+        /* 📱 AUTOMATIC FLOATING BOTTOM APP INSTALL PROMPT SHEET */
+        .pwa-bottom-sheet-popup {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(150%);
+            width: 92%;
+            max-width: 440px;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+            border: 2px solid var(--blinkit-yellow);
+            z-index: 100000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .pwa-bottom-sheet-popup.show {
+            transform: translateX(-50%) translateY(0);
+        }
     </style>
 </head>
 <body>
+
+    <!-- 📱 AUTOMATIC NATIVE APP INSTALL FLOATING POPUP -->
+    <div id="pwaAutoPopup" class="pwa-bottom-sheet-popup">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="https://img.icons8.com/color/512/printer--v1.png" style="width: 45px; height: 45px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" alt="App Icon">
+            <div style="text-align: left;">
+                <h4 style="font-size: 0.92rem; font-weight: 800; color: #0f172a; margin: 0;">Print From Home</h4>
+                <p style="font-size: 0.72rem; font-weight: 600; color: #64748b; margin: 2px 0 0 0;">Fast & direct home delivery app</p>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" id="pwaInstallNowBtn" style="background: var(--blinkit-green); color: white; border: none; padding: 10px 18px; border-radius: 12px; font-size: 0.85rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(12,131,70,0.25);">Install</button>
+            <span onclick="dismissPwaPopup()" style="font-size: 1.3rem; font-weight: bold; color: #94a3b8; cursor: pointer; padding: 4px;">&times;</span>
+        </div>
+    </div>
 
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
@@ -747,7 +786,7 @@
             observer.observe(targetConfigScreen, { attributes: true });
         }
 
-        // 📱 SAFE PWA SERVICE WORKER REGISTRATION (DIRECT PROMPT ALLOWED)
+        // 📱 SAFE PWA SERVICE WORKER REGISTRATION
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
@@ -755,6 +794,41 @@
                     .catch((err) => console.warn('PWA Worker Registration Delay: ', err));
             });
         }
+
+        // 📱 REAL AUTOMATIC SLIDING POPUP TRIGGER (PROVEN CRITERIA)
+        let deferredPwaPrompt = null;
+        const autoPopup = document.getElementById('pwaAutoPopup');
+        const installBtn = document.getElementById('pwaInstallNowBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPwaPrompt = e;
+            // Website open hone ke 1.2s baad popup automatically screen par slide ho jayega
+            setTimeout(() => {
+                if (autoPopup) autoPopup.classList.add('show');
+            }, 1200);
+        });
+
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (deferredPwaPrompt) {
+                    deferredPwaPrompt.prompt();
+                    const { outcome } = await deferredPwaPrompt.userChoice;
+                    console.log(`PWA Prompt Outcome: ${outcome}`);
+                    deferredPwaPrompt = null;
+                    if (autoPopup) autoPopup.classList.remove('show');
+                }
+            });
+        }
+
+        function dismissPwaPopup() {
+            if (autoPopup) autoPopup.classList.remove('show');
+        }
+
+        window.addEventListener('appinstalled', () => {
+            if (autoPopup) autoPopup.classList.remove('show');
+            console.log('🎉 Print From Home PWA successfully installed on device!');
+        });
     </script>
     <script src="script.js"></script>
 </body>
