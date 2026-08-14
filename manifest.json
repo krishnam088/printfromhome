@@ -15,6 +15,12 @@
   "iarc_rating_id": "e58286c1-65f5-48b4-b830-a8cd1e8605c4",
   "prefer_related_applications": false,
   "related_applications": [],
+  "scope_extensions": [
+    {
+      "type": "origin",
+      "origin": "https://printfromhome.onrender.com"
+    }
+  ],
   "categories": [
     "shopping",
     "utilities",
