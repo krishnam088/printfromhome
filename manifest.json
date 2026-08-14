@@ -1,0 +1,21 @@
+{
+  "short_name": "PrintFromHome",
+  "name": "Print From Home - India's Last Minute Printing App",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/337/337946.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/337/337946.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#F4C430",
+  "theme_color": "#F4C430",
+  "display": "standalone",
+  "orientation": "portrait"
+}
