@@ -51,6 +51,29 @@
       ]
     }
   },
+  "widgets": [
+    {
+      "name": "Print From Home Status",
+      "description": "Track your last-minute print orders instantly.",
+      "tag": "print-status-widget",
+      "ms_ac_template": "/widget.json",
+      "data": "/widget-data.json",
+      "type": "application/json",
+      "screenshots": [
+        {
+          "src": "/app_icon_512.png",
+          "sizes": "512x512",
+          "label": "Widget Preview"
+        }
+      ],
+      "icons": [
+        {
+          "src": "/app_icon_192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
   "categories": [
     "shopping",
     "utilities",
