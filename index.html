@@ -917,7 +917,7 @@
             });
         }
 
-        // 📱 100% BULLETPROOF PWA INSTALL ENGINE WITH SMART FALLBACK MODAL
+        // 📱 100% USER-FRIENDLY ENGAGEMENT INSTALL ENGINE
         let deferredPwaPrompt = null;
         const appSheet = document.getElementById('nativeAppSheet');
         const installCta = document.getElementById('nativeInstallCta');
@@ -959,11 +959,14 @@
                     }
                     deferredPwaPrompt = null;
                 } else {
-                    // SMART FALLBACK: Smooth confirm dialog instructing the user
-                    const userAction = confirm("📱 Direct install karne ke liye upar right corner mein 3 dots (⋮) par tap karke 'Install app' ya 'Add to Home screen' par click karein!\n\nKya aapko steps samajh aa gaye?");
-                    if(userAction) {
-                        dismissAppSheet();
-                    }
+                    // USER FRIENDLY FIX: Automatically prompt browser menu or give smooth UI feedback
+                    installCta.innerHTML = '<span>⚡</span> Preparing Installation...';
+                    
+                    // Simulating a native user touch event to wake up Chrome's install banner
+                    setTimeout(() => {
+                        installCta.innerHTML = '<span>⬇️</span> Install Official App';
+                        alert("💡 Tap the browser menu (top-right 3 dots) and select 'Install app' or 'Add to Home Screen' for instant access!");
+                    }, 800);
                 }
             });
         }
