@@ -10,6 +10,7 @@
   "background_color": "#F4C430",
   "theme_color": "#F4C430",
   "orientation": "portrait",
+  "prefer_related_applications": false,
   "categories": [
     "shopping",
     "utilities",
