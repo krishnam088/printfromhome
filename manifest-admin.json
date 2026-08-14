@@ -9,6 +9,7 @@
   "background_color": "#111111",
   "theme_color": "#111111",
   "orientation": "portrait",
+  "categories": ["business", "productivity", "utilities"],
   "icons": [
     {
       "src": "/app_icon_512.png",
