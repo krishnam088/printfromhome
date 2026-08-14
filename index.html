@@ -823,7 +823,7 @@
             });
         }
 
-        // 📱 100% BULLETPROOF 1-TAP PWA INSTALL ENGINE (FIXED CLICK LISTENER)
+        // 📱 100% BULLETPROOF NATIVE 1-TAP PWA INSTALL ENGINE
         let deferredPwaPrompt = null;
         const autoPopup = document.getElementById('pwaAutoPopup');
         const installBtn = document.getElementById('pwaInstallNowBtn');
@@ -835,27 +835,20 @@
                    localStorage.getItem('pwa_app_installed') === 'true';
         }
 
-        // 🎯 Catch Chrome's native prompt immediately
+        // 🎯 Catch Chrome's native prompt immediately & show bottom sheet
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPwaPrompt = e;
-            console.log('✅ Chrome native install prompt captured successfully!');
+            console.log('✅ Chrome native install prompt ready!');
 
-            if (!checkIfPwaIsInstalled() && autoPopup) {
-                autoPopup.classList.add('show');
-            }
-        });
-
-        // 🚀 Auto-show popup if not installed
-        window.addEventListener('load', () => {
             if (!checkIfPwaIsInstalled() && autoPopup) {
                 setTimeout(() => {
                     autoPopup.classList.add('show');
-                }, 1000);
+                }, 800);
             }
         });
 
-        // ⚡ Direct Click Trigger with Instant Prompt
+        // ⚡ Direct Click Trigger (Only fires prompt if ready)
         if (installBtn) {
             installBtn.addEventListener('click', async () => {
                 if (deferredPwaPrompt) {
@@ -870,11 +863,8 @@
                     }
                     deferredPwaPrompt = null;
                 } else {
-                    // Visual feedback in case event took an extra second
-                    installBtn.textContent = 'Installing...';
-                    setTimeout(() => {
-                        installBtn.textContent = 'Install';
-                    }, 1500);
+                    // Fallback guidance if event hasn't fired yet
+                    alert("App install karne ke liye Chrome ke top-right 3-dots (⋮) par tap karke 'Install App' ya 'Add to Home screen' select karein.");
                 }
             });
         }
