@@ -19,7 +19,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PrintFromHome">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/printer--v1.png">
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
@@ -205,13 +204,13 @@
         .app-native-icon {
             width: 62px;
             height: 62px;
-            border-radius: 16px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.12);
-            background: #F4C430;
+            border-radius: 18px;
+            box-shadow: 0 6px 16px rgba(244, 196, 48, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            overflow: hidden;
         }
         .app-native-title {
             font-size: 1.1rem;
@@ -314,8 +313,26 @@
         <div class="sheet-drag-handle"></div>
         <div class="app-meta-card">
             <div class="app-native-icon">
-                <svg width="36" height="36" viewBox="0 0 512 512" fill="#000000">
-                    <path d="M128 160h256v96H128zM112 288h288c17.6 0 32 14.4 32 32v64c0 17.6-14.4 32-32 32H112c-17.6 0-32-14.4-32-32v-64c0-17.6 14.4-32 32-32zm32 64a16 16 0 100-32 16 16 0 000 32zm64 0a16 16 0 100-32 16 16 0 000 32z"/>
+                <!-- 🎨 PREMIUM VECTOR APP ICON -->
+                <svg width="62" height="62" viewBox="0 0 512 512">
+                    <defs>
+                        <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#FAD961"/>
+                            <stop offset="100%" stop-color="#F4C430"/>
+                        </linearGradient>
+                        <linearGradient id="paperGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#FFFFFF"/>
+                            <stop offset="100%" stop-color="#E2E8F0"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="512" height="512" rx="120" fill="url(#bgGrad)"/>
+                    <path d="M160 80h192v96H160z" fill="url(#paperGrad)" rx="8"/>
+                    <path d="M110 176h292c24 0 42 18 42 42v136c0 24-18 42-42 42H110c-24 0-42-18-42-42V218c0-24 18-42 42-42z" fill="#1E293B"/>
+                    <rect x="136" y="270" width="240" height="162" rx="12" fill="url(#paperGrad)"/>
+                    <rect x="170" y="310" width="172" height="16" rx="8" fill="#0C8346"/>
+                    <rect x="170" y="346" width="130" height="14" rx="7" fill="#94A3B8"/>
+                    <rect x="170" y="378" width="150" height="14" rx="7" fill="#94A3B8"/>
+                    <circle cx="400" cy="230" r="14" fill="#22C55E"/>
                 </svg>
             </div>
             <div>
