@@ -63,6 +63,9 @@
       ]
     }
   },
+  "note_taking": {
+    "new_note_url": "/?action=new-note"
+  },
   "widgets": [
     {
       "name": "Print From Home Status",
