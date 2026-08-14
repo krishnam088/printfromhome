@@ -1,23 +1,19 @@
-const CACHE_NAME = 'pfh-v8';
+const CACHE_NAME = 'pfh-v9';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json'
 ];
 
-// 1. Install Event (Safe Pre-caching using allSettled to prevent timeouts)
+// 1. Install Event (Instant skip waiting)
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return Promise.allSettled(
-        ASSETS_TO_CACHE.map((asset) => 
-          cache.add(asset).catch((err) => console.log('Cache failed for:', asset, err))
-        )
-      );
+      return cache.addAll(ASSETS_TO_CACHE).catch(() => {});
     }).then(() => self.skipWaiting())
   );
 });
 
-// 2. Activate Event (Clean up old caches)
+// 2. Activate Event (Claim clients immediately)
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -32,28 +28,35 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. Fetch Event (Cache-first strategy with network fallback)
+// 3. Fetch Event (Network-First Strategy with Cache Fallback - Prevents Timeouts)
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, networkResponse.clone());
-          return networkResponse;
-        });
-      }).catch(() => {
-        if (event.request.mode === 'navigate') {
-          return caches.match('/');
+    fetch(event.request)
+      .then((networkResponse) => {
+        // Valid response mila toh cache me update kar do
+        if (networkResponse && networkResponse.status === 200) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
         }
-      });
-    })
+        return networkResponse;
+      })
+      .catch(() => {
+        // Agar network fail ho ya offline ho, toh cache se serve karo
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          if (event.request.mode === 'navigate') {
+            return caches.match('/');
+          }
+        });
+      })
   );
 });
 
