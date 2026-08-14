@@ -917,7 +917,7 @@
             });
         }
 
-        // 📱 REAL-TIME GUARANTEED BOTTOM SHEET TRIGGER
+        // 📱 ZERO-REFRESH 1-TAP PWA INSTALL ENGINE
         let deferredPwaPrompt = null;
         const appSheet = document.getElementById('nativeAppSheet');
         const installCta = document.getElementById('nativeInstallCta');
@@ -928,7 +928,6 @@
                    window.navigator.standalone === true;
         }
 
-        // 🎯 Catch Native Prompt
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPwaPrompt = e;
@@ -939,7 +938,6 @@
             }
         });
 
-        // 🚀 Auto-Show Fallback (1s after page load in regular browser)
         window.addEventListener('load', () => {
             if (!isCurrentlyRunningAsApp() && appSheet) {
                 setTimeout(() => {
@@ -948,7 +946,6 @@
             }
         });
 
-        // ⚡ Direct Click Action
         if (installCta) {
             installCta.addEventListener('click', async () => {
                 if (deferredPwaPrompt) {
@@ -962,8 +959,11 @@
                     }
                     deferredPwaPrompt = null;
                 } else {
-                    // Agar browser ne prompt hold kiya ho toh reload se direct catch karega
-                    window.location.reload();
+                    // ZERO REFRESH: Smooth visual guidance instead of reload
+                    installCta.innerHTML = '<span>ℹ️</span> Tap 3-dots (⋮) &gt; Install App';
+                    setTimeout(() => {
+                        installCta.innerHTML = '<span>⬇️</span> Install Official App';
+                    }, 3500);
                 }
             });
         }
