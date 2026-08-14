@@ -1,20 +1,16 @@
-const CACHE_NAME = 'pfh-offline-v12';
+const CACHE_NAME = 'pfh-offline-v13';
 const OFFLINE_URL = '/';
 
-// 1. Install Event: Cache root page instantly
+// 1. Install Event
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.add(OFFLINE_URL).catch(() => {
-        return cache.put(OFFLINE_URL, new Response('<!DOCTYPE html><html><body><h1>Print From Home - Offline</h1></body></html>', {
-          headers: { 'Content-Type': 'text/html; charset=utf-8' }
-        }));
-      });
+      return cache.add(OFFLINE_URL).catch(() => {});
     }).then(() => self.skipWaiting())
   );
 });
 
-// 2. Activate Event: Take control immediately
+// 2. Activate Event
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -29,13 +25,23 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. Fetch Event: Dedicated Navigation Handler (Passes PWABuilder Offline Test Instantly)
+// 3. Fetch Event with Admin Route Bypass
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') {
     return;
   }
 
-  // Navigation requests ke liye Cache-First strategy (No Network Wait)
+  const url = new URL(event.request.url);
+
+  // 🛑 AGAR URL MEIN ADMIN HAI, TOH SERVICE WORKER INTERCEPT NA KARE (Direct Network/Server Load ho)
+  if (url.pathname.includes('/admin')) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Normal User App Navigation
   if (event.request.mode === 'navigate') {
     event.respondWith(
       caches.match(OFFLINE_URL).then((cachedResponse) => {
@@ -45,7 +51,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Baaki sabhi requests ke liye standard cache fallback
+  // Assets & other requests
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       return cachedResponse || fetch(event.request).catch(() => {});
