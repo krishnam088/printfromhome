@@ -169,7 +169,7 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* 📱 GUARANTEED FLOATING BOTTOM APP INSTALL PROMPT SHEET */
+        /* 📱 1-TAP BOTTOM SLIDING APP INSTALL SHEET */
         .pwa-bottom-sheet-popup {
             position: fixed;
             bottom: 20px;
@@ -192,11 +192,39 @@
         .pwa-bottom-sheet-popup.show {
             transform: translateX(-50%) translateY(0) !important;
         }
+
+        /* 🎉 DOWNLOADED & INSTALLED SUCCESS TOAST NOTIFICATION */
+        .pwa-success-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-150%);
+            background: #0C8346;
+            color: #ffffff;
+            padding: 14px 24px;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            box-shadow: 0 10px 30px rgba(12,131,70,0.4);
+            z-index: 10000000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .pwa-success-toast.show {
+            transform: translateX(-50%) translateY(0) !important;
+        }
     </style>
 </head>
 <body>
 
-    <!-- 📱 AUTOMATIC GUARANTEED FLOATING POPUP -->
+    <!-- 🎉 DOWNLOADED / INSTALLED SUCCESS TOAST NOTIFICATION -->
+    <div id="pwaSuccessToast" class="pwa-success-toast">
+        <span>✅</span> Print From Home App Downloaded & Installed!
+    </div>
+
+    <!-- 📱 AUTOMATIC 1-TAP APP INSTALL FLOATING POPUP -->
     <div id="pwaAutoPopup" class="pwa-bottom-sheet-popup">
         <div style="display: flex; align-items: center; gap: 12px;">
             <img src="https://img.icons8.com/color/512/printer--v1.png" style="width: 44px; height: 44px; border-radius: 12px;" alt="App Icon">
@@ -795,26 +823,29 @@
             });
         }
 
-        // 📱 100% BULLETPROOF AUTOMATIC POPUP TRIGGER
+        // 📱 100% BULLETPROOF ZERO-ALERT 1-TAP INSTALL ENGINE
         let deferredPwaPrompt = null;
         const autoPopup = document.getElementById('pwaAutoPopup');
         const installBtn = document.getElementById('pwaInstallNowBtn');
+        const successToast = document.getElementById('pwaSuccessToast');
 
-        // Capture Chrome's native prompt if available
+        // Check if already installed on device
+        function checkIfPwaIsInstalled() {
+            return window.matchMedia('(display-mode: standalone)').matches || 
+                   window.navigator.standalone === true || 
+                   localStorage.getItem('pwa_app_installed') === 'true';
+        }
+
+        // Native Chrome Prompt Catcher
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPwaPrompt = e;
-            console.log('⚡ Native PWA prompt captured ready!');
-        });
 
-        // Force slide-up popup 1.5s after page load automatically
-        window.addEventListener('load', () => {
-            // Check if app is already running in standalone/installed mode
-            const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-            if (!isInstalled && autoPopup) {
+            // Agar device par pehle se install nahi hai, tabhi popup screen par layega
+            if (!checkIfPwaIsInstalled() && autoPopup) {
                 setTimeout(() => {
                     autoPopup.classList.add('show');
-                }, 1500);
+                }, 1000);
             }
         });
 
@@ -823,12 +854,13 @@
                 if (deferredPwaPrompt) {
                     deferredPwaPrompt.prompt();
                     const { outcome } = await deferredPwaPrompt.userChoice;
-                    console.log(`PWA Outcome: ${outcome}`);
+                    console.log(`PWA Prompt Outcome: ${outcome}`);
+                    if (outcome === 'accepted') {
+                        localStorage.setItem('pwa_app_installed', 'true');
+                        if (autoPopup) autoPopup.classList.remove('show');
+                        showInstalledToast();
+                    }
                     deferredPwaPrompt = null;
-                    if (autoPopup) autoPopup.classList.remove('show');
-                } else {
-                    // Direct Chrome fallback
-                    alert("App install karne ke liye Chrome ke top-right me 3-dots (⋮) par tap karke 'Install App' ya 'Add to Home Screen' select karein!");
                 }
             });
         }
@@ -837,9 +869,21 @@
             if (autoPopup) autoPopup.classList.remove('show');
         }
 
+        function showInstalledToast() {
+            if (successToast) {
+                successToast.classList.add('show');
+                setTimeout(() => {
+                    successToast.classList.remove('show');
+                }, 4000);
+            }
+        }
+
+        // Event listener for completed installation
         window.addEventListener('appinstalled', () => {
+            localStorage.setItem('pwa_app_installed', 'true');
             if (autoPopup) autoPopup.classList.remove('show');
-            console.log('🎉 Print From Home PWA installed successfully!');
+            showInstalledToast();
+            console.log('🎉 Print From Home PWA installed successfully on device!');
         });
     </script>
     <script src="script.js"></script>
