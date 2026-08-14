@@ -3,576 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print From Home - Admin Command Center</title>
-    <!-- PWA Manifest & Theme Configuration -->
-    <link rel="manifest" href="/manifest-admin.json">
-    <meta name="theme-color" content="#111111">
-    <link rel="apple-touch-icon" href="/app_icon_192.png">
+    <title>Print From Home - Admin Dashboard</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Isolated PWA Manifest for Admin App -->
+    <link rel="manifest" href="/manifest-admin.json">
+    <meta name="theme-color" content="#0070f3">
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        :root {
-            --bg-primary: #f8fafc;
-            --surface: #ffffff;
-            --text-main: #0f172a;
-            --text-sub: #64748b;
-            --blinkit-yellow: #F4C430;
-            --blinkit-green: #0C8346;
-            --border-color: #e2e8f0;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #111111;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
         }
-        body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; }
-        
-        /* Slide-out Navigation Drawer System */
-        .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 1999; display: none; opacity: 0; transition: opacity 0.3s ease; }
-        .drawer-overlay.active { display: block; opacity: 1; }
-        
-        .side-drawer { position: fixed; top: 0; left: -320px; width: 300px; height: 100vh; background: var(--surface); z-index: 2000; box-shadow: 10px 0 30px rgba(0,0,0,0.05); transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 25px 20px; display: flex; flex-direction: column; border-right: 1px solid var(--border-color); }
-        .side-drawer.active { left: 0; }
-        
-        .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; }
-        .drawer-menu-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-        .drawer-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; color: var(--text-main); cursor: pointer; transition: all 0.2s; }
-        .drawer-item:hover, .drawer-item.active { background: #f1f5f9; color: var(--blinkit-green); }
-        
-        .menu-trigger-btn { background: #000; color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-
-        /* Login Gateway Box */
-        .admin-box { background: var(--surface); max-width: 400px; margin: 100px auto; padding: 30px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--border-color); }
-        .input-group { margin-bottom: 18px; text-align: left; }
-        .input-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; }
-        .input-group input, .input-group select { width: 100%; padding: 12px 16px; border: 2px solid var(--border-color); border-radius: 12px; font-size: 0.95rem; outline: none; }
-        .btn-admin { width: 100%; padding: 12px; background: #000; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.95rem; }
-
-        /* Dashboard Viewports Container Wrapper */
-        .dashboard-container { max-width: 1200px; margin: 0 auto; display: none; padding: 15px; }
-        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid var(--border-color); flex-wrap: wrap; gap: 15px; }
-        
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: var(--surface); border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); border: 1px solid var(--border-color); border-left: 5px solid var(--blinkit-yellow); }
-        .stat-card p { font-size: 0.75rem; color: var(--text-sub); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
-        .stat-card h2 { font-size: 1.8rem; font-weight: 800; margin-top: 5px; }
-
-        .panel-box { background: var(--surface); border-radius: 18px; padding: 22px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.01); margin-bottom: 20px; }
-        .panel-box h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
-
-        .graph-filters { display: flex; gap: 10px; margin-bottom: 15px; }
-        .filter-btn { background: #e2e8f0; border: none; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-        .filter-btn.active { background: var(--blinkit-green); color: white; }
-
-        .order-card { background: var(--bg-primary); border-radius: 14px; padding: 18px; margin-bottom: 15px; border: 1px solid var(--border-color); }
-        .order-header { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 12px; }
-        
-        .status-select { padding: 6px 12px; border-radius: 8px; border: 2px solid var(--border-color); font-size: 0.8rem; font-weight: 700; outline: none; background: white; }
-        .status-select.pending { color: #d97706; border-color: #fef3c7; background: #fffbeb; }
-        .status-select.printing { color: #2563eb; border-color: #dbeafe; background: #eff6ff; }
-        .status-select.delivery { color: #7c3aed; border-color: #ede9fe; background: #f5f3ff; }
-        .status-select.delivered { color: var(--blinkit-green); border-color: #d1fae5; background: #e6f4ea; }
-
-        .btn-action-panel { display: flex; gap: 10px; margin-top: 15px; }
-        .file-link { display: inline-block; background: #e2e8f0; color: var(--text-main); padding: 8px 14px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.8rem; }
-        .btn-direct-print { background: var(--blinkit-green); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; }
-        
-        .hidden { display: none !important; }
-        .view-section { display: none; }
-        .view-section.active { display: block; animation: fadeView 0.25s ease-in-out; }
-        @keyframes fadeView { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        .master-toggle-btn { padding: 8px 16px; font-size: 0.85rem; font-weight: 800; border: none; border-radius: 20px; cursor: pointer; color: white; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-transform: uppercase; letter-spacing: 0.3px; }
-        .master-toggle-btn.open { background: var(--blinkit-green); }
-        .master-toggle-btn.closed { background: #ef4444; }
+        .dashboard-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        h1 {
+            color: #0070f3;
+            text-align: center;
+        }
+        .install-box {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #btnInstallAdmin {
+            display: none;
+            padding: 12px 24px;
+            background: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 auto;
+            box-shadow: 0 4px 10px rgba(0, 112, 243, 0.4);
+            transition: background 0.3s;
+        }
+        #btnInstallAdmin:hover {
+            background: #005bb5;
+        }
+        .stats-grid {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #2a2a2a;
+            padding: 15px 25px;
+            border-radius: 8px;
+            text-align: center;
+            flex: 1;
+            margin: 0 10px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="drawerOverlay" class="drawer-overlay" onclick="toggleSideDrawer(false)"></div>
+    <div class="dashboard-container">
+        <h1>Print From Home Admin Dashboard</h1>
 
-    <nav id="sideDrawer" class="side-drawer">
-        <div class="drawer-header">
-            <h2 style="font-size:1.3rem; letter-spacing:-0.5px;">Store Admin Menu</h2>
-            <span style="cursor:pointer; font-size:1.5rem; font-weight:bold; color:var(--text-sub);" onclick="toggleSideDrawer(false)">&times;</span>
+        <!-- Direct Install App Button Container -->
+        <div class="install-box">
+            <button id="btnInstallAdmin">📥 Install Admin App</button>
         </div>
-        <ul class="drawer-menu-list">
-            <li class="drawer-item active" id="menu_live_jobs" onclick="navigateToSection('live_jobs')">📦 Live Order Queue</li>
-            <li class="drawer-item" id="menu_analytics" onclick="navigateToSection('analytics')">📈 Shop Analytics Trend</li>
-            <li class="drawer-item" id="menu_settings" onclick="navigateToSection('settings')">⚙️ Store Settings Panel</li>
-            <li class="drawer-item" id="menu_help" onclick="navigateToSection('help')">❓ Help & System Support</li>
-        </ul>
-        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border-color);">
-            <button class="btn-admin" style="background:#ef4444; padding:8px;" onclick="adminLogout()">Lock App Panel</button>
-        </div>
-    </nav>
 
-    <div id="adminLoginBox" class="admin-box">
-        <h2 style="letter-spacing: -1px;">print<span style="color:var(--blinkit-green)">from</span>home</h2>
-        <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:20px; font-weight:500;">Admin Management Portal</p>
-        <div class="input-group">
-            <label>Admin Username / ID</label>
-            <input type="text" id="adminUser" placeholder="Enter Admin Username">
-        </div>
-        <div class="input-group">
-            <label>Secret Password</label>
-            <input type="password" id="adminPass" placeholder="Enter Password">
-        </div>
-        <button class="btn-admin" onclick="verifyAdminLogin()">Unlock Dashboard</button>
-    </div>
-
-    <div id="adminDashboard" class="dashboard-container">
-        <div class="dashboard-header">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <button class="menu-trigger-btn" onclick="toggleSideDrawer(true)">☰ Menu Tools</button>
-                <h1 id="panelTitleDisplay" style="font-size:1.5rem;">Live Order Queue</h1>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Live Operations</h3>
+                <p id="storeStatusText" style="color: #00ffcc; font-weight: bold;">Checking...</p>
             </div>
-            
-            <button id="storeMasterToggleBtn" class="master-toggle-btn open" onclick="toggleLiveStoreInfrastructureState()">
-                Store Status: OPEN 🟢
-            </button>
-        </div>
-
-        <div id="section_live_jobs" class="view-section active">
-            <div class="stats-grid">
-                <div class="stat-card" style="border-left-color: #2563eb;">
-                    <p>Total Print Jobs</p>
-                    <h2 id="statTotalOrders">0</h2>
-                </div>
-                <div class="stat-card" style="border-left-color: var(--blinkit-green);">
-                    <p>Gross Earnings</p>
-                    <h2 id="statRevenue">₹0.00</h2>
-                </div>
-                <div class="stat-card" id="profitCard" style="border-left-color: #10b981;">
-                    <p>Net Shop Profit</p>
-                    <h2 id="statProfit">₹0.00</h2>
-                </div>
-            </div>
-            <div class="panel-box">
-                <h3>📦 Incoming Printing Orders List</h3>
-                <div id="liveOrdersContainer">
-                    <p style="text-align:center; color:var(--text-sub); padding:20px;">Fetching latest updates...</p>
-                </div>
+            <div class="stat-card">
+                <h3>Total Orders</h3>
+                <p id="totalOrdersCount" style="font-weight: bold;">0</p>
             </div>
         </div>
 
-        <div id="section_analytics" class="view-section">
-            <div class="panel-box">
-                <h3>📈 Store Performance Analytics Chart</h3>
-                
-                <div class="graph-filters">
-                    <button id="filter_revenue" class="filter-btn active" onclick="switchGraphMode('revenue')">Gross Revenue (₹)</button>
-                    <button id="filter_profit" class="filter-btn" onclick="switchGraphMode('profit')">Net Profit/Loss (₹)</button>
-                    <button id="filter_orders" class="filter-btn" onclick="switchGraphMode('orders')">Orders Count</button>
-                </div>
+        <hr style="border-color: #333; margin: 20px 0;">
 
-                <div style="position: relative; width: 100%; height: 340px;">
-                    <canvas id="businessAnalyticsChart"></canvas>
-                </div>
-            </div>
+        <h2>Active Print Queue & Management</h2>
+        <div id="ordersContainer">
+            <p>Loading real-time orders...</p>
         </div>
-
-        <div id="section_settings" class="view-section">
-            <div class="panel-box" style="max-width:500px; margin:0 auto;">
-                <h3>⚙️ Update Authentication Credentials</h3>
-                <div class="input-group">
-                    <label>Admin Username Token ID</label>
-                    <input type="text" id="settingsAdminUser">
-                </div>
-                <div class="input-group">
-                    <label>Change Secret Password</label>
-                    <input type="password" id="settingsAdminPass" placeholder="Enter new secret password">
-                </div>
-                <button class="btn-admin" style="background:var(--blinkit-green);" onclick="updateAdminCredentials()">
-                    Commit Profile Updates
-                </button>
-            </div>
-        </div>
-
-        <div id="section_help" class="view-section">
-            <div class="panel-box">
-                <h3>❓ Help Center & Local Hardware Troubleshooter</h3>
-                <div style="line-height:1.7; font-size:0.9rem; color:#4a5568;">
-                    <p style="margin-bottom:12px; font-weight:700; color:#111;">💡 Quick Troubleshooting Manual:</p>
-                    <ul style="padding-left:20px; margin-bottom:15px; display:flex; flex-direction:column; gap:8px;">
-                        <li>• <b>Printer Agent Offline:</b> Make sure your local computer's CMD prompt is active with <code>node agent.js</code> and the USB cable is fully plugged into the printer.</li>
-                        <li>• <b>Double Printing Safeguard:</b> The local agent script natively saves a text token for each print job. To re-print a deleted sheet, simply remove that order's `.txt` log from the agent directory.</li>
-                        <li>• <b>Customer Refund Matrix:</b> If a print crashes or fails, you can copy the Razorpay Payment ID from the specific log entry and process the cash rollback directly from your dashboard inside the Razorpay console.</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
     </div>
 
     <script>
-        // Register Service Worker for PWA support on Admin Panel
+        let adminDeferredPrompt;
+        const btnInstallAdmin = document.getElementById('btnInstallAdmin');
+
+        // Capture PWA install event for Admin Panel
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            adminDeferredPrompt = e;
+            if (btnInstallAdmin) {
+                btnInstallAdmin.style.display = 'block';
+            }
+        });
+
+        // Trigger installation on button click
+        btnInstallAdmin?.addEventListener('click', () => {
+            if (adminDeferredPrompt) {
+                adminDeferredPrompt.prompt();
+                adminDeferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('Admin App Installed Successfully');
+                    }
+                    adminDeferredPrompt = null;
+                });
+            }
+        });
+
+        // Hide install button once installed
+        window.addEventListener('appinstalled', () => {
+            if (btnInstallAdmin) {
+                btnInstallAdmin.style.display = 'none';
+            }
+        });
+
+        // Register Isolated Admin Service Worker
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw-admin.js')
-                    .then(reg => console.log('Admin Service Worker registered!', reg))
-                    .catch(err => console.log('Admin Service Worker registration failed:', err));
-            });
+            navigator.serviceWorker.register('/sw-admin.js')
+                .then(() => console.log('Admin Service Worker Registered Successfully'))
+                .catch((err) => console.log('Admin SW Registration Failed:', err));
         }
 
-        let businessChartInstance = null;
-        let activeGraphDatasetMode = 'revenue'; 
-        let globalRawOrdersCache = []; 
-        
-        const cloudApiBaseUrl = window.location.origin;
-
-        if(sessionStorage.getItem('adminToken') === 'secure_active_session') {
-            showDashboard();
-        }
-
-        function verifyAdminLogin() {
-            const user = document.getElementById('adminUser').value.trim();
-            const pass = document.getElementById('adminPass').value;
-            
-            if(user === 'bhavishya' && pass === 'pfhadmin2026') { 
-                sessionStorage.setItem('adminToken', 'secure_active_session');
-                localStorage.setItem('admin_username', user);
-                localStorage.setItem('admin_password', pass);
-                showDashboard();
-            } else { 
-                alert("❌ Unauthorized Access! Sahi credentials daalo bhai."); 
-            }
-        }
-
-        function showDashboard() {
-            document.getElementById('adminLoginBox').classList.add('hidden');
-            document.getElementById('adminDashboard').style.display = 'block';
-            document.getElementById('settingsAdminUser').value = 'bhavishya';
-            
-            initAnalyticsGraph();
-            loadLiveOrders();
-            loadFinancialMetrics();
-            checkCurrentStoreStatus(); 
-            
-            setInterval(() => {
-                if(sessionStorage.getItem('adminToken') === 'secure_active_session') {
-                    loadLiveOrders();
-                    loadFinancialMetrics();
-                }
-            }, 8000);
-        }
-
-        async function checkCurrentStoreStatus() {
+        // Fetch basic dashboard data example
+        async function fetchAdminData() {
             try {
-                const response = await fetch(`${cloudApiBaseUrl}/api/store-status`);
-                if(!response.ok) throw new Error("Fetch failed");
-                const data = await response.json();
-                updateStoreButtonUI(data.isOpen);
-            } catch (err) {
-                console.error("Error fetching store state parameters:", err);
-            }
-        }
-
-        async function toggleLiveStoreInfrastructureState() {
-            const btn = document.getElementById('storeMasterToggleBtn');
-            if(!btn) return;
-
-            const isCurrentlyOpen = btn.classList.contains('open');
-            const targetNextState = !isCurrentlyOpen;
-
-            btn.disabled = true;
-            btn.textContent = "WAITING... ⏳";
-
-            try {
-                const response = await fetch(`${cloudApiBaseUrl}/api/store-status/toggle`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ isOpen: targetNextState })
-                });
-                
-                if(!response.ok) throw new Error("Network response code error");
-                const data = await response.json();
-                updateStoreButtonUI(data.isOpen);
-            } catch (err) {
-                console.error(err);
-                alert("❌ Server status update fail ho gaya bhai! Network pipeline refresh karo.");
-                updateStoreButtonUI(isCurrentlyOpen);
-            } finally {
-                btn.disabled = false;
-            }
-        }
-
-        function updateStoreButtonUI(isOpen) {
-            const btn = document.getElementById('storeMasterToggleBtn');
-            if(!btn) return;
-            if (isOpen) {
-                btn.textContent = "Store Status: OPEN 🟢";
-                btn.className = "master-toggle-btn open";
-            } else {
-                btn.textContent = "Store Status: CLOSED 🔴";
-                btn.className = "master-toggle-btn closed";
-            }
-        }
-
-        function toggleSideDrawer(open) {
-            const drawer = document.getElementById('sideDrawer');
-            const overlay = document.getElementById('drawerOverlay');
-            if(open) {
-                drawer.classList.add('active');
-                overlay.classList.add('active');
-            } else {
-                drawer.classList.remove('active');
-                overlay.classList.remove('active');
-            }
-        }
-
-        function navigateToSection(sectionId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
-            
-            document.getElementById(`section_${sectionId}`).classList.add('active');
-            const currentItem = document.getElementById(`menu_${sectionId}`);
-            if(currentItem) currentItem.classList.add('active');
-            
-            const headingDisplay = document.getElementById('panelTitleDisplay');
-            if(sectionId === 'live_jobs') headingDisplay.textContent = "Live Order Queue";
-            if(sectionId === 'analytics') headingDisplay.textContent = "Shop Analytics Trend";
-            if(sectionId === 'settings') headingDisplay.textContent = "Store Settings Panel";
-            if(sectionId === 'help') headingDisplay.textContent = "Help & System Support";
-            
-            if(sectionId === 'analytics') {
-                setTimeout(() => { rebuildGraphDataEngine(); }, 50); 
-            }
-            toggleSideDrawer(false);
-        }
-
-        function switchGraphMode(mode) {
-            activeGraphDatasetMode = mode;
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`filter_${mode}`).classList.add('active');
-            rebuildGraphDataEngine();
-        }
-
-        function rebuildGraphDataEngine() {
-            if(!businessChartInstance || globalRawOrdersCache.length === 0) return;
-
-            const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-            let parsedDataValues = [0, 0, 0, 0, 0, 0, 0];
-
-            const paidOrders = globalRawOrdersCache.filter(o => o.status === 'Paid / Ready for Print');
-
-            paidOrders.forEach(order => {
-                let orderDate = new Date();
-                if(order.date) {
-                    const cleanDateStr = order.date.split(',')[0];
-                    orderDate = new Date(cleanDateStr);
-                }
-                
-                let dayIndex = orderDate.getDay();
-                let adjustedChartIndex = dayIndex === 0 ? 6 : dayIndex - 1;
-
-                if(adjustedChartIndex >= 0 && adjustedChartIndex <= 6) {
-                    if(activeGraphDatasetMode === 'revenue') {
-                        parsedDataValues[adjustedChartIndex] += parseFloat(order.amount) || 0;
-                    } else if(activeGraphDatasetMode === 'orders') {
-                        parsedDataValues[adjustedChartIndex] += 1;
-                    } else if(activeGraphDatasetMode === 'profit') {
-                        let orderPages = 0;
-                        if(order.configDetails && Array.isArray(order.configDetails)) {
-                            order.configDetails.forEach(f => {
-                                orderPages += (parseInt(f.pages) || 1) * (parseInt(f.copies) || 1);
-                            });
-                        } else {
-                            orderPages = (parseInt(order.pages) || 1);
-                        }
-                        let orderCostPrice = (orderPages * 1.00) + 15.00;
-                        let orderNetProfit = (parseFloat(order.amount) || 0) - orderCostPrice;
-                        
-                        parsedDataValues[adjustedChartIndex] += orderNetProfit;
-                    }
-                }
-            });
-
-            let lineThemeColor = '#0C8346';
-            let fillThemeBg = 'rgba(12, 131, 70, 0.05)';
-            let labelStringName = 'Gross Earnings (₹)';
-
-            if(activeGraphDatasetMode === 'profit') {
-                lineThemeColor = '#10b981';
-                fillThemeBg = 'rgba(16, 185, 129, 0.05)';
-                labelStringName = 'Net Shop Profit (₹)';
-            } else if(activeGraphDatasetMode === 'orders') {
-                lineThemeColor = '#2563eb';
-                fillThemeBg = 'rgba(37, 99, 235, 0.05)';
-                labelStringName = 'Completed Orders Count';
-            }
-
-            businessChartInstance.data.datasets[0].data = parsedDataValues.map(v => parseFloat(v.toFixed(2)) || v);
-            businessChartInstance.data.datasets[0].label = labelStringName;
-            businessChartInstance.data.datasets[0].borderColor = lineThemeColor;
-            businessChartInstance.data.datasets[0].backgroundColor = fillThemeBg;
-            
-            businessChartInstance.update();
-        }
-
-        function initAnalyticsGraph() {
-            const ctx = document.getElementById('businessAnalyticsChart').getContext('2d');
-            businessChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [{
-                        label: 'Gross Earnings (₹)',
-                        data: [0, 0, 0, 0, 0, 0, 0],
-                        borderColor: '#0C8346',
-                        backgroundColor: 'rgba(12, 131, 70, 0.05)',
-                        borderWidth: 3,
-                        tension: 0.3,
-                        fill: true
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { legend: { display: true, position: 'top' } },
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
-        }
-
-        async function loadFinancialMetrics() {
-            try {
-                const res = await fetch(`${cloudApiBaseUrl}/api/admin/financials`);
-                if(!res.ok) return; 
+                const res = await fetch('/api/admin/orders');
                 const data = await res.json();
-                
-                document.getElementById('statTotalOrders').textContent = data.totalOrders;
-                document.getElementById('statRevenue').textContent = `₹${data.revenue}`;
-                
-                const profitEl = document.getElementById('statProfit');
-                profitEl.textContent = `₹${data.profitLoss}`;
-                
-                if(parseFloat(data.profitLoss) < 0) {
-                    document.getElementById('profitCard').style.borderLeftColor = "#ef4444";
-                    profitEl.style.color = "#ef4444";
-                } else {
-                    document.getElementById('profitCard').style.borderLeftColor = "#10b981";
-                    profitEl.style.color = "#0C8346";
-                }
-            } catch (err) { console.error(err); }
-        }
-
-        async function loadLiveOrders() {
-            try {
-                const res = await fetch(`${cloudApiBaseUrl}/api/admin/orders`);
-                const orders = await res.json();
-                
-                globalRawOrdersCache = orders;
-
-                const container = document.getElementById('liveOrdersContainer');
-                if(orders.length === 0) {
-                    container.innerHTML = '<p style="text-align:center; color:var(--text-sub); padding:20px;">Filhaal koi active jobs pool nahi hai.</p>';
-                    return;
-                }
-                
-                container.innerHTML = '';
-                [...orders].reverse().forEach((order) => {
-                    const card = document.createElement('div');
-                    card.className = 'order-card';
-                    let currentStatus = order.status;
-                    let selectStatusClass = "pending";
-                    if(currentStatus === 'Printing') selectStatusClass = "printing";
-                    if(currentStatus === 'Out for Delivery') selectStatusClass = "delivery";
-                    if(currentStatus === 'Delivered') selectStatusClass = "delivered";
-
-                    let configDetails = "";
-                    let metaArray = [];
-                    if(order.configDetails) {
-                        metaArray = typeof order.configDetails === 'string' ? JSON.parse(order.configDetails) : order.configDetails;
-                        configDetails = metaArray.map(f => `• <b>File:</b> ${f.fileName} <br> [Quantity: ${f.copies} copies × ${f.pages} pages | ${f.printType === 'bw' ? 'B&W' : 'Color'} | ${f.binding}]`).join('<br><br>');
-                    } else {
-                        configDetails = `• Pages: ${order.pages} | Type: ${order.printType} | Binding: ${order.binding}`;
-                    }
-
-                    card.innerHTML = `
-                        <div class="order-header">
-                            <span>📅 ${order.date || 'N/A'}</span>
-                            <div>
-                                <select class="status-select ${selectStatusClass}" onchange="updateDeliveryStatus('${order.orderId}', this)">
-                                    <option value="Paid / Ready for Print" ${currentStatus === 'Paid / Ready for Print' ? 'selected' : ''}>⏳ Pending</option>
-                                    <option value="Printing" ${currentStatus === 'Printing' ? 'selected' : ''}>🖨️ Printing</option>
-                                    <option value="Out for Delivery" ${currentStatus === 'Out for Delivery' ? 'selected' : ''}>🛵 Out for Delivery</option>
-                                    <option value="Delivered" ${currentStatus === 'Delivered' ? 'selected' : ''}>✅ Delivered</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div style="font-size:0.85rem; color:#4a5568; line-height:1.6; margin-bottom:10px;">
-                            <p style="margin-bottom:6px; color:#111;">📍 <b>Address:</b> ${order.address}</p>
-                            <div style="background:var(--surface); border:1px solid var(--border-color); padding:10px; border-radius:10px; margin-bottom:10px;">
-                                ${configDetails}
-                            </div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
-                                <span style="color:var(--text-sub)">ID: ${order.orderId}</span>
-                                <strong style="color:var(--blinkit-green); font-size:0.9rem;">Collected: ₹${order.amount}</strong>
-                            </div>
-                        </div>
-                        <div class="btn-action-panel">
-                            <a href="/download/${order.file}" class="file-link" target="_blank">📥 Download File</a>
-                            <button class="btn-direct-print" onclick="triggerHardwareFlashPrint('${order.file}', ${JSON.stringify(metaArray).replace(/"/g, '&quot;')})">🖨️ Flash Print</button>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-
-                const graphTabActive = document.getElementById('section_analytics').classList.contains('active');
-                if(graphTabActive) { rebuildGraphDataEngine(); }
-
-            } catch(err) { console.error(err); }
-        }
-
-        async function updateDeliveryStatus(orderId, selectElement) {
-            const selectedValue = selectElement.value;
-            
-            selectElement.className = "status-select";
-            if(selectedValue === 'Paid / Ready for Print') selectElement.classList.add('pending');
-            if(selectedValue === 'Printing') selectElement.classList.add('printing');
-            if(selectedValue === 'Out for Delivery') selectElement.classList.add('delivery');
-            if(selectedValue === 'Delivered') selectElement.classList.add('delivered');
-
-            try {
-                const response = await fetch(`${cloudApiBaseUrl}/api/admin/orders/update-status`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orderId: orderId, status: selectedValue })
-                });
-                const result = await response.json();
-                if(!result.success) {
-                    alert("⚠️ Tracking sync delayed on cloud infrastructure parameters.");
-                }
-                rebuildGraphDataEngine(); 
-            } catch(err) {
-                console.error(err);
-                alert("❌ Failed to broadcast tracking updates to live backend servers.");
+                document.getElementById('totalOrdersCount').innerText = Array.isArray(data) ? data.length : 0;
+            } catch (e) {
+                console.error("Failed to load admin data");
             }
-        }
 
-        function updateAdminCredentials() {
-            const newUser = document.getElementById('settingsAdminUser').value.trim();
-            const newPass = document.getElementById('settingsAdminPass').value;
-            if(!newUser) { alert("❌ Username khali nahi ho sakta."); return; }
-            localStorage.setItem('admin_username', newUser);
-            if(newPass.length > 0) localStorage.setItem('admin_password', newPass);
-            alert("🎉 Profile Credentials Updated successfully!");
-            document.getElementById('settingsAdminPass').value = '';
-        }
-
-        async function triggerHardwareFlashPrint(fileLocation, metaArray) {
-            let targetPages = undefined; let targetCopies = 1; let targetSides = 'single';
-            if(metaArray && metaArray.length > 0) { targetPages = metaArray[0].pages; targetCopies = metaArray[0].copies; targetSides = metaArray[0].sides; }
             try {
-                const response = await fetch(`${cloudApiBaseUrl}/api/admin/print-hardware`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fileLocation: fileLocation, options: { copies: targetCopies, pages: targetPages, sides: targetSides } })
-                });
-                const result = await response.json();
-                if(result.success) { alert(`🚀 Printing Triggered on HP Smart Tank!`); } else { alert(`⚠️ Error: ${result.error}`); }
-            } catch (err) { alert("❌ Bridge connection offline!"); }
+                const statusRes = await fetch('/api/store-status');
+                const statusData = await statusRes.json();
+                document.getElementById('storeStatusText').innerText = statusData.isOpen ? "OPEN" : "CLOSED";
+                document.getElementById('storeStatusText').style.color = statusData.isOpen ? "#00ffcc" : "#ff4444";
+            } catch (e) {}
         }
 
-        function adminLogout() { sessionStorage.removeItem('adminToken'); window.location.reload(); }
+        fetchAdminData();
+        setInterval(fetchAdminData, 10000); // Refresh every 10s
     </script>
 </body>
 </html>

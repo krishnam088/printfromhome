@@ -1,9 +1,8 @@
 {
   "name": "Print From Home Admin",
-  "short_name": "Print Admin",
-  "description": "Real-time order management, live sales tracking, and print control center for Print From Home.",
+  "short_name": "PFH Admin",
+  "id": "/admin-panel-pwa",
   "start_url": "/admin-panel",
-  "id": "/admin-panel",
   "scope": "/admin-panel",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
