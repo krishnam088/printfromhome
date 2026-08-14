@@ -10,6 +10,9 @@
   "background_color": "#F4C430",
   "theme_color": "#F4C430",
   "orientation": "portrait",
+  "lang": "en",
+  "dir": "ltr",
+  "iarc_rating_id": "e58286c1-65f5-48b4-b830-a8cd1e8605c4",
   "prefer_related_applications": false,
   "related_applications": [],
   "categories": [
@@ -37,7 +40,14 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Print From Home Dashboard"
+      "label": "Print From Home Mobile Dashboard"
+    },
+    {
+      "src": "/app_icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Print From Home Desktop Dashboard"
     }
   ]
 }
