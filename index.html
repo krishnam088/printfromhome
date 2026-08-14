@@ -920,41 +920,33 @@
             });
         }
 
-        // 📱 ORIGINAL APP-LIKE INSTALL SHEET ENGINE
+        // 📱 DYNAMIC REAL-TIME PWA INSTALL ENGINE (AUTO-RESTORES ON APP UNINSTALL)
         let deferredPwaPrompt = null;
         const appSheet = document.getElementById('nativeAppSheet');
         const installCta = document.getElementById('nativeInstallCta');
         const successToast = document.getElementById('pwaSuccessToast');
 
-        function checkIfPwaIsInstalled() {
+        // Only check if currently running inside the installed app window
+        function isCurrentlyRunningAsApp() {
             return window.matchMedia('(display-mode: standalone)').matches || 
-                   window.navigator.standalone === true || 
-                   localStorage.getItem('pwa_app_installed') === 'true';
+                   window.navigator.standalone === true;
         }
 
-        // Capture Native Prompt
+        // 🎯 Auto-Catch Prompt on Web Open / After App Uninstall
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPwaPrompt = e;
-            console.log('✅ Native App prompt ready!');
+            console.log('✅ Dynamic Native Install Prompt is ready!');
 
-            if (!checkIfPwaIsInstalled() && appSheet) {
+            // If user opened site in browser and app is not active
+            if (!isCurrentlyRunningAsApp() && appSheet) {
                 setTimeout(() => {
                     appSheet.classList.add('active');
                 }, 800);
             }
         });
 
-        // Auto Show on Open if not installed
-        window.addEventListener('load', () => {
-            if (!checkIfPwaIsInstalled() && appSheet) {
-                setTimeout(() => {
-                    appSheet.classList.add('active');
-                }, 1000);
-            }
-        });
-
-        // 🎯 1-Tap Play Store Style Install Trigger
+        // 🚀 Auto-Trigger Install on Click
         if (installCta) {
             installCta.addEventListener('click', async () => {
                 if (deferredPwaPrompt) {
@@ -963,7 +955,6 @@
                     console.log('Install outcome:', choiceResult.outcome);
                     
                     if (choiceResult.outcome === 'accepted') {
-                        localStorage.setItem('pwa_app_installed', 'true');
                         dismissAppSheet();
                         showInstalledToast();
                     }
@@ -990,11 +981,12 @@
             }
         }
 
+        // When installation completes
         window.addEventListener('appinstalled', () => {
-            localStorage.setItem('pwa_app_installed', 'true');
             dismissAppSheet();
             showInstalledToast();
-            console.log('🎉 Print From Home official app installed successfully!');
+            deferredPwaPrompt = null;
+            console.log('🎉 Print From Home app installed successfully!');
         });
     </script>
     <script src="script.js"></script>
