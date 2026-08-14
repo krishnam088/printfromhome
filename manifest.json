@@ -14,7 +14,12 @@
   "dir": "ltr",
   "iarc_rating_id": "e58286c1-65f5-48b4-b830-a8cd1e8605c4",
   "prefer_related_applications": false,
-  "related_applications": [],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://printfromhome.onrender.com/manifest.json"
+    }
+  ],
   "scope_extensions": [
     {
       "type": "origin",
