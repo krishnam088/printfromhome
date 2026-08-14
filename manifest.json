@@ -35,6 +35,22 @@
       "url": "/?print=%s"
     }
   ],
+  "share_target": {
+    "action": "/",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "document",
+          "accept": [".pdf", ".png", ".jpg", ".jpeg", ".doc", ".docx"]
+        }
+      ]
+    }
+  },
   "categories": [
     "shopping",
     "utilities",
