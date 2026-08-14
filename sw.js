@@ -1,13 +1,8 @@
-const CACHE_NAME = 'pfh-offline-v13';
-const OFFLINE_URL = '/';
+const CACHE_NAME = 'pfh-offline-v14';
 
 // 1. Install Event
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.add(OFFLINE_URL).catch(() => {});
-    }).then(() => self.skipWaiting())
-  );
+  event.waitUntil(self.skipWaiting());
 });
 
 // 2. Activate Event
@@ -25,7 +20,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. Fetch Event with Admin Route Bypass
+// 3. Clean Fetch Event (No forced redirects to root page)
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') {
     return;
@@ -33,25 +28,15 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // 🛑 AGAR URL MEIN ADMIN HAI, TOH SERVICE WORKER INTERCEPT NA KARE (Direct Network/Server Load ho)
-  if (url.pathname.includes('/admin')) {
+  // Admin routes ya API requests ko seedha server par jaane do bina intercept kiye
+  if (url.pathname.includes('/admin') || url.pathname.includes('/api/')) {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
     );
     return;
   }
 
-  // Normal User App Navigation
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      caches.match(OFFLINE_URL).then((cachedResponse) => {
-        return cachedResponse || fetch(event.request).catch(() => caches.match(OFFLINE_URL));
-      })
-    );
-    return;
-  }
-
-  // Assets & other requests
+  // Standard cache-first or network fallback for normal assets/pages
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       return cachedResponse || fetch(event.request).catch(() => {});
