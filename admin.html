@@ -3,157 +3,720 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print From Home - Admin Dashboard</title>
+    <title>Print From Home - Admin Control Center</title>
     
     <!-- Isolated PWA Manifest for Admin App -->
     <link rel="manifest" href="/manifest-admin.json">
     <meta name="theme-color" content="#0070f3">
 
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root {
+            --bg-dark: #0f172a;
+            --surface-card: #1e293b;
+            --surface-card-hover: #273549;
+            --accent-blue: #0070f3;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --border-color: #334155;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #111111;
-            color: #ffffff;
-            margin: 0;
-            padding: 20px;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 16px;
         }
-        .dashboard-container {
-            max-width: 900px;
+
+        .dashboard-wrapper {
+            max-width: 1200px;
             margin: 0 auto;
-            background: #1e1e1e;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        h1 {
-            color: #0070f3;
-            text-align: center;
-        }
-        .install-box {
-            text-align: center;
+
+        /* HEADER & TOP CONTROLS */
+        .admin-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface-card);
+            padding: 18px 24px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
             margin-bottom: 20px;
+            gap: 15px;
         }
+
+        .brand-title h1 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .brand-title h1 span { color: var(--accent-blue); }
+        .brand-title p { font-size: 0.75rem; color: var(--text-sub); margin-top: 2px; }
+
+        .header-action-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* TOGGLE BUTTONS & BADGES */
+        .toggle-badge-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .btn-store-open { background: var(--accent-green); color: white; }
+        .btn-store-closed { background: var(--accent-red); color: white; }
+        .btn-autoprint-on { background: #0284c7; color: white; }
+        .btn-autoprint-off { background: #475569; color: #cbd5e1; }
+
         #btnInstallAdmin {
             display: none;
-            padding: 12px 24px;
-            background: #0070f3;
+            padding: 8px 16px;
+            background: var(--accent-blue);
             color: white;
             border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 16px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
             cursor: pointer;
-            margin: 0 auto;
-            box-shadow: 0 4px 10px rgba(0, 112, 243, 0.4);
-            transition: background 0.3s;
+            box-shadow: 0 4px 12px rgba(0,112,243,0.3);
         }
-        #btnInstallAdmin:hover {
-            background: #005bb5;
-        }
+
+        /* STATS OVERVIEW CARDS */
         .stats-grid {
-            display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            margin-bottom: 22px;
         }
         .stat-card {
-            background: #2a2a2a;
-            padding: 15px 25px;
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .stat-title { font-size: 0.78rem; font-weight: 600; color: var(--text-sub); text-transform: uppercase; }
+        .stat-num { font-size: 1.6rem; font-weight: 800; color: var(--text-main); }
+
+        /* LIVE ORDER QUEUE CONTAINER */
+        .section-heading-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            padding: 0 4px;
+        }
+        .section-heading-bar h2 { font-size: 1.15rem; font-weight: 800; }
+        .audio-test-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-sub);
+            padding: 6px 12px;
             border-radius: 8px;
-            text-align: center;
-            flex: 1;
-            margin: 0 10px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .audio-test-btn:hover { color: var(--text-main); border-color: var(--text-sub); }
+
+        .order-queue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .order-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transition: border-color 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .order-card.new-order-pulse {
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 20px rgba(245,158,11,0.2);
+        }
+
+        .order-card-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 12px;
+            gap: 10px;
+        }
+        .order-id-meta h3 { font-size: 1.05rem; font-weight: 800; color: var(--text-main); }
+        .order-time { font-size: 0.72rem; color: var(--text-sub); margin-top: 2px; }
+
+        .order-customer-box {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.82rem;
+        }
+        .cust-field b { color: var(--text-sub); font-size: 0.72rem; display: block; text-transform: uppercase; }
+
+        /* PRINT SPECS CONTAINER */
+        .specs-container {
+            background: rgba(0, 112, 243, 0.05);
+            border: 1px solid rgba(0, 112, 243, 0.2);
+            border-radius: 12px;
+            padding: 14px;
+        }
+        .specs-title { font-size: 0.8rem; font-weight: 800; color: var(--accent-blue); text-transform: uppercase; margin-bottom: 8px; }
+        .specs-tags-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .spec-tag {
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .spec-tag.highlight {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .file-action-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .btn-download-file {
+            background: #334155;
+            color: white;
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-download-file:hover { background: #475569; }
+        .btn-manual-print {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* STATUS STEPPER CONTROLS */
+        .stepper-actions-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--border-color);
+        }
+        .stepper-label { font-size: 0.75rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; margin-right: 4px; }
+        .btn-step {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: var(--surface-card);
+            color: var(--text-sub);
+            transition: all 0.15s ease;
+        }
+        .btn-step:hover { color: var(--text-main); border-color: var(--text-sub); }
+        .btn-step.active {
+            background: var(--accent-green);
+            color: white;
+            border-color: var(--accent-green);
+        }
+        .btn-step.current-phase {
+            background: var(--accent-yellow);
+            color: black;
+            border-color: var(--accent-yellow);
+            font-weight: 800;
+        }
+
+        /* SILENT PRINT IFRAME (HIDDEN) */
+        #silentPrintFrame {
+            display: none;
+            width: 0;
+            height: 0;
+            border: 0;
         }
     </style>
 </head>
 <body>
 
-    <div class="dashboard-container">
-        <h1>Print From Home Admin Dashboard</h1>
+    <!-- Hidden Iframe for Direct Silent Auto-Printing -->
+    <iframe id="silentPrintFrame"></iframe>
 
-        <!-- Direct Install App Button Container -->
-        <div class="install-box">
-            <button id="btnInstallAdmin">📥 Install Admin App</button>
-        </div>
+    <div class="dashboard-wrapper">
+        
+        <!-- HEADER ROW -->
+        <header class="admin-header">
+            <div class="brand-title">
+                <h1>Print From Home <span>Control Center</span></h1>
+                <p>Real-Time Hardware Dispatch & Laser Print Operations</p>
+            </div>
 
+            <div class="header-action-group">
+                <!-- Auto-Print Toggle -->
+                <button type="button" id="autoPrintToggleBtn" class="toggle-badge-btn btn-autoprint-on" onclick="toggleAutoPrintEngine()">
+                    🖨️ Auto-Print: <span id="autoPrintStatusText">ON</span>
+                </button>
+
+                <!-- Store Status Toggle -->
+                <button type="button" id="storeStatusToggleBtn" class="toggle-badge-btn btn-store-open" onclick="toggleStoreStatus()">
+                    🏪 Store: <span id="storeStatusStateText">OPEN</span>
+                </button>
+
+                <!-- PWA Install Button -->
+                <button type="button" id="btnInstallAdmin">📥 Install Admin App</button>
+            </div>
+        </header>
+
+        <!-- STATS OVERVIEW -->
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>Live Operations</h3>
-                <p id="storeStatusText" style="color: #00ffcc; font-weight: bold;">Checking...</p>
+                <span class="stat-title">Total Orders</span>
+                <span class="stat-num" id="statTotalOrders">0</span>
             </div>
             <div class="stat-card">
-                <h3>Total Orders</h3>
-                <p id="totalOrdersCount" style="font-weight: bold;">0</p>
+                <span class="stat-title">Pending / Ready to Print</span>
+                <span class="stat-num" id="statReadyPrint" style="color: var(--accent-yellow);">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">Out for Delivery</span>
+                <span class="stat-num" id="statOutDelivery" style="color: #38bdf8;">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">Completed Orders</span>
+                <span class="stat-num" id="statCompleted" style="color: var(--accent-green);">0</span>
             </div>
         </div>
 
-        <hr style="border-color: #333; margin: 20px 0;">
-
-        <h2>Active Print Queue & Management</h2>
-        <div id="ordersContainer">
-            <p>Loading real-time orders...</p>
+        <!-- ORDER QUEUE HEADING -->
+        <div class="section-heading-bar">
+            <h2>📦 Live Hardware Print Queue</h2>
+            <button type="button" class="audio-test-btn" onclick="playLoudOrderChime(true)">🔔 Test Sound Alert</button>
         </div>
+
+        <!-- LIVE ORDERS CONTAINER -->
+        <div class="order-queue-list" id="adminOrderQueue">
+            <div style="text-align: center; padding: 40px; color: var(--text-sub);">
+                ⏳ Connecting to print stream & fetching orders...
+            </div>
+        </div>
+
     </div>
 
     <script>
+        // ==========================================
+        // 🔔 1. LOUD SOUND ALERT ENGINE (SYNTHESIZED BELL)
+        // ==========================================
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        // Play loud 2-tone chime on new order
+        function playLoudOrderChime(isTest = false) {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+
+                // High pitch beep 1
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.type = 'triangle';
+                osc1.frequency.setValueAtTime(880, now); // Note A5
+                gain1.gain.setValueAtTime(0.4, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.35);
+
+                // High pitch beep 2 (Louder bell finish)
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(1320, now + 0.2); // Note E6
+                gain2.gain.setValueAtTime(0.6, now + 0.2);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.start(now + 0.2);
+                osc2.stop(now + 0.8);
+            } catch (e) {
+                console.warn("Audio unlock required: Click anywhere on dashboard", e);
+            }
+        }
+
+        // Unlock Web Audio on first click
+        window.addEventListener('click', () => { getAudioContext(); }, { once: true });
+
+        // ==========================================
+        // 🖨️ 2. AUTO-PRINT SYSTEM & DISPATCH ENGINE
+        // ==========================================
+        let autoPrintEnabled = localStorage.getItem('admin_autoprint') !== 'false';
+        const processedAutoPrintOrderIds = new Set(JSON.parse(localStorage.getItem('printed_orders') || '[]'));
+
+        function toggleAutoPrintEngine() {
+            autoPrintEnabled = !autoPrintEnabled;
+            localStorage.setItem('admin_autoprint', autoPrintEnabled);
+            updateAutoPrintButtonUI();
+        }
+
+        function updateAutoPrintButtonUI() {
+            const btn = document.getElementById('autoPrintToggleBtn');
+            const txt = document.getElementById('autoPrintStatusText');
+            if (autoPrintEnabled) {
+                btn.className = "toggle-badge-btn btn-autoprint-on";
+                txt.textContent = "ON";
+            } else {
+                btn.className = "toggle-badge-btn btn-autoprint-off";
+                txt.textContent = "OFF";
+            }
+        }
+        updateAutoPrintButtonUI();
+
+        // Trigger hardware print for a given document URL
+        function triggerPrintJob(fileUrl, orderId) {
+            if (!fileUrl) {
+                alert("File URL not found for this order!");
+                return;
+            }
+
+            const frame = document.getElementById('silentPrintFrame');
+            frame.src = fileUrl;
+            frame.onload = function () {
+                try {
+                    frame.contentWindow.focus();
+                    frame.contentWindow.print();
+                } catch (e) {
+                    console.log("Direct iframe print blocked by CORS, opening print tab...");
+                    window.open(fileUrl, '_blank');
+                }
+            };
+
+            // Record as processed
+            if (orderId) {
+                processedAutoPrintOrderIds.add(orderId);
+                localStorage.setItem('printed_orders', JSON.stringify(Array.from(processedAutoPrintOrderIds)));
+            }
+        }
+
+        // ==========================================
+        // 🏪 3. STORE OPEN/CLOSED CONTROLLER
+        // ==========================================
+        let isStoreOpen = true;
+
+        async function fetchStoreStatus() {
+            try {
+                const res = await fetch('/api/store-status');
+                const data = await res.json();
+                if (data.success !== undefined) {
+                    isStoreOpen = data.isOpen;
+                    updateStoreButtonUI();
+                }
+            } catch (err) {
+                console.error("Store status fetch error:", err);
+            }
+        }
+
+        async function toggleStoreStatus() {
+            const nextState = !isStoreOpen;
+            try {
+                const res = await fetch('/api/admin/toggle-store', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isOpen: nextState })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    isStoreOpen = data.isOpen;
+                    updateStoreButtonUI();
+                }
+            } catch (e) {
+                // Fallback direct toggle
+                isStoreOpen = nextState;
+                updateStoreButtonUI();
+            }
+        }
+
+        function updateStoreButtonUI() {
+            const btn = document.getElementById('storeStatusToggleBtn');
+            const txt = document.getElementById('storeStatusStateText');
+            if (isStoreOpen) {
+                btn.className = "toggle-badge-btn btn-store-open";
+                txt.textContent = "OPEN";
+            } else {
+                btn.className = "toggle-badge-btn btn-store-closed";
+                txt.textContent = "CLOSED";
+            }
+        }
+
+        // ==========================================
+        // 🔄 4. ORDER STATUS STEPPER SYNC
+        // ==========================================
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                // Immediately refresh view
+                fetchLiveOrdersStream();
+            } catch (err) {
+                console.error("Failed to update status:", err);
+                fetchLiveOrdersStream();
+            }
+        }
+
+        // ==========================================
+        // 📦 5. LIVE ORDER QUEUE & REAL-TIME FETCH
+        // ==========================================
+        let previousOrderCount = -1;
+
+        async function fetchLiveOrdersStream() {
+            try {
+                const res = await fetch('/api/admin/orders');
+                if (!res.ok) return;
+                const orders = await res.json();
+
+                if (!Array.isArray(orders)) return;
+
+                // Update Stats
+                document.getElementById('statTotalOrders').textContent = orders.length;
+                document.getElementById('statReadyPrint').textContent = orders.filter(o => o.status === 'Paid / Ready for Print' || o.status === 'Pending').length;
+                document.getElementById('statOutDelivery').textContent = orders.filter(o => o.status === 'Out for Delivery').length;
+                document.getElementById('statCompleted').textContent = orders.filter(o => o.status === 'Delivered').length;
+
+                // Sound Alert on New Order Arrival
+                if (previousOrderCount !== -1 && orders.length > previousOrderCount) {
+                    playLoudOrderChime();
+                }
+                previousOrderCount = orders.length;
+
+                renderOrdersList(orders);
+
+                // Auto-Print Trigger Check
+                if (autoPrintEnabled) {
+                    orders.forEach(order => {
+                        const isReady = order.status === 'Paid / Ready for Print' || order.status === 'Paid';
+                        if (isReady && !processedAutoPrintOrderIds.has(order.orderId)) {
+                            console.log(`🤖 Auto-Printing Job for Order: ${order.orderId}`);
+                            const fileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '';
+                            if (fileUrl) {
+                                triggerPrintJob(fileUrl, order.orderId);
+                            }
+                        }
+                    });
+                }
+
+            } catch (err) {
+                console.error("Order stream sync error:", err);
+            }
+        }
+
+        function renderOrdersList(orders) {
+            const container = document.getElementById('adminOrderQueue');
+            if (orders.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background: var(--surface-card); border-radius: 16px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 2.5rem; margin-bottom: 8px;">📭</div>
+                        <h3>No Active Print Orders</h3>
+                        <p style="color: var(--text-sub); font-size: 0.85rem; margin-top: 4px;">Orders placed on the store will appear here with auto-print alerts.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort newest first
+            const sorted = [...orders].reverse();
+
+            container.innerHTML = sorted.map(order => {
+                const currentStatus = order.status || 'Pending';
+                const fileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '#';
+                const fileName = order.fileName || (order.files && order.files[0]?.name) || 'Print_Document.pdf';
+                const pages = order.pages || order.pageCount || 1;
+                const copies = order.copies || 1;
+                const printType = order.printType || (order.isColor ? 'Color' : 'Black & White');
+                const binding = order.binding || order.bindingType || 'None';
+                const totalAmt = order.totalAmount || order.grandTotal || 0;
+
+                const isNew = currentStatus === 'Pending' || currentStatus === 'Paid / Ready for Print';
+
+                return `
+                    <div class="order-card ${isNew ? 'new-order-pulse' : ''}" id="card_${order.orderId}">
+                        <div class="order-card-header">
+                            <div class="order-id-meta">
+                                <h3>Order #${order.orderId}</h3>
+                                <div class="order-time">Received: ${order.timestamp ? new Date(order.timestamp).toLocaleTimeString() : 'Just now'}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-green);">₹${totalAmt}</div>
+                                <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase;">${order.paymentMethod || 'Razorpay / Prepaid'}</span>
+                            </div>
+                        </div>
+
+                        <!-- Customer Meta -->
+                        <div class="order-customer-box">
+                            <div class="cust-field">
+                                <b>Customer Name</b>
+                                <span>${order.customerName || order.userName || 'Customer'}</span>
+                            </div>
+                            <div class="cust-field">
+                                <b>Contact Number</b>
+                                <span><a href="tel:${order.phone || ''}" style="color: #38bdf8; text-decoration: none;">${order.phone || 'N/A'}</a></span>
+                            </div>
+                            <div class="cust-field" style="grid-column: 1 / -1;">
+                                <b>📍 Gate / Delivery Address</b>
+                                <span>${order.address || 'Standard Delivery Location'}</span>
+                            </div>
+                        </div>
+
+                        <!-- Print Hardware Specifications -->
+                        <div class="specs-container">
+                            <div class="specs-title">🖨️ Hardware Specifications</div>
+                            <div class="specs-tags-row">
+                                <div class="spec-tag highlight">📑 ${pages} Pages</div>
+                                <div class="spec-tag highlight">✖️ ${copies} Copies</div>
+                                <div class="spec-tag">🎨 ${printType}</div>
+                                <div class="spec-tag">📎 Binding: ${binding}</div>
+                            </div>
+
+                            <div class="file-action-row">
+                                <a href="${fileUrl}" target="_blank" download class="btn-download-file">
+                                    📥 Download File (${fileName.substring(0, 24)}...)
+                                </a>
+                                <button type="button" class="btn-manual-print" onclick="triggerPrintJob('${fileUrl}', '${order.orderId}')">
+                                    🖨️ Print Document Now
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 4-Stage Stepper -->
+                        <div class="stepper-actions-bar">
+                            <span class="stepper-label">Set Status:</span>
+                            
+                            <button type="button" class="btn-step ${currentStatus === 'Paid / Ready for Print' || currentStatus === 'Pending' ? 'current-phase' : ''}" 
+                                onclick="updateOrderStatus('${order.orderId}', 'Paid / Ready for Print')">
+                                1. Ready
+                            </button>
+
+                            <button type="button" class="btn-step ${currentStatus === 'Printing' ? 'current-phase' : ''}" 
+                                onclick="updateOrderStatus('${order.orderId}', 'Printing')">
+                                2. 🖨️ Printing
+                            </button>
+
+                            <button type="button" class="btn-step ${currentStatus === 'Out for Delivery' ? 'current-phase' : ''}" 
+                                onclick="updateOrderStatus('${order.orderId}', 'Out for Delivery')">
+                                3. 🛵 Out for Delivery
+                            </button>
+
+                            <button type="button" class="btn-step ${currentStatus === 'Delivered' ? 'active' : ''}" 
+                                onclick="updateOrderStatus('${order.orderId}', 'Delivered')">
+                                4. ✅ Delivered
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==========================================
+        // 📱 6. PWA SERVICE WORKER & INSTALL LISTENER
+        // ==========================================
         let adminDeferredPrompt;
         const btnInstallAdmin = document.getElementById('btnInstallAdmin');
 
-        // Capture PWA install event for Admin Panel
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             adminDeferredPrompt = e;
-            if (btnInstallAdmin) {
-                btnInstallAdmin.style.display = 'block';
-            }
+            if (btnInstallAdmin) btnInstallAdmin.style.display = 'inline-flex';
         });
 
-        // Trigger installation on button click
         btnInstallAdmin?.addEventListener('click', () => {
             if (adminDeferredPrompt) {
                 adminDeferredPrompt.prompt();
                 adminDeferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('Admin App Installed Successfully');
-                    }
                     adminDeferredPrompt = null;
                 });
             }
         });
 
-        // Hide install button once installed
         window.addEventListener('appinstalled', () => {
-            if (btnInstallAdmin) {
-                btnInstallAdmin.style.display = 'none';
-            }
+            if (btnInstallAdmin) btnInstallAdmin.style.display = 'none';
         });
 
-        // Register Isolated Admin Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw-admin.js')
-                .then(() => console.log('Admin Service Worker Registered Successfully'))
-                .catch((err) => console.log('Admin SW Registration Failed:', err));
+                .then(() => console.log('Admin Service Worker Active'))
+                .catch((err) => console.log('Admin SW Error:', err));
         }
 
-        // Fetch basic dashboard data example
-        async function fetchAdminData() {
-            try {
-                const res = await fetch('/api/admin/orders');
-                const data = await res.json();
-                document.getElementById('totalOrdersCount').innerText = Array.isArray(data) ? data.length : 0;
-            } catch (e) {
-                console.error("Failed to load admin data");
-            }
-
-            try {
-                const statusRes = await fetch('/api/store-status');
-                const statusData = await statusRes.json();
-                document.getElementById('storeStatusText').innerText = statusData.isOpen ? "OPEN" : "CLOSED";
-                document.getElementById('storeStatusText').style.color = statusData.isOpen ? "#00ffcc" : "#ff4444";
-            } catch (e) {}
-        }
-
-        fetchAdminData();
-        setInterval(fetchAdminData, 10000); // Refresh every 10s
+        // Init Polling Cycles
+        fetchStoreStatus();
+        fetchLiveOrdersStream();
+        setInterval(fetchLiveOrdersStream, 3500); // 3.5s Live Polling
     </script>
 </body>
 </html>
