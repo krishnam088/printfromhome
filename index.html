@@ -294,7 +294,6 @@
             padding: 20px;
         }
         
-        /* 🛑 DESKTOP PAR PROMPT & SHEET DONO HAMESHA HIDE RAHENGE */
         @media (min-width: 768px) {
             .smart-install-modal-overlay, .native-app-install-sheet {
                 display: none !important;
@@ -553,7 +552,7 @@
                         </marquee>
                     </div>
                     <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%;">
-                        🚨 <b>Dukan Abhi Band Hai Bhai!</b> Print From Home accepts orders strictly between 07:00 AM and 11:59 PM.
+                        🚨 <b>Store is Closed!</b> We are not taking print orders currently.
                     </div>
                     <div style="text-align: center; padding: 25px 10px; width:100%;">
                         <h2 style="font-size: 2.3rem; font-weight:800; color:#1a202c; letter-spacing:-1px;">Print Store</h2>
@@ -663,7 +662,7 @@
     </div>
 
     <!-- 🚨 MASTER PREMIUM STORE CLOSED POPUP MODAL FRAME -->
-    <div id="storeClosedPopupModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 999999; display: none; justify-content: center; align-items: center; padding: 20px;">
+    <div id="storeClosedPopupModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 99999; display: none; justify-content: center; align-items: center; padding: 20px;">
         <div style="background: #ffffff; border-radius: 24px; padding: 30px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 3px solid #ef4444; animation: popupBounceAnimation 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
             <div style="font-size: 3.5rem; margin-bottom: 10px;">🏪🚨</div>
             <h3 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 8px; letter-spacing: -0.5px;">Store is Currently Closed</h3>
@@ -680,7 +679,87 @@
     </div>
 
     <script>
-        // 🔥 REAL-TIME CLOUD STORE STATUS GUARD (SYNCED WITH ADMIN PARAMETERS)
+        // ==========================================
+        // 🇮🇳 2026 AUTOMATED FESTIVE CALENDAR BANNER ENGINE
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            const banner = document.getElementById('storeOffersTopBanner');
+            if (!banner) return;
+
+            const now = new Date();
+            
+            // Helper: checks if current date/time falls between (startMonth, startDay 00:00:00) and (endMonth, endDay 23:59:59)
+            function isEventActive(startMonth, startDay, endMonth, endDay) {
+                const currentYear = now.getFullYear();
+                const startDate = new Date(currentYear, startMonth - 1, startDay, 0, 0, 0);
+                const endDate = new Date(currentYear, endMonth - 1, endDay, 23, 59, 59);
+                return now >= startDate && now <= endDate;
+            }
+
+            // 1. Republic Day (25 Jan 12:00 AM to 26 Jan 11:59:59 PM)
+            if (isEventActive(1, 25, 1, 26)) {
+                banner.style.background = "linear-gradient(to right, #FF9933, #FFFFFF, #138808)";
+                banner.style.color = "#000000";
+                banner.innerHTML = `<span>🇮🇳 <b>Republic Day Special:</b></span> <marquee>Happy Republic Day! Flat 20% OFF on all prints & FREE delivery.</marquee>`;
+            }
+            // 2. Holi (03 March to 04 March)
+            else if (isEventActive(3, 3, 3, 4)) {
+                banner.style.background = "#fef3c7";
+                banner.style.border = "1px solid #f59e0b";
+                banner.innerHTML = `<span>🎨 <b>Holi Rang Barse Offer:</b></span> <marquee>Wishing you a colorful Holi! Special festive discounts applied on bulk print orders.</marquee>`;
+            }
+            // 3. Eid-ul-Fitr (20 March to 21 March)
+            else if (isEventActive(3, 20, 3, 21)) {
+                banner.style.background = "#e6f4ea";
+                banner.style.border = "1px solid #0c8346";
+                banner.innerHTML = `<span>🌙 <b>Eid Mubarak Offer:</b></span> <marquee>Eid Mubarak! Enjoy special discounts and priority home delivery today.</marquee>`;
+            }
+            // 4. Independence Day (14 Aug 12:00 AM to 15 Aug 11:59:59 PM)
+            else if (isEventActive(8, 14, 8, 15)) {
+                banner.style.background = "linear-gradient(to right, #FF9933, #FFFFFF, #138808)";
+                banner.style.color = "#000000";
+                banner.innerHTML = `<span>🇮🇳 <b>Independence Day Special:</b></span> <marquee>Swatantrata Diwas ki Hardik Shubhkamnayein! Flat 20% OFF aur FREE delivery active!</marquee>`;
+            }
+            // 5. Raksha Bandhan (27 Aug to 28 Aug)
+            else if (isEventActive(8, 27, 8, 28)) {
+                banner.style.background = "#fce7f3";
+                banner.style.border = "1px solid #ec4899";
+                banner.innerHTML = `<span>🎁 <b>Rakhi Special Offer:</b></span> <marquee>Happy Raksha Bandhan! Send customized photo frames and special prints to your siblings with free shipping.</marquee>`;
+            }
+            // 6. Ganesh Chaturthi (13 Sept to 14 Sept)
+            else if (isEventActive(9, 13, 9, 14)) {
+                banner.style.background = "#ffedd5";
+                banner.style.border = "1px solid #ea580c";
+                banner.innerHTML = `<span>📿 <b>Ganesh Chaturthi Offer:</b></span> <marquee>Ganpati Bappa Morya! Special discount on all document and creative poster prints.</marquee>`;
+            }
+            // 7. Dussehra Season / Gandhi Jayanti (01 Oct to 20 Oct)
+            else if (isEventActive(10, 1, 10, 20)) {
+                banner.style.background = "#fef3c7";
+                banner.style.border = "1px solid #d97706";
+                banner.innerHTML = `<span>🏹 <b>Festive Season Dhamaka:</b></span> <marquee>Dussehra & Gandhi Jayanti Special: Extra savings on all spiral and hard-bound printing jobs!</marquee>`;
+            }
+            // 8. Diwali Festival (07 Nov to 08 Nov)
+            else if (isEventActive(11, 7, 11, 8)) {
+                banner.style.background = "#fef08a";
+                banner.style.border = "1px solid #eab308";
+                banner.innerHTML = `<span>🪔 <b>Diwali Mega Dhamaka:</b></span> <marquee>Happy Diwali! Light up your work with flat discounts, zero delivery charges on all prints!</marquee>`;
+            }
+            // 9. Christmas & New Year (24 Dec to 1 Jan)
+            else if (isEventActive(12, 24, 1, 1)) {
+                banner.style.background = "#fef2f2";
+                banner.style.border = "1px solid #ef4444";
+                banner.innerHTML = `<span>🎄 <b>Christmas & New Year Bash:</b></span> <marquee>Merry Christmas & Happy New Year! Midnight delivery and special year-end printing offers are live.</marquee>`;
+            }
+            // 10. Default Normal Days
+            else {
+                banner.style.background = "#fffbeb";
+                banner.style.border = "1px solid #fed7aa";
+                banner.style.color = "#b45309";
+                banner.innerHTML = `<span>📢 <b>Active Offers:</b></span> <marquee>⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!</marquee>`;
+            }
+        });
+
+        // 🔥 REAL-TIME CLOUD STORE STATUS GUARD (ADMIN MASTER OVERRIDE)
         async function runSilentIntradaySchedulerGuard() {
             const badge = document.getElementById('userShopStatus');
             const btn = document.getElementById('submitOrderBtn');
@@ -689,8 +768,7 @@
             if (!badge || !btn) return;
 
             try {
-                const cloudApiUrl = window.location.origin;
-                const response = await fetch(`${cloudApiUrl}/api/store-status`);
+                const response = await fetch('/api/store-status');
                 const data = await response.json();
                 
                 if (data.success && data.isOpen === false) {
@@ -708,13 +786,13 @@
                 const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
                 let isTimeOpen = (hoursIST >= 7 && hoursIST < 24);
 
-                if (isTimeOpen) {
+                if (isTimeOpen && data.isOpen !== false) {
                     badge.textContent = "OPEN 🟢"; 
                     badge.className = "shop-status-text-badge open";
                     btn.disabled = false; 
                     btn.style.opacity = "1"; 
                     btn.style.cursor = "pointer";
-                    if(btn.textContent.includes('Store Closed')) {
+                    if(btn.textContent.includes('Store Closed') || btn.textContent.includes('Store is Closed')) {
                         btn.textContent = "Proceed to Payment";
                     }
                     if (noticeBox) noticeBox.classList.add('hidden');
@@ -729,14 +807,13 @@
                 }
 
             } catch (err) {
-                console.error("Store status sync fallback error:", err);
+                console.error("Store status sync error:", err);
             }
         }
         
-        setInterval(runSilentIntradaySchedulerGuard, 4000);
+        setInterval(runSilentIntradaySchedulerGuard, 3000);
         window.addEventListener('DOMContentLoaded', runSilentIntradaySchedulerGuard);
 
-        // 🔥 POPUP MODAL TOGGLE LOGIC
         function closeStoreClosedPopup() {
             document.getElementById('storeClosedPopupModal').style.display = 'none';
         }
@@ -745,7 +822,6 @@
             document.getElementById('smartInstallModal').style.display = 'none';
         }
 
-        // 🔥 ATTACH INTERCEPTORS TO SECURITY GUARDS
         document.getElementById('fileUpload').addEventListener('click', function(e) {
             const badge = document.getElementById('userShopStatus');
             if (badge && badge.textContent.includes('CLOSED')) {
@@ -754,16 +830,6 @@
                 return false;
             }
         });
-
-        const originalInlineUploadTrigger = window.triggerInlineFileUploadClick;
-        window.triggerInlineFileUploadClick = function() {
-            const badge = document.getElementById('userShopStatus');
-            if (badge && badge.textContent.includes('CLOSED')) {
-                document.getElementById('storeClosedPopupModal').style.display = 'flex';
-                return;
-            }
-            if (typeof originalInlineUploadTrigger === 'function') originalInlineUploadTrigger();
-        };
 
         // 🔥 MAP OPERATION GLOBAL POOL HOOKS
         let deliveryMap = null;
@@ -878,8 +944,7 @@
                 
                 if (currentActiveTrackingId) {
                     try {
-                        const cloudApiUrl = window.location.origin;
-                        const res = await fetch(`${cloudApiUrl}/api/admin/orders`);
+                        const res = await fetch(`/api/admin/orders`);
                         if (!res.ok) return;
                         const latestOrdersCache = await res.json();
                         
@@ -894,7 +959,7 @@
                     }
                 }
             }
-        }, 4000);
+        }, 3000);
 
         function toggleUserDrawer(open) {
             document.getElementById('userSideDrawer').classList.toggle('active', open);
@@ -941,7 +1006,7 @@
                 if(targetId === 'order_tracking') {
                     const currentActiveTrackingId = document.getElementById('trackOrderIdLabel')?.textContent?.replace('ID Reference: ', '')?.replace('ID: ', '')?.trim();
                     if(currentActiveTrackingId) {
-                        fetch(`${window.location.origin}/api/admin/orders`)
+                        fetch(`/api/admin/orders`)
                             .then(res => res.json())
                             .then(latestOrdersCache => {
                                 if (Array.isArray(latestOrdersCache)) {
@@ -975,7 +1040,6 @@
             setTimeout(() => { alertSuccess.style.display = 'none'; }, 3500);
         });
 
-        // 🔥 OBSERVER MUTATION EYE TO TRIGGER INDEPENDENT MAP RE-RENDER ON DEMAND
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.attributeName === 'class') {
@@ -992,112 +1056,13 @@
             observer.observe(targetConfigScreen, { attributes: true });
         }
 
-        // 📱 SAFE PWA SERVICE WORKER REGISTRATION
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
-                    .then((reg) => console.log('✅ PWA Worker Registered Successfully! Scope: ', reg.scope))
+                    .then((reg) => console.log('✅ PWA Worker Registered Successfully!'))
                     .catch((err) => console.warn('PWA Worker Registration Delay: ', err));
             });
         }
-
-        // 📱 STRICT MOBILE-ONLY INSTALL ENGINE (DESKTOP AUTO BYPASS)
-        let deferredPwaPrompt = null;
-        const appSheet = document.getElementById('nativeAppSheet');
-        const installCta = document.getElementById('nativeInstallCta');
-        const smartModal = document.getElementById('smartInstallModal');
-        const successToast = document.getElementById('pwaSuccessToast');
-
-        function isDesktop() {
-            return window.innerWidth >= 768;
-        }
-
-        function isIOSDevice() {
-            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        }
-
-        function isCurrentlyRunningAsApp() {
-            return window.matchMedia('(display-mode: standalone)').matches || 
-                   window.navigator.standalone === true;
-        }
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPwaPrompt = e;
-            if (!isDesktop() && !isCurrentlyRunningAsApp() && appSheet) {
-                appSheet.classList.add('active');
-            }
-        });
-
-        window.addEventListener('load', () => {
-            if (!isDesktop() && !isCurrentlyRunningAsApp() && appSheet) {
-                setTimeout(() => {
-                    appSheet.classList.add('active');
-                }, 1000);
-            }
-            
-            if (!isDesktop() && isIOSDevice() && !isCurrentlyRunningAsApp() && appSheet) {
-                setTimeout(() => {
-                    appSheet.classList.add('active');
-                }, 1200);
-            }
-        });
-
-        if (installCta) {
-            installCta.addEventListener('click', async () => {
-                if (isDesktop()) return; // Desktop par click disable rahega kyunki wahan zaroorat nahi hai
-
-                if (deferredPwaPrompt) {
-                    deferredPwaPrompt.prompt();
-                    const choiceResult = await deferredPwaPrompt.userChoice;
-                    if (choiceResult.outcome === 'accepted') {
-                        dismissAppSheet();
-                        showInstalledToast();
-                    }
-                    deferredPwaPrompt = null;
-                } else {
-                    dismissAppSheet();
-                    if (smartModal) {
-                        const stepsContainer = document.getElementById('installStepsContainer');
-                        const modalTitle = document.getElementById('modalInstallTitle');
-                        
-                        if (isIOSDevice()) {
-                            modalTitle.textContent = "Install on iPhone (Safari)";
-                            stepsContainer.innerHTML = `
-                                <div class="step-row"><div class="step-num">1</div><div>Tap the <b>Share button ⎋</b> at bottom of Safari</div></div>
-                                <div class="step-row"><div class="step-num">2</div><div>Scroll down and select <b>"Add to Home Screen"</b></div></div>
-                            `;
-                        } else {
-                            modalTitle.textContent = "Install App in 1 Click";
-                            stepsContainer.innerHTML = `
-                                <div class="step-row"><div class="step-num">1</div><div>Tap browser menu icon <b>(Top-Right 3 Dots ⋮)</b></div></div>
-                                <div class="step-row"><div class="step-num">2</div><div>Select <b>"Install app"</b> or <b>"Add to Home screen"</b></div></div>
-                            `;
-                        }
-                        smartModal.style.display = 'flex';
-                    }
-                }
-            });
-        }
-
-        function dismissAppSheet() {
-            if (appSheet) appSheet.classList.remove('active');
-        }
-
-        function showInstalledToast() {
-            if (successToast) {
-                successToast.classList.add('show');
-                setTimeout(() => {
-                    successToast.classList.remove('show');
-                }, 4000);
-            }
-        }
-
-        window.addEventListener('appinstalled', () => {
-            dismissAppSheet();
-            showInstalledToast();
-            deferredPwaPrompt = null;
-        });
     </script>
     <script src="script.js"></script>
 </body>
