@@ -4,7 +4,6 @@ const path = require('path');
 const Razorpay = require('razorpay');
 const cors = require('cors'); 
 const fs = require('fs');
-//const pt = require('pdf-to-printer'); 
 require('dotenv').config();
 
 const app = express();
@@ -19,20 +18,17 @@ app.use(express.static(__dirname));
 // 🔥 PERMANENT DATABASE FILES FOR CLOUD CORES
 const USERS_FILE = path.join(__dirname, 'users.json');
 let orders = [];
-let autoPrintModeEnabled = false;
 
-// 🔥 STORE LIVE OPERATIONS MASTER TOGGLE (ON/OFF SWITCH)
+// 🔥 STORE LIVE OPERATIONS MASTER TOGGLE
 let isStoreOpenGlobal = true; 
 
-// 🔥 GLOBAL RAM CACHE FOR INSTANT CROSS-DEVICE VALIDATION
+// 🔥 GLOBAL RAM CACHE
 let globalUsersDatabaseArray = [];
 
-// Initialize permanent users file if absent
 if (!fs.existsSync(USERS_FILE)) {
     fs.writeFileSync(USERS_FILE, JSON.stringify([]));
 }
 
-// Helper to read users safely
 function readUsersFromDatabase() {
     try {
         const data = fs.readFileSync(USERS_FILE, 'utf8');
@@ -42,7 +38,6 @@ function readUsersFromDatabase() {
     }
 }
 
-// Helper to save users safely
 function saveUsersToDatabase(usersArray) {
     try {
         fs.writeFileSync(USERS_FILE, JSON.stringify(usersArray, null, 2));
@@ -51,13 +46,11 @@ function saveUsersToDatabase(usersArray) {
     }
 }
 
-// Create uploads folder programmatically if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)){
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Configure File Storage with Multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => { cb(null, uploadsDir); },
     filename: (req, file, cb) => { cb(null, Date.now() + '-' + file.originalname); }
@@ -70,23 +63,21 @@ const razorpay = new Razorpay({
     key_secret: 'PcaWJEUMGjhn7Cfa04IlzYd9'
 });
 
-// 🌐 Web entry routes
+// 🌐 Web entry & isolated app routing
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/admin-panel', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
-
-// 🔥 ADMIN PWA MANIFEST ROUTE (Added)
 app.get('/manifest-admin.json', (req, res) => { res.sendFile(path.join(__dirname, 'manifest-admin.json')); });
+app.get('/sw-admin.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw-admin.js')); });
+app.get('/sw.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw.js')); });
 
 // ====================================================================
-// 🏪 REMOTE STORE OPERATION CONFIGURATIONS (ON/OFF APIs)
+// 🏪 REMOTE STORE OPERATION CONFIGURATIONS
 // ====================================================================
 
-// 1. Fetch current status of store for Frontend UI Rendering
 app.get('/api/store-status', (req, res) => {
     res.json({ success: true, isOpen: isStoreOpenGlobal });
 });
 
-// 2. Toggle status endpoints securely controlled from Admin Console
 app.post('/api/store-status/toggle', (req, res) => {
     try {
         const { isOpen } = req.body;
@@ -102,10 +93,9 @@ app.post('/api/store-status/toggle', (req, res) => {
 });
 
 // ====================================================================
-// 🔥 UNLIMITED AUTH API SYSTEMS (SIGN UP & LOGIN - DEVICE SYNC FIXED)
+// 🔥 UNLIMITED AUTH API SYSTEMS
 // ====================================================================
 
-// 1. CREATE ACCOUNT (SIGN UP) ENDPOINT
 app.post('/api/auth/signup', (req, res) => {
     try {
         const { name, identity, password } = req.body;
@@ -134,16 +124,13 @@ app.post('/api/auth/signup', (req, res) => {
         freshFileUsers.push(newUser);
         saveUsersToDatabase(freshFileUsers);
 
-        console.log(`👤 New User Registered Successfully: ${newUser.name} (${newUser.identity})`);
         res.status(201).json({ success: true, message: "Account created successfully!", userId: newUser.identity, name: newUser.name });
-
     } catch (err) {
         console.error("Signup error:", err);
         res.status(500).json({ success: false, message: "Server error during registration." });
     }
 });
 
-// 2. USER LOGIN ENDPOINT
 app.post('/api/auth/login', (req, res) => {
     try {
         const { identity, password } = req.body;
@@ -160,9 +147,7 @@ app.post('/api/auth/login', (req, res) => {
             return res.status(401).json({ success: false, message: "Galat Credentials! Sahi password daalo bhai." });
         }
 
-        console.log(`🔓 Cross-Device Login Approved: ${user.name}`);
         res.json({ success: true, message: "Login successful!", name: user.name, identity: user.identity });
-
     } catch (err) {
         console.error("Login error:", err);
         res.status(500).json({ success: false, message: "Server error during login." });
@@ -226,7 +211,6 @@ app.post('/api/verify-payment', async (req, res) => {
     }
 });
 
-// 🔥 FIXED PATHWAY: ADMIN LIVE FINANCIAL STATISTICS CALCULATOR ENDPOINT
 app.get('/api/admin/financials', (req, res) => {
     try {
         const paidOrders = orders.filter(o => o.status === 'Paid / Ready for Print' || o.status === 'Delivered' || o.status === 'Printing' || o.status === 'Out for Delivery');
@@ -272,7 +256,6 @@ app.post('/api/admin/orders/update-status', (req, res) => {
     const order = orders.find(o => o.orderId === orderId);
     if (order) {
         order.status = status; 
-        console.log(`🛵 Order ${orderId} Status Synced Live To: ${status}`);
         return res.json({ success: true, message: `Tracking infrastructure updated to ${status}` });
     }
     res.status(404).json({ success: false, message: "Order data missing inside central cores." });

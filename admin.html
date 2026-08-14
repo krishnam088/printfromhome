@@ -206,7 +206,7 @@
         // Register Service Worker for PWA support on Admin Panel
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('/sw-admin.js')
                     .then(reg => console.log('Admin Service Worker registered!', reg))
                     .catch(err => console.log('Admin Service Worker registration failed:', err));
             });

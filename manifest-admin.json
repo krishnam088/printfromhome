@@ -4,7 +4,7 @@
   "description": "Real-time order management, live sales tracking, and print control center for Print From Home.",
   "start_url": "/admin-panel",
   "id": "/admin-panel",
-  "scope": "/",
+  "scope": "/admin-panel",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#0070f3",
