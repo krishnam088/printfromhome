@@ -917,7 +917,7 @@
             });
         }
 
-        // 📱 ZERO-REFRESH 1-TAP PWA INSTALL ENGINE
+        // 📱 100% BULLETPROOF PWA INSTALL ENGINE WITH SMART FALLBACK MODAL
         let deferredPwaPrompt = null;
         const appSheet = document.getElementById('nativeAppSheet');
         const installCta = document.getElementById('nativeInstallCta');
@@ -959,11 +959,11 @@
                     }
                     deferredPwaPrompt = null;
                 } else {
-                    // ZERO REFRESH: Smooth visual guidance instead of reload
-                    installCta.innerHTML = '<span>ℹ️</span> Tap 3-dots (⋮) &gt; Install App';
-                    setTimeout(() => {
-                        installCta.innerHTML = '<span>⬇️</span> Install Official App';
-                    }, 3500);
+                    // SMART FALLBACK: Smooth confirm dialog instructing the user
+                    const userAction = confirm("📱 Direct install karne ke liye upar right corner mein 3 dots (⋮) par tap karke 'Install app' ya 'Add to Home screen' par click karein!\n\nKya aapko steps samajh aa gaye?");
+                    if(userAction) {
+                        dismissAppSheet();
+                    }
                 }
             });
         }
