@@ -840,8 +840,11 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPwaPrompt = e;
+            console.log('⚡ Native PWA prompt ready!');
+        });
 
-            // Agar device par pehle se install nahi hai, tabhi popup screen par layega
+        // 🚀 FORCE AUTO-SHOW BOTTOM POPUP ON PAGE LOAD (Unless already installed)
+        window.addEventListener('load', () => {
             if (!checkIfPwaIsInstalled() && autoPopup) {
                 setTimeout(() => {
                     autoPopup.classList.add('show');
