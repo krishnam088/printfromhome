@@ -66,6 +66,11 @@
   "note_taking": {
     "new_note_url": "/?action=new-note"
   },
+  "permissions": [
+    "periodic-background-sync",
+    "background-sync",
+    "notifications"
+  ],
   "widgets": [
     {
       "name": "Print From Home Status",
