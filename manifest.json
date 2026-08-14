@@ -26,6 +26,9 @@
       "origin": "https://printfromhome.onrender.com"
     }
   ],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
   "categories": [
     "shopping",
     "utilities",
