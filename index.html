@@ -305,6 +305,19 @@
         <div class="container" id="mainLayoutAppContainer">
             <div id="user_section_store" class="view-section active">
                 <div id="uploadScreenInitialState" style="width:100%;">
+                    
+                    <!-- 📱 DYNAMIC PWA ONE-CLICK INSTALL PROMPT BANNER -->
+                    <div id="pwaInstallBanner" style="display: none; background: #ffffff; border: 2px solid var(--blinkit-green); padding: 12px 16px; border-radius: 14px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); justify-content: space-between; align-items: center; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <img src="https://img.icons8.com/color/512/printer--v1.png" style="width: 38px; height: 38px; border-radius: 8px;" alt="Printer">
+                            <div style="text-align: left;">
+                                <p style="font-size: 0.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 2px;">Install Print From Home</p>
+                                <p style="font-size: 0.72rem; font-weight: 600; color: var(--text-sub);">Fast 1-tap ordering experience</p>
+                            </div>
+                        </div>
+                        <button id="pwaCustomInstallBtn" style="background: var(--blinkit-green); color: #ffffff; border: none; padding: 8px 16px; border-radius: 10px; font-size: 0.82rem; font-weight: 800; cursor: pointer;">Install App</button>
+                    </div>
+
                     <div class="compact-offers-bar" id="storeOffersTopBanner" style="margin-top:10px;">
                         <span>📢 <b>Active Offers:</b></span>
                         <marquee scrollamount="3" style="width: 100%;">
@@ -765,6 +778,36 @@
                     .catch((err) => console.warn('PWA Worker Registration Delay: ', err));
             });
         }
+
+        // 📱 REAL-TIME PWA PROMPT CAPTURE LOGIC
+        let deferredPwaPrompt;
+        const pwaBanner = document.getElementById('pwaInstallBanner');
+        const pwaBtn = document.getElementById('pwaCustomInstallBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPwaPrompt = e;
+            if (pwaBanner) {
+                pwaBanner.style.display = 'flex';
+            }
+        });
+
+        if (pwaBtn) {
+            pwaBtn.addEventListener('click', async () => {
+                if (deferredPwaPrompt) {
+                    deferredPwaPrompt.prompt();
+                    const { outcome } = await deferredPwaPrompt.userChoice;
+                    console.log(`PWA Prompt Outcome: ${outcome}`);
+                    deferredPwaPrompt = null;
+                    if (pwaBanner) pwaBanner.style.display = 'none';
+                }
+            });
+        }
+
+        window.addEventListener('appinstalled', () => {
+            if (pwaBanner) pwaBanner.style.display = 'none';
+            console.log('🎉 Print From Home PWA successfully installed!');
+        });
     </script>
     <script src="script.js"></script>
 </body>
