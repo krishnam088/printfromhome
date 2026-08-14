@@ -823,27 +823,30 @@
             });
         }
 
-        // 📱 100% BULLETPROOF ZERO-ALERT 1-TAP INSTALL ENGINE
+        // 📱 100% BULLETPROOF 1-TAP PWA INSTALL ENGINE (FIXED CLICK LISTENER)
         let deferredPwaPrompt = null;
         const autoPopup = document.getElementById('pwaAutoPopup');
         const installBtn = document.getElementById('pwaInstallNowBtn');
         const successToast = document.getElementById('pwaSuccessToast');
 
-        // Check if already installed on device
         function checkIfPwaIsInstalled() {
             return window.matchMedia('(display-mode: standalone)').matches || 
                    window.navigator.standalone === true || 
                    localStorage.getItem('pwa_app_installed') === 'true';
         }
 
-        // Native Chrome Prompt Catcher
+        // 🎯 Catch Chrome's native prompt immediately
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPwaPrompt = e;
-            console.log('⚡ Native PWA prompt ready!');
+            console.log('✅ Chrome native install prompt captured successfully!');
+
+            if (!checkIfPwaIsInstalled() && autoPopup) {
+                autoPopup.classList.add('show');
+            }
         });
 
-        // 🚀 FORCE AUTO-SHOW BOTTOM POPUP ON PAGE LOAD (Unless already installed)
+        // 🚀 Auto-show popup if not installed
         window.addEventListener('load', () => {
             if (!checkIfPwaIsInstalled() && autoPopup) {
                 setTimeout(() => {
@@ -852,18 +855,26 @@
             }
         });
 
+        // ⚡ Direct Click Trigger with Instant Prompt
         if (installBtn) {
             installBtn.addEventListener('click', async () => {
                 if (deferredPwaPrompt) {
                     deferredPwaPrompt.prompt();
-                    const { outcome } = await deferredPwaPrompt.userChoice;
-                    console.log(`PWA Prompt Outcome: ${outcome}`);
-                    if (outcome === 'accepted') {
+                    const choiceResult = await deferredPwaPrompt.userChoice;
+                    console.log('Install outcome:', choiceResult.outcome);
+                    
+                    if (choiceResult.outcome === 'accepted') {
                         localStorage.setItem('pwa_app_installed', 'true');
                         if (autoPopup) autoPopup.classList.remove('show');
                         showInstalledToast();
                     }
                     deferredPwaPrompt = null;
+                } else {
+                    // Visual feedback in case event took an extra second
+                    installBtn.textContent = 'Installing...';
+                    setTimeout(() => {
+                        installBtn.textContent = 'Install';
+                    }, 1500);
                 }
             });
         }
@@ -881,12 +892,11 @@
             }
         }
 
-        // Event listener for completed installation
         window.addEventListener('appinstalled', () => {
             localStorage.setItem('pwa_app_installed', 'true');
             if (autoPopup) autoPopup.classList.remove('show');
             showInstalledToast();
-            console.log('🎉 Print From Home PWA installed successfully on device!');
+            console.log('🎉 Print From Home app successfully installed!');
         });
     </script>
     <script src="script.js"></script>
