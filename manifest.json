@@ -31,6 +31,20 @@
     "utilities",
     "productivity"
   ],
+  "shortcuts": [
+    {
+      "name": "Print Store",
+      "short_name": "Store",
+      "description": "Open the Print Store to upload and print documents",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/app_icon_192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
   "icons": [
     {
       "src": "/app_icon_512.png",
