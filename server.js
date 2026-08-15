@@ -5,7 +5,6 @@ const Razorpay = require('razorpay');
 const cors = require('cors'); 
 const fs = require('fs');
 const mongoose = require('mongoose');
-const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const app = express();
@@ -29,7 +28,7 @@ mongoose.connect(process.env.MONGO_URI, {
 // Mongoose Schemas & Models
 const userSchema = new mongoose.Schema({
     name: String,
-    identity: { type: String, unique: true },
+    identity: { type: String, unique: true }, // Mobile number identifier
     password: String,
     dateCreated: String
 });
@@ -81,27 +80,6 @@ const razorpay = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET || 'PcaWJEUMGjhn7Cfa04IlzYd9'
 });
 
-// Nodemailer Force IPv4 SMTP Transporter Setup (Fixes ENETUNREACH error on Render)
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    family: 4, // 🔥 Yeh line IPv4 force karegi taaki Render par error na aaye
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
-    },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000
-});
-
-// Temporary OTP Storage Memory
-const otpStorage = {};
-
 // Web entry & Manifest cache control routes
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/admin-panel', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
@@ -151,53 +129,15 @@ const handleStoreToggle = async (req, res) => {
 app.post('/api/store-status/toggle', handleStoreToggle);
 app.post('/api/admin/toggle-store', handleStoreToggle);
 
-// --- 🛡️ REAL GMAIL OTP SEND API ROUTE ---
-app.post('/api/auth/send-otp', async (req, res) => {
-    try {
-        const { email } = req.body;
-        if (!email || !email.includes('@')) {
-            return res.status(400).json({ success: false, message: "Valid Gmail address required" });
-        }
-
-        const normalizedEmail = email.toLowerCase().trim();
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        otpStorage[normalizedEmail] = { otp, expires: Date.now() + 5 * 60 * 1000 }; // 5 mins validity
-
-        const mailOptions = {
-            from: '"Print From Home Support" <printfromhomesupport@gmail.com>',
-            to: normalizedEmail,
-            subject: 'Verification OTP - Print From Home',
-            text: `Your OTP for Print From Home signup is: ${otp}. It is valid for 5 minutes.`
-        };
-
-        await transporter.sendMail(mailOptions);
-        res.json({ success: true, message: "OTP sent successfully to your Gmail!" });
-    } catch (err) {
-        console.error("Real Gmail OTP Send Error:", err);
-        res.status(500).json({ success: false, message: "Failed to send email: " + err.message });
-    }
-}); 
-
-// Auth APIs (MongoDB Connected with OTP Verification)
+// --- Auth APIs (Direct Mobile Number & Password Signup / Login) ---
 app.post('/api/auth/signup', async (req, res) => {
     try {
-        const { name, identity, password, otp } = req.body;
+        const { name, identity, password } = req.body;
         const normalizedIdentity = identity.toLowerCase().trim();
         
-        // Verify OTP for Email Registrations
-        if (normalizedIdentity.includes('@')) {
-            if (!otpStorage[normalizedIdentity] || otpStorage[normalizedIdentity].otp !== otp) {
-                return res.status(400).json({ success: false, message: "Invalid or incorrect OTP!" });
-            }
-            if (Date.now() > otpStorage[normalizedIdentity].expires) {
-                return res.status(400).json({ success: false, message: "OTP has expired!" });
-            }
-            delete otpStorage[normalizedIdentity]; // Clear OTP after success
-        }
-
         const existingUser = await User.findOne({ identity: normalizedIdentity });
         if (existingUser) {
-            return res.status(400).json({ success: false, message: "Already registered!" });
+            return res.status(400).json({ success: false, message: "This mobile number is already registered!" });
         }
 
         const newUser = new User({ 
@@ -221,7 +161,7 @@ app.post('/api/auth/login', async (req, res) => {
         const normalizedIdentity = identity.toLowerCase().trim();
         const user = await User.findOne({ identity: normalizedIdentity, password });
         
-        if (!user) return res.status(401).json({ success: false, message: "Invalid credentials" });
+        if (!user) return res.status(401).json({ success: false, message: "Invalid mobile number or password!" });
         res.json({ success: true, name: user.name, identity: user.identity });
     } catch (err) {
         console.error("Login Error:", err);
