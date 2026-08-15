@@ -19,7 +19,7 @@
         manifestTag.rel = 'manifest';
         
         const isFestiveSeason = (nowCheck.getMonth() === 7 && nowCheck.getDate() >= 14 && nowCheck.getDate() <= 15) || 
-                               (nowCheck.getMonth() === 10 && nowCheck.getDate() >= 7 && nowCheck.getDate() <= 8);
+                                (nowCheck.getMonth() === 10 && nowCheck.getDate() >= 7 && nowCheck.getDate() <= 8);
         
         manifestTag.href = isFestiveSeason ? '/manifest-festive.json' : '/manifest.json';
         document.head.appendChild(manifestTag);
@@ -41,7 +41,7 @@
         </div>
     </div>
 
-    <!-- 🔒 AUTHENTICATION SCREEN -->
+    <!-- 🔒 AUTHENTICATION SCREEN WITH EMAIL/OTP & PASSWORD -->
     <div id="authScreen" class="auth-container app-hidden">
         <div class="auth-card">
             <div class="auth-brand">print<span class="brand-green">from</span>home</div>
@@ -49,7 +49,19 @@
             <form id="authForm">
                 <div class="form-group signup-only hidden"><label>Full Name</label><input type="text" id="authName" placeholder="Enter your full name"></div>
                 <div class="form-group"><label>Gmail or Phone Number</label><input type="text" id="authIdentity" placeholder="e.g., name@gmail.com" required></div>
-                <div class="form-group"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters" required></div>
+                
+                <!-- PASSWORD FIELD -->
+                <div class="form-group" id="passwordGroup"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters"></div>
+                
+                <!-- OTP VERIFICATION FIELD (Hidden by default, used for signup/otp verification flows) -->
+                <div class="form-group app-hidden" id="otpGroup">
+                    <label>Enter Verification OTP</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="authOtpInput" placeholder="6-digit OTP" maxlength="6">
+                        <button type="button" id="verifyOtpBtn" style="background:var(--blinkit-green); color:white; border:none; padding:0 12px; border-radius:10px; font-weight:700; cursor:pointer;">Verify</button>
+                    </div>
+                </div>
+
                 <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
             </form>
             <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
@@ -87,7 +99,8 @@
 
         <div id="drawer_panel_help" class="drawer-subpanel-content">
             <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:12px; color:var(--text-main); border-bottom:1px solid var(--border-color); padding-bottom:4px;">Help Desk & Support</h4>
-            <a href="https://wa.me/91XXXXXXXXXX?text=Hi" target="_blank" class="whatsapp-support-btn"><span>💬</span> Chat on WhatsApp Support</a>
+            <!-- UPDATED WHATSAPP SUPPORT LINK WITH ACTIVE BUSINESS NUMBER -->
+            <a href="https://wa.me/917905837968?text=Hi%20Print%20From%20Home%20Support,%20I%20need%20assistance." target="_blank" class="whatsapp-support-btn"><span>💬</span> Chat on WhatsApp Support</a>
         </div>
 
         <div id="drawer_panel_terms" class="drawer-subpanel-content">
