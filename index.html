@@ -275,7 +275,7 @@
         </div>
     </nav>
 
-    <!-- 🛒 BLINKIT STYLE CHECKOUT CART DRAWER -->
+    <!-- 🛒 UNIFIED CHECKOUT CART DRAWER -->
     <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:16000; display:none; justify-content:flex-end;">
         <div class="cart-drawer-card" onclick="event.stopPropagation()" style="background:#f8fafc; width:100%; max-width:440px; height:100vh; padding:20px; display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.15); overflow-y:auto;">
             
@@ -370,7 +370,7 @@
             <div class="header-container">
                 <div class="header-meta-row">
                     <div class="delivery-brand-box">
-                        <div id="userGreeting" class="user-greeting-inline">GUEST MODE</div>
+                        <div id="userGreeting" class="user-greeting-inline">HI, LALCHAND</div>
                         <h2 class="delivery-time-countdown">
                             <span class="delivery-time-title" style="margin-right:6px;">Prints in</span> 15 mins
                         </h2>
@@ -405,7 +405,7 @@
                     </div>
                     <div style="text-align: center; padding: 20px 10px 10px 10px; width:100%;">
                         <h2 style="font-size: 2.1rem; font-weight:800; color:#1a202c; letter-spacing:-1px;">Print Store</h2>
-                        <p style="font-size: 0.9rem; color:var(--text-sub); font-weight:600; margin-top:2px;">Full freedom: Print documents, order snacks, or both together!</p>
+                        <p style="font-size: 0.9rem; color:var(--text-sub); font-weight:600; margin-top:2px;">printfromhome ensures secure prints at every stage</p>
                     </div>
 
                     <div class="verbatim-docs-promo-card">
@@ -597,7 +597,6 @@
         // ==========================================
         window.cartSnacksArray = [];
 
-        // Silent add (Alert popup removed)
         function addSnackToCart(name, price) {
             const existing = window.cartSnacksArray.find(item => item.name === name);
             if (existing) {
@@ -697,7 +696,7 @@
                 container.appendChild(row);
             });
 
-            // Render Print Files (Unified Cart Integration)
+            // Render Print Files
             let printTotal = 0;
             if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
                 masterFilesArray.forEach((item) => {
