@@ -152,8 +152,45 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
 
             const isSignUpModeActive = !signupOnlyFields[0].classList.contains('hidden');
-            const targetApiUrl = isSignUpModeActive ? '/api/auth/signup' : '/api/auth/login';
+            const otpGroup = document.getElementById('otpGroup');
+            const authOtpInput = document.getElementById('authOtpInput');
 
+            if (isSignUpModeActive && otpGroup && otpGroup.classList.contains('app-hidden')) {
+                // Step 1: Send OTP to Gmail
+                const email = authIdentity.value.trim();
+                if (!email.includes('@')) {
+                    alert('⚠️ Please enter a valid Gmail address to receive the OTP.');
+                    return;
+                }
+                try {
+                    authBtn.innerText = "Sending OTP...";
+                    authBtn.disabled = true;
+                    const res = await fetch(`${LIVE_SERVER_URL}/api/auth/send-otp`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        alert('📩 OTP sent to your Gmail inbox! Please check.');
+                        otpGroup.classList.remove('app-hidden');
+                        authBtn.innerText = "Verify & Complete Signup";
+                    } else {
+                        alert(`❌ Error: ${data.message}`);
+                    }
+                } catch (err) {
+                    alert("❌ Failed to send OTP network error.");
+                } finally {
+                    authBtn.disabled = false;
+                    if (!otpGroup.classList.contains('app-hidden')) {
+                        authBtn.innerText = "Verify & Complete Signup";
+                    }
+                }
+                return;
+            }
+
+            // Step 2: Final Signup or Login Submit
+            const targetApiUrl = isSignUpModeActive ? '/api/auth/signup' : '/api/auth/login';
             const payloadData = {
                 identity: authIdentity.value.trim(),
                 password: authPassword.value
@@ -161,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (isSignUpModeActive) {
                 payloadData.name = authName.value.trim();
+                payloadData.otp = authOtpInput ? authOtpInput.value.trim() : '';
             }
 
             try {
@@ -203,13 +241,15 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleAuthLink.addEventListener('click', (e) => {
             e.preventDefault();
             const isLoginViewNow = signupOnlyFields[0].classList.contains('hidden');
+            const otpGroup = document.getElementById('otpGroup');
             if (isLoginViewNow) {
                 signupOnlyFields.forEach(el => el.classList.remove('hidden'));
                 authTitle.textContent = "Create Account";
-                authBtn.textContent = "Register & Sign Up";
+                authBtn.textContent = "Get OTP & Sign Up";
                 toggleAuthLink.textContent = "Log In Here";
             } else {
                 signupOnlyFields.forEach(el => el.classList.add('hidden'));
+                if(otpGroup) otpGroup.classList.add('app-hidden');
                 authTitle.textContent = "Welcome Back!";
                 authBtn.textContent = "Log In";
                 toggleAuthLink.textContent = "Create Account";
