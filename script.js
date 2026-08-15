@@ -156,7 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const authOtpInput = document.getElementById('authOtpInput');
 
             if (isSignUpModeActive && otpGroup && otpGroup.classList.contains('app-hidden')) {
-                // Step 1: Send OTP to Gmail with 10-second timeout controller
                 const email = authIdentity.value.trim();
                 if (!email.includes('@')) {
                     alert('⚠️ Please enter a valid Gmail address to receive the OTP.');
@@ -189,22 +188,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } catch (err) {
                     if (err.name === 'AbortError') {
-                        alert('⏳ Request timed out! Server response lene mein samay lag raha hai. Render environment variables (EMAIL_USER & EMAIL_PASS) check karein.');
+                        alert('⏳ Request timed out!');
                     } else {
-                        console.error("OTP send error:", err);
                         alert('❌ Network error while sending OTP.');
                     }
                     authBtn.innerText = "Get OTP & Sign Up";
                 } finally {
                     authBtn.disabled = false;
-                    if (otpGroup && !otpGroup.classList.contains('app-hidden')) {
-                        authBtn.innerText = "Verify & Complete Signup";
-                    }
                 }
                 return;
             }
 
-            // Step 2: Final Signup or Login Submit
             const targetApiUrl = isSignUpModeActive ? '/api/auth/signup' : '/api/auth/login';
             const payloadData = {
                 identity: authIdentity.value.trim(),
@@ -243,8 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert(`⚠️ Oye Bhai: ${data.message}`);
                 }
             } catch (err) {
-                console.error(err);
-                alert("❌ Connection Breakdown! Backend up nahi hai shayad.");
+                alert("❌ Connection Breakdown!");
             } finally {
                 authBtn.innerText = isSignUpModeActive ? "Log In" : "Register & Sign Up";
                 authBtn.disabled = false;
@@ -255,13 +248,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (toggleAuthLink) {
         toggleAuthLink.addEventListener('click', (e) => {
             e.preventDefault();
-            
-         const
-         isLoginViewNow = signupOnlyFields[0].classList.contains('hidden');
+            const isLoginViewNow = signupOnlyFields[0].classList.contains('hidden');
             if (isLoginViewNow) {
                 signupOnlyFields.forEach(el => el.classList.remove('hidden'));
                 authTitle.textContent = "Create Account";
-                authBtn.textContent = "Register & Sign Up"; // 🔥 Fixed quotes here
+                authBtn.textContent = "Register & Sign Up";
                 toggleAuthLink.textContent = "Already have an account? Log In";
             } else {
                 signupOnlyFields.forEach(el => el.classList.add('hidden'));
@@ -271,8 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-        });
-    
 
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
@@ -289,9 +278,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     masterFilesArray.push({ name: file.name, size: file.size, type: file.type, fileData: file, config: { pages: 1, printType: 'bw', orientation: 'portrait', binding: 'none', copies: 1 } });
                 }
             });
-            fileUpload.value = ''; saveCurrentFilesToSession(); renderFilesUI();
+            fileUpload.value = ''; 
+            saveCurrentFilesToSession(); 
+            renderFilesUI();
         });
     }
+
+    window.triggerInlineFileUploadClick = function() {
+        if(fileUpload) fileUpload.click();
+    };
 
     function saveCurrentFilesToSession() {
         sessionStorage.setItem('savedPrintFiles', JSON.stringify(masterFilesArray.map(i => ({ name: i.name, size: i.size, type: i.type, config: i.config }))));
@@ -306,7 +301,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderFilesUI() {
-        if(!multiFilesContainer) return; multiFilesContainer.innerHTML = ''; 
+        if(!multiFilesContainer) return; 
+        multiFilesContainer.innerHTML = ''; 
         refreshInvoiceTabState();
         if (masterFilesArray.length === 0) return;
 
@@ -570,4 +566,4 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {}
         });
     }
-;
+});
