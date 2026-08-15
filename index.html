@@ -33,8 +33,33 @@
 </head>
 <body>
 
+    <!-- 🔒 SPLASH SCREEN -->
+    <div id="splashScreen" class="splash-container">
+        <div class="splash-content">
+            <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
+            <p class="splash-tagline">India's Last Minute Printing App</p>
+        </div>
+    </div>
+
+    <!-- 🔒 AUTHENTICATION SCREEN -->
+    <div id="authScreen" class="auth-container app-hidden">
+        <div class="auth-card">
+            <div class="auth-brand">print<span class="brand-green">from</span>home</div>
+            <h2 id="authTitle">Welcome Back!</h2>
+            <form id="authForm">
+                <div class="form-group signup-only hidden"><label>Full Name</label><input type="text" id="authName" placeholder="Enter your full name"></div>
+                <div class="form-group"><label>Gmail or Phone Number</label><input type="text" id="authIdentity" placeholder="e.g., name@gmail.com" required></div>
+                <div class="form-group"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters" required></div>
+                <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
+            </form>
+            <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
+        </div>
+    </div>
+
+    <!-- 🔒 SIDEBAR DRAWER OVERLAY -->
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
+    <!-- 👤 USER ACCOUNT SIDE DRAWER -->
     <nav id="userSideDrawer" class="side-drawer">
         <div class="drawer-header">
             <h2 style="font-size:1.1rem; font-weight:800;">Account Menu</h2>
@@ -75,6 +100,24 @@
         </div>
     </nav>
 
+    <!-- 💰 RECHARGE WALLET MODAL -->
+    <div id="walletDepositModal" class="wallet-modal-overlay" onclick="toggleWalletPopupGrid(false, event)">
+        <div class="wallet-modal-card">
+            <h3 style="font-size:1.3rem; font-weight:800; margin-bottom:6px;">💰 Recharge Print Wallet</h3>
+            <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:15px;">Add cash balance for seamless dispatches</p>
+            <div class="form-group" style="text-align:left;">
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-main);">Enter Custom Amount (₹):</label>
+                <input type="number" id="walletCustomAmountInput" value="100" style="width:100%; padding:12px; border:2px solid var(--border-color); border-radius:12px; font-weight:700; font-size:1rem; outline:none; margin-top:4px;">
+            </div>
+            <div class="wallet-chip-grid">
+                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(100)">+ ₹100</button>
+                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(200)">+ ₹200</button>
+                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(500)">+ ₹500</button>
+            </div>
+            <button class="btn-admin" style="background:var(--blinkit-green); margin-top:10px; width:100%; padding:12px; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;" onclick="executeWalletRazorpayDeposit()">Pay & Add Cash</button>
+        </div>
+    </div>
+
     <!-- 🛒 UNIFIED CHECKOUT CART DRAWER -->
     <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:16000; display:none; justify-content:flex-end;">
         <div class="cart-drawer-card" onclick="event.stopPropagation()" style="background:#f8fafc; width:100%; max-width:440px; height:100vh; padding:20px; display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.15); overflow-y:auto;">
@@ -95,7 +138,6 @@
                 </div>
             </div>
 
-            <!-- Unified Items List Container -->
             <div id="cartDrawerItemsList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-bottom:20px;"></div>
 
             <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px;">
@@ -127,50 +169,13 @@
         </div>
     </div>
 
-    <div id="walletDepositModal" class="wallet-modal-overlay" onclick="toggleWalletPopupGrid(false, event)">
-        <div class="wallet-modal-card">
-            <h3 style="font-size:1.3rem; font-weight:800; margin-bottom:6px;">💰 Recharge Print Wallet</h3>
-            <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:15px;">Add cash balance for seamless dispatches</p>
-            <div class="form-group" style="text-align:left;">
-                <label style="font-size:0.75rem; font-weight:700; color:var(--text-main);">Enter Custom Amount (₹):</label>
-                <input type="number" id="walletCustomAmountInput" value="100" style="width:100%; padding:12px; border:2px solid var(--border-color); border-radius:12px; font-weight:700; font-size:1rem; outline:none; margin-top:4px;">
-            </div>
-            <div class="wallet-chip-grid">
-                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(100)">+ ₹100</button>
-                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(200)">+ ₹200</button>
-                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(500)">+ ₹500</button>
-            </div>
-            <button class="btn-admin" style="background:var(--blinkit-green); margin-top:10px; width:100%; padding:12px; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;" onclick="executeWalletRazorpayDeposit()">Pay & Add Cash</button>
-        </div>
-    </div>
-
-    <div id="splashScreen" class="splash-container">
-        <div class="splash-content">
-            <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
-            <p class="splash-tagline">India's Last Minute Printing App</p>
-        </div>
-    </div>
-
-    <div id="authScreen" class="auth-container app-hidden">
-        <div class="auth-card">
-            <div class="auth-brand">print<span class="brand-green">from</span>home</div>
-            <h2 id="authTitle">Welcome Back!</h2>
-            <form id="authForm">
-                <div class="form-group signup-only hidden"><label>Full Name</label><input type="text" id="authName" placeholder="Enter your full name"></div>
-                <div class="form-group"><label>Gmail or Phone Number</label><input type="text" id="authIdentity" placeholder="e.g., name@gmail.com" required></div>
-                <div class="form-group"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters" required></div>
-                <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
-            </form>
-            <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
-        </div>
-    </div>
-
+    <!-- 📱 MAIN APP (Shown After Login) -->
     <div id="mainApp" class="app-hidden">
         <header class="brand-premium-header">
             <div class="header-container">
                 <div class="header-meta-row">
                     <div class="delivery-brand-box">
-                        <div id="userGreeting" class="user-greeting-inline">HI, LALCHAND</div>
+                        <div id="userGreeting" class="user-greeting-inline">HI, KRISHNA</div>
                         <h2 class="delivery-time-countdown">
                             <span class="delivery-time-title" style="margin-right:6px;">Prints in</span> 15 mins
                         </h2>
@@ -200,12 +205,14 @@
                             ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!
                         </marquee>
                     </div>
+                    
                     <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%;">
                         🚨 <b>Store is Closed!</b> We are not taking print orders currently.
                     </div>
-                    <div class="store-header-box" style="text-align: center; padding: 20px 10px 10px 10px; width:100%;">
-                        <h2 style="font-size: 2.1rem; font-weight:800; color:#1a202c; letter-spacing:-1px;">Print Store</h2>
-                        <p style="font-size: 0.9rem; color:var(--text-sub); font-weight:600; margin-top:2px;">printfromhome ensures secure prints at every stage</p>
+
+                    <div class="store-header-box">
+                        <h2>Print Store</h2>
+                        <p>printfromhome ensures secure prints at every stage</p>
                     </div>
 
                     <div class="verbatim-docs-promo-card">
