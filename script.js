@@ -156,33 +156,48 @@ document.addEventListener('DOMContentLoaded', () => {
             const authOtpInput = document.getElementById('authOtpInput');
 
             if (isSignUpModeActive && otpGroup && otpGroup.classList.contains('app-hidden')) {
-                // Step 1: Send OTP to Gmail
+                // Step 1: Send OTP to Gmail with 10-second timeout controller
                 const email = authIdentity.value.trim();
                 if (!email.includes('@')) {
                     alert('⚠️ Please enter a valid Gmail address to receive the OTP.');
                     return;
                 }
+                
                 try {
                     authBtn.innerText = "Sending OTP...";
                     authBtn.disabled = true;
+
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
                     const res = await fetch(`${LIVE_SERVER_URL}/api/auth/send-otp`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email })
+                        body: JSON.stringify({ email }),
+                        signal: controller.signal
                     });
+                    clearTimeout(timeoutId);
+
                     const data = await res.json();
-                    if (data.success) {
+                    if (res.ok && data.success) {
                         alert('📩 OTP sent to your Gmail inbox! Please check.');
                         otpGroup.classList.remove('app-hidden');
                         authBtn.innerText = "Verify & Complete Signup";
                     } else {
-                        alert(`❌ Error: ${data.message}`);
+                        alert(`❌ Error: ${data.message || 'Failed to send OTP'}`);
+                        authBtn.innerText = "Get OTP & Sign Up";
                     }
                 } catch (err) {
-                    alert("❌ Failed to send OTP network error.");
+                    if (err.name === 'AbortError') {
+                        alert('⏳ Request timed out! Server response lene mein samay lag raha hai. Render environment variables (EMAIL_USER & EMAIL_PASS) check karein.');
+                    } else {
+                        console.error("OTP send error:", err);
+                        alert('❌ Network error while sending OTP.');
+                    }
+                    authBtn.innerText = "Get OTP & Sign Up";
                 } finally {
                     authBtn.disabled = false;
-                    if (!otpGroup.classList.contains('app-hidden')) {
+                    if (otpGroup && !otpGroup.classList.contains('app-hidden')) {
                         authBtn.innerText = "Verify & Complete Signup";
                     }
                 }
