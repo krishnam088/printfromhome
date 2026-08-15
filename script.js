@@ -256,34 +256,76 @@ document.addEventListener('DOMContentLoaded', () => {
         masterFilesArray.forEach((item, index) => {
             const fileRow = document.createElement('div');
             fileRow.className = 'blinkit-file-card';
+            fileRow.style.cssText = "background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);";
+
             const activeColorBw = item.config.printType === 'bw' ? 'active' : '';
             const activeColorCol = item.config.printType === 'color' ? 'active' : '';
             const activeOriPort = item.config.orientation === 'portrait' ? 'active' : '';
             const activeOriLand = item.config.orientation === 'landscape' ? 'active' : '';
 
             fileRow.innerHTML = `
-                <div class="blinkit-card-row" style="margin-bottom: 8px; padding-bottom: 6px;">
-                    <div style="text-align:left; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                        <h4 style="font-weight:700; font-size:0.82rem; word-break:break-all; color:var(--text-main);">📄 ${item.name}</h4>
-                        <button type="button" class="add-more-inline-card-btn" style="padding: 2px 6px; font-size: 0.7rem;" onclick="triggerInlineFileUploadClick()">+ Add More</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; padding-bottom: 8px; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                        <span style="font-size: 1.1rem;">📄</span>
+                        <h4 style="font-weight: 700; font-size: 0.85rem; color: #1a202c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;" title="${item.name}">${item.name}</h4>
                     </div>
-                    <button type="button" id="removeFile_${index}" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1.2rem; margin-left:auto;">&times;</button>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <button type="button" class="add-more-inline-card-btn" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 3px 8px; font-size: 0.7rem; font-weight: 700; border-radius: 6px; cursor: pointer;" onclick="triggerInlineFileUploadClick()">+ Add More</button>
+                        <button type="button" id="removeFile_${index}" style="background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; width: 24px; height: 24px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">&times;</button>
+                    </div>
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px; align-items:center;">
-                    <div class="input-group" style="margin-bottom:0;"><label style="font-size:0.65rem; font-weight:700;">Pages:</label><input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding:6px; border-radius:6px; border:2px solid var(--border-color); font-weight:700; font-size:0.75rem; height:28px;" required></div>
-                    <div><label style="font-size:0.65rem; font-weight:700;">Copies:</label><div class="blinkit-stepper"><button type="button" id="minusCopy_${index}" class="stepper-btn">-</button><span id="copyCountLabel_${index}">${item.config.copies}</span><button type="button" id="plusCopy_${index}" class="stepper-btn">+</button></div></div>
+
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-bottom: 12px; align-items: center;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 0.7rem; font-weight: 700; color: #4a5568;">Total Pages:</label>
+                        <input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 0.8rem; background: #f8fafc; outline: none;" required>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 0.7rem; font-weight: 700; color: #4a5568;">Copies:</label>
+                        <div class="blinkit-stepper" style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 2px 8px; height: 32px;">
+                            <button type="button" id="minusCopy_${index}" class="stepper-btn" style="background: none; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; color: #334155;">-</button>
+                            <span id="copyCountLabel_${index}" style="font-weight: 700; font-size: 0.8rem; color: #0f172a;">${item.config.copies}</span>
+                            <button type="button" id="plusCopy_${index}" class="stepper-btn" style="background: none; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; color: #334155;">+</button>
+                        </div>
+                    </div>
                 </div>
-                <p style="font-size:0.65rem; font-weight:700; margin-bottom:3px;">Print Color</p>
-                <div class="blinkit-grid-options" style="gap: 8px; margin-bottom: 8px;">
-                    <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}"><div class="option-icon">🎨</div><div class="option-meta-text"><span class="option-title">Coloured</span><span class="option-subtitle">₹10/pg</span></div></div>
-                    <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}"><div class="option-icon">🌑</div><div class="option-meta-text"><span class="option-title">B & W</span><span class="option-subtitle">₹3/pg</span></div></div>
+
+                <div style="margin-bottom: 10px;">
+                    <p style="font-size: 0.7rem; font-weight: 700; color: #4a5568; margin-bottom: 6px;">Print Color</p>
+                    <div class="blinkit-grid-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeColorCol ? '#16a34a' : '#cbd5e1'}; background: ${activeColorCol ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
+                            <div style="font-size: 1rem;">🎨</div>
+                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Coloured</span><span style="font-size: 0.65rem; color: #64748b;">₹10/pg</span></div>
+                        </div>
+                        <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeColorBw ? '#16a34a' : '#cbd5e1'}; background: ${activeColorBw ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
+                            <div style="font-size: 1rem;">🌑</div>
+                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">B & W</span><span style="font-size: 0.65rem; color: #64748b;">₹3/pg</span></div>
+                        </div>
+                    </div>
                 </div>
-                <p style="font-size:0.65rem; font-weight:700; margin-bottom:3px;">Orientation</p>
-                <div class="blinkit-grid-options">
-                    <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}"><div class="option-icon">📱</div><div class="option-meta-text"><span class="option-title">Portrait</span></div></div>
-                    <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}"><div class="option-icon">💻</div><div class="option-meta-text"><span class="option-title">Landscape</span></div></div>
+
+                <div style="margin-bottom: 10px;">
+                    <p style="font-size: 0.7rem; font-weight: 700; color: #4a5568; margin-bottom: 6px;">Orientation</p>
+                    <div class="blinkit-grid-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeOriPort ? '#16a34a' : '#cbd5e1'}; background: ${activeOriPort ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
+                            <div style="font-size: 1rem;">📱</div>
+                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Portrait</span></div>
+                        </div>
+                        <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeOriLand ? '#16a34a' : '#cbd5e1'}; background: ${activeOriLand ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
+                            <div style="font-size: 1rem;">💻</div>
+                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Landscape</span></div>
+                        </div>
+                    </div>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-primary); padding:6px 10px; border-radius:6px; border:1px solid var(--border-color);"><label style="font-size:0.68rem; font-weight:700;">Binding:</label><select id="binding_${index}"><option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option><option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option><option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral (+₹30)</option></select></div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    <label style="font-size: 0.75rem; font-weight: 700; color: #334155;">Binding Option:</label>
+                    <select id="binding_${index}" style="padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.75rem; font-weight: 600; background: #ffffff; outline: none;">
+                        <option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option>
+                        <option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option>
+                        <option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral (+₹30)</option>
+                    </select>
+                </div>
             `;
             multiFilesContainer.appendChild(fileRow);
 
@@ -324,7 +366,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.openOrderDeepTrackingWorkspacePage = function(orderStringPayload) {
         const order = JSON.parse(decodeURIComponent(orderStringPayload));
         
-        // Find if naye pool engine mein server se status mil raha hai
         let liveCloudStatus = order.status;
         if (window.globalRawOrdersCache && window.globalRawOrdersCache.length > 0) {
             const realTimeMatchNode = window.globalRawOrdersCache.find(o => o.orderId === order.orderId);
@@ -352,7 +393,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 🔥 Trigger dynamic workflow layout state stepper directly
         if(typeof window.executeLiveTimelineStateStepper === 'function') {
             window.executeLiveTimelineStateStepper(liveCloudStatus);
         }
@@ -370,7 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (renderHistoryContainerClean) {
             ordersHistoryContainer.innerHTML = '';
         } else {
-            // Keep user layout safe during internal loops override sync
             const activeCardsList = ordersHistoryContainer.querySelectorAll('.history-card-item');
             if (activeCardsList.length === parsedHistory.length) {
                 parsedHistory.forEach((order, idx) => {
@@ -386,7 +425,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'history-card-item';
             
-            // Sync initial state data properties securely
             let currentStatus = order.status || 'Paid / Ready for Print';
             if (window.globalRawOrdersCache && window.globalRawOrdersCache.length > 0) {
                 const match = window.globalRawOrdersCache.find(o => o.orderId === order.orderId);
@@ -429,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     binding: item.config.binding, 
                     copies: item.config.copies,
                     orientation: item.config.orientation, 
-                    colorMode: item.config.printType       
+                    colorMode: item.config.printType      
                 };
             });
 
