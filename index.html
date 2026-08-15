@@ -43,7 +43,8 @@
             --blinkit-light-green: #e6f4ea;
             --border-color: #e2e8f0;
         }
-        body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; transition: background-color 0.5s ease; padding-bottom: 90px; }
+        /* Layout fix: Added padding-bottom to prevent content overlapping with the fixed cart footer */
+        body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; transition: background-color 0.5s ease; padding-bottom: 120px; }
 
         /* 🎨 FESTIVE THEME FULL BACKGROUND & CARD OVERRIDES */
         body.theme-festive-republic { background-color: #fffaf5 !important; }
@@ -140,18 +141,36 @@
         .verbatim-upload-btn { background-color: #2e7d32; color: #ffffff; border: none; padding: 12px 28px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; }
         .promo-graphic-mockup { position: absolute; right: 10px; bottom: 10px; width: 45%; max-width: 130px; z-index: 1; }
 
-        /* 🛒 BLINKIT STYLE CATEGORIES & SNACKS STYLING */
+        /* 🍟 HORIZONTAL SLIDING SNACKS CONTAINER (Updated for smooth left-to-right scroll) */
         .category-section-title { font-size: 1.1rem; font-weight: 800; color: #1e293b; margin: 25px 0 12px 0; text-align: left; display: flex; justify-content: space-between; align-items: center; }
-        .blinkit-category-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
-        .blinkit-cat-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: transform 0.2s; cursor: pointer; }
+        .snacks-horizontal-slider {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: none;
+        }
+        .snacks-horizontal-slider::-webkit-scrollbar { display: none; }
+        .blinkit-cat-card {
+            min-width: 130px;
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
         .blinkit-cat-card:hover { transform: translateY(-2px); border-color: var(--blinkit-green); }
         .blinkit-cat-img { font-size: 2rem; margin-bottom: 6px; }
-        .blinkit-cat-name { font-size: 0.75rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+        .blinkit-cat-name { font-size: 0.75rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .blinkit-cat-price { font-size: 0.7rem; font-weight: 600; color: var(--text-sub); margin-bottom: 8px; }
-        .btn-quick-add { background: #f0fdf4; color: var(--blinkit-green); border: 1px solid #bbf7d0; padding: 4px 10px; font-size: 0.7rem; font-weight: 700; border-radius: 8px; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .btn-quick-add { background: #f0fdf4; color: var(--blinkit-green); border: 1px solid #bbf7d0; padding: 6px 10px; font-size: 0.75rem; font-weight: 700; border-radius: 8px; cursor: pointer; width: 100%; transition: background 0.2s; }
         .btn-quick-add:hover { background: var(--blinkit-green); color: white; }
 
-        /* 📦 FLOATING VIEW CART BAR (Picture 2 style) */
+        /* 📦 FLOATING VIEW CART BAR (Non-overlapping & stable) */
         .floating-cart-footer { 
             position: fixed; 
             bottom: 20px; 
@@ -256,7 +275,7 @@
         </div>
     </nav>
 
-    <!-- 🛒 BLINKIT STYLE CHECKOUT CART DRAWER (Picture 1 jaisa interface) -->
+    <!-- 🛒 UNIFIED CHECKOUT CART DRAWER -->
     <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:16000; display:none; justify-content:flex-end;">
         <div class="cart-drawer-card" onclick="event.stopPropagation()" style="background:#f8fafc; width:100%; max-width:440px; height:100vh; padding:20px; display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.15); overflow-y:auto;">
             
@@ -278,10 +297,8 @@
                 </div>
             </div>
 
-            <!-- Items List Container (Picture 1 style green stepper cards) -->
-            <div id="cartDrawerItemsList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
-                <!-- Dynamic items with green [- 1 +] stepper will appear here -->
-            </div>
+            <!-- Items List Container (Unified Snacks + Print Files with steppers) -->
+            <div id="cartDrawerItemsList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-bottom:20px;"></div>
 
             <!-- Delivery Address Footer Box -->
             <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px;">
@@ -392,7 +409,7 @@
                     </div>
                     <div style="text-align: center; padding: 20px 10px 10px 10px; width:100%;">
                         <h2 style="font-size: 2.1rem; font-weight:800; color:#1a202c; letter-spacing:-1px;">Print Store</h2>
-                        <p style="font-size: 0.9rem; color:var(--text-sub); font-weight:600; margin-top:2px;">printfromhome ensures secure prints at every stage</p>
+                        <p style="font-size: 0.9rem; color:var(--text-sub); font-weight:600; margin-top:2px;">Full freedom: Print documents, order snacks, or both together!</p>
                     </div>
 
                     <div class="verbatim-docs-promo-card">
@@ -411,11 +428,11 @@
                         </div>
                     </div>
 
-                    <!-- 🛍️ BLINKIT STYLE SNACKS & ESSENTIALS CATEGORIES ON HOME -->
+                    <!-- 🍟 SNACKS & MUNCHIES HORIZONTAL SLIDER (Left-to-right scrollable) -->
                     <div class="category-section-title">
-                        <span>⚡ Snacks & Munchies</span>
+                        <span>⚡ Snacks & Munchies (Slide &rarr;)</span>
                     </div>
-                    <div class="blinkit-category-grid" id="homeSnacksGrid">
+                    <div class="snacks-horizontal-slider" id="homeSnacksGrid">
                         <div class="blinkit-cat-card">
                             <div class="blinkit-cat-img">🥔</div>
                             <div class="blinkit-cat-name">Lays Classic Chips</div>
@@ -434,6 +451,12 @@
                             <div class="blinkit-cat-price">₹40</div>
                             <button type="button" class="btn-quick-add" onclick="addSnackToCart('Coca Cola 500ml', 40)">+ Add</button>
                         </div>
+                        <div class="blinkit-cat-card">
+                            <div class="blinkit-cat-img">🍫</div>
+                            <div class="blinkit-cat-name">Dairy Milk Silk</div>
+                            <div class="blinkit-cat-price">₹80</div>
+                            <button type="button" class="btn-quick-add" onclick="addSnackToCart('Dairy Milk Silk', 80)">+ Add</button>
+                        </div>
                     </div>
                 </div>
 
@@ -446,23 +469,23 @@
                     <!-- 🍟 SLIDING SNACKS BAR ON PRINT CONFIG -->
                     <div style="background:var(--surface); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:15px;">
                         <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:10px; color:#1e293b;">⚡ Hungry while waiting? Add Snacks</h4>
-                        <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:6px;">
-                            <div style="min-width:130px; background:#f8fafc; border:1px solid var(--border-color); border-radius:12px; padding:10px; text-align:center;">
-                                <div style="font-size:1.5rem;">🥔</div>
-                                <div style="font-size:0.75rem; font-weight:700; margin:2px 0;">Lays Chips</div>
-                                <div style="font-size:0.7rem; color:var(--text-sub); margin-bottom:6px;">₹20</div>
+                        <div class="snacks-horizontal-slider">
+                            <div class="blinkit-cat-card">
+                                <div class="blinkit-cat-img">🥔</div>
+                                <div class="blinkit-cat-name">Lays Chips</div>
+                                <div class="blinkit-cat-price">₹20</div>
                                 <button type="button" class="btn-quick-add" onclick="addSnackToCart('Lays Classic Chips', 20)">+ Add</button>
                             </div>
-                            <div style="min-width:130px; background:#f8fafc; border:1px solid var(--border-color); border-radius:12px; padding:10px; text-align:center;">
-                                <div style="font-size:1.5rem;">🍪</div>
-                                <div style="font-size:0.75rem; font-weight:700; margin:2px 0;">Hide & Seek</div>
-                                <div style="font-size:0.7rem; color:var(--text-sub); margin-bottom:6px;">₹30</div>
+                            <div class="blinkit-cat-card">
+                                <div class="blinkit-cat-img">🍪</div>
+                                <div class="blinkit-cat-name">Hide & Seek</div>
+                                <div class="blinkit-cat-price">₹30</div>
                                 <button type="button" class="btn-quick-add" onclick="addSnackToCart('Hide & Seek Biscuit', 30)">+ Add</button>
                             </div>
-                            <div style="min-width:130px; background:#f8fafc; border:1px solid var(--border-color); border-radius:12px; padding:10px; text-align:center;">
-                                <div style="font-size:1.5rem;">🥤</div>
-                                <div style="font-size:0.75rem; font-weight:700; margin:2px 0;">Coca Cola</div>
-                                <div style="font-size:0.7rem; color:var(--text-sub); margin-bottom:6px;">₹40</div>
+                            <div class="blinkit-cat-card">
+                                <div class="blinkit-cat-img">🥤</div>
+                                <div class="blinkit-cat-name">Coca Cola</div>
+                                <div class="blinkit-cat-price">₹40</div>
                                 <button type="button" class="btn-quick-add" onclick="addSnackToCart('Coca Cola 500ml', 40)">+ Add</button>
                             </div>
                         </div>
@@ -546,7 +569,7 @@
         </div>
     </div>
 
-    <!-- 🛒 FLOATING VIEW CART FOOTER BAR (Picture 2 style) -->
+    <!-- 🛒 FLOATING VIEW CART FOOTER BAR (Unified with Grand Total) -->
     <div id="floatingCartFooterBar" class="floating-cart-footer hidden" onclick="toggleCartDrawer(true)">
         <div class="floating-cart-left" style="display:flex; align-items:center; gap:12px;">
             <div style="display:flex; align-items:center; margin-left:4px;">
@@ -574,10 +597,11 @@
 
     <script>
         // ==========================================
-        // 🛒 GLOBAL CART STATE MANAGEMENT
+        // 🛒 GLOBAL UNIFIED CART STATE MANAGEMENT
         // ==========================================
         window.cartSnacksArray = [];
 
+        // Silent add (Alert popup removed)
         function addSnackToCart(name, price) {
             const existing = window.cartSnacksArray.find(item => item.name === name);
             if (existing) {
@@ -586,30 +610,36 @@
                 window.cartSnacksArray.push({ name, price, qty: 1 });
             }
             updateFloatingCartBar();
-            alert(`✅ Added ${name} to cart!`);
         }
 
         function updateFloatingCartBar() {
             const bar = document.getElementById('floatingCartFooterBar');
             const countText = document.getElementById('floatingCartCountText');
             const priceText = document.getElementById('floatingCartTotalPriceText');
+            if (!bar) return;
             
             let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0);
             let totalSnacksPrice = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
 
             let printTotalVal = 0;
-            const summaryTotalNode = document.getElementById('summaryTotal');
-            if (summaryTotalNode) {
-                printTotalVal = parseFloat(summaryTotalNode.textContent.replace('₹', '')) || 0;
+            let printFilesCount = 0;
+            if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
+                masterFilesArray.forEach((item) => {
+                    const pages = parseInt(item.config.pages) || 1;
+                    const copies = parseInt(item.config.copies) || 1;
+                    const cost = pages * (item.config.printType === 'bw' ? 3 : 10) * copies + (item.config.binding === 'spiral' ? 30 * copies : 0);
+                    printTotalVal += cost;
+                    printFilesCount += copies;
+                });
             }
 
             let grandTotalCombined = totalSnacksPrice + printTotalVal;
-            let totalItemsCombined = totalSnacksCount + (typeof masterFilesArray !== 'undefined' ? masterFilesArray.length : 0);
+            let totalItemsCombined = totalSnacksCount + printFilesCount;
 
             if (totalItemsCombined > 0) {
                 bar.classList.remove('hidden');
-                countText.textContent = `${totalItemsCombined} item${totalItemsCombined > 1 ? 's' : ''}`;
-                priceText.textContent = `₹${grandTotalCombined.toFixed(2)}`;
+                if (countText) countText.textContent = `${totalItemsCombined} item${totalItemsCombined > 1 ? 's' : ''}`;
+                if (priceText) priceText.textContent = `₹${grandTotalCombined.toFixed(2)}`;
             } else {
                 bar.classList.add('hidden');
             }
@@ -647,7 +677,7 @@
                 addressSummaryNode.textContent = addressInput.value || "Varanasi, Uttar Pradesh";
             }
 
-            // Render Snacks with Picture 1 style green steppers
+            // Render Snacks with Green Steppers
             window.cartSnacksArray.forEach((snack, idx) => {
                 subtotal += snack.price * snack.qty;
                 totalItemsCount += snack.qty;
@@ -671,7 +701,7 @@
                 container.appendChild(row);
             });
 
-            // Render Print Files
+            // Render Print Files (Unified Cart Integration)
             let printTotal = 0;
             if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
                 masterFilesArray.forEach((item) => {
@@ -722,7 +752,7 @@
             if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
                 document.getElementById('printForm').scrollIntoView({ behavior: 'smooth' });
             } else {
-                alert("💡 Pehle Print Store se koi document upload karein!");
+                alert("💡 Proceeding with your cart items checkout!");
             }
         }
 
@@ -818,7 +848,7 @@
                     badge.textContent = "CLOSED 🔴"; badge.className = "shop-status-text-badge closed";
                     btn.disabled = true; btn.style.opacity = "0.4"; btn.style.cursor = "not-allowed"; 
                     btn.textContent = "❌ Store is Closed (7AM - 12AM)";
-                    if (noticeBox) noticeBox.classList.remove('hidden');
+                    if (noticeBox) noticeBox.classList.add('hidden');
                 }
             } catch (err) {}
         }
