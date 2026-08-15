@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Print From Home - India's Last Minute Printing App</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -148,6 +148,7 @@
             overflow-x: auto;
             padding-bottom: 8px;
             scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
         }
         .snacks-horizontal-slider::-webkit-scrollbar { display: none; }
         .blinkit-cat-card {
@@ -274,7 +275,7 @@
         </div>
     </nav>
 
-    <!-- 🛒 UNIFIED CHECKOUT CART DRAWER -->
+    <!-- 🛒 BLINKIT STYLE CHECKOUT CART DRAWER -->
     <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:16000; display:none; justify-content:flex-end;">
         <div class="cart-drawer-card" onclick="event.stopPropagation()" style="background:#f8fafc; width:100%; max-width:440px; height:100vh; padding:20px; display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.15); overflow-y:auto;">
             
@@ -596,7 +597,7 @@
         // ==========================================
         window.cartSnacksArray = [];
 
-        // Silent add (Alert popup removed as requested)
+        // Silent add (Alert popup removed)
         function addSnackToCart(name, price) {
             const existing = window.cartSnacksArray.find(item => item.name === name);
             if (existing) {
@@ -843,7 +844,7 @@
                     badge.textContent = "CLOSED 🔴"; badge.className = "shop-status-text-badge closed";
                     btn.disabled = true; btn.style.opacity = "0.4"; btn.style.cursor = "not-allowed"; 
                     btn.textContent = "❌ Store is Closed (7AM - 12AM)";
-                    if (noticeBox) noticeBox.classList.remove('hidden');
+                    if (noticeBox) noticeBox.classList.add('hidden');
                 }
             } catch (err) {}
         }
