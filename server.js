@@ -5,6 +5,7 @@ const Razorpay = require('razorpay');
 const cors = require('cors'); 
 const fs = require('fs');
 const mongoose = require('mongoose');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const app = express();
@@ -80,6 +81,18 @@ const razorpay = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET || 'PcaWJEUMGjhn7Cfa04IlzYd9'
 });
 
+// Nodemailer Transporter Setup for Gmail OTP
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
+
+// Temporary OTP Storage Memory
+const otpStorage = {};
+
 // Web entry & Manifest cache control routes
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/admin-panel', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
@@ -129,12 +142,50 @@ const handleStoreToggle = async (req, res) => {
 app.post('/api/store-status/toggle', handleStoreToggle);
 app.post('/api/admin/toggle-store', handleStoreToggle);
 
-// Auth APIs (MongoDB Connected)
+// --- 🛡️ GMAIL OTP SEND API ROUTE ---
+app.post('/api/auth/send-otp', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email || !email.includes('@')) {
+            return res.status(400).json({ success: false, message: "Valid Gmail address required" });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        otpStorage[normalizedEmail] = { otp, expires: Date.now() + 5 * 60 * 1000 }; // 5 mins validity
+
+        const mailOptions = {
+            from: 'Print From Home <support@printfromhome.onrender.com>',
+            to: normalizedEmail,
+            subject: 'Verification OTP - Print From Home',
+            text: `Your OTP for Print From Home signup is: ${otp}. It is valid for 5 minutes.`
+        };
+
+        await transporter.sendMail(mailOptions);
+        res.json({ success: true, message: "OTP sent successfully to your Gmail!" });
+    } catch (err) {
+        console.error("OTP Send Error:", err);
+        res.status(500).json({ success: false, message: "Failed to send OTP. Check email configurations on Render." });
+    }
+});
+
+// Auth APIs (MongoDB Connected with OTP Verification)
 app.post('/api/auth/signup', async (req, res) => {
     try {
-        const { name, identity, password } = req.body;
+        const { name, identity, password, otp } = req.body;
         const normalizedIdentity = identity.toLowerCase().trim();
         
+        // Verify OTP for Email Registrations
+        if (normalizedIdentity.includes('@')) {
+            if (!otpStorage[normalizedIdentity] || otpStorage[normalizedIdentity].otp !== otp) {
+                return res.status(400).json({ success: false, message: "Invalid or incorrect OTP!" });
+            }
+            if (Date.now() > otpStorage[normalizedIdentity].expires) {
+                return res.status(400).json({ success: false, message: "OTP has expired! Please request a new one." });
+            }
+            delete otpStorage[normalizedIdentity]; // Clear OTP after successful check
+        }
+
         const existingUser = await User.findOne({ identity: normalizedIdentity });
         if (existingUser) {
             return res.status(400).json({ success: false, message: "Already registered!" });
