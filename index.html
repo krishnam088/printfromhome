@@ -43,31 +43,21 @@
 
     <!-- 🔒 AUTHENTICATION SCREEN WITH EMAIL/OTP & PASSWORD -->
     <div id="authScreen" class="auth-container app-hidden">
-        <div class="auth-card">
-            <div class="auth-brand">print<span class="brand-green">from</span>home</div>
-            <h2 id="authTitle">Welcome Back!</h2>
-            <form id="authForm">
-                <div class="form-group signup-only hidden"><label>Full Name</label><input type="text" id="authName" placeholder="Enter your full name"></div>
-                <div class="form-group"><label>Gmail or Phone Number</label><input type="text" id="authIdentity" placeholder="e.g., name@gmail.com" required></div>
-                
-                <!-- PASSWORD FIELD -->
-                <div class="form-group" id="passwordGroup"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters"></div>
-                
-                <!-- OTP VERIFICATION FIELD (Hidden by default, used for signup/otp verification flows) -->
-                <div class="form-group app-hidden" id="otpGroup">
-                    <label>Enter Verification OTP</label>
-                    <div style="display:flex; gap:8px;">
-                        <input type="text" id="authOtpInput" placeholder="6-digit OTP" maxlength="6">
-                        <button type="button" id="verifyOtpBtn" style="background:var(--blinkit-green); color:white; border:none; padding:0 12px; border-radius:10px; font-weight:700; cursor:pointer;">Verify</button>
-                    </div>
-                </div>
+    <div class="auth-card">
+        <div class="auth-brand">print<span class="brand-green">from</span>home</div>
+        <h2 id="authTitle">Welcome Back!</h2>
+        <form id="authForm">
+            <div class="form-group signup-only hidden"><label>Full Name</label><input type="text" id="authName" placeholder="Enter your full name"></div>
+            <div class="form-group"><label>Mobile Number</label><input type="text" id="authIdentity" placeholder="Enter 10-digit mobile number" maxlength="10" required></div>
+            
+            <!-- PASSWORD FIELD -->
+            <div class="form-group" id="passwordGroup"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters" required></div>
 
-                <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
-            </form>
-            <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
-        </div>
+            <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
+        </form>
+        <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
     </div>
-
+</div>
     <!-- 🔒 SIDEBAR DRAWER OVERLAY -->
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
