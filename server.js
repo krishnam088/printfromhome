@@ -81,13 +81,16 @@ const razorpay = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET || 'PcaWJEUMGjhn7Cfa04IlzYd9'
 });
 
-// Nodemailer Transporter Setup for Gmail OTP
+// Nodemailer Transporter Setup with Safety Timeouts
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-    }
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000
 });
 
 // Temporary OTP Storage Memory
@@ -155,7 +158,7 @@ app.post('/api/auth/send-otp', async (req, res) => {
         otpStorage[normalizedEmail] = { otp, expires: Date.now() + 5 * 60 * 1000 }; // 5 mins validity
 
         const mailOptions = {
-            from: 'Print From Home <support@printfromhome.onrender.com>',
+            from: process.env.EMAIL_USER,
             to: normalizedEmail,
             subject: 'Verification OTP - Print From Home',
             text: `Your OTP for Print From Home signup is: ${otp}. It is valid for 5 minutes.`
@@ -164,8 +167,8 @@ app.post('/api/auth/send-otp', async (req, res) => {
         await transporter.sendMail(mailOptions);
         res.json({ success: true, message: "OTP sent successfully to your Gmail!" });
     } catch (err) {
-        console.error("OTP Send Error:", err);
-        res.status(500).json({ success: false, message: "Failed to send OTP. Check email configurations on Render." });
+        console.error("OTP Send Error:", err.message);
+        res.status(500).json({ success: false, message: "Failed to send OTP: " + err.message });
     }
 });
 
@@ -181,9 +184,9 @@ app.post('/api/auth/signup', async (req, res) => {
                 return res.status(400).json({ success: false, message: "Invalid or incorrect OTP!" });
             }
             if (Date.now() > otpStorage[normalizedIdentity].expires) {
-                return res.status(400).json({ success: false, message: "OTP has expired! Please request a new one." });
+                return res.status(400).json({ success: false, message: "OTP has expired!" });
             }
-            delete otpStorage[normalizedIdentity]; // Clear OTP after successful check
+            delete otpStorage[normalizedIdentity]; // Clear OTP after success
         }
 
         const existingUser = await User.findOne({ identity: normalizedIdentity });
