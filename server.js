@@ -81,11 +81,12 @@ const razorpay = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET || 'PcaWJEUMGjhn7Cfa04IlzYd9'
 });
 
-// Nodemailer Secure SMTP Transporter Setup (Gmail Official Port 465 SSL)
+// Nodemailer Force IPv4 SMTP Transporter Setup (Fixes ENETUNREACH error on Render)
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
-    secure: true, // true for port 465, false for other ports
+    secure: true,
+    family: 4, // 🔥 Yeh line IPv4 force karegi taaki Render par error na aaye
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
