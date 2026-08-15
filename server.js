@@ -129,11 +129,12 @@ const handleStoreToggle = async (req, res) => {
 app.post('/api/store-status/toggle', handleStoreToggle);
 app.post('/api/admin/toggle-store', handleStoreToggle);
 
-// --- Auth APIs (Direct Mobile Number & Password Signup / Login) ---
+-// --- Auth APIs (Fixed typo & added 10-digit mobile normalization) ---
 app.post('/api/auth/signup', async (req, res) => {
     try {
         const { name, identity, password } = req.body;
-        const normalizedIdentity = identity.toLowerCase().trim();
+        // Sirf last 10 digits lega taaki chahe koi phone ho, format same rahe
+        const normalizedIdentity = identity.replace(/\D/g, '').slice(-10); 
         
         const existingUser = await User.findOne({ identity: normalizedIdentity });
         if (existingUser) {
@@ -158,7 +159,8 @@ app.post('/api/auth/signup', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { identity, password } = req.body;
-        const normalizedIdentity = identity.toLowerCase().trim();
+        // Login mein bhi same 10-digit normalization taaki match karne mein error na aaye
+        const normalizedIdentity = identity.replace(/\D/g, '').slice(-10); 
         const user = await User.findOne({ identity: normalizedIdentity, password });
         
         if (!user) return res.status(401).json({ success: false, message: "Invalid mobile number or password!" });
@@ -168,7 +170,6 @@ app.post('/api/auth/login', async (req, res) => {
         res.status(500).json({ success: false, message: "Server error" });
     }
 });
-
 // Orders & Payments (MongoDB Connected with COD & Cart Support)
 app.post('/api/create-order', upload.array('document', 20), async (req, res) => {
     try {
