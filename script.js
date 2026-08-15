@@ -255,22 +255,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if (toggleAuthLink) {
         toggleAuthLink.addEventListener('click', (e) => {
             e.preventDefault();
-            const isLoginViewNow = signupOnlyFields[0].classList.contains('hidden');
-            const otpGroup = document.getElementById('otpGroup');
+            
+         const
+         isLoginViewNow = signupOnlyFields[0].classList.contains('hidden');
             if (isLoginViewNow) {
                 signupOnlyFields.forEach(el => el.classList.remove('hidden'));
                 authTitle.textContent = "Create Account";
-                authBtn.textContent = "Get OTP & Sign Up";
-                toggleAuthLink.textContent = "Log In Here";
+                authBtn.textContent = "Register & Sign Up"; // 🔥 Fixed quotes here
+                toggleAuthLink.textContent = "Already have an account? Log In";
             } else {
                 signupOnlyFields.forEach(el => el.classList.add('hidden'));
-                if(otpGroup) otpGroup.classList.add('app-hidden');
                 authTitle.textContent = "Welcome Back!";
                 authBtn.textContent = "Log In";
-                toggleAuthLink.textContent = "Create Account";
+                toggleAuthLink.textContent = "New user? Create Account";
             }
         });
     }
+        });
+    
 
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
@@ -568,4 +570,4 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {}
         });
     }
-});
+;
