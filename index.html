@@ -43,7 +43,7 @@
             --blinkit-light-green: #e6f4ea;
             --border-color: #e2e8f0;
         }
-        body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; transition: background-color 0.5s ease; padding-bottom: 70px; }
+        body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; transition: background-color 0.5s ease; padding-bottom: 90px; }
 
         /* 🎨 FESTIVE THEME FULL BACKGROUND & CARD OVERRIDES */
         body.theme-festive-republic { background-color: #fffaf5 !important; }
@@ -123,7 +123,7 @@
         .container { width: 100%; max-width: 100%; margin: 0; padding: 15px; display: grid; grid-template-columns: 1fr; gap: 20px; transition: all 0.3s ease; }
         @media (min-width: 992px) { .container.has-invoice { grid-template-columns: 2.5fr 1.2fr; padding: 25px; } }
 
-        /* 📱 RESPONSIVE & MOBILE-FRIENDLY OFFERS BAR STYLING */
+        /* 📱 OFFERS BAR */
         .compact-offers-bar { display: flex; align-items: center; gap: 8px; background: #fffbeb; border: 1px solid #fed7aa; padding: 10px 14px; border-radius: 12px; margin-bottom: 20px; font-size: 0.78rem; font-weight: 600; color: #b45309; width: 100%; overflow: hidden; transition: all 0.5s ease; }
         .compact-offers-bar marquee { width: 100%; font-weight: 600; letter-spacing: -0.2px; }
 
@@ -151,19 +151,27 @@
         .btn-quick-add { background: #f0fdf4; color: var(--blinkit-green); border: 1px solid #bbf7d0; padding: 4px 10px; font-size: 0.7rem; font-weight: 700; border-radius: 8px; cursor: pointer; width: 100%; transition: background 0.2s; }
         .btn-quick-add:hover { background: var(--blinkit-green); color: white; }
 
-        /* 📦 FLOATING VIEW CART BAR */
-        .floating-cart-footer { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 480px; background: var(--blinkit-green); color: white; border-radius: 16px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px rgba(12,131,70,0.35); z-index: 10000; cursor: pointer; animation: slideUpCart 0.3s ease; }
+        /* 📦 FLOATING VIEW CART BAR (Picture 2 style) */
+        .floating-cart-footer { 
+            position: fixed; 
+            bottom: 20px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 90%; 
+            max-width: 420px; 
+            background: var(--blinkit-green); 
+            color: white; 
+            border-radius: 30px; 
+            padding: 12px 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 10px 25px rgba(12,131,70,0.4); 
+            z-index: 10000; 
+            cursor: pointer; 
+            animation: slideUpCart 0.3s ease; 
+        }
         @keyframes slideUpCart { from { transform: translate(-50%, 50px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
-        .floating-cart-left { display: flex; align-items: center; gap: 12px; }
-        .cart-icon-circle { background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-        .cart-title-info { display: flex; flex-direction: column; text-align: left; }
-        .cart-items-count { font-size: 0.75rem; font-weight: 600; opacity: 0.9; }
-        .cart-total-price { font-size: 0.95rem; font-weight: 800; }
-        .floating-cart-right { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 700; }
-
-        /* 🛒 CART DRAWER MODAL */
-        .cart-drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 16000; display: none; justify-content: flex-end; }
-        .cart-drawer-card { background: var(--surface); width: 100%; max-width: 400px; height: 100vh; padding: 20px; display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.15); overflow-y: auto; }
 
         .tracking-timeline-box { display: flex; flex-direction: column; gap: 20px; margin: 20px 0; padding-left: 10px; position: relative; }
         .tracking-timeline-box::before { content: ''; position: absolute; left: 19px; top: 10px; bottom: 10px; width: 3px; background: #cbd5e1; z-index: 1; }
@@ -248,22 +256,61 @@
         </div>
     </nav>
 
-    <!-- 🛒 CART DRAWER -->
-    <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)">
-        <div class="cart-drawer-card" onclick="event.stopPropagation()">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--border-color); padding-bottom:12px; margin-bottom:15px;">
-                <h3 style="font-size:1.2rem; font-weight:800;">🛒 Your Cart & Summary</h3>
-                <span style="cursor:pointer; font-size:1.5rem; font-weight:bold;" onclick="toggleCartDrawer(false)">&times;</span>
+    <!-- 🛒 BLINKIT STYLE CHECKOUT CART DRAWER (Picture 1 jaisa interface) -->
+    <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:16000; display:none; justify-content:flex-end;">
+        <div class="cart-drawer-card" onclick="event.stopPropagation()" style="background:#f8fafc; width:100%; max-width:440px; height:100vh; padding:20px; display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.15); overflow-y:auto;">
+            
+            <!-- Top Header -->
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:15px; background:#ffffff; padding:10px 15px; border-radius:14px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="cursor:pointer; font-size:1.2rem; font-weight:bold;" onclick="toggleCartDrawer(false)">&larr;</span>
+                    <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a;">Checkout</h3>
+                </div>
+                <span style="font-size:0.8rem; font-weight:700; color:var(--blinkit-green); background:#f0fdf4; padding:4px 10px; border-radius:8px; cursor:pointer;" onclick="toggleCartDrawer(false)">🔍 Search</span>
             </div>
-            <div id="cartDrawerItemsList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
-                <!-- Cart Items will be injected here dynamically -->
+
+            <!-- Delivery Time Banner -->
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+                <div style="font-size:1.8rem;">⏰</div>
+                <div>
+                    <h4 style="font-size:0.95rem; font-weight:800; color:#0f172a;">Delivery in 15 minutes</h4>
+                    <p style="font-size:0.75rem; color:#64748b; font-weight:600;" id="shipmentItemsCountText">Shipment of items</p>
+                </div>
             </div>
-            <div style="border-top:1px solid var(--border-color); padding-top:12px;">
-                <div class="summary-row" style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.85rem;"><span>Subtotal</span><span id="cartSubtotalVal">₹0.00</span></div>
-                <div class="summary-row" style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.85rem;"><span>Delivery Fee</span><span id="cartDeliveryVal">₹0.00</span></div>
-                <div class="summary-row total-row" style="display:flex; justify-content:space-between; font-weight:800; font-size:1.1rem; margin-bottom:15px;"><span>Grand Total</span><span id="cartGrandTotalVal">₹0.00</span></div>
-                <button type="button" onclick="proceedToCheckoutFromCart()" class="btn-drawer-action" style="padding:14px; font-size:1rem; border-radius:12px;">Proceed to Checkout &rarr;</button>
+
+            <!-- Items List Container (Picture 1 style green stepper cards) -->
+            <div id="cartDrawerItemsList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+                <!-- Dynamic items with green [- 1 +] stepper will appear here -->
             </div>
+
+            <!-- Delivery Address Footer Box -->
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span style="font-size:0.75rem; font-weight:800; color:#64748b; text-transform:uppercase;">Delivering to Home</span>
+                    <span style="font-size:0.75rem; font-weight:700; color:var(--blinkit-green); cursor:pointer;" onclick="document.getElementById('address').scrollIntoView({behavior:'smooth'}); toggleCartDrawer(false);">Change</span>
+                </div>
+                <p style="font-size:0.8rem; font-weight:600; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="cartDrawerAddressSummary">Varanasi, Uttar Pradesh</p>
+            </div>
+
+            <!-- Bottom Place Order / Payment Bar -->
+            <div style="background:#ffffff; border-top:1px solid #e2e8f0; padding:15px; border-radius:16px; box-shadow:0 -4px 15px rgba(0,0,0,0.03);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="font-size:0.75rem; font-weight:700; background:#f1f5f9; padding:3px 8px; border-radius:6px;">PAY USING</span>
+                        <span style="font-size:0.8rem; font-weight:800; color:#0f172a;" id="cartSelectedPaymentLabel">Razorpay Online</span>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; background:var(--blinkit-green); color:white; border-radius:14px; padding:12px 18px; cursor:pointer;" onclick="proceedToCheckoutFromCart()">
+                    <div>
+                        <div style="font-size:1.1rem; font-weight:900;" id="cartDrawerGrandTotal">₹0.00</div>
+                        <div style="font-size:0.65rem; font-weight:700; opacity:0.9; text-transform:uppercase;">TOTAL</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px; font-size:0.95rem; font-weight:800;">
+                        <span>Place Order</span> &rarr;
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -369,7 +416,6 @@
                         <span>⚡ Snacks & Munchies</span>
                     </div>
                     <div class="blinkit-category-grid" id="homeSnacksGrid">
-                        <!-- Dynamic Snack Cards -->
                         <div class="blinkit-cat-card">
                             <div class="blinkit-cat-img">🥔</div>
                             <div class="blinkit-cat-name">Lays Classic Chips</div>
@@ -397,7 +443,7 @@
                         <button type="button" onclick="forceReturnToUploadView()" style="background:none; border:none; color:var(--blinkit-green); font-weight:700; cursor:pointer; font-size:0.85rem;">&larr; Back to Upload</button>
                     </div>
 
-                    <!-- 🍟 SLIDING / GRID SNACKS BAR ON PRINT CONFIGURATION PAGE -->
+                    <!-- 🍟 SLIDING SNACKS BAR ON PRINT CONFIG -->
                     <div style="background:var(--surface); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:15px;">
                         <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:10px; color:#1e293b;">⚡ Hungry while waiting? Add Snacks</h4>
                         <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:6px;">
@@ -436,12 +482,12 @@
                         <div class="form-group" style="background: var(--surface); padding: 16px; border-radius: 16px; border: 1px solid var(--border-color); width:100%; margin-bottom:20px;">
                             <label style="font-weight: 700; margin-bottom:8px; display: block; font-size: 0.85rem;">💳 Select Payment Mode:</label>
                             <div style="display:flex; gap:15px;">
-                                <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="paymentMode" value="online" checked> Razorpay Online</label>
-                                <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="paymentMode" value="cod"> Cash on Delivery (COD)</label>
+                                <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="paymentMode" value="online" checked onchange="updatePaymentModeLabel('Razorpay Online')"> Razorpay Online</label>
+                                <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="paymentMode" value="cod" onchange="updatePaymentModeLabel('Cash on Delivery')"> Cash on Delivery (COD)</label>
                             </div>
                         </div>
 
-                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">Add to Cart & Preview</button>
+                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">Proceed to Payment</button>
                     </form>
                 </div>
             </div>
@@ -500,17 +546,19 @@
         </div>
     </div>
 
-    <!-- 🛒 FLOATING VIEW CART FOOTER BAR -->
+    <!-- 🛒 FLOATING VIEW CART FOOTER BAR (Picture 2 style) -->
     <div id="floatingCartFooterBar" class="floating-cart-footer hidden" onclick="toggleCartDrawer(true)">
-        <div class="floating-cart-left">
-            <div class="cart-icon-circle">🛒</div>
-            <div class="cart-title-info">
-                <span class="cart-items-count" id="floatingCartCountText">0 items in cart</span>
-                <span class="cart-total-price" id="floatingCartTotalPriceText">₹0.00</span>
+        <div class="floating-cart-left" style="display:flex; align-items:center; gap:12px;">
+            <div style="display:flex; align-items:center; margin-left:4px;">
+                <div style="width:32px; height:32px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--blinkit-green); font-size:0.9rem; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🛒</div>
+            </div>
+            <div class="cart-title-info" style="display:flex; flex-direction:column; text-align:left;">
+                <span class="cart-items-count" id="floatingCartCountText" style="font-size:0.75rem; font-weight:700; color:#ffffff; opacity:0.9;">3 items</span>
+                <span class="cart-total-price" id="floatingCartTotalPriceText" style="font-size:0.95rem; font-weight:900; color:#ffffff;">View cart</span>
             </div>
         </div>
-        <div class="floating-cart-right">
-            <span>View Cart</span> &rarr;
+        <div class="floating-cart-right" style="display:flex; align-items:center; gap:6px; font-size:0.9rem; font-weight:800; background:rgba(0,0,0,0.15); padding:8px 14px; border-radius:12px;">
+            <span>View cart</span> &rarr;
         </div>
     </div>
 
@@ -549,7 +597,6 @@
             let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0);
             let totalSnacksPrice = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
 
-            // Get print grand total if available
             let printTotalVal = 0;
             const summaryTotalNode = document.getElementById('summaryTotal');
             if (summaryTotalNode) {
@@ -578,33 +625,53 @@
             }
         }
 
+        function updatePaymentModeLabel(modeName) {
+            const label = document.getElementById('cartSelectedPaymentLabel');
+            if (label) label.textContent = modeName;
+        }
+
         function renderCartDrawerContents() {
             const container = document.getElementById('cartDrawerItemsList');
-            const subtotalNode = document.getElementById('cartSubtotalVal');
-            const deliveryNode = document.getElementById('cartDeliveryVal');
-            const grandTotalNode = document.getElementById('cartGrandTotalVal');
+            const grandTotalNode = document.getElementById('cartDrawerGrandTotal');
+            const itemsCountNode = document.getElementById('shipmentItemsCountText');
+            const addressSummaryNode = document.getElementById('cartDrawerAddressSummary');
+            
             if (!container) return;
 
             container.innerHTML = '';
             let subtotal = 0;
+            let totalItemsCount = 0;
 
-            // Render Snacks
+            const addressInput = document.getElementById('address');
+            if (addressInput && addressSummaryNode) {
+                addressSummaryNode.textContent = addressInput.value || "Varanasi, Uttar Pradesh";
+            }
+
+            // Render Snacks with Picture 1 style green steppers
             window.cartSnacksArray.forEach((snack, idx) => {
                 subtotal += snack.price * snack.qty;
+                totalItemsCount += snack.qty;
                 const row = document.createElement('div');
-                row.style = "display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:10px; border-radius:10px; border:1px solid var(--border-color); font-size:0.8rem; font-weight:600;";
+                row.style = "display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:12px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 2px 6px rgba(0,0,0,0.02);";
                 row.innerHTML = `
-                    <div><span>📦 ${snack.name}</span><br><span style="color:var(--text-sub); font-size:0.7rem;">₹${snack.price} x ${snack.qty}</span></div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span>₹${snack.price * snack.qty}</span>
-                        <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="padding:2px 6px; background:#e2e8f0; border:none; border-radius:4px; cursor:pointer;">+</button>
-                        <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="padding:2px 6px; background:#e2e8f0; border:none; border-radius:4px; cursor:pointer;">-</button>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="font-size:2rem; background:#f8fafc; padding:8px; border-radius:12px; border:1px solid #e2e8f0;">📦</div>
+                        <div>
+                            <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a;">${snack.name}</h4>
+                            <p style="font-size:0.7rem; color:#64748b; font-weight:600;">1 unit</p>
+                            <p style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-top:2px;">₹${snack.price * snack.qty}</p>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; background:var(--blinkit-green); border-radius:10px; padding:4px 8px; gap:10px;">
+                        <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; color:white; font-weight:bold; font-size:1rem; cursor:pointer;">-</button>
+                        <span style="color:white; font-weight:800; font-size:0.85rem;">${snack.qty}</span>
+                        <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; color:white; font-weight:bold; font-size:1rem; cursor:pointer;">+</button>
                     </div>
                 `;
                 container.appendChild(row);
             });
 
-            // Render Print Files if in masterFilesArray
+            // Render Print Files
             let printTotal = 0;
             if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
                 masterFilesArray.forEach((item) => {
@@ -612,11 +679,22 @@
                     const copies = parseInt(item.config.copies) || 1;
                     const cost = pages * (item.config.printType === 'bw' ? 3 : 10) * copies + (item.config.binding === 'spiral' ? 30 * copies : 0);
                     printTotal += cost;
+                    totalItemsCount += copies;
+
                     const row = document.createElement('div');
-                    row.style = "display:flex; justify-content:space-between; align-items:center; background:#f0fdf4; padding:10px; border-radius:10px; border:1px solid #bbf7d0; font-size:0.8rem; font-weight:600;";
+                    row.style = "display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:12px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 2px 6px rgba(0,0,0,0.02);";
                     row.innerHTML = `
-                        <div><span>📄 ${item.name}</span><br><span style="color:var(--blinkit-green); font-size:0.7rem;">${item.config.printType.toUpperCase()} | ${copies} copy</span></div>
-                        <span>₹${cost.toFixed(2)}</span>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div style="font-size:2rem; background:#f0fdf4; padding:8px; border-radius:12px; border:1px solid #bbf7d0;">📄</div>
+                            <div>
+                                <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; max-width:150px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${item.name}">${item.name}</h4>
+                                <p style="font-size:0.7rem; color:var(--blinkit-green); font-weight:700;">${item.config.printType.toUpperCase()} | ${copies} copy</p>
+                                <p style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-top:2px;">₹${cost.toFixed(2)}</p>
+                            </div>
+                        </div>
+                        <div style="font-size:0.75rem; font-weight:700; color:#64748b; background:#f1f5f9; padding:6px 10px; border-radius:8px;">
+                            Configured
+                        </div>
                     `;
                     container.appendChild(row);
                 });
@@ -626,9 +704,8 @@
             let delivery = subtotal >= 99 || subtotal === 0 ? 0 : 25;
             let grandTotal = subtotal + delivery;
 
-            subtotalNode.textContent = `₹${subtotal.toFixed(2)}`;
-            deliveryNode.textContent = delivery === 0 ? "FREE" : `₹${delivery.toFixed(2)}`;
-            grandTotalNode.textContent = `₹${grandTotal.toFixed(2)}`;
+            if (itemsCountNode) itemsCountNode.textContent = `Shipment of ${totalItemsCount} item${totalItemsCount > 1 ? 's' : ''}`;
+            if (grandTotalNode) grandTotalNode.textContent = `₹${grandTotal.toFixed(2)}`;
         }
 
         function adjustSnackQty(index, delta) {
@@ -642,7 +719,6 @@
 
         function proceedToCheckoutFromCart() {
             toggleCartDrawer(false);
-            // Scroll to print config or submit form if files uploaded
             if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
                 document.getElementById('printForm').scrollIntoView({ behavior: 'smooth' });
             } else {
