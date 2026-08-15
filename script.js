@@ -28,6 +28,44 @@ document.addEventListener('DOMContentLoaded', () => {
     // 🔥 CRITICAL LIVE INTERCEPTOR CACHE ARRAY CORES
     window.globalRawOrdersCache = [];
 
+    // ==========================================
+    // 📱 PERMANENT USER APP INSTALL HANDLER
+    // ==========================================
+    let deferredUserPrompt = null;
+    const userInstallBanner = document.getElementById('userInstallBanner');
+    const userInstallTriggerBtn = document.getElementById('userInstallTriggerBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredUserPrompt = e;
+        
+        if (userInstallBanner && localStorage.getItem('user_pwa_installed') !== 'true') {
+            userInstallBanner.classList.remove('hidden');
+            userInstallBanner.style.display = 'flex';
+        }
+    });
+
+    if (userInstallTriggerBtn) {
+        userInstallTriggerBtn.addEventListener('click', async () => {
+            if (!deferredUserPrompt) {
+                alert("💡 To install, tap your browser's menu (3 dots at top right) and select 'Install app' or 'Add to Home screen'.");
+                return;
+            }
+            deferredUserPrompt.prompt();
+            const { outcome } = await deferredUserPrompt.userChoice;
+            if (outcome === 'accepted') {
+                localStorage.setItem('user_pwa_installed', 'true');
+                if (userInstallBanner) userInstallBanner.style.display = 'none';
+            }
+            deferredUserPrompt = null;
+        });
+    }
+
+    window.addEventListener('appinstalled', () => {
+        localStorage.setItem('user_pwa_installed', 'true');
+        if (userInstallBanner) userInstallBanner.style.display = 'none';
+    });
+
     // Background engine to update global orders array cache every 4 seconds for instant real-time sync
     async function silentlySyncOrdersArrayCache() {
         try {
