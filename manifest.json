@@ -1,7 +1,8 @@
 {
+  
   "name": "Print From Home",
   "short_name": "PrintFromHome",
-  "description": "India's Last Minute Printing App",
+  "description": "India's Last Minute Printing App - Upload, configure, and order document prints with doorstep delivery.",
   "start_url": "/",
   "id": "/",
   "scope": "/",
