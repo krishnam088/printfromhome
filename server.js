@@ -18,7 +18,10 @@ app.use(express.static(__dirname));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Connect to MongoDB Atlas using MONGO_URI from Render Environment Variables
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI, {
+    serverSelectionTimeoutMS: 30000, // 30 seconds wait karega
+    socketTimeoutMS: 45000
+})
     .then(() => console.log(' Connected to MongoDB Atlas successfully!'))
     .catch((err) => console.error(' MongoDB Connection Error:', err));
 
