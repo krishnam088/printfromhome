@@ -4,6 +4,7 @@ const path = require('path');
 const Razorpay = require('razorpay');
 const cors = require('cors'); 
 const fs = require('fs');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
 const app = express();
@@ -16,39 +17,49 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname)); 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Database Files
-const USERS_FILE = path.join(__dirname, 'users.json');
-const ORDERS_FILE = path.join(__dirname, 'orders.json');
-const STORE_CONFIG_FILE = path.join(__dirname, 'store_config.json');
+// Connect to MongoDB Atlas using MONGO_URI from Render Environment Variables
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log(' Connected to MongoDB Atlas successfully!'))
+    .catch((err) => console.error(' MongoDB Connection Error:', err));
 
-if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, JSON.stringify([]));
-if (!fs.existsSync(ORDERS_FILE)) fs.writeFileSync(ORDERS_FILE, JSON.stringify([]));
-if (!fs.existsSync(STORE_CONFIG_FILE)) fs.writeFileSync(STORE_CONFIG_FILE, JSON.stringify({ isOpen: true }));
+// Mongoose Schemas & Models
+const userSchema = new mongoose.Schema({
+    name: String,
+    identity: { type: String, unique: true },
+    password: String,
+    dateCreated: String
+});
+const User = mongoose.model('User', userSchema);
 
-function readUsersFromDatabase() {
-    try { return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')); } catch (e) { return []; }
-}
-function saveUsersToDatabase(usersArray) {
-    try { fs.writeFileSync(USERS_FILE, JSON.stringify(usersArray, null, 2)); } catch (e) {}
-}
+const orderSchema = new mongoose.Schema({
+    orderId: { type: String, unique: true },
+    customerName: String,
+    phone: String,
+    files: Array,
+    fileUrl: String,
+    fileName: String,
+    configDetails: Array,
+    pages: Number,
+    copies: Number,
+    printType: String,
+    binding: String,
+    address: String,
+    amount: String,
+    totalAmount: String,
+    status: String,
+    date: String,
+    timestamp: String,
+    paymentId: String
+});
+const Order = mongoose.model('Order', orderSchema);
 
-function readOrdersFromDatabase() {
-    try { return JSON.parse(fs.readFileSync(ORDERS_FILE, 'utf8')); } catch (e) { return []; }
-}
-function saveOrdersToDatabase(ordersArray) {
-    try { fs.writeFileSync(ORDERS_FILE, JSON.stringify(ordersArray, null, 2)); } catch (e) {}
-}
+const storeConfigSchema = new mongoose.Schema({
+    isOpen: { type: Boolean, default: true },
+    updatedAt: String
+});
+const StoreConfig = mongoose.model('StoreConfig', storeConfigSchema);
 
-function getStoreConfig() {
-    try { return JSON.parse(fs.readFileSync(STORE_CONFIG_FILE, 'utf8')); } catch (e) { return { isOpen: true }; }
-}
-function saveStoreConfig(config) {
-    try { fs.writeFileSync(STORE_CONFIG_FILE, JSON.stringify(config, null, 2)); } catch (e) {}
-}
-
-let globalUsersDatabaseArray = [];
-let orders = readOrdersFromDatabase();
-
+// Multer Setup for File Uploads
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)){
     fs.mkdirSync(uploadsDir, { recursive: true });
@@ -60,6 +71,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+// Razorpay Setup
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_Sz27MnobxedYSU', 
     key_secret: process.env.RAZORPAY_KEY_SECRET || 'PcaWJEUMGjhn7Cfa04IlzYd9'
@@ -83,17 +95,29 @@ app.get('/sw-admin.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw-ad
 app.get('/sw.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw.js')); });
 
 // Store Status APIs
-app.get('/api/store-status', (req, res) => {
-    const config = getStoreConfig();
-    res.json({ success: true, isOpen: config.isOpen });
+app.get('/api/store-status', async (req, res) => {
+    try {
+        let config = await StoreConfig.findOne();
+        if (!config) {
+            config = await StoreConfig.create({ isOpen: true, updatedAt: new Date().toISOString() });
+        }
+        res.json({ success: true, isOpen: config.isOpen });
+    } catch (err) {
+        res.status(500).json({ success: false, isOpen: true });
+    }
 });
 
-const handleStoreToggle = (req, res) => {
+const handleStoreToggle = async (req, res) => {
     try {
         const { isOpen } = req.body;
-        const updatedConfig = { isOpen: Boolean(isOpen), updatedAt: new Date().toISOString() };
-        saveStoreConfig(updatedConfig);
-        res.json({ success: true, isOpen: updatedConfig.isOpen });
+        let config = await StoreConfig.findOne();
+        if (!config) {
+            config = new StoreConfig();
+        }
+        config.isOpen = Boolean(isOpen);
+        config.updatedAt = new Date().toISOString();
+        await config.save();
+        res.json({ success: true, isOpen: config.isOpen });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -102,51 +126,54 @@ const handleStoreToggle = (req, res) => {
 app.post('/api/store-status/toggle', handleStoreToggle);
 app.post('/api/admin/toggle-store', handleStoreToggle);
 
-// Auth APIs
-app.post('/api/auth/signup', (req, res) => {
+// Auth APIs (MongoDB Connected)
+app.post('/api/auth/signup', async (req, res) => {
     try {
         const { name, identity, password } = req.body;
-        const usersFromFile = readUsersFromDatabase();
-        const combinedUsers = [...usersFromFile, ...globalUsersDatabaseArray];
+        const normalizedIdentity = identity.toLowerCase().trim();
         
-        if (combinedUsers.some(u => u.identity.toLowerCase() === identity.toLowerCase().trim())) {
+        const existingUser = await User.findOne({ identity: normalizedIdentity });
+        if (existingUser) {
             return res.status(400).json({ success: false, message: "Already registered!" });
         }
 
-        const newUser = { name: name.trim(), identity: identity.toLowerCase().trim(), password, dateCreated: new Date().toLocaleString() };
-        globalUsersDatabaseArray.push(newUser);
-        usersFromFile.push(newUser);
-        saveUsersToDatabase(usersFromFile);
-
+        const newUser = new User({ 
+            name: name.trim(), 
+            identity: normalizedIdentity, 
+            password, 
+            dateCreated: new Date().toLocaleString() 
+        });
+        
+        await newUser.save();
         res.status(201).json({ success: true, userId: newUser.identity, name: newUser.name });
     } catch (err) {
+        console.error("Signup Error:", err);
         res.status(500).json({ success: false, message: "Server error" });
     }
 });
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
     try {
         const { identity, password } = req.body;
-        const usersFromFile = readUsersFromDatabase();
-        const combinedUsers = [...usersFromFile, ...globalUsersDatabaseArray];
-        const user = combinedUsers.find(u => u.identity.toLowerCase() === identity.toLowerCase().trim() && u.password === password);
+        const normalizedIdentity = identity.toLowerCase().trim();
+        const user = await User.findOne({ identity: normalizedIdentity, password });
         
         if (!user) return res.status(401).json({ success: false, message: "Invalid credentials" });
         res.json({ success: true, name: user.name, identity: user.identity });
     } catch (err) {
+        console.error("Login Error:", err);
         res.status(500).json({ success: false, message: "Server error" });
     }
 });
 
-// Orders & Payments (Secured & Fixed)
+// Orders & Payments (MongoDB Connected)
 app.post('/api/create-order', upload.array('document', 20), async (req, res) => {
     try {
-        const storeConf = getStoreConfig();
-        if (!storeConf.isOpen) return res.status(403).json({ success: false, message: "Store is closed" });
+        let config = await StoreConfig.findOne();
+        const isOpen = config ? config.isOpen : true;
+        if (!isOpen) return res.status(403).json({ success: false, message: "Store is closed" });
 
         const { totalAmount, configDetails, address, customerName, phone } = req.body;
-        
-        // Safe string conversion to avoid trim() type error
         const finalAmount = totalAmount ? totalAmount.toString().trim() : "42";
         
         let razorpayOrder;
@@ -165,7 +192,7 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
         let parsedConfig = [];
         try { parsedConfig = configDetails ? JSON.parse(configDetails) : []; } catch(e){}
 
-        const newOrder = {
+        const newOrder = new Order({
             orderId: razorpayOrder.id,
             customerName: customerName || 'Customer',
             phone: phone || 'N/A',
@@ -183,11 +210,9 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
             status: 'Pending Payment',
             date: new Date().toLocaleString(),
             timestamp: new Date().toISOString()
-        };
+        });
 
-        orders = readOrdersFromDatabase();
-        orders.push(newOrder);
-        saveOrdersToDatabase(orders);
+        await newOrder.save();
 
         res.status(201).json({ success: true, order_id: razorpayOrder.id, amount: razorpayOrder.amount, key_id: razorpay.key_id });
     } catch (error) {
@@ -199,12 +224,11 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
 app.post('/api/verify-payment', async (req, res) => {
     try {
         const { orderId, paymentId } = req.body;
-        orders = readOrdersFromDatabase();
-        const order = orders.find(o => o.orderId === orderId);
+        const order = await Order.findOne({ orderId });
         if (order) {
             order.status = 'Paid / Ready for Print';
             order.paymentId = paymentId; 
-            saveOrdersToDatabase(orders);
+            await order.save();
             return res.json({ success: true });
         }
         res.status(404).json({ success: false });
@@ -213,22 +237,29 @@ app.post('/api/verify-payment', async (req, res) => {
     }
 });
 
-app.get('/api/admin/orders', (req, res) => { 
-    orders = readOrdersFromDatabase();
-    res.json(orders); 
+app.get('/api/admin/orders', async (req, res) => { 
+    try {
+        const orders = await Order.find().sort({ timestamp: -1 });
+        res.json(orders); 
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
-const handleStatusUpdate = (req, res) => {
-    const orderId = req.params.orderId || req.body.orderId;
-    const status = req.body.status;
-    orders = readOrdersFromDatabase();
-    const order = orders.find(o => o.orderId === orderId);
-    if (order) {
-        order.status = status; 
-        saveOrdersToDatabase(orders);
-        return res.json({ success: true });
+const handleStatusUpdate = async (req, res) => {
+    try {
+        const orderId = req.params.orderId || req.body.orderId;
+        const status = req.body.status;
+        const order = await Order.findOne({ orderId });
+        if (order) {
+            order.status = status; 
+            await order.save();
+            return res.json({ success: true });
+        }
+        res.status(404).json({ success: false });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
-    res.status(404).json({ success: false });
 };
 
 app.post('/api/admin/orders/update-status', handleStatusUpdate);
