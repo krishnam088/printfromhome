@@ -1,10 +1,9 @@
 {
-  
   "name": "Print From Home",
   "short_name": "PrintFromHome",
   "description": "India's Last Minute Printing App - Upload, configure, and order document prints with doorstep delivery.",
   "start_url": "/",
-  "id": "/",
+  "id": "/print-from-home-app",
   "scope": "/",
   "display": "standalone",
   "display_override": [
@@ -19,7 +18,11 @@
   "orientation": "portrait",
   "lang": "en",
   "dir": "ltr",
-  "iarc_rating_id": "e58286c1-65f5-48b4-b830-a8cd1e8605c4",
+  "categories": [
+    "shopping",
+    "utilities",
+    "productivity"
+  ],
   "prefer_related_applications": false,
   "related_applications": [
     {
@@ -36,73 +39,6 @@
   "launch_handler": {
     "client_mode": "navigate-existing"
   },
-  "tab_strip": {
-    "home_tab": {
-      "scope": "/"
-    },
-    "visibility": "auto"
-  },
-  "protocol_handlers": [
-    {
-      "protocol": "web+print",
-      "url": "/?print=%s"
-    }
-  ],
-  "share_target": {
-    "action": "/",
-    "method": "POST",
-    "enctype": "multipart/form-data",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url",
-      "files": [
-        {
-          "name": "document",
-          "accept": [".pdf", ".png", ".jpg", ".jpeg", ".doc", ".docx"]
-        }
-      ]
-    }
-  },
-  "note_taking": {
-    "new_note_url": "/?action=new-note"
-  },
-  "permissions": [
-    "periodic-background-sync",
-    "background-sync",
-    "notifications"
-  ],
-  "widgets": [
-    {
-      "name": "Print From Home Status",
-      "description": "Track your last-minute print orders instantly.",
-      "tag": "print-status-widget",
-      "ms_ac_template": "/widget.json",
-      "data": "/widget-data.json",
-      "type": "application/json",
-      "screenshots": [
-        {
-          "src": "/app_icon_512.png",
-          "sizes": "512x512",
-          "label": "Widget Preview"
-        }
-      ],
-      "icons": [
-        {
-          "src": "/app_icon_192.png",
-          "sizes": "192x192"
-        }
-      ]
-    }
-  ],
-  "edge_side_panel": {
-    "preferred_width": 400
-  },
-  "categories": [
-    "shopping",
-    "utilities",
-    "productivity"
-  ],
   "shortcuts": [
     {
       "name": "Print Store",
@@ -112,7 +48,8 @@
       "icons": [
         {
           "src": "/app_icon_192.png",
-          "sizes": "192x192"
+          "sizes": "192x192",
+          "type": "image/png"
         }
       ]
     }
@@ -129,6 +66,7 @@
       }
     }
   ],
+  "iarc_rating_id": "e58286c1-65f5-48b4-b830-a8cd1e8605c4",
   "icons": [
     {
       "src": "/app_icon_512.png",
