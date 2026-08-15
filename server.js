@@ -81,12 +81,17 @@ const razorpay = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET || 'PcaWJEUMGjhn7Cfa04IlzYd9'
 });
 
-// Nodemailer Transporter Setup with Safety Timeouts
+// Nodemailer Secure SMTP Transporter Setup (Gmail Official Port 465 SSL)
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // true for port 465, false for other ports
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false
     },
     connectionTimeout: 10000,
     greetingTimeout: 10000,
@@ -145,7 +150,7 @@ const handleStoreToggle = async (req, res) => {
 app.post('/api/store-status/toggle', handleStoreToggle);
 app.post('/api/admin/toggle-store', handleStoreToggle);
 
-// --- 🛡️ GMAIL OTP SEND API ROUTE ---
+// --- 🛡️ REAL GMAIL OTP SEND API ROUTE ---
 app.post('/api/auth/send-otp', async (req, res) => {
     try {
         const { email } = req.body;
@@ -158,7 +163,7 @@ app.post('/api/auth/send-otp', async (req, res) => {
         otpStorage[normalizedEmail] = { otp, expires: Date.now() + 5 * 60 * 1000 }; // 5 mins validity
 
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: '"Print From Home Support" <printfromhomesupport@gmail.com>',
             to: normalizedEmail,
             subject: 'Verification OTP - Print From Home',
             text: `Your OTP for Print From Home signup is: ${otp}. It is valid for 5 minutes.`
@@ -167,10 +172,10 @@ app.post('/api/auth/send-otp', async (req, res) => {
         await transporter.sendMail(mailOptions);
         res.json({ success: true, message: "OTP sent successfully to your Gmail!" });
     } catch (err) {
-        console.error("OTP Send Error:", err.message);
-        res.status(500).json({ success: false, message: "Failed to send OTP: " + err.message });
+        console.error("Real Gmail OTP Send Error:", err);
+        res.status(500).json({ success: false, message: "Failed to send email: " + err.message });
     }
-});
+}); 
 
 // Auth APIs (MongoDB Connected with OTP Verification)
 app.post('/api/auth/signup', async (req, res) => {
