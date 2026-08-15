@@ -19,7 +19,7 @@
         manifestTag.rel = 'manifest';
         
         const isFestiveSeason = (nowCheck.getMonth() === 7 && nowCheck.getDate() >= 14 && nowCheck.getDate() <= 15) || 
-                                 (nowCheck.getMonth() === 10 && nowCheck.getDate() >= 7 && nowCheck.getDate() <= 8);
+                               (nowCheck.getMonth() === 10 && nowCheck.getDate() >= 7 && nowCheck.getDate() <= 8);
         
         manifestTag.href = isFestiveSeason ? '/manifest-festive.json' : '/manifest.json';
         document.head.appendChild(manifestTag);
@@ -43,7 +43,7 @@
             --blinkit-light-green: #e6f4ea;
             --border-color: #e2e8f0;
         }
-        body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; transition: background-color 0.5s ease; }
+        body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; transition: background-color 0.5s ease; padding-bottom: 70px; }
 
         /* 🎨 FESTIVE THEME FULL BACKGROUND & CARD OVERRIDES */
         body.theme-festive-republic { background-color: #fffaf5 !important; }
@@ -140,6 +140,31 @@
         .verbatim-upload-btn { background-color: #2e7d32; color: #ffffff; border: none; padding: 12px 28px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; }
         .promo-graphic-mockup { position: absolute; right: 10px; bottom: 10px; width: 45%; max-width: 130px; z-index: 1; }
 
+        /* 🛒 BLINKIT STYLE CATEGORIES & SNACKS STYLING */
+        .category-section-title { font-size: 1.1rem; font-weight: 800; color: #1e293b; margin: 25px 0 12px 0; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+        .blinkit-category-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .blinkit-cat-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: transform 0.2s; cursor: pointer; }
+        .blinkit-cat-card:hover { transform: translateY(-2px); border-color: var(--blinkit-green); }
+        .blinkit-cat-img { font-size: 2rem; margin-bottom: 6px; }
+        .blinkit-cat-name { font-size: 0.75rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+        .blinkit-cat-price { font-size: 0.7rem; font-weight: 600; color: var(--text-sub); margin-bottom: 8px; }
+        .btn-quick-add { background: #f0fdf4; color: var(--blinkit-green); border: 1px solid #bbf7d0; padding: 4px 10px; font-size: 0.7rem; font-weight: 700; border-radius: 8px; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .btn-quick-add:hover { background: var(--blinkit-green); color: white; }
+
+        /* 📦 FLOATING VIEW CART BAR */
+        .floating-cart-footer { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 480px; background: var(--blinkit-green); color: white; border-radius: 16px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px rgba(12,131,70,0.35); z-index: 10000; cursor: pointer; animation: slideUpCart 0.3s ease; }
+        @keyframes slideUpCart { from { transform: translate(-50%, 50px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        .floating-cart-left { display: flex; align-items: center; gap: 12px; }
+        .cart-icon-circle { background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .cart-title-info { display: flex; flex-direction: column; text-align: left; }
+        .cart-items-count { font-size: 0.75rem; font-weight: 600; opacity: 0.9; }
+        .cart-total-price { font-size: 0.95rem; font-weight: 800; }
+        .floating-cart-right { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 700; }
+
+        /* 🛒 CART DRAWER MODAL */
+        .cart-drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 16000; display: none; justify-content: flex-end; }
+        .cart-drawer-card { background: var(--surface); width: 100%; max-width: 400px; height: 100vh; padding: 20px; display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.15); overflow-y: auto; }
+
         .tracking-timeline-box { display: flex; flex-direction: column; gap: 20px; margin: 20px 0; padding-left: 10px; position: relative; }
         .tracking-timeline-box::before { content: ''; position: absolute; left: 19px; top: 10px; bottom: 10px; width: 3px; background: #cbd5e1; z-index: 1; }
         .timeline-step { display: flex; align-items: center; gap: 15px; position: relative; z-index: 2; opacity: 0.4; transition: all 0.3s ease; }
@@ -223,6 +248,25 @@
         </div>
     </nav>
 
+    <!-- 🛒 CART DRAWER -->
+    <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)">
+        <div class="cart-drawer-card" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--border-color); padding-bottom:12px; margin-bottom:15px;">
+                <h3 style="font-size:1.2rem; font-weight:800;">🛒 Your Cart & Summary</h3>
+                <span style="cursor:pointer; font-size:1.5rem; font-weight:bold;" onclick="toggleCartDrawer(false)">&times;</span>
+            </div>
+            <div id="cartDrawerItemsList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
+                <!-- Cart Items will be injected here dynamically -->
+            </div>
+            <div style="border-top:1px solid var(--border-color); padding-top:12px;">
+                <div class="summary-row" style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.85rem;"><span>Subtotal</span><span id="cartSubtotalVal">₹0.00</span></div>
+                <div class="summary-row" style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.85rem;"><span>Delivery Fee</span><span id="cartDeliveryVal">₹0.00</span></div>
+                <div class="summary-row total-row" style="display:flex; justify-content:space-between; font-weight:800; font-size:1.1rem; margin-bottom:15px;"><span>Grand Total</span><span id="cartGrandTotalVal">₹0.00</span></div>
+                <button type="button" onclick="proceedToCheckoutFromCart()" class="btn-drawer-action" style="padding:14px; font-size:1rem; border-radius:12px;">Proceed to Checkout &rarr;</button>
+            </div>
+        </div>
+    </div>
+
     <div id="walletDepositModal" class="wallet-modal-overlay" onclick="toggleWalletPopupGrid(false, event)">
         <div class="wallet-modal-card">
             <h3 style="font-size:1.3rem; font-weight:800; margin-bottom:6px;">💰 Recharge Print Wallet</h3>
@@ -299,10 +343,11 @@
                     <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%;">
                         🚨 <b>Store is Closed!</b> We are not taking print orders currently.
                     </div>
-                    <div style="text-align: center; padding: 25px 10px; width:100%;">
-                        <h2 style="font-size: 2.3rem; font-weight:800; color:#1a202c; letter-spacing:-1px;">Print Store</h2>
-                        <p style="font-size: 0.95rem; color:var(--text-sub); font-weight:600; margin-top:2px;">printfromhome ensures secure prints at every stage</p>
+                    <div style="text-align: center; padding: 20px 10px 10px 10px; width:100%;">
+                        <h2 style="font-size: 2.1rem; font-weight:800; color:#1a202c; letter-spacing:-1px;">Print Store</h2>
+                        <p style="font-size: 0.9rem; color:var(--text-sub); font-weight:600; margin-top:2px;">printfromhome ensures secure prints at every stage</p>
                     </div>
+
                     <div class="verbatim-docs-promo-card">
                         <div class="promo-details-block">
                             <h3 class="promo-main-title">Documents</h3>
@@ -318,9 +363,65 @@
                             <img src="/printer-icon.jpg" alt="HP Smart Tank Printer" style="width: 100%; filter: grayscale(100%);">
                         </div>
                     </div>
+
+                    <!-- 🛍️ BLINKIT STYLE SNACKS & ESSENTIALS CATEGORIES ON HOME -->
+                    <div class="category-section-title">
+                        <span>⚡ Snacks & Munchies</span>
+                    </div>
+                    <div class="blinkit-category-grid" id="homeSnacksGrid">
+                        <!-- Dynamic Snack Cards -->
+                        <div class="blinkit-cat-card">
+                            <div class="blinkit-cat-img">🥔</div>
+                            <div class="blinkit-cat-name">Lays Classic Chips</div>
+                            <div class="blinkit-cat-price">₹20</div>
+                            <button type="button" class="btn-quick-add" onclick="addSnackToCart('Lays Classic Chips', 20)">+ Add</button>
+                        </div>
+                        <div class="blinkit-cat-card">
+                            <div class="blinkit-cat-img">🍪</div>
+                            <div class="blinkit-cat-name">Hide & Seek Biscuit</div>
+                            <div class="blinkit-cat-price">₹30</div>
+                            <button type="button" class="btn-quick-add" onclick="addSnackToCart('Hide & Seek Biscuit', 30)">+ Add</button>
+                        </div>
+                        <div class="blinkit-cat-card">
+                            <div class="blinkit-cat-img">🥤</div>
+                            <div class="blinkit-cat-name">Coca Cola 500ml</div>
+                            <div class="blinkit-cat-price">₹40</div>
+                            <button type="button" class="btn-quick-add" onclick="addSnackToCart('Coca Cola 500ml', 40)">+ Add</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="configurationScreenState" class="hidden" style="width:100%;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3 style="font-size:1.1rem; font-weight:800;">Configure Print & Add Snacks</h3>
+                        <button type="button" onclick="forceReturnToUploadView()" style="background:none; border:none; color:var(--blinkit-green); font-weight:700; cursor:pointer; font-size:0.85rem;">&larr; Back to Upload</button>
+                    </div>
+
+                    <!-- 🍟 SLIDING / GRID SNACKS BAR ON PRINT CONFIGURATION PAGE -->
+                    <div style="background:var(--surface); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:15px;">
+                        <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:10px; color:#1e293b;">⚡ Hungry while waiting? Add Snacks</h4>
+                        <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:6px;">
+                            <div style="min-width:130px; background:#f8fafc; border:1px solid var(--border-color); border-radius:12px; padding:10px; text-align:center;">
+                                <div style="font-size:1.5rem;">🥔</div>
+                                <div style="font-size:0.75rem; font-weight:700; margin:2px 0;">Lays Chips</div>
+                                <div style="font-size:0.7rem; color:var(--text-sub); margin-bottom:6px;">₹20</div>
+                                <button type="button" class="btn-quick-add" onclick="addSnackToCart('Lays Classic Chips', 20)">+ Add</button>
+                            </div>
+                            <div style="min-width:130px; background:#f8fafc; border:1px solid var(--border-color); border-radius:12px; padding:10px; text-align:center;">
+                                <div style="font-size:1.5rem;">🍪</div>
+                                <div style="font-size:0.75rem; font-weight:700; margin:2px 0;">Hide & Seek</div>
+                                <div style="font-size:0.7rem; color:var(--text-sub); margin-bottom:6px;">₹30</div>
+                                <button type="button" class="btn-quick-add" onclick="addSnackToCart('Hide & Seek Biscuit', 30)">+ Add</button>
+                            </div>
+                            <div style="min-width:130px; background:#f8fafc; border:1px solid var(--border-color); border-radius:12px; padding:10px; text-align:center;">
+                                <div style="font-size:1.5rem;">🥤</div>
+                                <div style="font-size:0.75rem; font-weight:700; margin:2px 0;">Coca Cola</div>
+                                <div style="font-size:0.7rem; color:var(--text-sub); margin-bottom:6px;">₹40</div>
+                                <button type="button" class="btn-quick-add" onclick="addSnackToCart('Coca Cola 500ml', 40)">+ Add</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <form id="printForm" enctype="multipart/form-data" style="width:100%;">
                         <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
                         
@@ -331,7 +432,16 @@
                             <textarea id="address" name="address" rows="3" placeholder="Map se pin drag karein ya apna full address yahan likhein..." required></textarea>
                         </div>
                         
-                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">Proceed to Payment</button>
+                        <!-- PAYMENT MODE CHOICE -->
+                        <div class="form-group" style="background: var(--surface); padding: 16px; border-radius: 16px; border: 1px solid var(--border-color); width:100%; margin-bottom:20px;">
+                            <label style="font-weight: 700; margin-bottom:8px; display: block; font-size: 0.85rem;">💳 Select Payment Mode:</label>
+                            <div style="display:flex; gap:15px;">
+                                <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="paymentMode" value="online" checked> Razorpay Online</label>
+                                <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="paymentMode" value="cod"> Cash on Delivery (COD)</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">Add to Cart & Preview</button>
                     </form>
                 </div>
             </div>
@@ -390,6 +500,20 @@
         </div>
     </div>
 
+    <!-- 🛒 FLOATING VIEW CART FOOTER BAR -->
+    <div id="floatingCartFooterBar" class="floating-cart-footer hidden" onclick="toggleCartDrawer(true)">
+        <div class="floating-cart-left">
+            <div class="cart-icon-circle">🛒</div>
+            <div class="cart-title-info">
+                <span class="cart-items-count" id="floatingCartCountText">0 items in cart</span>
+                <span class="cart-total-price" id="floatingCartTotalPriceText">₹0.00</span>
+            </div>
+        </div>
+        <div class="floating-cart-right">
+            <span>View Cart</span> &rarr;
+        </div>
+    </div>
+
     <!-- STORE CLOSED POPUP MODAL -->
     <div id="storeClosedPopupModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 99999; display: none; justify-content: center; align-items: center; padding: 20px;">
         <div style="background: #ffffff; border-radius: 24px; padding: 30px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 3px solid #ef4444; animation: popupBounceAnimation 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
@@ -401,6 +525,131 @@
     </div>
 
     <script>
+        // ==========================================
+        // 🛒 GLOBAL CART STATE MANAGEMENT
+        // ==========================================
+        window.cartSnacksArray = [];
+
+        function addSnackToCart(name, price) {
+            const existing = window.cartSnacksArray.find(item => item.name === name);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                window.cartSnacksArray.push({ name, price, qty: 1 });
+            }
+            updateFloatingCartBar();
+            alert(`✅ Added ${name} to cart!`);
+        }
+
+        function updateFloatingCartBar() {
+            const bar = document.getElementById('floatingCartFooterBar');
+            const countText = document.getElementById('floatingCartCountText');
+            const priceText = document.getElementById('floatingCartTotalPriceText');
+            
+            let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0);
+            let totalSnacksPrice = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
+
+            // Get print grand total if available
+            let printTotalVal = 0;
+            const summaryTotalNode = document.getElementById('summaryTotal');
+            if (summaryTotalNode) {
+                printTotalVal = parseFloat(summaryTotalNode.textContent.replace('₹', '')) || 0;
+            }
+
+            let grandTotalCombined = totalSnacksPrice + printTotalVal;
+            let totalItemsCombined = totalSnacksCount + (typeof masterFilesArray !== 'undefined' ? masterFilesArray.length : 0);
+
+            if (totalItemsCombined > 0) {
+                bar.classList.remove('hidden');
+                countText.textContent = `${totalItemsCombined} item${totalItemsCombined > 1 ? 's' : ''}`;
+                priceText.textContent = `₹${grandTotalCombined.toFixed(2)}`;
+            } else {
+                bar.classList.add('hidden');
+            }
+        }
+
+        function toggleCartDrawer(open) {
+            const overlay = document.getElementById('cartDrawerOverlay');
+            if (open) {
+                overlay.style.display = 'flex';
+                renderCartDrawerContents();
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+
+        function renderCartDrawerContents() {
+            const container = document.getElementById('cartDrawerItemsList');
+            const subtotalNode = document.getElementById('cartSubtotalVal');
+            const deliveryNode = document.getElementById('cartDeliveryVal');
+            const grandTotalNode = document.getElementById('cartGrandTotalVal');
+            if (!container) return;
+
+            container.innerHTML = '';
+            let subtotal = 0;
+
+            // Render Snacks
+            window.cartSnacksArray.forEach((snack, idx) => {
+                subtotal += snack.price * snack.qty;
+                const row = document.createElement('div');
+                row.style = "display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:10px; border-radius:10px; border:1px solid var(--border-color); font-size:0.8rem; font-weight:600;";
+                row.innerHTML = `
+                    <div><span>📦 ${snack.name}</span><br><span style="color:var(--text-sub); font-size:0.7rem;">₹${snack.price} x ${snack.qty}</span></div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span>₹${snack.price * snack.qty}</span>
+                        <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="padding:2px 6px; background:#e2e8f0; border:none; border-radius:4px; cursor:pointer;">+</button>
+                        <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="padding:2px 6px; background:#e2e8f0; border:none; border-radius:4px; cursor:pointer;">-</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            // Render Print Files if in masterFilesArray
+            let printTotal = 0;
+            if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
+                masterFilesArray.forEach((item) => {
+                    const pages = parseInt(item.config.pages) || 1;
+                    const copies = parseInt(item.config.copies) || 1;
+                    const cost = pages * (item.config.printType === 'bw' ? 3 : 10) * copies + (item.config.binding === 'spiral' ? 30 * copies : 0);
+                    printTotal += cost;
+                    const row = document.createElement('div');
+                    row.style = "display:flex; justify-content:space-between; align-items:center; background:#f0fdf4; padding:10px; border-radius:10px; border:1px solid #bbf7d0; font-size:0.8rem; font-weight:600;";
+                    row.innerHTML = `
+                        <div><span>📄 ${item.name}</span><br><span style="color:var(--blinkit-green); font-size:0.7rem;">${item.config.printType.toUpperCase()} | ${copies} copy</span></div>
+                        <span>₹${cost.toFixed(2)}</span>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+
+            subtotal += printTotal;
+            let delivery = subtotal >= 99 || subtotal === 0 ? 0 : 25;
+            let grandTotal = subtotal + delivery;
+
+            subtotalNode.textContent = `₹${subtotal.toFixed(2)}`;
+            deliveryNode.textContent = delivery === 0 ? "FREE" : `₹${delivery.toFixed(2)}`;
+            grandTotalNode.textContent = `₹${grandTotal.toFixed(2)}`;
+        }
+
+        function adjustSnackQty(index, delta) {
+            window.cartSnacksArray[index].qty += delta;
+            if (window.cartSnacksArray[index].qty <= 0) {
+                window.cartSnacksArray.splice(index, 1);
+            }
+            renderCartDrawerContents();
+            updateFloatingCartBar();
+        }
+
+        function proceedToCheckoutFromCart() {
+            toggleCartDrawer(false);
+            // Scroll to print config or submit form if files uploaded
+            if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
+                document.getElementById('printForm').scrollIntoView({ behavior: 'smooth' });
+            } else {
+                alert("💡 Pehle Print Store se koi document upload karein!");
+            }
+        }
+
         // ==========================================
         // 🎨 ADVANCED FESTIVE THEME & FULL BACKGROUND ENGINE (2026)
         // ==========================================
@@ -430,49 +679,29 @@
                 }
             }
 
-            // 1. Republic Day (25 Jan - 26 Jan)
             if (isEventActive(1, 25, 1, 26)) {
                 applyFestiveTheme("linear-gradient(to right, #FF9933, #FFFFFF, #138808)", "linear-gradient(to bottom, #ffe0cc, #ffffff)", "theme-festive-republic", "Republic Day", "Happy Republic Day! Get 20% OFF. Code: REPUBLIC20", "🇮🇳");
-            }
-            // 2. Holi (03 Mar - 04 Mar)
-            else if (isEventActive(3, 3, 3, 4)) {
+            } else if (isEventActive(3, 3, 3, 4)) {
                 applyFestiveTheme("#fef3c7", "linear-gradient(to bottom, #fde047, #fef9c3)", "theme-festive-holi", "Holi Offer", "Wishing you a colorful Holi! Enjoy flat discounts & express deliveries.", "🎨");
-            }
-            // 3. Eid-ul-Fitr (20 Mar - 21 Mar)
-            else if (isEventActive(3, 20, 3, 21)) {
+            } else if (isEventActive(3, 20, 3, 21)) {
                 applyFestiveTheme("#e6f4ea", "linear-gradient(to bottom, #d1fae5, #ecfdf5)", "theme-festive-holi", "Eid Mubarak", "Eid Mubarak! Avail special festive savings & priority home print dispatch.", "🌙");
-            }
-            // 4. Independence Day (14 Aug - 15 Aug) [ACTIVE NOW!]
-            else if (isEventActive(8, 14, 8, 15)) {
+            } else if (isEventActive(8, 14, 8, 15)) {
                 applyFestiveTheme("linear-gradient(to right, #FF9933, #FFFFFF, #138808)", "linear-gradient(to bottom, #ffe0cc, #ffffff)", "theme-festive-republic", "Independence Day", "Happy Independence Day! 25% OFF & FREE Delivery! Code: AZADI25", "🇮🇳");
-                
                 const script = document.createElement('script');
                 script.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js";
                 script.onload = () => { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); };
                 document.body.appendChild(script);
-            }
-            // 5. Raksha Bandhan (27 Aug - 28 Aug)
-            else if (isEventActive(8, 27, 8, 28)) {
+            } else if (isEventActive(8, 27, 8, 28)) {
                 applyFestiveTheme("#fce7f3", "linear-gradient(to bottom, #fbcfe8, #fdf2f8)", "theme-festive-holi", "Rakhi Special", "Happy Raksha Bandhan! Send photo prints with free shipping.", "🎁");
-            }
-            // 6. Ganesh Chaturthi (13 Sep - 14 Sep)
-            else if (isEventActive(9, 13, 9, 14)) {
+            } else if (isEventActive(9, 13, 9, 14)) {
                 applyFestiveTheme("#ffedd5", "linear-gradient(to bottom, #fed7aa, #fff7ed)", "theme-festive-holi", "Ganpati Special", "Ganpati Bappa Morya! Special discounts on poster prints & booklets.", "📿");
-            }
-            // 7. Dussehra & Gandhi Jayanti (01 Oct - 20 Oct)
-            else if (isEventActive(10, 1, 10, 20)) {
+            } else if (isEventActive(10, 1, 10, 20)) {
                 applyFestiveTheme("#fef3c7", "linear-gradient(to bottom, #fde68a, #fffbeb)", "theme-festive-holi", "Festive Dhamaka", "Dussehra & Gandhi Jayanti Special: Extra savings on spiral bindings!", "🏹");
-            }
-            // 8. Diwali (07 Nov - 08 Nov)
-            else if (isEventActive(11, 7, 11, 8)) {
+            } else if (isEventActive(11, 7, 11, 8)) {
                 applyFestiveTheme("#fef08a", "linear-gradient(to bottom, #fde047, #fef9c3)", "theme-festive-diwali", "Diwali Dhamaka", "Shubh Deepavali! Flat discounts & zero delivery fees on all prints!", "🪔");
-            }
-            // 9. Christmas & New Year (24 Dec - 1 Jan)
-            else if (isEventActive(12, 24, 1, 1)) {
+            } else if (isEventActive(12, 24, 1, 1)) {
                 applyFestiveTheme("#fecaca", "linear-gradient(to bottom, #f87171, #fee2e2)", "theme-festive-christmas", "New Year Bash", "Merry Christmas & Happy New Year! Get 30% OFF on creative prints.", "🎄");
-            }
-            // 10. Default Normal Days
-            else {
+            } else {
                 banner.style.background = "#fffbeb";
                 banner.style.border = "1px solid #fed7aa";
                 banner.style.color = "#b45309";

@@ -169,16 +169,50 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-// Orders & Payments (MongoDB Connected)
+// Orders & Payments (MongoDB Connected with COD & Cart Support)
 app.post('/api/create-order', upload.array('document', 20), async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
         const isOpen = config ? config.isOpen : true;
         if (!isOpen) return res.status(403).json({ success: false, message: "Store is closed" });
 
-        const { totalAmount, configDetails, address, customerName, phone } = req.body;
+        const { totalAmount, configDetails, address, customerName, phone, paymentMode } = req.body;
         const finalAmount = totalAmount ? totalAmount.toString().trim() : "42";
-        
+        const selectedPaymentMode = paymentMode || "online";
+
+        // Cash on Delivery (COD) Flow
+        if (selectedPaymentMode === 'cod') {
+            const filesMappedList = req.files ? req.files.map(f => ({ name: f.originalname, filename: f.filename, url: `/uploads/${f.filename}` })) : [];
+            let parsedConfig = [];
+            try { parsedConfig = configDetails ? JSON.parse(configDetails) : []; } catch(e){}
+
+            const codOrderId = 'COD-' + Date.now();
+            const newOrder = new Order({
+                orderId: codOrderId,
+                customerName: customerName || 'Customer',
+                phone: phone || 'N/A',
+                files: filesMappedList,
+                fileUrl: filesMappedList.length > 0 ? filesMappedList[0].url : '',
+                fileName: filesMappedList.length > 0 ? filesMappedList[0].name : 'Document.pdf',
+                configDetails: parsedConfig,
+                pages: parsedConfig.length > 0 ? (parsedConfig[0].pages || 1) : 1,
+                copies: parsedConfig.length > 0 ? (parsedConfig[0].copies || 1) : 1,
+                printType: parsedConfig.length > 0 ? (parsedConfig[0].isColor ? 'Color' : 'Black & White') : 'Black & White',
+                binding: parsedConfig.length > 0 ? (parsedConfig[0].binding || 'None') : 'None',
+                address: address || 'N/A',
+                amount: finalAmount,
+                totalAmount: finalAmount,
+                status: 'COD / Ready for Print',
+                date: new Date().toLocaleString(),
+                timestamp: new Date().toISOString(),
+                paymentId: 'CASH ON DELIVERY'
+            });
+
+            await newOrder.save();
+            return res.status(201).json({ success: true, isCod: true, order_id: codOrderId });
+        }
+
+        // Online Razorpay Payment Flow
         let razorpayOrder;
         try {
             razorpayOrder = await razorpay.orders.create({ 
