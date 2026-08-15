@@ -35,6 +35,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const userInstallBanner = document.getElementById('userInstallBanner');
     const userInstallTriggerBtn = document.getElementById('userInstallTriggerBtn');
 
+    // Check if app is genuinely running in standalone mode (uninstalled check reset)
+    const isRunningStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (!isRunningStandalone) {
+        // Agar user ne app uninstall kar diya hai aur browser mein normal web tab par khol raha hai, toh flag reset karein
+        const checkBrowserInstallState = localStorage.getItem('user_pwa_installed');
+        if (checkBrowserInstallState === 'true' && !window.matchMedia('(display-mode: standalone)').matches) {
+            localStorage.removeItem('user_pwa_installed');
+        }
+    }
+
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredUserPrompt = e;
