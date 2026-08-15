@@ -43,7 +43,6 @@
             --blinkit-light-green: #e6f4ea;
             --border-color: #e2e8f0;
         }
-        /* Layout fix: Added padding-bottom to prevent content overlapping with the fixed cart footer */
         body { background-color: var(--bg-primary); color: var(--text-main); position: relative; overflow-x: hidden; transition: background-color 0.5s ease; padding-bottom: 120px; }
 
         /* 🎨 FESTIVE THEME FULL BACKGROUND & CARD OVERRIDES */
@@ -141,7 +140,7 @@
         .verbatim-upload-btn { background-color: #2e7d32; color: #ffffff; border: none; padding: 12px 28px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; }
         .promo-graphic-mockup { position: absolute; right: 10px; bottom: 10px; width: 45%; max-width: 130px; z-index: 1; }
 
-        /* 🍟 HORIZONTAL SLIDING SNACKS CONTAINER (Updated for smooth left-to-right scroll) */
+        /* 🍟 HORIZONTAL SLIDING SNACKS CONTAINER */
         .category-section-title { font-size: 1.1rem; font-weight: 800; color: #1e293b; margin: 25px 0 12px 0; text-align: left; display: flex; justify-content: space-between; align-items: center; }
         .snacks-horizontal-slider {
             display: flex;
@@ -170,7 +169,7 @@
         .btn-quick-add { background: #f0fdf4; color: var(--blinkit-green); border: 1px solid #bbf7d0; padding: 6px 10px; font-size: 0.75rem; font-weight: 700; border-radius: 8px; cursor: pointer; width: 100%; transition: background 0.2s; }
         .btn-quick-add:hover { background: var(--blinkit-green); color: white; }
 
-        /* 📦 FLOATING VIEW CART BAR (Non-overlapping & stable) */
+        /* 📦 STABLE NON-OVERLAPPING FLOATING CART BAR */
         .floating-cart-footer { 
             position: fixed; 
             bottom: 20px; 
@@ -279,7 +278,6 @@
     <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:16000; display:none; justify-content:flex-end;">
         <div class="cart-drawer-card" onclick="event.stopPropagation()" style="background:#f8fafc; width:100%; max-width:440px; height:100vh; padding:20px; display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.15); overflow-y:auto;">
             
-            <!-- Top Header -->
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:15px; background:#ffffff; padding:10px 15px; border-radius:14px;">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <span style="cursor:pointer; font-size:1.2rem; font-weight:bold;" onclick="toggleCartDrawer(false)">&larr;</span>
@@ -288,7 +286,6 @@
                 <span style="font-size:0.8rem; font-weight:700; color:var(--blinkit-green); background:#f0fdf4; padding:4px 10px; border-radius:8px; cursor:pointer;" onclick="toggleCartDrawer(false)">🔍 Search</span>
             </div>
 
-            <!-- Delivery Time Banner -->
             <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
                 <div style="font-size:1.8rem;">⏰</div>
                 <div>
@@ -297,10 +294,9 @@
                 </div>
             </div>
 
-            <!-- Items List Container (Unified Snacks + Print Files with steppers) -->
+            <!-- Unified Items List Container -->
             <div id="cartDrawerItemsList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-bottom:20px;"></div>
 
-            <!-- Delivery Address Footer Box -->
             <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                     <span style="font-size:0.75rem; font-weight:800; color:#64748b; text-transform:uppercase;">Delivering to Home</span>
@@ -309,7 +305,6 @@
                 <p style="font-size:0.8rem; font-weight:600; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="cartDrawerAddressSummary">Varanasi, Uttar Pradesh</p>
             </div>
 
-            <!-- Bottom Place Order / Payment Bar -->
             <div style="background:#ffffff; border-top:1px solid #e2e8f0; padding:15px; border-radius:16px; box-shadow:0 -4px 15px rgba(0,0,0,0.03);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                     <div style="display:flex; align-items:center; gap:6px;">
@@ -428,7 +423,7 @@
                         </div>
                     </div>
 
-                    <!-- 🍟 SNACKS & MUNCHIES HORIZONTAL SLIDER (Left-to-right scrollable) -->
+                    <!-- 🍟 SNACKS & MUNCHIES HORIZONTAL SLIDER -->
                     <div class="category-section-title">
                         <span>⚡ Snacks & Munchies (Slide &rarr;)</span>
                     </div>
@@ -569,7 +564,7 @@
         </div>
     </div>
 
-    <!-- 🛒 FLOATING VIEW CART FOOTER BAR (Unified with Grand Total) -->
+    <!-- 🛒 FLOATING VIEW CART FOOTER BAR -->
     <div id="floatingCartFooterBar" class="floating-cart-footer hidden" onclick="toggleCartDrawer(true)">
         <div class="floating-cart-left" style="display:flex; align-items:center; gap:12px;">
             <div style="display:flex; align-items:center; margin-left:4px;">
@@ -601,7 +596,7 @@
         // ==========================================
         window.cartSnacksArray = [];
 
-        // Silent add (Alert popup removed)
+        // Silent add (Alert popup removed as requested)
         function addSnackToCart(name, price) {
             const existing = window.cartSnacksArray.find(item => item.name === name);
             if (existing) {
@@ -638,7 +633,7 @@
 
             if (totalItemsCombined > 0) {
                 bar.classList.remove('hidden');
-                if (countText) countText.textContent = `${totalItemsCombined} item${totalItemsCombined > 1 ? 's' : ''}`;
+                if (countText) countText.textContent = `${totalItemsCombined} item${totalItemsCount > 1 ? 's' : ''}`;
                 if (priceText) priceText.textContent = `₹${grandTotalCombined.toFixed(2)}`;
             } else {
                 bar.classList.add('hidden');
@@ -848,7 +843,7 @@
                     badge.textContent = "CLOSED 🔴"; badge.className = "shop-status-text-badge closed";
                     btn.disabled = true; btn.style.opacity = "0.4"; btn.style.cursor = "not-allowed"; 
                     btn.textContent = "❌ Store is Closed (7AM - 12AM)";
-                    if (noticeBox) noticeBox.classList.add('hidden');
+                    if (noticeBox) noticeBox.classList.remove('hidden');
                 }
             } catch (err) {}
         }

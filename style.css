@@ -1,5 +1,5 @@
 /* ========================================
-   PRINT FROM HOME - STABLE LAYOUT & BLINKIT UI
+   PRINT FROM HOME - RESPONSIVE STYLESHEET
    ======================================== */
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 :root {
@@ -22,30 +22,31 @@ body.theme-festive-christmas { background-color: #fef2f2 !important; }
 
 .brand-premium-header {
     background: linear-gradient(to bottom, #FFF3B3 0%, #FFFBE6 100%);
-    padding: 16px 20px;
+    padding: 14px 16px;
     width: 100%;
     border-bottom: 1px solid rgba(244,196,48,0.15);
 }
-.header-container { max-width: 100%; margin: 0 auto; position: relative; }
+.header-container { max-width: 1200px; margin: 0 auto; position: relative; }
 .header-meta-row { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
 
 .delivery-brand-box { display: flex; flex-direction: column; text-align: left; }
-.user-greeting-inline { font-size: 0.85rem; font-weight: 700; color: #2d3748; margin-bottom: 2px; text-transform: uppercase; }
-.delivery-time-title { font-size: 0.75rem; font-weight: 700; color: #718096; text-transform: uppercase; }
-.delivery-time-countdown { font-size: 1.5rem; font-weight: 900; color: #111111; margin-top: -2px; }
+.user-greeting-inline { font-size: 0.8rem; font-weight: 700; color: #2d3748; margin-bottom: 2px; text-transform: uppercase; }
+.delivery-time-title { font-size: 0.7rem; font-weight: 700; color: #718096; text-transform: uppercase; }
+.delivery-time-countdown { font-size: 1.3rem; font-weight: 900; color: #111111; margin-top: -2px; }
 
 .header-profile-cluster { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .status-micro-nav { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
-.shop-status-text-badge { font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; }
+.shop-status-text-badge { font-size: 0.65rem; font-weight: 800; padding: 2px 6px; border-radius: 6px; text-transform: uppercase; }
 .shop-status-text-badge.open { background: var(--blinkit-green); color: white; }
 .shop-status-text-badge.closed { background: #ef4444; color: white; }
 
-.profile-wallet-row { display: flex; align-items: center; gap: 10px; }
-.wallet-micro-badge { background: #ffffff; border-radius: 14px; border: 1px solid var(--border-color); padding: 6px 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
-.wallet-cash-value { font-size: 0.85rem; font-weight: 800; color: #000000; }
-.avatar-circle-trigger { width: 44px; height: 44px; background: #000000; color: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 1.1rem; border: 2px solid #ffffff; }
+.profile-wallet-row { display: flex; align-items: center; gap: 8px; }
+.wallet-micro-badge { background: #ffffff; border-radius: 12px; border: 1px solid var(--border-color); padding: 4px 10px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.wallet-cash-value { font-size: 0.8rem; font-weight: 800; color: #000000; }
+.avatar-circle-trigger { width: 38px; height: 38px; background: #000000; color: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 1rem; border: 2px solid #ffffff; }
 
-.container { width: 100%; max-width: 100%; margin: 0; padding: 15px; display: flex; flex-direction: column; gap: 20px; }
+/* 📱 RESPONSIVE CONTAINER & GRID */
+.container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 12px; display: flex; flex-direction: column; gap: 16px; }
 
 /* 🍟 HORIZONTAL SLIDING SNACKS CONTAINER */
 .snacks-horizontal-slider {
@@ -54,36 +55,37 @@ body.theme-festive-christmas { background-color: #fef2f2 !important; }
     overflow-x: auto;
     padding-bottom: 8px;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
 }
 .snacks-horizontal-slider::-webkit-scrollbar { display: none; }
 .blinkit-cat-card {
-    min-width: 130px;
+    min-width: 120px;
     background: var(--surface);
     border: 1px solid var(--border-color);
     border-radius: 16px;
-    padding: 12px;
+    padding: 10px;
     text-align: center;
     flex-shrink: 0;
     box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
-.blinkit-cat-img { font-size: 2rem; margin-bottom: 6px; }
-.blinkit-cat-name { font-size: 0.75rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.blinkit-cat-price { font-size: 0.7rem; font-weight: 600; color: var(--text-sub); margin-bottom: 8px; }
-.btn-quick-add { background: #f0fdf4; color: var(--blinkit-green); border: 1px solid #bbf7d0; padding: 6px 10px; font-size: 0.75rem; font-weight: 700; border-radius: 8px; cursor: pointer; width: 100%; }
+.blinkit-cat-img { font-size: 1.8rem; margin-bottom: 4px; }
+.blinkit-cat-name { font-size: 0.7rem; font-weight: 700; color: #1e293b; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.blinkit-cat-price { font-size: 0.65rem; font-weight: 600; color: var(--text-sub); margin-bottom: 6px; }
+.btn-quick-add { background: #f0fdf4; color: var(--blinkit-green); border: 1px solid #bbf7d0; padding: 5px 8px; font-size: 0.7rem; font-weight: 700; border-radius: 8px; cursor: pointer; width: 100%; }
 .btn-quick-add:hover { background: var(--blinkit-green); color: white; }
 
-/* 📦 NON-OVERLAPPING FIXED FLOATING CART BAR */
+/* 📦 STABLE FLOATING CART BAR */
 .floating-cart-footer { 
     position: fixed; 
-    bottom: 15px; 
+    bottom: 12px; 
     left: 50%; 
     transform: translateX(-50%); 
-    width: 92%; 
-    max-width: 420px; 
+    width: 94%; 
+    max-width: 480px; 
     background: var(--blinkit-green); 
     color: white; 
     border-radius: 30px; 
-    padding: 12px 20px; 
+    padding: 10px 18px; 
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
@@ -91,3 +93,11 @@ body.theme-festive-christmas { background-color: #fef2f2 !important; }
     z-index: 1000; 
 }
 .hidden { display: none !important; }
+
+/* 💻 DESKTOP SPECIFIC ENHANCEMENTS */
+@media (min-width: 992px) {
+    .container { max-width: 900px; padding: 24px; }
+    .brand-premium-header { padding: 20px 40px; }
+    .delivery-time-countdown { font-size: 1.8rem; }
+    .floating-cart-footer { max-width: 520px; bottom: 20px; }
+}
