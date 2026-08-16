@@ -177,7 +177,6 @@
 
         .specs-container { background: rgba(0, 112, 243, 0.05); border: 1px solid rgba(0, 112, 243, 0.2); border-radius: 12px; padding: 14px; }
         .specs-title { font-size: 0.8rem; font-weight: 800; color: var(--accent-blue); text-transform: uppercase; margin-bottom: 8px; }
-        .specs-tags-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
         .spec-tag { background: var(--surface-card); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; color: var(--text-main); }
         .spec-tag.highlight { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-green); color: var(--accent-green); }
 
@@ -735,22 +734,24 @@
         async function fetchLiveOrdersStream() {
             try {
                 const res = await fetch('/api/admin/orders');
-                if (!res.ok) return;
+                if (!res.ok) throw new Error("Server responded with status " + res.status);
                 const orders = await res.json();
                 if (!Array.isArray(orders)) return;
 
                 globalLiveOrdersCache = orders;
 
-                document.getElementById('statDashTotalOrders').textContent = orders.length;
+                const totalOrdersEl = document.getElementById('statDashTotalOrders');
+                if (totalOrdersEl) totalOrdersEl.textContent = orders.length;
 
                 if (previousOrderCount !== -1 && orders.length > previousOrderCount) { playLoudOrderChime(); }
                 previousOrderCount = orders.length;
 
                 renderOrdersList(orders);
             } catch (err) {
+                console.warn("Stream warning:", err);
                 const container = document.getElementById('adminOrderQueue');
-                if (container) {
-                    container.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--accent-red);">⚠️ Error connecting to live orders stream. Retrying...</div>`;
+                if (container && container.innerHTML.includes('Connecting')) {
+                    container.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--accent-yellow);">⚠️ Reconnecting to live orders stream...</div>`;
                 }
             }
         }
@@ -759,7 +760,7 @@
             const container = document.getElementById('adminOrderQueue');
             if (!container) return;
 
-            if (orders.length === 0) {
+            if (!Array.isArray(orders) || orders.length === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 40px; background: var(--surface-card); border-radius: 16px; border: 1px solid var(--border-color);">
                         <div style="font-size: 2.5rem; margin-bottom: 8px;">📭</div>
@@ -776,8 +777,13 @@
                 let printFilesList = [];
                 let productItemsList = [];
 
-                if (Array.isArray(order.configDetails)) {
-                    order.configDetails.forEach(item => {
+                let configItems = order.configDetails || [];
+                if (typeof configItems === 'string') {
+                    try { configItems = JSON.parse(configItems); } catch(e) { configItems = []; }
+                }
+
+                if (Array.isArray(configItems)) {
+                    configItems.forEach(item => {
                         if (item.printType === 'snack' || (item.fileName && item.fileName.startsWith('Product:'))) {
                             productItemsList.push(item);
                         } else {
@@ -786,11 +792,20 @@
                     });
                 }
 
+                if (printFilesList.length === 0 && (order.fileUrl || order.fileName)) {
+                    printFilesList.push({
+                        fileName: order.fileName || 'Document.pdf',
+                        pages: order.pages || 1,
+                        copies: order.copies || 1,
+                        printType: order.printType || 'bw'
+                    });
+                }
+
                 let totalPackingItems = productItemsList.length;
                 let verifiedItemsList = Array.isArray(order.verifiedItems) ? order.verifiedItems : [];
                 let allProductsVerified = totalPackingItems === 0 || verifiedItemsList.length >= totalPackingItems;
 
-                const primaryFileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '';
+                const primaryFileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '#';
                 const isDrawerOpen = openDrawers.has(order.orderId);
 
                 return `
@@ -816,10 +831,10 @@
 
                             ${printFilesList.length > 0 ? `
                             <div class="specs-container" style="margin-bottom: 12px;">
-                                <div class="specs-title">🖨️ Print Job</div>
-                                ${printFilesList.map(job => `<div class="spec-tag highlight">📑 ${job.pages || 1} Pages | ✖️ ${job.copies || 1} Copies | 🎨 ${(job.printType || 'bw').toUpperCase()}</div>`).join('')}
+                                <div class="specs-title">🖨️ Print Job Files</div>
+                                ${printFilesList.map(job => `<div class="spec-tag highlight" style="margin-bottom:6px; display:block;">📑 ${job.fileName || 'File'} (${job.pages || 1} Pages | ✖️ ${job.copies || 1} Copies | 🎨 ${String(job.printType || 'bw').toUpperCase()})</div>`).join('')}
                                 <div class="file-action-row" style="margin-top:8px;">
-                                    <a href="${primaryFileUrl}" target="_blank" download class="btn-download-file">📥 Download File</a>
+                                    ${primaryFileUrl !== '#' ? `<a href="${primaryFileUrl}" target="_blank" download class="btn-download-file">📥 Download File</a>` : ''}
                                     <button type="button" class="btn-manual-print" onclick="triggerPrintJob('${primaryFileUrl}', '${order.orderId}')">🖨️ Print Now</button>
                                 </div>
                             </div>
@@ -828,11 +843,11 @@
                             ${productItemsList.length > 0 ? `
                             <div class="packing-list-box">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                    <div class="packing-title" style="margin-bottom:0;">🛒 Item-by-Item Verification (${verifiedItemsList.length}/${totalPackingItems} verified)</div>
-                                    <button type="button" onclick="openBarcodeScannerModal('${order.orderId}')" style="background: #8b5cf6; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer;">📷 Scan/Type Item</button>
+                                    <div class="packing-title" style="margin-bottom:0;">🛒 Item Verification (${verifiedItemsList.length}/${totalPackingItems} verified)</div>
+                                    <button type="button" onclick="openBarcodeScannerModal('${order.orderId}')" style="background: #8b5cf6; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer;">📷 Scan Item</button>
                                 </div>
                                 ${productItemsList.map(prod => {
-                                    let prodCleanName = prod.fileName.replace('Product: ', '').split(' (Qty:')[0].trim();
+                                    let prodCleanName = prod.fileName ? prod.fileName.replace('Product: ', '').split(' (Qty:')[0].trim() : 'Item';
                                     let isItemVerified = verifiedItemsList.some(v => v.toLowerCase().includes(prodCleanName.toLowerCase()));
                                     return `
                                         <div class="packing-item-row">
@@ -845,10 +860,10 @@
                             ` : ''}
                         </div>
 
-                        <!-- 4-Stage Stepper (Out for Delivery is disabled until all items are verified) -->
+                        <!-- 4-Stage Stepper -->
                         <div class="stepper-actions-bar">
                             <span class="stepper-label">Set Status:</span>
-                            <button type="button" class="btn-step ${currentStatus === 'Paid / Ready for Print' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Paid / Ready for Print')">1. Ready</button>
+                            <button type="button" class="btn-step ${currentStatus === 'Paid / Ready for Print' || currentStatus === 'COD / Ready for Print' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Paid / Ready for Print')">1. Ready</button>
                             <button type="button" class="btn-step ${currentStatus === 'Printing' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Printing')">2. Processing</button>
                             <button type="button" class="btn-step ${currentStatus === 'Out for Delivery' ? 'current-phase' : ''}" ${!allProductsVerified ? 'disabled title="Verify all items first!"' : ''} onclick="updateOrderStatus('${order.orderId}', 'Out for Delivery')">3. Out for Delivery</button>
                             <button type="button" class="btn-step ${currentStatus === 'Delivered' ? 'active' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Delivered')">4. Delivered</button>
