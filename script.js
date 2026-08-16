@@ -29,16 +29,41 @@ document.addEventListener('DOMContentLoaded', () => {
     window.globalRawOrdersCache = [];
 
     // ==========================================
+    // 🔙 PHONE BACK BUTTON / HISTORY HANDLER
+    // ==========================================
+    window.addEventListener('popstate', (event) => {
+        const cartOverlay = document.getElementById('cartDrawerOverlay');
+        const walletModal = document.getElementById('walletDepositModal');
+        const sideDrawer = document.getElementById('userSideDrawer');
+        
+        if (cartOverlay && cartOverlay.style.display === 'flex') {
+            cartOverlay.style.display = 'none';
+            return;
+        }
+        if (walletModal && walletModal.style.display === 'flex') {
+            walletModal.style.display = 'none';
+            return;
+        }
+        if (sideDrawer && sideDrawer.classList.contains('active')) {
+            sideDrawer.classList.remove('active');
+            document.getElementById('drawerOverlay').classList.remove('active');
+            return;
+        }
+        
+        if (typeof navigateDrawerSection === 'function') {
+            navigateDrawerSection('store');
+        }
+    });
+
+    // ==========================================
     // 📱 PERMANENT USER APP INSTALL HANDLER
     // ==========================================
     let deferredUserPrompt = null;
     const userInstallBanner = document.getElementById('userInstallBanner');
     const userInstallTriggerBtn = document.getElementById('userInstallTriggerBtn');
 
-    // Check if app is genuinely running in standalone mode (uninstalled check reset)
     const isRunningStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     if (!isRunningStandalone) {
-        // Agar user ne app uninstall kar diya hai aur browser mein normal web tab par khol raha hai, toh flag reset karein
         const checkBrowserInstallState = localStorage.getItem('user_pwa_installed');
         if (checkBrowserInstallState === 'true' && !window.matchMedia('(display-mode: standalone)').matches) {
             localStorage.removeItem('user_pwa_installed');
@@ -85,14 +110,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (Array.isArray(data)) {
                 window.globalRawOrdersCache = data;
                 
-                // Keep active tracking layout reactive to loops mapping changes
                 const currentActiveTrackingId = document.getElementById('trackOrderIdLabel')?.textContent?.replace('ID Reference: ', '')?.replace('ID: ', '')?.trim();
                 if (currentActiveTrackingId && typeof window.executeLiveTimelineStateStepper === 'function') {
                     const match = data.find(o => o.orderId === currentActiveTrackingId);
                     if (match) {
                         window.executeLiveTimelineStateStepper(match.status);
                         
-                        // Dynamically mirror incoming parameters inside historical badge views arrays
                         const activeUserToken = localStorage.getItem('printAppUser');
                         const localHistory = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
                         let historyUpdated = false;
@@ -104,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                         if(historyUpdated) {
                             localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(localHistory));
-                            renderOrderHistoryUI(activeUserToken, false); // Quiet render bypass
+                            renderOrderHistoryUI(activeUserToken, false);
                         }
                     }
                 }
@@ -170,6 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(sideInvoicePanel) sideInvoicePanel.classList.add('hidden');
             if(layoutContainer) { layoutContainer.classList.remove('has-invoice'); layoutContainer.style.gridTemplateColumns = '1fr'; }
         }
+        updateFloatingCartBar();
     }
 
     window.addEventListener('resize', window.refreshInvoiceTabState);
@@ -441,6 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById(`binding_${index}`).addEventListener('change', (e) => { item.config.binding = e.target.value; saveCurrentFilesToSession(); calculateTotal(); });
         });
         calculateTotal();
+        updateFloatingCartBar();
     }
 
     function calculateTotal() {
@@ -450,16 +475,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const summaryDelivery = document.getElementById('summaryDelivery');
         const summaryTotal = document.getElementById('summaryTotal');
         if (!summaryPrint || !summaryBinding || !summaryDelivery || !summaryTotal) return;
-        if (masterFilesArray.length === 0) { summaryPrint.textContent = `₹0.00`; summaryBinding.textContent = `₹0.00`; summaryDelivery.textContent = `₹0.00`; summaryTotal.textContent = `₹0.00`; return; }
+        
+        let snacksTotal = 0;
+        if (window.cartSnacksArray) {
+            snacksTotal = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
+        }
+
+        if (masterFilesArray.length === 0 && snacksTotal === 0) { 
+            summaryPrint.textContent = `₹0.00`; summaryBinding.textContent = `₹0.00`; summaryDelivery.textContent = `₹0.00`; summaryTotal.textContent = `₹0.00`; return; 
+        }
+
         masterFilesArray.forEach((item) => {
             const pages = parseInt(item.config.pages) || 1; const printType = item.config.printType; const binding = item.config.binding; const copies = parseInt(item.config.copies) || 1;
             totalPrintCost += (pages * ((printType === 'bw') ? 3.00 : 10.00)) * copies;
             if (binding === 'spiral') totalBindingCost += 30.00 * copies;
         });
-        let finalDocumentCost = totalPrintCost + totalBindingCost;
-        let accurateDeliveryCharge = finalDocumentCost >= 99.00 ? 0.00 : 25.00;
+
+        let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal;
+        let accurateDeliveryCharge = (finalDocumentCost >= 99.00 || finalDocumentCost === 0) ? 0.00 : 25.00;
+
         summaryPrint.textContent = `₹${totalPrintCost.toFixed(2)}`;
-        summaryBinding.textContent = `₹${totalBindingCost.toFixed(2)}`;
+        summaryBinding.textContent = `₹${(totalBindingCost + snacksTotal).toFixed(2)}`; // Includes snacks inside summary view
         summaryDelivery.textContent = accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`;
         summaryTotal.textContent = `₹${(finalDocumentCost + accurateDeliveryCharge).toFixed(2)}`;
     }
@@ -556,6 +592,11 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const summaryTotal = document.getElementById('summaryTotal');
             const totalAmountText = summaryTotal ? summaryTotal.textContent.replace('₹', '') : "0";
+            
+            // Check selected payment mode (Online via Razorpay or COD)
+            const selectedPaymentRadio = document.querySelector('input[name="paymentMode"]:checked');
+            const paymentMode = selectedPaymentRadio ? selectedPaymentRadio.value : 'online';
+
             const formData = new FormData();
             masterFilesArray.forEach((item) => { if(item.fileData) formData.append('document', item.fileData); });
 
@@ -572,6 +613,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             });
 
+            // Include snacks info if any
+            if (window.cartSnacksArray && window.cartSnacksArray.length > 0) {
+                window.cartSnacksArray.forEach(snack => {
+                    finalMetaConfig.push({ fileName: `Snack: ${snack.name}`, copies: snack.qty, printType: 'snack', pages: 1 });
+                });
+            }
+
             formData.append('totalAmount', totalAmountText);
             formData.append('configDetails', JSON.stringify(finalMetaConfig));
             formData.append('address', document.getElementById('address').value);
@@ -581,6 +629,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 if (!data.success) return;
 
+                if (paymentMode === 'cod') {
+                    // Cash on Delivery direct flow
+                    alert('🎉 Order Placed Successfully via Cash on Delivery!');
+                    const activeUserToken = localStorage.getItem('printAppUser');
+                    const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
+                    
+                    const newOrderPayload = { 
+                        orderId: data.order_id || 'COD-' + Date.now(),
+                        date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), 
+                        amount: totalAmountText, 
+                        status: "COD / Ready for Print", 
+                        details: finalMetaConfig,
+                        address: document.getElementById('address').value 
+                    };
+                    
+                    currentHistoryArray.push(newOrderPayload);
+                    localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
+                    
+                    isFirstTimeUser = false; sessionStorage.removeItem('savedPrintFiles'); printForm.reset(); multiFilesContainer.innerHTML = ''; masterFilesArray = []; window.cartSnacksArray = [];
+                    renderOrderHistoryUI(activeUserToken); calculateTotal(); updateFloatingCartBar();
+                    
+                    openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
+                    return;
+                }
+
+                // Online Razorpay Flow
                 const options = {
                     "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Print From Home", "order_id": data.order_id,
                     "handler": async function (response){
@@ -603,8 +677,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             currentHistoryArray.push(newOrderPayload);
                             localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
                             
-                            isFirstTimeUser = false; sessionStorage.removeItem('savedPrintFiles'); printForm.reset(); multiFilesContainer.innerHTML = ''; masterFilesArray = [];
-                            renderOrderHistoryUI(activeUserToken); calculateTotal();
+                            isFirstTimeUser = false; sessionStorage.removeItem('savedPrintFiles'); printForm.reset(); multiFilesContainer.innerHTML = ''; masterFilesArray = []; window.cartSnacksArray = [];
+                            renderOrderHistoryUI(activeUserToken); calculateTotal(); updateFloatingCartBar();
                             
                             openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
                         }

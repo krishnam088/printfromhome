@@ -43,21 +43,22 @@
 
     <!-- 🔒 AUTHENTICATION SCREEN WITH EMAIL/OTP & PASSWORD -->
     <div id="authScreen" class="auth-container app-hidden">
-    <div class="auth-card">
-        <div class="auth-brand">print<span class="brand-green">from</span>home</div>
-        <h2 id="authTitle">Welcome Back!</h2>
-        <form id="authForm">
-            <div class="form-group signup-only hidden"><label>Full Name</label><input type="text" id="authName" placeholder="Enter your full name"></div>
-            <div class="form-group"><label>Mobile Number</label><input type="text" id="authIdentity" placeholder="Enter 10-digit mobile number" maxlength="10" required></div>
-            
-            <!-- PASSWORD FIELD -->
-            <div class="form-group" id="passwordGroup"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters" required></div>
+        <div class="auth-card">
+            <div class="auth-brand">print<span class="brand-green">from</span>home</div>
+            <h2 id="authTitle">Welcome Back!</h2>
+            <form id="authForm">
+                <div class="form-group signup-only hidden"><label>Full Name</label><input type="text" id="authName" placeholder="Enter your full name"></div>
+                <div class="form-group"><label>Mobile Number</label><input type="text" id="authIdentity" placeholder="Enter 10-digit mobile number" maxlength="10" required></div>
+                
+                <!-- PASSWORD FIELD -->
+                <div class="form-group" id="passwordGroup"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters" required></div>
 
-            <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
-        </form>
-        <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
+                <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
+            </form>
+            <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
+        </div>
     </div>
-</div>
+
     <!-- 🔒 SIDEBAR DRAWER OVERLAY -->
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
@@ -88,10 +89,14 @@
         </div>
 
         <div id="drawer_panel_help" class="drawer-subpanel-content">
-            <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:12px; color:var(--text-main); border-bottom:1px solid var(--border-color); padding-bottom:4px;">
-                Help Desk & Support</h4>
-            <!-- UPDATED WHATSAPP SUPPORT LINK WITH ACTIVE BUSINESS NUMBER -->
-            <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hi%20Print%20From%20Home%20Support,%20I%20need%20assistance." target="_blank" class="whatsapp-support-btn"><span>💬</span> Chat on WhatsApp Support</a>
+            <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:8px; color:var(--text-main); border-bottom:1px solid var(--border-color); padding-bottom:4px;">
+                Help Desk & Support
+            </h4>
+            <p style="font-size:0.75rem; color:var(--text-sub); margin-bottom:12px;">Our support executives are active from 7:00 AM to 12:00 AM for instant resolution.</p>
+            
+            <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Print%20From%20Home%20Team,%20I%20need%20assistance%20regarding%20my%20print%20order.%0A%0A*Order%20ID%20(if%20any):*%20%0A*Issue%20Details:*" target="_blank" class="whatsapp-support-btn" style="display:flex; align-items:center; justify-content:center; gap:8px; background:#25D366; color:white; padding:12px; border-radius:12px; font-weight:700; text-decoration:none; font-size:0.85rem;">
+                <span>💬</span> Connect with Official Support
+            </a>
         </div>
 
         <div id="drawer_panel_terms" class="drawer-subpanel-content">
@@ -129,9 +134,17 @@
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:15px; background:#ffffff; padding:10px 15px; border-radius:14px;">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <span style="cursor:pointer; font-size:1.2rem; font-weight:bold;" onclick="toggleCartDrawer(false)">&larr;</span>
-                    <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a;">Checkout</h3>
+                    <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a;">Checkout & Cart</h3>
                 </div>
-                <span style="font-size:0.8rem; font-weight:700; color:var(--blinkit-green); background:#f0fdf4; padding:4px 10px; border-radius:8px; cursor:pointer;" onclick="toggleCartDrawer(false)">🔍 Search</span>
+                <span style="font-size:0.8rem; font-weight:700; color:var(--blinkit-green); background:#f0fdf4; padding:4px 10px; border-radius:8px; cursor:pointer;" onclick="toggleCartDrawer(false)">Close</span>
+            </div>
+
+            <!-- Free Delivery Progress Bar -->
+            <div id="freeDeliveryProgressBarBox" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 10px 14px; margin-bottom: 15px;">
+                <p id="freeDeliveryMessageText" style="font-size: 0.78rem; font-weight: 700; color: #16a34a; margin: 0 0 6px 0;">🎉 Add items worth ₹99 more for FREE delivery!</p>
+                <div style="width: 100%; background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
+                    <div id="freeDeliveryFillBar" style="width: 0%; background: #16a34a; height: 100%; transition: width 0.3s ease;"></div>
+                </div>
             </div>
 
             <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
@@ -142,7 +155,24 @@
                 </div>
             </div>
 
-            <div id="cartDrawerItemsList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-bottom:20px;"></div>
+            <div id="cartDrawerItemsList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-bottom:15px;"></div>
+
+            <!-- Live Bill Breakdown Box inside Cart -->
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px;">
+                <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:8px;">Bill Details</h4>
+                <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#64748b; margin-bottom:4px;">
+                    <span>Item Total</span>
+                    <span id="cartItemSubtotal">₹0.00</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#64748b; margin-bottom:4px;">
+                    <span>Delivery Charge</span>
+                    <span id="cartDeliveryFee">₹25.00</span>
+                </div>
+                <div style="border-top:1px solid #e2e8f0; margin-top:6px; padding-top:6px; display:flex; justify-content:space-between; font-size:0.9rem; font-weight:800; color:#0f172a;">
+                    <span>Grand Total</span>
+                    <span id="cartGrandTotalSummary" style="color:var(--blinkit-green);">₹0.00</span>
+                </div>
+            </div>
 
             <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
@@ -153,19 +183,13 @@
             </div>
 
             <div style="background:#ffffff; border-top:1px solid #e2e8f0; padding:15px; border-radius:16px; box-shadow:0 -4px 15px rgba(0,0,0,0.03);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <span style="font-size:0.75rem; font-weight:700; background:#f1f5f9; padding:3px 8px; border-radius:6px;">PAY USING</span>
-                        <span style="font-size:0.8rem; font-weight:800; color:#0f172a;" id="cartSelectedPaymentLabel">Razorpay Online</span>
-                    </div>
-                </div>
                 <div style="display:flex; align-items:center; justify-content:space-between; background:var(--blinkit-green); color:white; border-radius:14px; padding:12px 18px; cursor:pointer;" onclick="proceedToCheckoutFromCart()">
                     <div>
                         <div style="font-size:1.1rem; font-weight:900;" id="cartDrawerGrandTotal">₹0.00</div>
-                        <div style="font-size:0.65rem; font-weight:700; opacity:0.9; text-transform:uppercase;">TOTAL</div>
+                        <div style="font-size:0.65rem; font-weight:700; opacity:0.9; text-transform:uppercase;">TOTAL AMOUNT</div>
                     </div>
                     <div style="display:flex; align-items:center; gap:6px; font-size:0.95rem; font-weight:800;">
-                        <span>Place Order</span> &rarr;
+                        <span>Proceed & Pay</span> &rarr;
                     </div>
                 </div>
             </div>
@@ -312,8 +336,8 @@
                         <div class="form-group" style="background: var(--surface); padding: 16px; border-radius: 16px; border: 1px solid var(--border-color); width:100%; margin-bottom:20px;">
                             <label style="font-weight: 700; margin-bottom:8px; display: block; font-size: 0.85rem;">💳 Select Payment Mode:</label>
                             <div style="display:flex; gap:15px;">
-                                <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="paymentMode" value="online" checked onchange="updatePaymentModeLabel('Razorpay Online')"> Razorpay Online</label>
-                                <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="paymentMode" value="cod" onchange="updatePaymentModeLabel('Cash on Delivery')"> Cash on Delivery (COD)</label>
+                                <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="paymentMode" value="online" checked> Razorpay Online</label>
+                                <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="paymentMode" value="cod"> Cash on Delivery (COD)</label>
                             </div>
                         </div>
 
@@ -392,7 +416,7 @@
         </div>
     </div>
 
-    <!-- 📱 PERMANENT PWA INSTALL BANNER (Visible on Login & Home screens if not installed) -->
+    <!-- 📱 PERMANENT PWA INSTALL BANNER -->
     <div id="userInstallBanner" class="hidden" style="background: #0f172a; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: fixed; bottom: 0; left: 0; width: 100%; z-index: 99999; box-shadow: 0 -4px 12px rgba(0,0,0,0.2);">
         <div style="display: flex; align-items: center; gap: 10px;">
             <span style="font-size: 1.5rem;">📥</span>
@@ -453,11 +477,12 @@
 
             let grandTotalCombined = totalSnacksPrice + printTotalVal;
             let totalItemsCombined = totalSnacksCount + printFilesCount;
+            let deliveryFee = (grandTotalCombined >= 99 || grandTotalCombined === 0) ? 0 : 25;
 
             if (totalItemsCombined > 0) {
                 bar.classList.remove('hidden');
-                if (countText) countText.textContent = `${totalItemsCombined} item${totalItemsCount > 1 ? 's' : ''}`;
-                if (priceText) priceText.textContent = `₹${grandTotalCombined.toFixed(2)}`;
+                if (countText) countText.textContent = `${totalItemsCombined} item${totalItemsCombined > 1 ? 's' : ''}`;
+                if (priceText) priceText.textContent = `₹${(grandTotalCombined + deliveryFee).toFixed(2)}`;
             } else {
                 bar.classList.add('hidden');
             }
@@ -465,7 +490,9 @@
 
         function toggleCartDrawer(open) {
             const overlay = document.getElementById('cartDrawerOverlay');
+            if (!overlay) return;
             if (open) {
+                history.pushState({ cartOpen: true }, '', '');
                 overlay.style.display = 'flex';
                 renderCartDrawerContents();
             } else {
@@ -473,16 +500,14 @@
             }
         }
 
-        function updatePaymentModeLabel(modeName) {
-            const label = document.getElementById('cartSelectedPaymentLabel');
-            if (label) label.textContent = modeName;
-        }
-
         function renderCartDrawerContents() {
             const container = document.getElementById('cartDrawerItemsList');
             const grandTotalNode = document.getElementById('cartDrawerGrandTotal');
             const itemsCountNode = document.getElementById('shipmentItemsCountText');
             const addressSummaryNode = document.getElementById('cartDrawerAddressSummary');
+            const subtotalNode = document.getElementById('cartItemSubtotal');
+            const deliveryNode = document.getElementById('cartDeliveryFee');
+            const summaryGrandNode = document.getElementById('cartGrandTotalSummary');
             
             if (!container) return;
 
@@ -506,7 +531,7 @@
                         <div style="font-size:2rem; background:#f8fafc; padding:8px; border-radius:12px; border:1px solid #e2e8f0;">📦</div>
                         <div>
                             <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a;">${snack.name}</h4>
-                            <p style="font-size:0.7rem; color:#64748b; font-weight:600;">1 unit</p>
+                            <p style="font-size:0.7rem; color:#64748b; font-weight:600;">Snack Item</p>
                             <p style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-top:2px;">₹${snack.price * snack.qty}</p>
                         </div>
                     </div>
@@ -549,10 +574,25 @@
             }
 
             subtotal += printTotal;
-            let delivery = subtotal >= 99 || subtotal === 0 ? 0 : 25;
+            let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
             let grandTotal = subtotal + delivery;
 
+            // Free Delivery Progress bar calculation
+            let freeDeliveryRemaining = Math.max(0, 99 - subtotal);
+            const msgText = document.getElementById('freeDeliveryMessageText');
+            const fillBar = document.getElementById('freeDeliveryFillBar');
+            if (subtotal >= 99) {
+                if (msgText) msgText.textContent = "🥳 Woohoo! You unlocked FREE Delivery!";
+                if (fillBar) fillBar.style.width = "100%";
+            } else {
+                if (msgText) msgText.textContent = `🎉 Add items worth ₹${freeDeliveryRemaining.toFixed(2)} more for FREE delivery!`;
+                if (fillBar) fillBar.style.width = `${Math.min(100, (subtotal / 99) * 100)}%`;
+            }
+
             if (itemsCountNode) itemsCountNode.textContent = `Shipment of ${totalItemsCount} item${totalItemsCount > 1 ? 's' : ''}`;
+            if (subtotalNode) subtotalNode.textContent = `₹${subtotal.toFixed(2)}`;
+            if (deliveryNode) deliveryNode.textContent = delivery === 0 ? "FREE" : `₹${delivery.toFixed(2)}`;
+            if (summaryGrandNode) summaryGrandNode.textContent = `₹${grandTotal.toFixed(2)}`;
             if (grandTotalNode) grandTotalNode.textContent = `₹${grandTotal.toFixed(2)}`;
         }
 
@@ -563,6 +603,7 @@
             }
             renderCartDrawerContents();
             updateFloatingCartBar();
+            if (typeof calculateTotal === 'function') calculateTotal();
         }
 
         function proceedToCheckoutFromCart() {
@@ -709,12 +750,17 @@
         function toggleUserDrawer(open) {
             document.getElementById('userSideDrawer').classList.toggle('active', open);
             document.getElementById('drawerOverlay').classList.toggle('active', open);
+            if(open) history.pushState({ drawerOpen: true }, '', '');
         }
         function toggleWalletPopupGrid(show, event) {
             const modal = document.getElementById('walletDepositModal');
             if (!modal) return;
-            if (show) modal.style.display = 'flex';
-            else if (event.target === modal) modal.style.display = 'none';
+            if (show) {
+                modal.style.display = 'flex';
+                history.pushState({ walletOpen: true }, '', '');
+            } else if (event.target === modal) {
+                modal.style.display = 'none';
+            }
         }
         function setWalletQuickAmount(amt) { document.getElementById('walletCustomAmountInput').value = amt; }
 
