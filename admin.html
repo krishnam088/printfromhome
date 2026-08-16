@@ -13,7 +13,7 @@
     <!-- Chart.js for Dashboard Profit Graph -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Html5-Qrcode Scanner Library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -221,19 +221,19 @@
     <div id="barcodeScannerModal">
         <div class="scanner-card">
             <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 6px;">📷 Product Barcode & SKU Scanner</h3>
-            <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 10px;">Use live camera or type SKU manually below.</p>
+            <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 10px;">Use live camera or type SKU/UPC manually below.</p>
             
-        <!-- Live Camera View Container -->
-<div id="cameraScannerContainer" style="display:none; width: 100%; height: 180px; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 10px; position: relative;">
-    <div id="liveCameraVideoFeed" style="width: 100%; height: 100%;"></div>
-    <div style="position: absolute; inset: 0; border: 2px dashed rgba(16,185,129,0.7); pointer-events: none; z-index: 10;"></div>
-</div>
+            <!-- Live Camera View Container -->
+            <div id="cameraScannerContainer" style="display:none; width: 100%; height: 180px; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 10px; position: relative;">
+                <div id="liveCameraVideoFeed" style="width: 100%; height: 100%;"></div>
+                <div style="position: absolute; inset: 0; border: 2px dashed rgba(16,185,129,0.7); pointer-events: none; z-index: 10;"></div>
+            </div>
             <div style="display: flex; gap: 8px; margin-bottom: 10px;">
                 <button type="button" id="btnToggleCamera" onclick="toggleCameraScanner()" style="flex: 1; padding: 8px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">📷 Open Camera</button>
             </div>
 
             <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 14px; border: 2px dashed var(--border-color); margin-bottom: 12px;">
-                <input type="text" id="barcodeInputScanField" placeholder="Type Barcode / SKU / Product Name..." oninput="autoDetectProductByBarcode(this.value)" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 700; text-align: center; outline: none;">
+                <input type="text" id="barcodeInputScanField" placeholder="Type Barcode / UPC / SKU..." oninput="autoDetectProductByBarcode(this.value)" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 700; text-align: center; outline: none;">
             </div>
 
             <div id="scannerDetectedFeedbackBox" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); border-radius: 10px; padding: 10px; margin-bottom: 15px; display: none; text-align: left;">
@@ -331,10 +331,10 @@
         <!-- TAB 3: INVENTORY MANAGEMENT SECTION -->
         <div id="section_inventory" class="admin-section">
             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px; margin-bottom: 22px;">
-                <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px;">📊 Store Inventory, Stock Restock & Profit Tracker</h3>
+                <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px;">📊 Store Inventory, UPC Barcode & Restock Tracker</h3>
                 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 15px;">
-                    <input type="text" id="invSkuInput" placeholder="Scan Barcode / SKU" oninput="autoFillInventoryProduct(this.value)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
+                    <input type="text" id="invSkuInput" placeholder="Scan/Type Barcode (UPC)" oninput="autoFillInventoryProduct(this.value)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
                     <input type="text" id="invNameInput" placeholder="Product Name (e.g. Lays)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
                     <input type="number" id="invPurchasePrice" placeholder="Purchase Price (₹)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
                     <input type="number" id="invSellingPrice" placeholder="Selling Price (₹)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
@@ -352,7 +352,7 @@
                             <tr>
                                 <th>#</th>
                                 <th>Product Name</th>
-                                <th>Barcode / SKU</th>
+                                <th>UPC Barcode / SKU</th>
                                 <th>Purchase Cost</th>
                                 <th>Selling Price</th>
                                 <th>Stock Left</th>
@@ -374,7 +374,6 @@
         let html5QrCodeScanner = null;
         let globalLiveOrdersCache = [];
         let activeTargetOrderIdForScan = null;
-        let activeCameraStream = null;
         let openDrawers = new Set();
         let profitChartInstance = null;
 
@@ -424,9 +423,9 @@
 
         window.addEventListener('click', () => { getAudioContext(); }, { once: true });
 
-        function autoFillInventoryProduct(skuVal) {
-            const cleanSku = skuVal.trim();
-            const matched = cachedInventoryList.find(p => p.sku === cleanSku);
+        function autoFillInventoryProduct(barcodeVal) {
+            const cleanBarcode = barcodeVal.trim();
+            const matched = cachedInventoryList.find(p => p.barcode === cleanBarcode || p.sku === cleanBarcode);
             if (matched) {
                 document.getElementById('invNameInput').value = matched.name || '';
                 document.getElementById('invPurchasePrice').value = matched.purchasePrice || '';
@@ -435,14 +434,14 @@
         }
 
         async function addNewStockItem() {
-            const sku = document.getElementById('invSkuInput').value.trim();
+            const barcode = document.getElementById('invSkuInput').value.trim();
             const name = document.getElementById('invNameInput').value.trim();
             const purchasePrice = document.getElementById('invPurchasePrice').value;
             const sellingPrice = document.getElementById('invSellingPrice').value;
             const quantity = document.getElementById('invQtyInput').value;
 
-            if (!sku || !name || !quantity) {
-                alert("⚠️ Please enter Barcode/SKU, Product Name, and Quantity!");
+            if (!barcode || !name || !quantity) {
+                alert("⚠️ Please enter Barcode/UPC, Product Name, and Quantity!");
                 return;
             }
 
@@ -450,11 +449,11 @@
                 const res = await fetch('/api/admin/inventory/add', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sku, name, purchasePrice, sellingPrice, quantity })
+                    body: JSON.stringify({ sku: barcode, barcode, name, purchasePrice, sellingPrice, quantity })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert("✅ Stock updated / restocked successfully!");
+                    alert("✅ Stock updated and registered with UPC barcode!");
                     document.getElementById('invSkuInput').value = '';
                     document.getElementById('invNameInput').value = '';
                     document.getElementById('invPurchasePrice').value = '';
@@ -529,7 +528,7 @@
                         <tr>
                             <td><b>${idx + 1}</b></td>
                             <td style="font-weight: 800; color: white;">📦 ${p.name}</td>
-                            <td><code>${p.sku}</code></td>
+                            <td><code>${p.barcode || p.sku || 'N/A'}</code></td>
                             <td>₹${p.purchasePrice || 0}</td>
                             <td style="color: var(--accent-green); font-weight: 700;">₹${p.sellingPrice || 0}</td>
                             <td><span style="background:${p.stockQuantity > 0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; color:${p.stockQuantity > 0 ? '#10b981' : '#ef4444'}; padding:3px 8px; border-radius:6px; font-weight:700;">${p.stockQuantity} units</span></td>
@@ -548,9 +547,12 @@
         }
 
         function closeBarcodeScannerModal() {
-            if (activeCameraStream) {
-                activeCameraStream.getTracks().forEach(track => track.stop());
-                activeCameraStream = null;
+            if (html5QrCodeScanner) {
+                try {
+                    html5QrCodeScanner.stop();
+                    html5QrCodeScanner.clear();
+                } catch(e) {}
+                html5QrCodeScanner = null;
             }
             document.getElementById('cameraScannerContainer').style.display = 'none';
             document.getElementById('btnToggleCamera').textContent = '📷 Open Camera';
@@ -578,33 +580,25 @@
             container.style.display = 'block';
             btn.textContent = '❌ Close Camera';
 
-            // Html5-Qrcode professional scanner initialization
             html5QrCodeScanner = new Html5Qrcode("liveCameraVideoFeed");
-            
             const config = { fps: 10, qrbox: { width: 250, height: 150 } };
             
             html5QrCodeScanner.start(
                 { facingMode: "environment" }, 
                 config, 
                 (decodedText, decodedResult) => {
-                    // Jaise hi camera real barcode/QR read karega, yeh turant fill karke verify kar dega
-                    console.log(`Scan result: ${decodedText}`, decodedResult);
                     document.getElementById('barcodeInputScanField').value = decodedText;
                     autoDetectProductByBarcode(decodedText);
-                    
                     toggleCameraScanner();
                     processScannedBarcode();
                 },
-                (errorMessage) => {
-                    // Scanning in progress (ignoring frame errors)
-                }
+                (errorMessage) => {}
             ).catch(err => {
                 alert("⚠️ Camera start error: " + err);
                 container.style.display = 'none';
                 btn.textContent = '📷 Open Camera';
             });
         }
-        
 
         function autoDetectProductByBarcode(inputVal) {
             const cleanVal = inputVal.trim();
@@ -616,10 +610,10 @@
                 return;
             }
 
-            const matchedProd = cachedInventoryList.find(p => p.sku === cleanVal || p.name.toLowerCase().includes(cleanVal.toLowerCase()));
+            const matchedProd = cachedInventoryList.find(p => p.barcode === cleanVal || p.sku === cleanVal || p.name.toLowerCase().includes(cleanVal.toLowerCase()));
             if (matchedProd) {
                 feedbackBox.style.display = 'block';
-                feedbackText.textContent = `${matchedProd.name} (SKU: ${matchedProd.sku}) - Stock: ${matchedProd.stockQuantity}`;
+                feedbackText.textContent = `${matchedProd.name} (UPC: ${matchedProd.barcode || matchedProd.sku}) - Stock: ${matchedProd.stockQuantity}`;
             } else {
                 feedbackBox.style.display = 'none';
             }
@@ -628,17 +622,18 @@
         async function processScannedBarcode() {
             const val = document.getElementById('barcodeInputScanField').value.trim();
             if (!val) {
-                alert("⚠️ Please scan or enter a valid product barcode/SKU!");
+                alert("⚠️ Please scan or enter a valid registered product barcode/UPC!");
+                return;
+            }
+
+            const matchedProd = cachedInventoryList.find(p => p.barcode === val || p.sku === val || p.name.toLowerCase().includes(val.toLowerCase()));
+            if (!matchedProd) {
+                alert(`❌ Invalid UPC: "${val}" is not registered in your inventory!`);
                 return;
             }
 
             let targetOrderId = activeTargetOrderIdForScan;
             if (!targetOrderId) {
-                const matchedProd = cachedInventoryList.find(p => p.sku === val || p.name.toLowerCase().includes(val.toLowerCase()));
-                if (!matchedProd) {
-                    alert("❌ Invalid Barcode or SKU!");
-                    return;
-                }
                 const pendingOrder = globalLiveOrdersCache.find(o => 
                     o.status !== 'Delivered' && Array.isArray(o.configDetails) && o.configDetails.some(item => item.fileName && item.fileName.toLowerCase().includes(matchedProd.name.toLowerCase()))
                 );
@@ -653,7 +648,7 @@
                 const res = await fetch('/api/admin/verify-item', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orderId: targetOrderId, skuOrName: val })
+                    body: JSON.stringify({ orderId: targetOrderId, barcode: val, skuOrName: matchedProd.name })
                 });
                 const data = await res.json();
                 if (data.success) {
@@ -782,7 +777,7 @@
             }
         }
 
-       function renderOrdersList(orders) {
+        function renderOrdersList(orders) {
             const container = document.getElementById('adminOrderQueue');
             if (!container) return;
 
@@ -818,7 +813,6 @@
                     });
                 }
 
-                // Fallback sirf tabhi chale jab asli document upload hua ho aur yeh pure product order na ho
                 const hasRealFiles = Array.isArray(order.files) && order.files.length > 0;
                 const isPureProductOrder = productItemsList.length > 0 && printFilesList.length === 0 && !hasRealFiles;
 
@@ -831,7 +825,6 @@
                     });
                 }
 
-                // Agar yeh pure product order hai, toh printFilesList ko strictly empty rakhein
                 if (isPureProductOrder) {
                     printFilesList = [];
                 }
@@ -907,110 +900,6 @@
                 `;
             }).join('');
         }
-            
-
-            const sorted = [...orders].reverse();
-
-            container.innerHTML = sorted.map(order => {
-                const currentStatus = order.status || 'Pending';
-                let printFilesList = [];
-                let productItemsList = [];
-
-                let configItems = order.configDetails || [];
-                if (typeof configItems === 'string') {
-                    try { configItems = JSON.parse(configItems); } catch(e) { configItems = []; }
-                }
-
-                if (Array.isArray(configItems)) {
-                    configItems.forEach(item => {
-                        if (item.printType === 'snack' || (item.fileName && item.fileName.startsWith('Product:'))) {
-                            productItemsList.push(item);
-                        } else {
-                            printFilesList.push(item);
-                        }
-                    });
-                }
-
-                if (printFilesList.length === 0 && (order.fileUrl || order.fileName)) {
-                    printFilesList.push({
-                        fileName: order.fileName || 'Document.pdf',
-                        pages: order.pages || 1,
-                        copies: order.copies || 1,
-                        printType: order.printType || 'bw'
-                    });
-                }
-
-                let totalPackingItems = productItemsList.length;
-                let verifiedItemsList = Array.isArray(order.verifiedItems) ? order.verifiedItems : [];
-                let allProductsVerified = totalPackingItems === 0 || verifiedItemsList.length >= totalPackingItems;
-
-                const primaryFileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '#';
-                const isDrawerOpen = openDrawers.has(order.orderId);
-
-                return `
-                    <div class="order-card" id="card_${order.orderId}">
-                        <div class="order-card-header">
-                            <div class="order-id-meta">
-                                <h3>Order #${order.orderId}</h3>
-                                <div class="order-time">Received: ${order.date || 'Just now'}</div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-green);">₹${order.totalAmount || order.amount || 0}</div>
-                                <button type="button" onclick="toggleOrderDetailsDrawer('${order.orderId}')" style="background: var(--surface-card-hover); color: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">📋 View Details</button>
-                            </div>
-                        </div>
-
-                        <!-- Collapsible Order Details Panel -->
-                <div id="orderDetailsPanel_${order.orderId}" style="display: ${isDrawerOpen ? 'block' : 'none'}; background: rgba(15,23,42,0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
-                            <div class="order-customer-box" style="margin-bottom: 12px;">
-                                <div class="cust-field"><b>Customer Name</b><span>${order.customerName || 'Customer'}</span></div>
-                                <div class="cust-field"><b>Contact Number</b><span><a href="tel:${order.phone || ''}" style="color: #38bdf8; text-decoration: none;">${order.phone || 'N/A'}</a></span></div>
-                                <div class="cust-field" style="grid-column: 1 / -1;"><b>📍 Address</b><span>${order.address || 'N/A'}</span></div>
-                            </div>
-
-                            ${printFilesList.length > 0 ? `
-                            <div class="specs-container" style="margin-bottom: 12px;">
-                                <div class="specs-title">🖨️ Print Job Files</div>
-                                ${printFilesList.map(job => `<div class="spec-tag highlight" style="margin-bottom:6px; display:block;">📑 ${job.fileName || 'File'} (${job.pages || 1} Pages | ✖️ ${job.copies || 1} Copies | 🎨 ${String(job.printType || 'bw').toUpperCase()})</div>`).join('')}
-                                <div class="file-action-row" style="margin-top:8px;">
-                                    ${primaryFileUrl !== '#' ? `<a href="${primaryFileUrl}" target="_blank" download class="btn-download-file">📥 Download File</a>` : ''}
-                                    <button type="button" class="btn-manual-print" onclick="triggerPrintJob('${primaryFileUrl}', '${order.orderId}')">🖨️ Print Now</button>
-                                </div>
-                            </div>
-                            ` : ''}
-
-                            ${productItemsList.length > 0 ? `
-                            <div class="packing-list-box">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                    <div class="packing-title" style="margin-bottom:0;">🛒 Item Verification (${verifiedItemsList.length}/${totalPackingItems} verified)</div>
-                                    <button type="button" onclick="openBarcodeScannerModal('${order.orderId}')" style="background: #8b5cf6; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer;">📷 Scan Item</button>
-                                </div>
-                                ${productItemsList.map(prod => {
-                                    let prodCleanName = prod.fileName ? prod.fileName.replace('Product: ', '').split(' (Qty:')[0].trim() : 'Item';
-                                    let isItemVerified = verifiedItemsList.some(v => v.toLowerCase().includes(prodCleanName.toLowerCase()));
-                                    return `
-                                        <div class="packing-item-row">
-                                            <span style="color:${isItemVerified ? 'var(--accent-green)' : 'white'};">📦 ${prod.fileName}</span>
-                                            <span>${isItemVerified ? '✅ VERIFIED' : '⏳ PENDING'}</span>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                            ` : ''}
-                        </div>
-
-                        <!-- 4-Stage Stepper -->
-                        <div class="stepper-actions-bar">
-                            <span class="stepper-label">Set Status:</span>
-                            <button type="button" class="btn-step ${currentStatus === 'Paid / Ready for Print' || currentStatus === 'COD / Ready for Print' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Paid / Ready for Print')">1. Ready</button>
-                            <button type="button" class="btn-step ${currentStatus === 'Printing' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Printing')">2. Processing</button>
-                            <button type="button" class="btn-step ${currentStatus === 'Out for Delivery' ? 'current-phase' : ''}" ${!allProductsVerified ? 'disabled title="Verify all items first!"' : ''} onclick="updateOrderStatus('${order.orderId}', 'Out for Delivery')">3. Out for Delivery</button>
-                            <button type="button" class="btn-step ${currentStatus === 'Delivered' ? 'active' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Delivered')">4. Delivered</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        
 
         fetchStoreStatus();
         fetchInventoryReport();
