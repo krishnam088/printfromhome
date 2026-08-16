@@ -171,7 +171,7 @@
             padding-bottom: 12px;
             gap: 10px;
         }
-        .order-id-meta h3 { font-size: 1.05rem; font-weight: 800; color: var(--text-main); }
+        .order-id-meta h3 { font-size: 1.05rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .order-time { font-size: 0.72rem; color: var(--text-sub); margin-top: 2px; }
 
         .order-customer-box {
@@ -220,7 +220,6 @@
             border: 1px solid rgba(245, 158, 11, 0.25);
             border-radius: 12px;
             padding: 12px 14px;
-            margin-top: 10px;
         }
         .packing-title { font-size: 0.78rem; font-weight: 800; color: var(--accent-yellow); text-transform: uppercase; margin-bottom: 6px; }
         .packing-item-row {
@@ -321,7 +320,7 @@
         <header class="admin-header">
             <div class="brand-title">
                 <h1>Print From Home <span>Control Center</span></h1>
-                <p>Real-Time Hardware Dispatch & Laser Print Operations</p>
+                <p>Real-Time Hardware Dispatch & Store Operations</p>
             </div>
 
             <div class="header-action-group">
@@ -347,7 +346,7 @@
                 <span class="stat-num" id="statTotalOrders">0</span>
             </div>
             <div class="stat-card">
-                <span class="stat-title">Pending / Ready to Print</span>
+                <span class="stat-title">Pending / Ready</span>
                 <span class="stat-num" id="statReadyPrint" style="color: var(--accent-yellow);">0</span>
             </div>
             <div class="stat-card">
@@ -362,14 +361,14 @@
 
         <!-- ORDER QUEUE HEADING -->
         <div class="section-heading-bar">
-            <h2>📦 Live Hardware Print & Packing Queue</h2>
+            <h2>📦 Live Print & Product Packing Queue</h2>
             <button type="button" class="audio-test-btn" onclick="playLoudOrderChime(true)">🔔 Test Sound Alert</button>
         </div>
 
         <!-- LIVE ORDERS CONTAINER -->
         <div class="order-queue-list" id="adminOrderQueue">
             <div style="text-align: center; padding: 40px; color: var(--text-sub);">
-                ⏳ Connecting to print stream & fetching orders...
+                ⏳ Connecting to live orders stream...
             </div>
         </div>
 
@@ -567,9 +566,23 @@
                     orders.forEach(order => {
                         const isReady = order.status === 'Paid / Ready for Print' || order.status === 'Paid';
                         if (isReady && !processedAutoPrintOrderIds.has(order.orderId)) {
-                            const fileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '';
-                            if (fileUrl) {
-                                triggerPrintJob(fileUrl, order.orderId);
+                            // STRICT CHECK: Only auto-print if order actually contains printable documents!
+                            let hasPrintFiles = false;
+                            if (Array.isArray(order.configDetails)) {
+                                hasPrintFiles = order.configDetails.some(item => item.printType !== 'snack' && (!item.fileName || !item.fileName.startsWith('Product:')));
+                            } else if (order.fileUrl || (order.files && order.files.length > 0)) {
+                                hasPrintFiles = true;
+                            }
+
+                            if (hasPrintFiles) {
+                                const fileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '';
+                                if (fileUrl) {
+                                    triggerPrintJob(fileUrl, order.orderId);
+                                }
+                            } else {
+                                // If it's a snack-only order, mark as processed so it won't try to print
+                                processedAutoPrintOrderIds.add(order.orderId);
+                                localStorage.setItem('printed_orders', JSON.stringify(Array.from(processedAutoPrintOrderIds)));
                             }
                         }
                     });
@@ -586,8 +599,8 @@
                 container.innerHTML = `
                     <div style="text-align: center; padding: 40px; background: var(--surface-card); border-radius: 16px; border: 1px solid var(--border-color);">
                         <div style="font-size: 2.5rem; margin-bottom: 8px;">📭</div>
-                        <h3>No Active Print Orders</h3>
-                        <p style="color: var(--text-sub); font-size: 0.85rem; margin-top: 4px;">Orders placed on the store will appear here with auto-print alerts.</p>
+                        <h3>No Active Orders</h3>
+                        <p style="color: var(--text-sub); font-size: 0.85rem; margin-top: 4px;">Orders placed on the store will appear here.</p>
                     </div>
                 `;
                 return;
@@ -598,7 +611,6 @@
             container.innerHTML = sorted.map(order => {
                 const currentStatus = order.status || 'Pending';
                 
-                // Separate Print Files vs Product/Snack items from configDetails
                 let printFilesList = [];
                 let productItemsList = [];
 
@@ -612,17 +624,26 @@
                     });
                 }
 
-                // Fallback file info if configDetails is empty
                 const primaryFileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '';
                 const primaryFileName = printFilesList.length > 0 ? printFilesList[0].fileName : (order.fileName || 'Document.pdf');
 
                 const isNew = currentStatus === 'Pending' || currentStatus === 'Pending Payment' || currentStatus === 'Paid / Ready for Print';
 
+                // Determine Order Type Badge for Admin clarity
+                let orderTypeBadge = '';
+                if (printFilesList.length > 0 && productItemsList.length > 0) {
+                    orderTypeBadge = `<span style="background: rgba(245,158,11,0.2); color: #f59e0b; border: 1px solid #f59e0b; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 800;">🖨️+🛒 MIXED ORDER (Print + Snacks)</span>`;
+                } else if (printFilesList.length > 0) {
+                    orderTypeBadge = `<span style="background: rgba(0,112,243,0.2); color: #38bdf8; border: 1px solid #0070f3; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 800;">🖨️ PRINT JOB ONLY</span>`;
+                } else {
+                    orderTypeBadge = `<span style="background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid #10b981; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 800;">🛒 GROCERY / SNACK ORDER (NO PRINT)</span>`;
+                }
+
                 return `
                     <div class="order-card ${isNew ? 'new-order-pulse' : ''}" id="card_${order.orderId}">
                         <div class="order-card-header">
                             <div class="order-id-meta">
-                                <h3>Order #${order.orderId}</h3>
+                                <h3>Order #${order.orderId} ${orderTypeBadge}</h3>
                                 <div class="order-time">Received: ${order.date || 'Just now'}</div>
                             </div>
                             <div style="text-align: right;">
@@ -647,7 +668,7 @@
                             </div>
                         </div>
 
-                        <!-- Print Hardware Specifications -->
+                        <!-- Print Hardware Specifications (Only shown if print documents exist) -->
                         ${printFilesList.length > 0 ? `
                         <div class="specs-container">
                             <div class="specs-title">🖨️ Print Hardware Job</div>
@@ -669,9 +690,13 @@
                                 </button>
                             </div>
                         </div>
-                        ` : ''}
+                        ` : `
+                        <div style="background: rgba(16,185,129,0.05); border: 1px dashed rgba(16,185,129,0.3); border-radius: 12px; padding: 10px 14px; font-size: 0.78rem; color: #10b981; font-weight: 700;">
+                            ℹ️ This is a retail product / snack order. No document printing required.
+                        </div>
+                        `}
 
-                        <!-- Packing List for Snacks / Products -->
+                        <!-- Packing List for Snacks / Products (Shown if products exist) -->
                         ${productItemsList.length > 0 ? `
                         <div class="packing-list-box">
                             <div class="packing-title">🛒 Items to Pack (Groceries / Snacks)</div>
@@ -695,7 +720,7 @@
 
                             <button type="button" class="btn-step ${currentStatus === 'Printing' ? 'current-phase' : ''}" 
                                 onclick="updateOrderStatus('${order.orderId}', 'Printing')">
-                                2. 🖨️ Printing
+                                2. 🖨️ Processing
                             </button>
 
                             <button type="button" class="btn-step ${currentStatus === 'Out for Delivery' ? 'current-phase' : ''}" 
