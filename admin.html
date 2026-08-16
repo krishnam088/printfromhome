@@ -305,7 +305,7 @@
         <div id="section_orders" class="admin-section">
             <div class="section-heading-bar">
                 <h2>📦 Live Print & Product Packing Queue</h2>
-                <button type="button" class="audio-test-btn" onclick="playLoudOrderChime(true)">🔔 Test Sound Alert</button>
+                <button type="button" class="audio-test-btn" onclick="playLoudOrderChime()">🔔 Test Sound Alert</button>
             </div>
 
             <!-- LIVE ORDERS CONTAINER -->
@@ -522,7 +522,6 @@
 
             let targetOrderId = activeTargetOrderIdForScan;
             if (!targetOrderId) {
-                // Find pending order containing this item
                 const matchedProd = cachedInventoryList.find(p => p.sku === val || p.name.toLowerCase().includes(val.toLowerCase()));
                 if (!matchedProd) {
                     alert("❌ Invalid Barcode or SKU!");
@@ -687,7 +686,6 @@
                     });
                 }
 
-                // Check item verification status
                 let totalPackingItems = productItemsList.length;
                 let verifiedItemsList = Array.isArray(order.verifiedItems) ? order.verifiedItems : [];
                 let allProductsVerified = totalPackingItems === 0 || verifiedItemsList.length >= totalPackingItems;
