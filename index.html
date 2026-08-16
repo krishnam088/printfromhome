@@ -31,23 +31,33 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PrintFromHome">
+    
+    <style>
+        @keyframes slideUpModal {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
 </head>
 <body>
 
-    <!-- 🔍 GLOBAL PRODUCT DETAIL & HD IMAGE VIEWER MODAL -->
-    <div id="productDetailModal" onclick="closeProductDetailModal(event)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); z-index:99999; display:none; justify-content:center; align-items:center; padding:20px;">
-        <div style="background:#ffffff; border-radius:24px; padding:24px; max-width:380px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,0.3); text-align:center; position:relative; animation:popupBounceAnimation 0.25s ease;">
-            <span style="position:absolute; top:12px; right:16px; cursor:pointer; font-size:1.6rem; font-weight:bold; color:#64748b;" onclick="closeProductDetailModal()">&times;</span>
-            
-            <div id="modalProductImgContainer" style="width:100%; height:200px; background:#f8fafc; border-radius:16px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; overflow:hidden; border:1px solid #e2e8f0;">
-                <!-- Product Image or Fallback -->
+    <!-- 🔍 MODERN BOTTOM-SHEET PRODUCT DETAIL & HD IMAGE VIEWER MODAL -->
+    <div id="productDetailModal" onclick="closeProductDetailModal(event)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:99999; display:none; justify-content:center; align-items:flex-end; padding:0;">
+        <div style="background:#ffffff; border-radius:24px 24px 0 0; padding:24px; width:100%; max-width:500px; max-height:85vh; overflow-y:auto; box-shadow:0 -10px 30px rgba(0,0,0,0.2); text-align:left; animation:slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1); position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a;">Product Details</h3>
+                <span style="cursor:pointer; font-size:1.5rem; font-weight:bold; color:#64748b;" onclick="closeProductDetailModal()">&times;</span>
             </div>
             
-            <h3 id="modalProductName" style="font-size:1.2rem; font-weight:800; color:#0f172a; margin-bottom:6px;">Product Name</h3>
-            <p id="modalProductPrice" style="font-size:1.1rem; font-weight:900; color:var(--blinkit-green); margin-bottom:12px;">₹0.00</p>
-            <p id="modalProductStock" style="font-size:0.78rem; font-weight:700; color:#64748b; background:#f1f5f9; padding:6px 12px; border-radius:8px; display:inline-block; margin-bottom:18px;">Stock: Available</p>
+            <div id="modalProductImgContainer" style="width:100%; height:220px; background:#f8fafc; border-radius:16px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; overflow:hidden; border:1px solid #e2e8f0;">
+                <!-- Product Image -->
+            </div>
             
-            <button type="button" id="modalAddToCartBtn" style="width:100%; padding:12px; background:var(--blinkit-green); color:white; border:none; border-radius:12px; font-weight:800; font-size:0.9rem; cursor:pointer;">+ Add to Cart</button>
+            <h3 id="modalProductName" style="font-size:1.3rem; font-weight:800; color:#0f172a; margin-bottom:6px;">Product Name</h3>
+            <p id="modalProductPrice" style="font-size:1.2rem; font-weight:900; color:var(--blinkit-green, #10b981); margin-bottom:10px;">₹0.00</p>
+            <p id="modalProductStock" style="font-size:0.78rem; font-weight:700; color:#64748b; background:#f1f5f9; padding:6px 12px; border-radius:8px; display:inline-block; margin-bottom:20px;">Stock: Available</p>
+            
+            <button type="button" id="modalAddToCartBtn" style="width:100%; padding:14px; background:var(--blinkit-green, #10b981); color:white; border:none; border-radius:12px; font-weight:800; font-size:0.95rem; cursor:pointer; box-shadow:0 4px 12px rgba(16,185,129,0.3);">+ Add to Cart</button>
         </div>
     </div>
 
@@ -333,7 +343,7 @@
                         </div>
                     </div>
 
-                    <!-- 📦 STORE PRODUCTS GRID -->
+                    <!-- 📦 STORE PRODUCTS HORIZONTAL SLIDER GRID -->
                     <div class="category-section-title">
                         <span>⚡ Store Products & Snacks (Slide &rarr;)</span>
                     </div>
@@ -463,7 +473,6 @@
                 const res = await fetch('/api/store/products');
                 const data = await res.json();
                 if (data.success && Array.isArray(data.products)) {
-                    // Check if products actually changed to prevent DOM blinking/flashing
                     const newProductsJson = JSON.stringify(data.products);
                     const oldProductsJson = JSON.stringify(window.storeInventoryProducts);
                     if (newProductsJson !== oldProductsJson) {
@@ -481,6 +490,13 @@
             if (gridContainers.length === 0) return;
 
             gridContainers.forEach(container => {
+                container.style.display = 'flex';
+                container.style.gap = '12px';
+                container.style.overflowX = 'auto';
+                container.style.padding = '10px 4px';
+                container.style.width = '100%';
+                container.style.scrollbarWidth = 'none';
+
                 container.innerHTML = '';
                 if (window.storeInventoryProducts.length === 0) {
                     container.innerHTML = `<p style="font-size:0.75rem; color:#64748b; padding:10px;">No store products available currently.</p>`;
@@ -491,31 +507,45 @@
                     const isOutOfStock = (prod.stockQuantity <= 0);
                     const card = document.createElement('div');
                     card.className = 'blinkit-cat-card';
-                    card.style.cssText = `position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; display:flex; flex-direction:column; align-items:center; cursor:pointer;`;
+                    card.style.cssText = `
+                        min-width: 120px;
+                        width: 120px;
+                        background: #ffffff;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 14px;
+                        padding: 10px;
+                        position: relative; 
+                        opacity: ${isOutOfStock ? '0.7' : '1'}; 
+                        display: flex; 
+                        flex-direction: column; 
+                        align-items: center; 
+                        cursor: pointer;
+                        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+                        flex-shrink: 0;
+                    `;
                     
-                    // Clicking anywhere on the card opens HD Image & Details popup
                     card.onclick = () => openProductDetailModal(prod);
 
                     const imageHtml = prod.imageUrl 
-                        ? `<img src="${prod.imageUrl}" style="width:70px; height:70px; object-fit:cover; border-radius:10px; margin-bottom:6px;" />` 
-                        : `<div class="blinkit-cat-img" style="font-size:2rem; margin-bottom:6px;">📦</div>`;
+                        ? `<img src="${prod.imageUrl}" style="width:70px; height:70px; object-fit:cover; border-radius:10px; margin-bottom:6px;" onerror="this.src='';" />` 
+                        : `<div style="font-size:2rem; margin-bottom:6px; height:70px; display:flex; align-items:center; justify-content:center;">📦</div>`;
 
                     card.innerHTML = `
                         ${imageHtml}
-                        <div class="blinkit-cat-name" title="${prod.name}" style="font-weight:700; font-size:0.8rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name}</div>
-                        <div class="blinkit-cat-price" style="font-weight:800; font-size:0.8rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
+                        <div title="${prod.name}" style="font-weight:700; font-size:0.78rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; color:#0f172a;">${prod.name}</div>
+                        <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
                         ${isOutOfStock 
-                            ? `<button type="button" class="btn-quick-add" style="background:#ef4444; color:white;" onclick="event.stopPropagation(); notifyWhenAvailable('${prod.name}')">Notify</button>`
-                            : `<button type="button" class="btn-quick-add" onclick="event.stopPropagation(); addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
+                            ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); notifyWhenAvailable('${prod.name}')">Notify</button>`
+                            : `<button type="button" style="background:var(--blinkit-green, #10b981); color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
                         }
-                        ${isOutOfStock ? `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.6rem; padding:2px 5px; border-radius:4px; font-weight:800;">OUT</span>` : ''}
+                        ${isOutOfStock ? `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.55rem; padding:2px 4px; border-radius:4px; font-weight:800;">OUT</span>` : ''}
                     `;
                     container.appendChild(card);
                 });
             });
         }
 
-        // 🔍 GLOBAL PRODUCT DETAIL POPUP HANDLERS
+        // 🔍 GLOBAL BOTTOM-SHEET PRODUCT DETAIL POPUP
         window.openProductDetailModal = function(prod) {
             const modal = document.getElementById('productDetailModal');
             const imgContainer = document.getElementById('modalProductImgContainer');
@@ -543,7 +573,7 @@
                 addBtn.textContent = 'Out of Stock';
                 addBtn.onclick = () => notifyWhenAvailable(prod.name);
             } else {
-                addBtn.style.background = 'var(--blinkit-green)';
+                addBtn.style.background = 'var(--blinkit-green, #10b981)';
                 addBtn.textContent = '+ Add to Cart';
                 addBtn.onclick = () => {
                     addDynamicProductToCart(prod.sku, prod.name, prod.sellingPrice || 0, prod.stockQuantity);
@@ -587,7 +617,7 @@
         }
 
         loadDynamicStoreProducts();
-        setInterval(loadDynamicStoreProducts, 8000); // Stable interval to prevent flickering
+        setInterval(loadDynamicStoreProducts, 8000);
 
         window.updateFloatingCartBar = function() {
             const bar = document.getElementById('floatingCartFooterBar');
@@ -650,12 +680,10 @@
             let subtotal = 0;
             let totalItemsCount = 0;
 
-            // Render Snacks in Cart with Clickable Image/Name to View Details
             window.cartSnacksArray.forEach((snack, idx) => {
                 subtotal += snack.price * snack.qty;
                 totalItemsCount += snack.qty;
                 
-                // Find product matching image from inventory
                 const matchedProd = window.storeInventoryProducts.find(p => p.name === snack.name);
                 const imgUrl = matchedProd ? matchedProd.imageUrl : '';
 
