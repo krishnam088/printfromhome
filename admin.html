@@ -368,7 +368,14 @@
                     <input type="number" id="invPurchasePrice" placeholder="Purchase Price (₹)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
                     <input type="number" id="invSellingPrice" placeholder="Selling Price (₹)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
                     <input type="number" id="invQtyInput" placeholder="Add / Restock Qty" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
-                    <button type="button" onclick="addNewStockItem()" style="background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; padding: 10px;">+ Save / Restock</button>
+                    
+                    <!-- HD PRODUCT IMAGE UPLOAD FIELD -->
+                    <div style="grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; background: var(--bg-dark); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <label style="font-size: 0.75rem; color: var(--text-sub); font-weight:700;">HD Product Image (Optional):</label>
+                        <input type="file" id="invImageFile" accept="image/*" style="color: white; font-size: 0.8rem;">
+                    </div>
+
+                    <button type="button" onclick="addNewStockItem()" style="background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; padding: 12px; grid-column: 1 / -1;">+ Save / Restock Product</button>
                 </div>
             </div>
 
@@ -528,6 +535,7 @@
             const purchasePrice = document.getElementById('invPurchasePrice').value;
             const sellingPrice = document.getElementById('invSellingPrice').value;
             const quantity = document.getElementById('invQtyInput').value;
+            const imageFile = document.getElementById('invImageFile').files[0];
 
             if (!barcode || !name || !quantity) {
                 alert("⚠️ Please enter Barcode/UPC, Product Name, and Quantity!");
@@ -541,8 +549,11 @@
             formData.append('purchasePrice', purchasePrice);
             formData.append('sellingPrice', sellingPrice);
             formData.append('quantity', quantity);
-            if (temporaryFetchedImageUrl) {
-                formData.append('externalImageUrl', temporaryFetchedImageUrl);
+            
+            if (imageFile) {
+                formData.append('productImage', imageFile); // Manual HD File Upload
+            } else if (temporaryFetchedImageUrl) {
+                formData.append('externalImageUrl', temporaryFetchedImageUrl); // API Auto-Fetched Image
             }
 
             try {
@@ -552,12 +563,13 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert("✅ Stock updated and registered with barcode & image!");
+                    alert("✅ Stock updated and registered successfully with image!");
                     document.getElementById('invSkuInput').value = '';
                     document.getElementById('invNameInput').value = '';
                     document.getElementById('invPurchasePrice').value = '';
                     document.getElementById('invSellingPrice').value = '';
                     document.getElementById('invQtyInput').value = '';
+                    document.getElementById('invImageFile').value = '';
                     temporaryFetchedImageUrl = '';
                     fetchInventoryReport();
                     fetchDashboardStats();
