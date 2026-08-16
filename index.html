@@ -37,6 +37,12 @@
             from { transform: translateY(100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+        input[name="cartPaymentMode"]:checked + .payment-option-box {
+            border-color: var(--blinkit-green) !important;
+            background: #f0fdf4 !important;
+            box-shadow: 0 0 0 2px var(--blinkit-green);
+        }
+        .payment-option-box { transition: all 0.2s ease; }
     </style>
 </head>
 <body>
@@ -209,7 +215,7 @@
                 </div>
             </div>
 
-            <!-- Scrollable Content Container (Fixed layout overflow) -->
+            <!-- Scrollable Content Container -->
             <div style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:15px;">
                 
                 <!-- Free Delivery Progress Bar -->
@@ -261,28 +267,35 @@
                     </div>
                 </div>
 
-                <!-- Cart Payment Mode Selection -->
-                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px;">
-                    <label style="font-size:0.75rem; font-weight:800; color:#64748b; text-transform:uppercase; display:block; margin-bottom:8px;">💳 Select Payment Method</label>
-                    <div style="display:flex; gap:15px;">
-                        <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="cartPaymentMode" value="online" checked> Razorpay Online</label>
-                        <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="cartPaymentMode" value="cod"> Cash on Delivery (COD)</label>
+                <!-- Interactive Blinkit Style Payment Mode Selection Grid -->
+                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:16px; margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                    <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:12px;">💳 Select Payment Method</h4>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <label style="cursor:pointer; position:relative;">
+                            <input type="radio" name="cartPaymentMode" value="online" checked style="position:absolute; opacity:0; top:0; left:0;">
+                            <div class="payment-option-box" style="padding:12px; border:2px solid var(--blinkit-green); border-radius:12px; background:#f0fdf4; text-align:center;">
+                                <div style="font-size:1.2rem;">⚡</div>
+                                <div style="font-size:0.75rem; font-weight:800; margin-top:4px; color:#0f172a;">Online Payment</div>
+                            </div>
+                        </label>
+                        <label style="cursor:pointer; position:relative;">
+                            <input type="radio" name="cartPaymentMode" value="cod" style="position:absolute; opacity:0; top:0; left:0;">
+                            <div class="payment-option-box" style="padding:12px; border:2px solid #e2e8f0; border-radius:12px; background:#f8fafc; text-align:center;">
+                                <div style="font-size:1.2rem;">💵</div>
+                                <div style="font-size:0.75rem; font-weight:800; margin-top:4px; color:#0f172a;">Cash on Delivery</div>
+                            </div>
+                        </label>
                     </div>
                 </div>
 
             </div>
 
-            <!-- Footer (Fixed at Bottom) -->
+            <!-- Footer (Fixed at Bottom with integrated Grand Total) -->
             <div style="flex-shrink:0; background:#ffffff; border-top:1px solid #e2e8f0; padding:15px; box-shadow:0 -4px 15px rgba(0,0,0,0.03);">
-                <div style="display:flex; align-items:center; justify-content:space-between; background:var(--blinkit-green); color:white; border-radius:14px; padding:12px 18px; cursor:pointer;" onclick="executeFinalCartOrderPlacement()">
-                    <div>
-                        <div style="font-size:1.1rem; font-weight:900;" id="cartDrawerGrandTotal">₹0.00</div>
-                        <div style="font-size:0.65rem; font-weight:700; opacity:0.9; text-transform:uppercase;">TOTAL AMOUNT</div>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:6px; font-size:0.95rem; font-weight:800;">
-                        <span>Place Order & Pay</span> &rarr;
-                    </div>
-                </div>
+                <button type="button" onclick="executeFinalCartOrderPlacement()" style="width:100%; padding:14px 18px; background:var(--blinkit-green); color:white; border:none; border-radius:14px; font-weight:900; font-size:1rem; display:flex; justify-content:space-between; align-items:center; cursor:pointer; box-shadow:0 4px 12px rgba(12,131,70,0.3);">
+                    <span style="font-size:0.95rem; font-weight:800;">Place Order & Pay</span>
+                    <span id="cartDrawerGrandTotal" style="font-size:1.1rem; font-weight:900;">₹0.00</span>
+                </button>
             </div>
 
         </div>
