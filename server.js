@@ -62,6 +62,17 @@ const storeConfigSchema = new mongoose.Schema({
 });
 const StoreConfig = mongoose.model('StoreConfig', storeConfigSchema);
 
+// --- INVENTORY / PRODUCT SCHEMA FOR STOCK & P&L ---
+const productSchema = new mongoose.Schema({
+    sku: { type: String, unique: true },
+    name: String,
+    purchasePrice: Number,
+    sellingPrice: Number,
+    stockQuantity: Number,
+    totalSold: { type: Number, default: 0 }
+});
+const Product = mongoose.model('Product', productSchema);
+
 // Multer Setup for File Uploads
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)){
@@ -169,6 +180,58 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// --- INVENTORY MANAGEMENT APIS ---
+app.post('/api/admin/inventory/add', async (req, res) => {
+    try {
+        const { sku, name, purchasePrice, sellingPrice, quantity } = req.body;
+        let product = await Product.findOne({ sku });
+        
+        if (product) {
+            product.stockQuantity += Number(quantity);
+            if (purchasePrice) product.purchasePrice = Number(purchasePrice);
+            if (sellingPrice) product.sellingPrice = Number(sellingPrice);
+            if (name) product.name = name;
+            await product.save();
+        } else {
+            product = new Product({
+                sku,
+                name,
+                purchasePrice: Number(purchasePrice),
+                sellingPrice: Number(sellingPrice),
+                stockQuantity: Number(quantity)
+            });
+            await product.save();
+        }
+        res.json({ success: true, product });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get('/api/admin/inventory/report', async (req, res) => {
+    try {
+        const products = await Product.find();
+        let totalStockValue = 0;
+        let totalPotentialProfit = 0;
+
+        products.forEach(p => {
+            totalStockValue += (p.purchasePrice || 0) * (p.stockQuantity || 0);
+            totalPotentialProfit += ((p.sellingPrice || 0) - (p.purchasePrice || 0)) * (p.totalSold || 0);
+        });
+
+        res.json({
+            success: true,
+            products,
+            financials: {
+                totalStockValue,
+                totalProfitEarned: totalPotentialProfit
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Orders & Payments APIs
 app.post('/api/create-order', upload.array('document', 20), async (req, res) => {
     try {
@@ -183,6 +246,23 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
         const filesMappedList = req.files ? req.files.map(f => ({ name: f.originalname, filename: f.filename, url: `/uploads/${f.filename}` })) : [];
         let parsedConfig = [];
         try { parsedConfig = configDetails ? JSON.parse(configDetails) : []; } catch(e){}
+
+        // Automatically deduct inventory stock when items are ordered
+        if (parsedConfig && parsedConfig.length > 0) {
+            for (const item of parsedConfig) {
+                if (item.printType === 'snack' || (item.fileName && item.fileName.startsWith('Product:'))) {
+                    let prodName = item.fileName.replace('Product: ', '').split(' (Qty:')[0].trim();
+                    let qty = item.copies || item.qty || 1;
+                    
+                    let matchedProd = await Product.findOne({ name: { $regex: new RegExp(prodName, 'i') } });
+                    if (matchedProd) {
+                        matchedProd.stockQuantity = Math.max(0, matchedProd.stockQuantity - qty);
+                        matchedProd.totalSold += qty;
+                        await matchedProd.save();
+                    }
+                }
+            }
+        }
 
         // Cash on Delivery (COD) Flow
         if (selectedPaymentMode === 'cod') {
