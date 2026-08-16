@@ -127,18 +127,47 @@
         </div>
     </div>
 
-    <!-- 📍 ADDRESS MANAGER MODAL WITH LEAFLET MAP -->
-    <div id="addressManagerModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:18000; display:none; justify-content:center; align-items:center; padding:20px;">
-        <div style="background:#ffffff; border-radius:24px; padding:24px; max-width:460px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.3); text-align:left;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a;">📍 Select Delivery Location</h3>
+    <!-- 📍 DETAILED ADDRESS MANAGER MODAL WITH FORM & MAP -->
+    <div id="addressManagerModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:18000; display:none; justify-content:center; align-items:center; padding:15px; overflow-y:auto;">
+        <div style="background:#ffffff; border-radius:24px; padding:20px; max-width:480px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.3); text-align:left; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a;">📍 Enter Delivery Address</h3>
                 <span style="cursor:pointer; font-size:1.5rem; font-weight:bold; color:#64748b;" onclick="closeAddressManagerModal()">&times;</span>
             </div>
-            <p style="font-size:0.75rem; color:#64748b; margin-bottom:10px;">Drag the pin on map to pin your precise address</p>
-            <div id="userDeliveryMap" style="width:100%; height:240px; border-radius:12px; border:1px solid #cbd5e1; margin-bottom:12px; z-index:999;"></div>
-            <label style="font-size:0.75rem; font-weight:700; color:#4a5568; display:block; margin-bottom:4px;">Confirmed Address:</label>
-            <textarea id="mapSelectedAddressInput" rows="2" style="width:100%; padding:10px; border-radius:10px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none; margin-bottom:15px; background:#f8fafc;" placeholder="Fetching address..."></textarea>
-            <button type="button" onclick="confirmNewAddressFromMap()" style="width:100%; padding:12px; background:var(--blinkit-green); color:white; border:none; border-radius:10px; font-weight:700; font-size:0.9rem; cursor:pointer;">Save & Use This Address</button>
+            <p style="font-size:0.72rem; color:#64748b; margin-bottom:12px;">Provide exact details so our Blinkit delivery executive can reach you in 15 mins.</p>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                <div>
+                    <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Your Full Name *</label>
+                    <input type="text" id="addrContactName" style="width:100%; padding:9px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none;" placeholder="Enter name" required>
+                </div>
+                <div>
+                    <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Contact Mobile *</label>
+                    <input type="tel" id="addrContactMobile" maxlength="10" style="width:100%; padding:9px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none;" placeholder="10-digit mobile" required>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1.4fr 1fr; gap:10px; margin-bottom:10px;">
+                <div>
+                    <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Flat / House / Building *</label>
+                    <input type="text" id="addrFlatBuilding" style="width:100%; padding:9px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none;" placeholder="Flat No / Building Name" required>
+                </div>
+                <div>
+                    <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Floor (Optional)</label>
+                    <input type="text" id="addrFloor" style="width:100%; padding:9px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none;" placeholder="e.g. 2nd Floor">
+                </div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+                <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Nearby Landmark (Optional)</label>
+                <input type="text" id="addrLandmark" style="width:100%; padding:9px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none;" placeholder="e.g. Near Hanuman Temple">
+            </div>
+
+            <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Pin Location on Map (Drag Pin):</label>
+            <div id="userDeliveryMap" style="width:100%; height:180px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:8px; z-index:999;"></div>
+            <textarea id="mapSelectedAddressInput" rows="2" style="width:100%; padding:8px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.75rem; font-weight:600; outline:none; margin-bottom:12px; background:#f8fafc;" placeholder="Map location area..." readonly></textarea>
+
+            <button type="button" onclick="saveFullAddressFormToStorage()" style="width:100%; padding:12px; background:var(--blinkit-green); color:white; border:none; border-radius:10px; font-weight:700; font-size:0.88rem; cursor:pointer;">Save & Deliver Here</button>
         </div>
     </div>
 
@@ -151,7 +180,10 @@
                     <span style="cursor:pointer; font-size:1.2rem; font-weight:bold;" onclick="toggleCartDrawer(false)">&larr;</span>
                     <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a;">Review Cart & Checkout</h3>
                 </div>
-                <span style="font-size:0.8rem; font-weight:700; color:var(--blinkit-green); background:#f0fdf4; padding:4px 10px; border-radius:8px; cursor:pointer;" onclick="toggleCartDrawer(false)">Close</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button type="button" onclick="clearEntireCartData()" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; cursor:pointer;">🗑️ Clean Cart</button>
+                    <span style="font-size:0.8rem; font-weight:700; color:var(--blinkit-green); background:#f0fdf4; padding:4px 10px; border-radius:8px; cursor:pointer;" onclick="toggleCartDrawer(false)">Close</span>
+                </div>
             </div>
 
             <!-- Free Delivery Progress Bar -->
@@ -179,21 +211,26 @@
                 </div>
             </div>
 
-            <div id="cartDrawerItemsList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-bottom:15px;"></div>
+            <!-- Row-wise Cart Items Container -->
+            <div id="cartDrawerItemsList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
 
-            <!-- Live Bill Breakdown Box inside Cart -->
-            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px;">
-                <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:8px;">Bill Details</h4>
-                <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#64748b; margin-bottom:4px;">
-                    <span>Item Total</span>
+            <!-- Realistic Detailed Bill Invoice Box inside Cart -->
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:16px; margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                <h4 style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:6px;">📄 Bill Invoice Summary</h4>
+                <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#4a5568; margin-bottom:5px;">
+                    <span>Item Total (Prints & Snacks)</span>
                     <span id="cartItemSubtotal">₹0.00</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#64748b; margin-bottom:4px;">
-                    <span>Delivery Charge</span>
+                <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#4a5568; margin-bottom:5px;">
+                    <span>Delivery Partner Fee (Blinkit)</span>
                     <span id="cartDeliveryFee">₹25.00</span>
                 </div>
-                <div style="border-top:1px solid #e2e8f0; margin-top:6px; padding-top:6px; display:flex; justify-content:space-between; font-size:0.9rem; font-weight:800; color:#0f172a;">
-                    <span>Grand Total</span>
+                <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#16a34a; font-weight:700; margin-bottom:8px;">
+                    <span>Taxes & Platform Charges</span>
+                    <span>FREE</span>
+                </div>
+                <div style="border-top:1px solid #e2e8f0; margin-top:8px; padding-top:8px; display:flex; justify-content:space-between; font-size:0.95rem; font-weight:900; color:#0f172a;">
+                    <span>Grand Total Payable</span>
                     <span id="cartGrandTotalSummary" style="color:var(--blinkit-green);">₹0.00</span>
                 </div>
             </div>
@@ -350,7 +387,6 @@
                     <form id="printForm" enctype="multipart/form-data" style="width:100%;">
                         <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
                         
-                        <!-- Map removed from here as per instructions, now managed in address modal/cart -->
                         <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">Add Print Job to Cart</button>
                     </form>
                 </div>
@@ -450,9 +486,9 @@
 
     <script>
         // ==========================================
-        // 🛒 GLOBAL UNIFIED CART STATE MANAGEMENT
+        // 🛒 GLOBAL UNIFIED CART STATE MANAGEMENT WITH ROW-WISE RENDERING
         // ==========================================
-        window.cartSnacksArray = [];
+        window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
 
         function addSnackToCart(name, price) {
             const existing = window.cartSnacksArray.find(item => item.name === name);
@@ -461,11 +497,12 @@
             } else {
                 window.cartSnacksArray.push({ name, price, qty: 1 });
             }
+            if (typeof persistCartStateData === 'function') persistCartStateData();
             updateFloatingCartBar();
             if (typeof calculateTotal === 'function') calculateTotal();
         }
 
-        function updateFloatingCartBar() {
+        window.updateFloatingCartBar = function() {
             const bar = document.getElementById('floatingCartFooterBar');
             const countText = document.getElementById('floatingCartCountText');
             const priceText = document.getElementById('floatingCartTotalPriceText');
@@ -497,7 +534,7 @@
             }
         }
 
-        function toggleCartDrawer(open) {
+        window.toggleCartDrawer = function(open) {
             const overlay = document.getElementById('cartDrawerOverlay');
             if (!overlay) return;
             if (open) {
@@ -510,7 +547,7 @@
             }
         }
 
-        function renderCartDrawerContents() {
+        window.renderCartDrawerContents = function() {
             const container = document.getElementById('cartDrawerItemsList');
             const grandTotalNode = document.getElementById('cartDrawerGrandTotal');
             const itemsCountNode = document.getElementById('shipmentItemsCountText');
@@ -524,56 +561,63 @@
             let subtotal = 0;
             let totalItemsCount = 0;
 
-            // Render Snacks with Green Steppers
+            // Render Snacks Row-wise with Plus / Minus buttons
             window.cartSnacksArray.forEach((snack, idx) => {
                 subtotal += snack.price * snack.qty;
                 totalItemsCount += snack.qty;
                 const row = document.createElement('div');
-                row.style = "display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:12px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 2px 6px rgba(0,0,0,0.02);";
+                row.style = "display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:10px 14px; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 1px 4px rgba(0,0,0,0.02);";
                 row.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="font-size:2rem; background:#f8fafc; padding:8px; border-radius:12px; border:1px solid #e2e8f0;">📦</div>
-                        <div>
-                            <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a;">${snack.name}</h4>
-                            <p style="font-size:0.7rem; color:#64748b; font-weight:600;">Snack Item</p>
-                            <p style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-top:2px;">₹${snack.price * snack.qty}</p>
+                    <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                        <span style="font-size:1.4rem;">📦</span>
+                        <div style="overflow:hidden;">
+                            <h4 style="font-size:0.8rem; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</h4>
+                            <p style="font-size:0.7rem; color:#64748b; font-weight:600;">₹${snack.price} each</p>
                         </div>
                     </div>
-                    <div style="display:flex; align-items:center; background:var(--blinkit-green); border-radius:10px; padding:4px 8px; gap:10px;">
-                        <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; color:white; font-weight:bold; font-size:1rem; cursor:pointer;">-</button>
-                        <span style="color:white; font-weight:800; font-size:0.85rem;">${snack.qty}</span>
-                        <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; color:white; font-weight:bold; font-size:1rem; cursor:pointer;">+</button>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="font-size:0.85rem; font-weight:900; color:#0f172a;">₹${snack.price * snack.qty}</span>
+                        <div style="display:flex; align-items:center; background:var(--blinkit-green); border-radius:8px; padding:2px 6px; gap:8px;">
+                            <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; color:white; font-weight:bold; font-size:0.9rem; cursor:pointer;">-</button>
+                            <span style="color:white; font-weight:800; font-size:0.8rem;">${snack.qty}</span>
+                            <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; color:white; font-weight:bold; font-size:0.9rem; cursor:pointer;">+</button>
+                        </div>
                     </div>
                 `;
                 container.appendChild(row);
             });
 
-            // Render Cart Print Jobs
-            let printTotal = 0;
+            // Render Cart Print Jobs Row-wise with Plus / Minus buttons
             if (window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0) {
                 window.cartPrintJobsArray.forEach((job, jobIdx) => {
                     const cost = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
-                    printTotal += cost;
+                    printTotalVal = cost;
+                    subtotal += cost;
                     totalItemsCount += job.copies;
 
                     const row = document.createElement('div');
-                    row.style = "display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:12px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 2px 6px rgba(0,0,0,0.02);";
+                    row.style = "display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:10px 14px; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 1px 4px rgba(0,0,0,0.02);";
                     row.innerHTML = `
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <div style="font-size:2rem; background:#f0fdf4; padding:8px; border-radius:12px; border:1px solid #bbf7d0;">📄</div>
-                            <div>
-                                <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${job.fileName}">${job.fileName}</h4>
-                                <p style="font-size:0.7rem; color:var(--blinkit-green); font-weight:700;">${job.printType.toUpperCase()} | ${job.copies} copy</p>
-                                <p style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-top:2px;">₹${cost.toFixed(2)}</p>
+                        <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                            <span style="font-size:1.4rem;">📄</span>
+                            <div style="overflow:hidden;">
+                                <h4 style="font-size:0.8rem; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${job.fileName}">${job.fileName}</h4>
+                                <p style="font-size:0.68rem; color:var(--blinkit-green); font-weight:700;">${job.printType.toUpperCase()} (${job.pages}p)</p>
                             </div>
                         </div>
-                        <button type="button" onclick="removePrintJobFromCart(${jobIdx})" style="background:#fef2f2; border:1px solid #fecaca; color:#ef4444; width:26px; height:26px; border-radius:50%; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem;">&times;</button>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <span style="font-size:0.85rem; font-weight:900; color:#0f172a;">₹${cost.toFixed(2)}</span>
+                            <div style="display:flex; align-items:center; background:var(--blinkit-green); border-radius:8px; padding:2px 6px; gap:8px;">
+                                <button type="button" onclick="adjustPrintJobCopies(${jobIdx}, -1)" style="background:none; border:none; color:white; font-weight:bold; font-size:0.9rem; cursor:pointer;">-</button>
+                                <span style="color:white; font-weight:800; font-size:0.8rem;">${job.copies}</span>
+                                <button type="button" onclick="adjustPrintJobCopies(${jobIdx}, 1)" style="background:none; border:none; color:white; font-weight:bold; font-size:0.9rem; cursor:pointer;">+</button>
+                            </div>
+                        </div>
                     `;
                     container.appendChild(row);
                 });
             }
 
-            subtotal += printTotal;
             let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
             let grandTotal = subtotal + delivery;
 
@@ -596,132 +640,38 @@
             if (grandTotalNode) grandTotalNode.textContent = `₹${grandTotal.toFixed(2)}`;
         }
 
-        window.removePrintJobFromCart = function(index) {
-            window.cartPrintJobsArray.splice(index, 1);
+        window.adjustPrintJobCopies = function(index, delta) {
+            window.cartPrintJobsArray[index].copies += delta;
+            if (window.cartPrintJobsArray[index].copies <= 0) {
+                window.cartPrintJobsArray.splice(index, 1);
+            }
+            if (typeof persistCartStateData === 'function') persistCartStateData();
             renderCartDrawerContents();
             updateFloatingCartBar();
             if (typeof calculateTotal === 'function') calculateTotal();
         }
 
-        function adjustSnackQty(index, delta) {
+        window.adjustSnackQty = function(index, delta) {
             window.cartSnacksArray[index].qty += delta;
             if (window.cartSnacksArray[index].qty <= 0) {
                 window.cartSnacksArray.splice(index, 1);
             }
+            if (typeof persistCartStateData === 'function') persistCartStateData();
             renderCartDrawerContents();
             updateFloatingCartBar();
             if (typeof calculateTotal === 'function') calculateTotal();
         }
 
-        // ==========================================
-        // 🎨 ADVANCED FESTIVE THEME & FULL BACKGROUND ENGINE (2026)
-        // ==========================================
-        window.addEventListener('DOMContentLoaded', () => {
-            const banner = document.getElementById('storeOffersTopBanner');
-            const header = document.querySelector('.brand-premium-header');
-            const body = document.querySelector('body');
-            if (!banner) return;
-
-            const now = new Date();
-            
-            function isEventActive(startMonth, startDay, endMonth, endDay) {
-                const currentYear = now.getFullYear();
-                const startDate = new Date(currentYear, startMonth - 1, startDay, 0, 0, 0);
-                const endDate = new Date(currentYear, endMonth - 1, endDay, 23, 59, 59);
-                return now >= startDate && now <= endDate;
+        window.clearEntireCartData = function() {
+            if (confirm("🗑️ Are you sure you want to clean/clear your entire cart?")) {
+                window.cartPrintJobsArray = [];
+                window.cartSnacksArray = [];
+                if (typeof persistCartStateData === 'function') persistCartStateData();
+                renderCartDrawerContents();
+                updateFloatingCartBar();
+                if (typeof calculateTotal === 'function') calculateTotal();
             }
-
-            function applyFestiveTheme(bannerBg, headerGrad, bodyThemeClass, offerTitle, offerMessage, icon) {
-                banner.style.background = bannerBg;
-                banner.style.color = "#000";
-                banner.innerHTML = `<span style="white-space:nowrap; flex-shrink:0;">${icon} <b>${offerTitle}:</b></span> <marquee scrollamount="4">${offerMessage}</marquee>`;
-                if (header) header.style.background = headerGrad;
-                if (body) {
-                    body.className = ""; 
-                    body.classList.add(bodyThemeClass); 
-                }
-            }
-
-            if (isEventActive(1, 25, 1, 26)) {
-                applyFestiveTheme("linear-gradient(to right, #FF9933, #FFFFFF, #138808)", "linear-gradient(to bottom, #ffe0cc, #ffffff)", "theme-festive-republic", "Republic Day", "Happy Republic Day! Get 20% OFF. Code: REPUBLIC20", "🇮🇳");
-            } else if (isEventActive(3, 3, 3, 4)) {
-                applyFestiveTheme("#fef3c7", "linear-gradient(to bottom, #fde047, #fef9c3)", "theme-festive-holi", "Holi Offer", "Wishing you a colorful Holi! Enjoy flat discounts & express deliveries.", "🎨");
-            } else if (isEventActive(3, 20, 3, 21)) {
-                applyFestiveTheme("#e6f4ea", "linear-gradient(to bottom, #d1fae5, #ecfdf5)", "theme-festive-holi", "Eid Mubarak", "Eid Mubarak! Avail special festive savings & priority home print dispatch.", "🌙");
-            } else if (isEventActive(8, 14, 8, 15)) {
-                applyFestiveTheme("linear-gradient(to right, #FF9933, #FFFFFF, #138808)", "linear-gradient(to bottom, #ffe0cc, #ffffff)", "theme-festive-republic", "Independence Day", "Happy Independence Day! 25% OFF & FREE Delivery! Code: AZADI25", "🇮🇳");
-                const script = document.createElement('script');
-                script.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js";
-                script.onload = () => { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); };
-                document.body.appendChild(script);
-            } else if (isEventActive(8, 27, 8, 28)) {
-                applyFestiveTheme("#fce7f3", "linear-gradient(to bottom, #fbcfe8, #fdf2f8)", "theme-festive-holi", "Rakhi Special", "Happy Raksha Bandhan! Send photo prints with free shipping.", "🎁");
-            } else if (isEventActive(9, 13, 9, 14)) {
-                applyFestiveTheme("#ffedd5", "linear-gradient(to bottom, #fed7aa, #fff7ed)", "theme-festive-holi", "Ganpati Special", "Ganpati Bappa Morya! Special discounts on poster prints & booklets.", "📿");
-            } else if (isEventActive(10, 1, 10, 20)) {
-                applyFestiveTheme("#fef3c7", "linear-gradient(to bottom, #fde68a, #fffbeb)", "theme-festive-holi", "Festive Dhamaka", "Dussehra & Gandhi Jayanti Special: Extra savings on spiral bindings!", "🏹");
-            } else if (isEventActive(11, 7, 11, 8)) {
-                applyFestiveTheme("#fef08a", "linear-gradient(to bottom, #fde047, #fef9c3)", "theme-festive-diwali", "Diwali Dhamaka", "Shubh Deepavali! Flat discounts & zero delivery fees on all prints!", "🪔");
-            } else if (isEventActive(12, 24, 1, 1)) {
-                applyFestiveTheme("#fecaca", "linear-gradient(to bottom, #f87171, #fee2e2)", "theme-festive-christmas", "New Year Bash", "Merry Christmas & Happy New Year! Get 30% OFF on creative prints.", "🎄");
-            } else {
-                banner.style.background = "#fffbeb";
-                banner.style.border = "1px solid #fed7aa";
-                banner.style.color = "#b45309";
-                banner.innerHTML = `<span style="white-space:nowrap; flex-shrink:0;">📢 <b>Offers:</b></span> <marquee scrollamount="4">⚡ First Order: Print for ₹49+ & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery above ₹99!</marquee>`;
-            }
-        });
-
-        // Store Status Sync Guard
-        async function runSilentIntradaySchedulerGuard() {
-            const badge = document.getElementById('userShopStatus');
-            const btn = document.getElementById('submitOrderBtn');
-            const noticeBox = document.getElementById('storeClosedNoticeBox');
-            if (!badge || !btn) return;
-
-            try {
-                const response = await fetch('/api/store-status');
-                const data = await response.json();
-                
-                if (data.success && data.isOpen === false) {
-                    badge.textContent = "CLOSED 🔴"; 
-                    badge.className = "shop-status-text-badge closed";
-                    btn.disabled = true; btn.style.opacity = "0.4"; btn.style.cursor = "not-allowed"; 
-                    btn.textContent = "❌ Store Closed by Admin";
-                    if (noticeBox) noticeBox.classList.remove('hidden');
-                    return;
-                }
-
-                const now = new Date();
-                const hoursIST = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(now));
-                let isTimeOpen = (hoursIST >= 7 && hoursIST < 24);
-
-                if (isTimeOpen && data.isOpen !== false) {
-                    badge.textContent = "OPEN 🟢"; badge.className = "shop-status-text-badge open";
-                    btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
-                    if(btn.textContent.includes('Store Closed')) btn.textContent = "Add Print Job to Cart";
-                    if (noticeBox) noticeBox.classList.add('hidden');
-                } else {
-                    badge.textContent = "CLOSED 🔴"; badge.className = "shop-status-text-badge closed";
-                    btn.disabled = true; btn.style.opacity = "0.4"; btn.style.cursor = "not-allowed"; 
-                    btn.textContent = "❌ Store is Closed (7AM - 12AM)";
-                    if (noticeBox) noticeBox.classList.add('hidden');
-                }
-            } catch (err) {}
         }
-        setInterval(runSilentIntradaySchedulerGuard, 3000);
-        window.addEventListener('DOMContentLoaded', runSilentIntradaySchedulerGuard);
-
-        function closeStoreClosedPopup() { document.getElementById('storeClosedPopupModal').style.display = 'none'; }
-        
-        document.getElementById('fileUpload').addEventListener('click', function(e) {
-            const badge = document.getElementById('userShopStatus');
-            if (badge && badge.textContent.includes('CLOSED')) {
-                e.preventDefault(); 
-                document.getElementById('storeClosedPopupModal').style.display = 'flex';
-                return false;
-            }
-        });
 
         let deliveryMap = null;
         let deliveryMarker = null;

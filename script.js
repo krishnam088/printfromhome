@@ -20,10 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const ordersHistoryContainer = document.getElementById('ordersHistoryContainer');
 
     let masterFilesArray = []; 
-    window.cartPrintJobsArray = []; // Cart print jobs storage
-    window.cartSnacksArray = [];     // Cart snacks storage
-    window.savedUserAddresses = [];  // User saved addresses list
-    let selectedActiveAddress = "";  // Currently selected delivery address
+    window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]'); 
+    window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');     
+    window.savedUserAddresses = JSON.parse(localStorage.getItem('saved_addresses') || '[]');  
+    let selectedActiveAddress = localStorage.getItem('selected_active_address') || "";  
 
     // 🔥 LIVE RE-ROUTE CONFIGS
     const LIVE_SERVER_URL = window.location.origin;
@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const walletModal = document.getElementById('walletDepositModal');
         const sideDrawer = document.getElementById('userSideDrawer');
         const addressModal = document.getElementById('addressManagerModal');
+        const configScreen = document.getElementById('configurationScreenState');
+        const uploadScreen = document.getElementById('uploadScreenInitialState');
         
         if (cartOverlay && cartOverlay.style.display === 'flex') {
             cartOverlay.style.display = 'none';
@@ -57,49 +59,77 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('drawerOverlay').classList.remove('active');
             return;
         }
+        // Agar configuration screen par hai, toh back button dabane par upload screen par le aayein
+        if (configScreen && !configScreen.classList.contains('hidden')) {
+            forceReturnToUploadView();
+            return;
+        }
         
         if (typeof navigateDrawerSection === 'function') {
             navigateDrawerSection('store');
         }
     });
 
+    // Save Cart State to LocalStorage for persistence across app reloads
+    window.persistCartStateData = function() {
+        localStorage.setItem('cart_print_jobs', JSON.stringify(window.cartPrintJobsArray));
+        localStorage.setItem('cart_snacks', JSON.stringify(window.cartSnacksArray));
+        updateFloatingCartBar();
+    }
+
     // ==========================================
-    // 📍 ADDRESS MANAGEMENT CORE
+    // 📍 DETAILED ADDRESS MANAGEMENT CORE
     // ==========================================
     window.loadUserAddressesFromStorage = function() {
-        const activeUser = localStorage.getItem('printAppUser') || 'default_user';
-        const raw = localStorage.getItem(`addresses_${activeUser}`);
+        const raw = localStorage.getItem('saved_addresses');
         if (raw) {
             try { window.savedUserAddresses = JSON.parse(raw); } catch(e) { window.savedUserAddresses = []; }
-        } else {
-            window.savedUserAddresses = [];
         }
         if (window.savedUserAddresses.length > 0 && !selectedActiveAddress) {
-            selectedActiveAddress = window.savedUserAddresses[0];
+            selectedActiveAddress = localStorage.getItem('selected_active_address') || window.savedUserAddresses[0];
         }
         renderSavedAddressesUI();
     }
 
-    window.saveAddressToStorage = function(newAddressText) {
-        if (!newAddressText || newAddressText.trim() === "") return;
-        const activeUser = localStorage.getItem('printAppUser') || 'default_user';
-        if (!window.savedUserAddresses.includes(newAddressText)) {
-            window.savedUserAddresses.push(newAddressText);
+    window.saveFullAddressFormToStorage = function() {
+        const flat = document.getElementById('addrFlatBuilding').value.trim();
+        const floor = document.getElementById('addrFloor').value.trim();
+        const landmark = document.getElementById('addrLandmark').value.trim();
+        const name = document.getElementById('addrContactName').value.trim();
+        const mobile = document.getElementById('addrContactMobile').value.trim();
+        const fullGeo = document.getElementById('mapSelectedAddressInput').value.trim();
+
+        if (!flat || !name || !mobile) {
+            alert("⚠️ Please enter Building/Flat number, Contact Name, and Mobile Number!");
+            return;
         }
-        selectedActiveAddress = newAddressText;
-        localStorage.setItem(`addresses_${activeUser}`, JSON.stringify(window.savedUserAddresses));
+
+        const formattedAddress = `${flat}${floor ? ', Floor: ' + floor : ''}${landmark ? ', Landmark: ' + landmark : ''} | Area: ${fullGeo || 'Varanasi'} | Contact: ${name} (${mobile})`;
+        
+        if (!window.savedUserAddresses.includes(formattedAddress)) {
+            window.savedUserAddresses.push(formattedAddress);
+        }
+        selectedActiveAddress = formattedAddress;
+        localStorage.setItem('saved_addresses', JSON.stringify(window.savedUserAddresses));
+        localStorage.setItem('selected_active_address', selectedActiveAddress);
+        
+        closeAddressManagerModal();
         renderSavedAddressesUI();
+        if (document.getElementById('cartDrawerOverlay').style.display === 'flex') {
+            renderCartDrawerContents();
+        }
+        alert("✅ Address saved successfully!");
     }
 
     function renderSavedAddressesUI() {
         const listContainer = document.getElementById('cartSavedAddressesList');
         const summaryNode = document.getElementById('cartDrawerAddressSummary');
-        if (summaryNode) summaryNode.textContent = selectedActiveAddress || "No address selected. Please add one.";
+        if (summaryNode) summaryNode.textContent = selectedActiveAddress || "No delivery address added yet.";
         if (!listContainer) return;
 
         listContainer.innerHTML = '';
         if (window.savedUserAddresses.length === 0) {
-            listContainer.innerHTML = `<p style="font-size:0.75rem; color:#ef4444; font-weight:600;">⚠️ No saved address found. Please add a delivery address.</p>`;
+            listContainer.innerHTML = `<p style="font-size:0.75rem; color:#ef4444; font-weight:600;">⚠️ No address saved. Tap '+ Add New Address' to add one.</p>`;
             return;
         }
 
@@ -118,6 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.selectActiveAddressByIndex = function(idx) {
         if (window.savedUserAddresses[idx]) {
             selectedActiveAddress = window.savedUserAddresses[idx];
+            localStorage.setItem('selected_active_address', selectedActiveAddress);
             renderSavedAddressesUI();
         }
     }
@@ -134,17 +165,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.closeAddressManagerModal = function() {
         const modal = document.getElementById('addressManagerModal');
         if (modal) modal.style.display = 'none';
-    }
-
-    window.confirmNewAddressFromMap = function() {
-        const addressInput = document.getElementById('mapSelectedAddressInput');
-        if (addressInput && addressInput.value.trim() !== "") {
-            saveAddressToStorage(addressInput.value.trim());
-            closeAddressManagerModal();
-            renderCartDrawerContents();
-        } else {
-            alert("⚠️ Please select a valid location on the map.");
-        }
     }
 
     // ==========================================
@@ -274,7 +294,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (masterFilesArray && masterFilesArray.length > 0) {
             if(uploadInitialScreen) uploadInitialScreen.classList.add('hidden');
-            if(configWorkspaceScreen) configWorkspaceScreen.classList.remove('hidden');
+            if(configWorkspaceScreen) {
+                configWorkspaceScreen.classList.remove('hidden');
+                history.pushState({ configOpen: true }, '', ''); // Push state for phone back button support
+            }
             if(sideInvoicePanel) sideInvoicePanel.classList.remove('hidden');
             if (window.innerWidth > 992) {
                 if(layoutContainer) { layoutContainer.classList.add('has-invoice'); layoutContainer.style.gridTemplateColumns = '2.5fr 1.2fr'; }
@@ -310,6 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(authScreen) { authScreen.classList.remove('app-hidden'); authScreen.style.display = 'flex'; }
         }
         calculateTotal();
+        updateFloatingCartBar();
     }, 2500);
 
     if (authForm) {
@@ -687,7 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Print Form submission now adds to cart instead of ordering directly
+    // Add Print Jobs to Cart from configuration screen
     const printForm = document.getElementById('printForm');
     if(printForm) {
         printForm.addEventListener('submit', (e) => {
@@ -710,6 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
+            persistCartStateData();
             alert("🎉 Print job(s) successfully added to Cart!");
             masterFilesArray = [];
             sessionStorage.removeItem('savedPrintFiles');
@@ -717,15 +742,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if(multiFilesContainer) multiFilesContainer.innerHTML = '';
             refreshInvoiceTabState();
             calculateTotal();
-            updateFloatingCartBar();
             toggleCartDrawer(true);
         });
     }
 
-    // Final Order Placement from Cart Drawer
+    // Final Order Placement from Cart Drawer with Address Verification
     window.executeFinalCartOrderPlacement = async function() {
         if (!selectedActiveAddress || selectedActiveAddress.trim() === "") {
-            alert("⚠️ Please select or add a delivery address first!");
+            alert("⚠️ Please add and select a delivery address first!");
             openAddressManagerModal();
             return;
         }
@@ -807,10 +831,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 window.cartPrintJobsArray = [];
                 window.cartSnacksArray = [];
+                persistCartStateData();
                 toggleCartDrawer(false);
                 renderOrderHistoryUI(activeUserToken);
                 calculateTotal();
-                updateFloatingCartBar();
                 
                 openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
                 return;
@@ -841,10 +865,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         window.cartPrintJobsArray = [];
                         window.cartSnacksArray = [];
+                        persistCartStateData();
                         toggleCartDrawer(false);
                         renderOrderHistoryUI(activeUserToken);
                         calculateTotal();
-                        updateFloatingCartBar();
                         
                         openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
                     }
