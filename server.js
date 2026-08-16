@@ -53,7 +53,7 @@ const orderSchema = new mongoose.Schema({
     date: String,
     timestamp: String,
     paymentId: String,
-    verifiedItems: { type: Array, default: [] } // Track item-by-item verified SKUs/Names for packing
+    verifiedItems: { type: Array, default: [] } // Track item-by-item verified UPCs/Names for packing
 });
 const Order = mongoose.model('Order', orderSchema);
 
@@ -69,7 +69,8 @@ const productSchema = new mongoose.Schema({
     purchasePrice: Number,
     sellingPrice: Number,
     stockQuantity: Number,
-    totalSold: { type: Number, default: 0 }
+    totalSold: { type: Number, default: 0 },
+    barcode: { type: String, default: '' } // Added UPC / Barcode field for real camera/typing verification
 });
 const Product = mongoose.model('Product', productSchema);
 
@@ -183,22 +184,24 @@ app.post('/api/auth/login', async (req, res) => {
 // --- INVENTORY MANAGEMENT & PUBLIC PRODUCTS API ---
 app.post('/api/admin/inventory/add', async (req, res) => {
     try {
-        const { sku, name, purchasePrice, sellingPrice, quantity } = req.body;
-        let product = await Product.findOne({ sku });
+        const { sku, name, purchasePrice, sellingPrice, quantity, barcode } = req.body;
+        let product = await Product.findOne({ $or: [{ sku }, ...(barcode ? [{ barcode }] : [])] });
         
         if (product) {
             product.stockQuantity += Number(quantity);
             if (purchasePrice) product.purchasePrice = Number(purchasePrice);
             if (sellingPrice) product.sellingPrice = Number(sellingPrice);
             if (name) product.name = name;
+            if (barcode) product.barcode = barcode;
             await product.save();
         } else {
             product = new Product({
-                sku,
+                sku: sku || ('SKU-' + Date.now()),
                 name,
                 purchasePrice: Number(purchasePrice),
                 sellingPrice: Number(sellingPrice),
-                stockQuantity: Number(quantity)
+                stockQuantity: Number(quantity),
+                barcode: barcode || ''
             });
             await product.save();
         }
@@ -264,37 +267,59 @@ app.get('/api/admin/stats', async (req, res) => {
     }
 });
 
-// --- ITEM-BY-ITEM VERIFICATION API FOR ADMIN PACKING ---
+// --- ITEM-BY-ITEM UPC / BARCODE VERIFICATION API FOR ADMIN PACKING & AUTO STATUS ---
 app.post('/api/admin/verify-item', async (req, res) => {
     try {
-        const { orderId, skuOrName } = req.body;
+        const { orderId, barcode, skuOrName } = req.body;
+        const searchKey = barcode || skuOrName;
+
         const order = await Order.findOne({ orderId });
         if (!order) return res.status(404).json({ success: false, message: "Order not found!" });
 
-        const product = await Product.findOne({ $or: [{ sku: skuOrName }, { name: { $regex: new RegExp(skuOrName, 'i') } }] });
+        // 1. Check if barcode/SKU/name exists in registered inventory
+        const product = await Product.findOne({ $or: [{ barcode: searchKey }, { sku: searchKey }, { name: { $regex: new RegExp(searchKey, 'i') } }] });
         
-        let targetItemName = skuOrName;
-        if (product) targetItemName = product.name;
+        if (!product) {
+            return res.status(400).json({ success: false, message: `⚠️ Mismatch! "${searchKey}" is not registered in inventory.` });
+        }
 
-        const itemExists = order.configDetails.find(item => {
-            let itemName = item.fileName.replace('Product: ', '').split(' (Qty:')[0].trim();
+        let targetItemName = product.name;
+
+        // 2. Check if product is part of this specific order
+        let configItems = order.configDetails || [];
+        if (typeof configItems === 'string') {
+            try { configItems = JSON.parse(configItems); } catch(e) { configItems = []; }
+        }
+
+        const itemExists = configItems.find(item => {
+            let itemName = item.fileName ? item.fileName.replace('Product: ', '').split(' (Qty:')[0].trim() : '';
             return itemName.toLowerCase().includes(targetItemName.toLowerCase()) || targetItemName.toLowerCase().includes(itemName.toLowerCase());
         });
 
         if (!itemExists) {
-            return res.status(400).json({ success: false, message: `⚠️ Mismatch! "${skuOrName}" is not part of this order.` });
+            return res.status(400).json({ success: false, message: `⚠️ Mismatch! "${targetItemName}" is not part of this order.` });
         }
 
         if (!order.verifiedItems) order.verifiedItems = [];
         if (!order.verifiedItems.includes(targetItemName)) {
             order.verifiedItems.push(targetItemName);
-            await order.save();
         }
+
+        // Count total unique product items in this order
+        let totalPackingItems = configItems.filter(item => item.printType === 'snack' || (item.fileName && item.fileName.startsWith('Product:'))).length;
+
+        // Auto shift status to "Out for Delivery" if all products are verified
+        if (totalPackingItems > 0 && order.verifiedItems.length >= totalPackingItems) {
+            order.status = 'Out for Delivery';
+        }
+
+        await order.save();
 
         res.json({ 
             success: true, 
             verifiedCount: order.verifiedItems.length, 
-            totalItems: order.configDetails.length,
+            totalItems: totalPackingItems,
+            currentStatus: order.status,
             message: `✅ Verified "${targetItemName}" successfully!` 
         });
     } catch (err) {
