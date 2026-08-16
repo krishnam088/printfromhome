@@ -40,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const sideDrawer = document.getElementById('userSideDrawer');
         const addressModal = document.getElementById('addressManagerModal');
         const configScreen = document.getElementById('configurationScreenState');
-        const uploadScreen = document.getElementById('uploadScreenInitialState');
         
         if (cartOverlay && cartOverlay.style.display === 'flex') {
             cartOverlay.style.display = 'none';
@@ -59,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('drawerOverlay').classList.remove('active');
             return;
         }
-        // Agar configuration screen par hai, toh back button dabane par upload screen par le aayein
         if (configScreen && !configScreen.classList.contains('hidden')) {
             forceReturnToUploadView();
             return;
@@ -70,7 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Save Cart State to LocalStorage for persistence across app reloads
     window.persistCartStateData = function() {
         localStorage.setItem('cart_print_jobs', JSON.stringify(window.cartPrintJobsArray));
         localStorage.setItem('cart_snacks', JSON.stringify(window.cartSnacksArray));
@@ -296,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(uploadInitialScreen) uploadInitialScreen.classList.add('hidden');
             if(configWorkspaceScreen) {
                 configWorkspaceScreen.classList.remove('hidden');
-                history.pushState({ configOpen: true }, '', ''); // Push state for phone back button support
+                history.pushState({ configOpen: true }, '', '');
             }
             if(sideInvoicePanel) sideInvoicePanel.classList.remove('hidden');
             if (window.innerWidth > 992) {
@@ -711,7 +708,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Add Print Jobs to Cart from configuration screen
     const printForm = document.getElementById('printForm');
     if(printForm) {
         printForm.addEventListener('submit', (e) => {
@@ -746,7 +742,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Final Order Placement from Cart Drawer with Address Verification
     window.executeFinalCartOrderPlacement = async function() {
         if (!selectedActiveAddress || selectedActiveAddress.trim() === "") {
             alert("⚠️ Please add and select a delivery address first!");

@@ -446,9 +446,9 @@
         </div>
     </div>
 
-    <!-- 🛒 FLOATING VIEW CART FOOTER BAR -->
-    <div id="floatingCartFooterBar" class="floating-cart-footer hidden" onclick="toggleCartDrawer(true)">
-        <div class="floating-cart-left" style="display:flex; align-items:center; gap:12px;">
+    <!-- 🛒 FLOATING VIEW CART FOOTER BAR WITH CANCEL BUTTON -->
+    <div id="floatingCartFooterBar" class="floating-cart-footer hidden" style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="floating-cart-left" style="display:flex; align-items:center; gap:12px; cursor:pointer; flex:1;" onclick="toggleCartDrawer(true)">
             <div style="display:flex; align-items:center; margin-left:4px;">
                 <div style="width:32px; height:32px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--blinkit-green); font-size:0.9rem; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🛒</div>
             </div>
@@ -457,8 +457,11 @@
                 <span class="cart-total-price" id="floatingCartTotalPriceText" style="font-size:0.95rem; font-weight:900; color:#ffffff;">View cart</span>
             </div>
         </div>
-        <div class="floating-cart-right" style="display:flex; align-items:center; gap:6px; font-size:0.9rem; font-weight:800; background:rgba(0,0,0,0.15); padding:8px 14px; border-radius:12px;">
-            <span>View cart</span> &rarr;
+        <div style="display:flex; align-items:center; gap:8px;">
+            <button type="button" onclick="clearEntireCartData()" style="background:#ef4444; color:white; border:none; padding:6px 10px; border-radius:8px; font-size:0.7rem; font-weight:800; cursor:pointer;" title="Clear Cart">❌ Clear</button>
+            <div class="floating-cart-right" style="display:flex; align-items:center; gap:6px; font-size:0.9rem; font-weight:800; background:rgba(0,0,0,0.15); padding:8px 14px; border-radius:12px; cursor:pointer;" onclick="toggleCartDrawer(true)">
+                <span>View cart</span> &rarr;
+            </div>
         </div>
     </div>
 
@@ -489,6 +492,7 @@
         // 🛒 GLOBAL UNIFIED CART STATE MANAGEMENT WITH ROW-WISE RENDERING
         // ==========================================
         window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
+        window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
         function addSnackToCart(name, price) {
             const existing = window.cartSnacksArray.find(item => item.name === name);
@@ -527,10 +531,12 @@
 
             if (totalItemsCombined > 0) {
                 bar.classList.remove('hidden');
+                bar.style.display = 'flex';
                 if (countText) countText.textContent = `${totalItemsCombined} item${totalItemsCombined > 1 ? 's' : ''}`;
                 if (priceText) priceText.textContent = `₹${(grandTotalCombined + deliveryFee).toFixed(2)}`;
             } else {
                 bar.classList.add('hidden');
+                bar.style.display = 'none';
             }
         }
 
@@ -591,7 +597,6 @@
             if (window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0) {
                 window.cartPrintJobsArray.forEach((job, jobIdx) => {
                     const cost = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
-                    printTotalVal = cost;
                     subtotal += cost;
                     totalItemsCount += job.copies;
 
@@ -621,7 +626,6 @@
             let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
             let grandTotal = subtotal + delivery;
 
-            // Free Delivery Progress bar calculation
             let freeDeliveryRemaining = Math.max(0, 99 - subtotal);
             const msgText = document.getElementById('freeDeliveryMessageText');
             const fillBar = document.getElementById('freeDeliveryFillBar');
