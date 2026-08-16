@@ -508,6 +508,8 @@
 
                 window.storeInventoryProducts.forEach((prod, index) => {
                     const isOutOfStock = (prod.stockQuantity <= 0);
+                    const finalImgUrl = prod.imageUrl || prod.image || '';
+
                     const card = document.createElement('div');
                     card.className = 'blinkit-cat-card';
                     card.style.cssText = `
@@ -527,14 +529,13 @@
                         flex-shrink: 0;
                     `;
                     
-                    // Tap anywhere on card (except add button) opens modal smoothly
                     card.onclick = (e) => {
                         if (e.target.tagName === 'BUTTON') return;
                         openProductDetailModal(window.storeInventoryProducts[index]);
                     };
 
-                    const imageHtml = prod.imageUrl 
-                        ? `<img src="${prod.imageUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px; display:block;" />` 
+                    const imageHtml = finalImgUrl 
+                        ? `<img src="${finalImgUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px; display:block;" />` 
                         : `<div style="font-size:2rem; margin-bottom:6px; height:65px; display:flex; align-items:center; justify-content:center;">📦</div>`;
 
                     card.innerHTML = `
@@ -563,14 +564,15 @@
 
             if (!modal) return;
 
+            const finalImgUrl = prod.imageUrl || prod.image || '';
             nameEl.textContent = prod.name;
             priceEl.textContent = `₹${prod.sellingPrice || 0}`;
             stockEl.textContent = prod.stockQuantity > 0 ? `Stock Left: ${prod.stockQuantity} units` : `Status: Out of Stock`;
             stockEl.style.color = prod.stockQuantity > 0 ? '#16a34a' : '#ef4444';
             stockEl.style.background = prod.stockQuantity > 0 ? '#f0fdf4' : '#fef2f2';
 
-            if (prod.imageUrl) {
-                imgContainer.innerHTML = `<img src="${prod.imageUrl}" style="width:100%; height:100%; object-fit:contain;" />`;
+            if (finalImgUrl) {
+                imgContainer.innerHTML = `<img src="${finalImgUrl}" style="width:100%; height:100%; object-fit:contain;" />`;
             } else {
                 imgContainer.innerHTML = `<span style="font-size:3.5rem;">📦</span>`;
             }
@@ -692,13 +694,13 @@
                 totalItemsCount += snack.qty;
                 
                 const matchedProd = window.storeInventoryProducts.find(p => p.name === snack.name);
-                const imgUrl = matchedProd ? matchedProd.imageUrl : '';
+                const finalImgUrl = matchedProd ? (matchedProd.imageUrl || matchedProd.image || '') : '';
 
                 const row = document.createElement('div');
                 row.style = "display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:10px 14px; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 1px 4px rgba(0,0,0,0.02);";
                 row.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden; cursor:pointer;" onclick='openProductDetailModal(${JSON.stringify(matchedProd || {name: snack.name, sellingPrice: snack.price, stockQuantity: 99, imageUrl: imgUrl})})'>
-                        ${imgUrl ? `<img src="${imgUrl}" style="width:36px; height:36px; object-fit:cover; border-radius:6px;" />` : `<span style="font-size:1.4rem;">📦</span>`}
+                    <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden; cursor:pointer;" onclick='openProductDetailModal(${JSON.stringify(matchedProd || {name: snack.name, sellingPrice: snack.price, stockQuantity: 99, imageUrl: finalImgUrl})})'>
+                        ${finalImgUrl ? `<img src="${finalImgUrl}" style="width:36px; height:36px; object-fit:cover; border-radius:6px;" />` : `<span style="font-size:1.4rem;">📦</span>`}
                         <div style="overflow:hidden;">
                             <h4 style="font-size:0.8rem; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${snack.name}">${snack.name}</h4>
                             <p style="font-size:0.7rem; color:#64748b; font-weight:600;">₹${snack.price} each</p>
