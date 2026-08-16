@@ -19,16 +19,16 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Connect to MongoDB Atlas using MONGO_URI from Render Environment Variables
 mongoose.connect(process.env.MONGO_URI, {
-    serverSelectionTimeoutMS: 30000, // 30 seconds wait karega
+    serverSelectionTimeoutMS: 30000, 
     socketTimeoutMS: 45000
 })
-    .then(() => console.log(' Connected to MongoDB Atlas successfully!'))
-    .catch((err) => console.error(' MongoDB Connection Error:', err));
+    .then(() => console.log('✅ Connected to MongoDB Atlas successfully!'))
+    .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
 // Mongoose Schemas & Models
 const userSchema = new mongoose.Schema({
     name: String,
-    identity: { type: String, unique: true }, // Mobile number identifier
+    identity: { type: String, unique: true }, 
     password: String,
     dateCreated: String
 });
@@ -129,11 +129,10 @@ const handleStoreToggle = async (req, res) => {
 app.post('/api/store-status/toggle', handleStoreToggle);
 app.post('/api/admin/toggle-store', handleStoreToggle);
 
--// --- Auth APIs (Fixed typo & added 10-digit mobile normalization) ---
+// --- Auth APIs ---
 app.post('/api/auth/signup', async (req, res) => {
     try {
         const { name, identity, password } = req.body;
-        // Sirf last 10 digits lega taaki chahe koi phone ho, format same rahe
         const normalizedIdentity = identity.replace(/\D/g, '').slice(-10); 
         
         const existingUser = await User.findOne({ identity: normalizedIdentity });
@@ -159,7 +158,6 @@ app.post('/api/auth/signup', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { identity, password } = req.body;
-        // Login mein bhi same 10-digit normalization taaki match karne mein error na aaye
         const normalizedIdentity = identity.replace(/\D/g, '').slice(-10); 
         const user = await User.findOne({ identity: normalizedIdentity, password });
         
@@ -170,7 +168,8 @@ app.post('/api/auth/login', async (req, res) => {
         res.status(500).json({ success: false, message: "Server error" });
     }
 });
-// Orders & Payments (MongoDB Connected with COD & Cart Support)
+
+// Orders & Payments APIs
 app.post('/api/create-order', upload.array('document', 20), async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
@@ -181,12 +180,12 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
         const finalAmount = totalAmount ? totalAmount.toString().trim() : "42";
         const selectedPaymentMode = paymentMode || "online";
 
+        const filesMappedList = req.files ? req.files.map(f => ({ name: f.originalname, filename: f.filename, url: `/uploads/${f.filename}` })) : [];
+        let parsedConfig = [];
+        try { parsedConfig = configDetails ? JSON.parse(configDetails) : []; } catch(e){}
+
         // Cash on Delivery (COD) Flow
         if (selectedPaymentMode === 'cod') {
-            const filesMappedList = req.files ? req.files.map(f => ({ name: f.originalname, filename: f.filename, url: `/uploads/${f.filename}` })) : [];
-            let parsedConfig = [];
-            try { parsedConfig = configDetails ? JSON.parse(configDetails) : []; } catch(e){}
-
             const codOrderId = 'COD-' + Date.now();
             const newOrder = new Order({
                 orderId: codOrderId,
@@ -226,10 +225,6 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
             return res.status(500).json({ success: false, message: "Payment gateway error" });
         }
         
-        const filesMappedList = req.files ? req.files.map(f => ({ name: f.originalname, filename: f.filename, url: `/uploads/${f.filename}` })) : [];
-        let parsedConfig = [];
-        try { parsedConfig = configDetails ? JSON.parse(configDetails) : []; } catch(e){}
-
         const newOrder = new Order({
             orderId: razorpayOrder.id,
             customerName: customerName || 'Customer',
@@ -251,7 +246,6 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
         });
 
         await newOrder.save();
-
         res.status(201).json({ success: true, order_id: razorpayOrder.id, amount: razorpayOrder.amount, key_id: razorpay.key_id });
     } catch (error) {
         console.error("Create Order Error:", error);
