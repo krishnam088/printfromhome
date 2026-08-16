@@ -485,17 +485,21 @@
                     const isOutOfStock = (prod.stockQuantity <= 0);
                     const card = document.createElement('div');
                     card.className = 'blinkit-cat-card';
-                    card.style.cssText = `position: relative; opacity: ${isOutOfStock ? '0.7' : '1'};`;
+                    card.style.cssText = `position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; display:flex; flex-direction:column; align-items:center;`;
                     
+                    const imageHtml = prod.imageUrl 
+                        ? `<img src="${prod.imageUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px;" />` 
+                        : `<div class="blinkit-cat-img" style="font-size:2rem; margin-bottom:6px;">📦</div>`;
+
                     card.innerHTML = `
-                        <div class="blinkit-cat-img">📦</div>
-                        <div class="blinkit-cat-name" title="${prod.name}">${prod.name}</div>
-                        <div class="blinkit-cat-price">₹${prod.sellingPrice || 0}</div>
+                        ${imageHtml}
+                        <div class="blinkit-cat-name" title="${prod.name}" style="font-weight:700; font-size:0.8rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name}</div>
+                        <div class="blinkit-cat-price" style="font-weight:800; font-size:0.8rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
                         ${isOutOfStock 
-                            ? `<button type="button" class="btn-quick-add" style="background:#ef4444; color:white;" onclick="notifyWhenAvailable('${prod.name}')">Notify Me</button>`
+                            ? `<button type="button" class="btn-quick-add" style="background:#ef4444; color:white;" onclick="notifyWhenAvailable('${prod.name}')">Notify</button>`
                             : `<button type="button" class="btn-quick-add" onclick="addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
                         }
-                        ${isOutOfStock ? `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.6rem; padding:2px 5px; border-radius:4px; font-weight:800;">OUT OF STOCK</span>` : ''}
+                        ${isOutOfStock ? `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.6rem; padding:2px 5px; border-radius:4px; font-weight:800;">OUT</span>` : ''}
                     `;
                     container.appendChild(card);
                 });
