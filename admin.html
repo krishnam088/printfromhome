@@ -28,12 +28,39 @@
             background-color: var(--bg-dark);
             color: var(--text-main);
             min-height: 100vh;
-            padding: 16px;
+            display: flex;
         }
 
-        .dashboard-wrapper {
-            max-width: 1200px;
-            margin: 0 auto;
+        /* SIDEBAR NAVIGATION */
+        .admin-sidebar {
+            width: 260px;
+            background: var(--surface-card);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 20px;
+            position: fixed;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+        .sidebar-brand h2 { font-size: 1.1rem; font-weight: 800; color: white; }
+        .sidebar-brand h2 span { color: var(--accent-blue); }
+        .sidebar-menu { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+        .sidebar-item {
+            padding: 12px 16px; border-radius: 10px; font-size: 0.88rem; font-weight: 700;
+            color: var(--text-sub); cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 10px;
+        }
+        .sidebar-item:hover, .sidebar-item.active { background: var(--surface-card-hover); color: var(--text-main); }
+
+        /* MAIN CONTENT WRAPPER */
+        .admin-main-content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 24px;
+            max-width: calc(1200px + 260px);
         }
 
         /* HEADER & TOP CONTROLS */
@@ -50,16 +77,9 @@
             gap: 15px;
         }
 
-        .brand-title h1 {
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .brand-title h1 { font-size: 1.3rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
         .brand-title h1 span { color: var(--accent-blue); }
-        .brand-title p { font-size: 0.75rem; color: var(--text-sub); margin-top: 2px; }
+        .brand-title p { font-size: 0.72rem; color: var(--text-sub); margin-top: 2px; }
 
         .header-action-group {
             display: flex;
@@ -75,7 +95,7 @@
             gap: 8px;
             padding: 8px 16px;
             border-radius: 10px;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 700;
             cursor: pointer;
             border: none;
@@ -88,17 +108,13 @@
         .btn-scanner { background: #8b5cf6; color: white; }
 
         #btnInstallAdmin {
-            display: none;
-            padding: 8px 16px;
-            background: var(--accent-blue);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,112,243,0.3);
+            display: none; padding: 8px 16px; background: var(--accent-blue); color: white;
+            border: none; border-radius: 10px; font-weight: 700; font-size: 0.82rem; cursor: pointer;
         }
+
+        /* VIEW SECTIONS */
+        .admin-section { display: none; }
+        .admin-section.active { display: block; }
 
         /* BARCODE SCANNER MODAL */
         #barcodeScannerModal {
@@ -119,207 +135,75 @@
             margin-bottom: 22px;
         }
         .stat-card {
-            background: var(--surface-card);
-            border: 1px solid var(--border-color);
-            padding: 16px;
-            border-radius: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+            background: var(--surface-card); border: 1px solid var(--border-color);
+            padding: 16px; border-radius: 14px; display: flex; flex-direction: column; gap: 4px;
         }
         .stat-title { font-size: 0.78rem; font-weight: 600; color: var(--text-sub); text-transform: uppercase; }
         .stat-num { font-size: 1.6rem; font-weight: 800; color: var(--text-main); }
 
         /* LIVE ORDER QUEUE CONTAINER */
         .section-heading-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-            padding: 0 4px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 4px;
         }
         .section-heading-bar h2 { font-size: 1.15rem; font-weight: 800; }
         .audio-test-btn {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-sub);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            font-weight: 600;
+            background: transparent; border: 1px solid var(--border-color); color: var(--text-sub);
+            padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; font-weight: 600;
         }
-        .audio-test-btn:hover { color: var(--text-main); border-color: var(--text-sub); }
 
-        .order-queue-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
+        .order-queue-list { display: flex; flex-direction: column; gap: 16px; }
 
         .order-card {
-            background: var(--surface-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            transition: border-color 0.2s ease;
-            position: relative;
-            overflow: hidden;
+            background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px;
+            padding: 20px; display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden;
         }
-        .order-card.new-order-pulse {
-            border-color: var(--accent-yellow);
-            box-shadow: 0 0 20px rgba(245,158,11,0.2);
-        }
+        .order-card.new-order-pulse { border-color: var(--accent-yellow); box-shadow: 0 0 20px rgba(245,158,11,0.2); }
 
         .order-card-header {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: flex-start;
-            border-bottom: 1px dashed var(--border-color);
-            padding-bottom: 12px;
-            gap: 10px;
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start;
+            border-bottom: 1px dashed var(--border-color); padding-bottom: 12px; gap: 10px;
         }
         .order-id-meta h3 { font-size: 1.05rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .order-time { font-size: 0.72rem; color: var(--text-sub); margin-top: 2px; }
 
         .order-customer-box {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 12px;
-            background: rgba(15, 23, 42, 0.6);
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 0.82rem;
-            border: 1px solid rgba(255,255,255,0.04);
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;
+            background: rgba(15, 23, 42, 0.6); padding: 12px 16px; border-radius: 12px; font-size: 0.82rem; border: 1px solid rgba(255,255,255,0.04);
         }
         .cust-field b { color: var(--accent-blue); font-size: 0.72rem; display: block; text-transform: uppercase; margin-bottom: 2px; }
 
-        /* PRINT SPECS & PRODUCTS CONTAINER */
-        .specs-container {
-            background: rgba(0, 112, 243, 0.05);
-            border: 1px solid rgba(0, 112, 243, 0.2);
-            border-radius: 12px;
-            padding: 14px;
-        }
+        .specs-container { background: rgba(0, 112, 243, 0.05); border: 1px solid rgba(0, 112, 243, 0.2); border-radius: 12px; padding: 14px; }
         .specs-title { font-size: 0.8rem; font-weight: 800; color: var(--accent-blue); text-transform: uppercase; margin-bottom: 8px; }
-        .specs-tags-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-        .spec-tag {
-            background: var(--surface-card);
-            border: 1px solid var(--border-color);
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-        .spec-tag.highlight {
-            background: rgba(16, 185, 129, 0.15);
-            border-color: var(--accent-green);
-            color: var(--accent-green);
-        }
+        .specs-tags-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+        .spec-tag { background: var(--surface-card); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; color: var(--text-main); }
+        .spec-tag.highlight { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-green); color: var(--accent-green); }
 
-        /* PACKING / PRODUCTS LIST BOX */
-        .packing-list-box {
-            background: rgba(245, 158, 11, 0.05);
-            border: 1px solid rgba(245, 158, 11, 0.25);
-            border-radius: 12px;
-            padding: 12px 14px;
-        }
+        .packing-list-box { background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 12px; padding: 12px 14px; }
         .packing-title { font-size: 0.78rem; font-weight: 800; color: var(--accent-yellow); text-transform: uppercase; margin-bottom: 6px; }
-        .packing-item-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.78rem;
-            font-weight: 600;
-            padding: 4px 0;
-            border-bottom: 1px dashed rgba(255,255,255,0.05);
-        }
+        .packing-item-row { display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; padding: 4px 0; border-bottom: 1px dashed rgba(255,255,255,0.05); }
 
-        .file-action-row {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .btn-download-file {
-            background: #334155;
-            color: white;
-            text-decoration: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-download-file:hover { background: #475569; }
-        .btn-manual-print {
-            background: var(--accent-blue);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
+        .file-action-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+        .btn-download-file { background: #334155; color: white; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-manual-print { background: var(--accent-blue); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 
-        /* STATUS STEPPER CONTROLS */
-        .stepper-actions-bar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px;
-            padding-top: 10px;
-            border-top: 1px dashed var(--border-color);
-        }
+        .stepper-actions-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 10px; border-top: 1px dashed var(--border-color); }
         .stepper-label { font-size: 0.75rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; margin-right: 4px; }
         .btn-step {
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            cursor: pointer;
-            border: 1px solid var(--border-color);
-            background: var(--surface-card);
-            color: var(--text-sub);
-            transition: all 0.15s ease;
+            padding: 8px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;
+            border: 1px solid var(--border-color); background: var(--surface-card); color: var(--text-sub); transition: all 0.15s ease;
         }
-        .btn-step:hover { color: var(--text-main); border-color: var(--text-sub); }
-        .btn-step.active {
-            background: var(--accent-green);
-            color: white;
-            border-color: var(--accent-green);
-        }
-        .btn-step.current-phase {
-            background: var(--accent-yellow);
-            color: black;
-            border-color: var(--accent-yellow);
-            font-weight: 800;
-        }
+        .btn-step.active { background: var(--accent-green); color: white; border-color: var(--accent-green); }
+        .btn-step.current-phase { background: var(--accent-yellow); color: black; border-color: var(--accent-yellow); font-weight: 800; }
 
-        /* SILENT PRINT IFRAME (HIDDEN) */
-        #silentPrintFrame {
-            display: none;
-            width: 0;
-            height: 0;
-            border: 0;
+        /* INVENTORY TABLE STYLING */
+        .inventory-table {
+            width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.82rem; background: var(--surface-card); border-radius: 12px; overflow: hidden;
         }
+        .inventory-table th, .inventory-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .inventory-table th { background: rgba(0,0,0,0.2); font-weight: 800; color: var(--text-sub); text-transform: uppercase; font-size: 0.72rem; }
+        .inventory-table tr:hover { background: var(--surface-card-hover); }
+
+        #silentPrintFrame { display: none; width: 0; height: 0; border: 0; }
     </style>
 </head>
 <body>
@@ -327,15 +211,23 @@
     <!-- Hidden Iframe for Direct Silent Auto-Printing -->
     <iframe id="silentPrintFrame"></iframe>
 
-    <!-- Barcode Scanner Simulation Modal -->
+    <!-- Barcode Scanner Simulation Modal with Auto-Recognition & Anti-Mismatch Guard -->
     <div id="barcodeScannerModal">
         <div class="scanner-card">
-            <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 8px;">📷 Product Barcode Scanner</h3>
-            <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 16px;">Scan item barcode or enter product SKU to verify packing & complete pickup.</p>
-            <div style="background: rgba(0,0,0,0.3); padding: 30px; border-radius: 14px; border: 2px dashed var(--border-color); margin-bottom: 15px;">
-                <div style="font-size: 2.5rem; margin-bottom: 8px;">🔍</div>
-                <input type="text" id="barcodeInputScanField" placeholder="Scan Barcode / SKU..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 700; text-align: center; outline: none;">
+            <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 8px;">📷 Product Barcode & SKU Scanner</h3>
+            <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 12px;">Scan product barcode or type SKU to verify and auto-complete order pickup.</p>
+            
+            <div style="background: rgba(0,0,0,0.3); padding: 24px; border-radius: 14px; border: 2px dashed var(--border-color); margin-bottom: 12px;">
+                <div style="font-size: 2.2rem; margin-bottom: 6px;">🔍</div>
+                <input type="text" id="barcodeInputScanField" placeholder="Scan Barcode / SKU / Order ID..." oninput="autoDetectProductByBarcode(this.value)" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 700; text-align: center; outline: none;">
             </div>
+
+            <!-- Auto-Detected Product Feedback Box -->
+            <div id="scannerDetectedFeedbackBox" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); border-radius: 10px; padding: 10px; margin-bottom: 15px; display: none; text-align: left;">
+                <p style="font-size: 0.72rem; font-weight: 800; color: var(--accent-green); text-transform: uppercase;">⚡ Auto-Recognized Product:</p>
+                <p id="detectedProductNameText" style="font-size: 0.85rem; font-weight: 700; color: white; margin-top: 2px;"></p>
+            </div>
+
             <div style="display: flex; gap: 10px;">
                 <button type="button" onclick="processScannedBarcode()" style="flex: 1; padding: 10px; background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Verify & Complete Pickup</button>
                 <button type="button" onclick="closeBarcodeScannerModal()" style="padding: 10px 16px; background: var(--accent-red); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Cancel</button>
@@ -343,7 +235,18 @@
         </div>
     </div>
 
-    <div class="dashboard-wrapper">
+    <!-- SIDEBAR NAVIGATION -->
+    <nav class="admin-sidebar">
+        <div class="sidebar-brand">
+            <h2>Print<span>Admin</span></h2>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-item active" id="nav_orders" onclick="switchAdminTab('orders')">📦 Live Orders Queue</li>
+            <li class="sidebar-item" id="nav_inventory" onclick="switchAdminTab('inventory')">📊 Inventory & Stock Manager</li>
+        </ul>
+    </nav>
+
+    <div class="admin-main-content">
         
         <!-- HEADER ROW -->
         <header class="admin-header">
@@ -354,7 +257,7 @@
 
             <div class="header-action-group">
                 <button type="button" class="toggle-badge-btn btn-scanner" onclick="openBarcodeScannerModal()">
-                    📷 Scan Barcode / Pickup
+                    📷 Scan Barcode
                 </button>
                 <button type="button" id="autoPrintToggleBtn" class="toggle-badge-btn btn-autoprint-on" onclick="toggleAutoPrintEngine()">
                     🖨️ Auto-Print: <span id="autoPrintStatusText">ON</span>
@@ -366,72 +269,112 @@
             </div>
         </header>
 
-        <!-- INVENTORY & PROFIT/LOSS MANAGEMENT PANEL -->
-        <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 22px;">
-            <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                📊 Store Inventory, Stock & Profit/Loss Tracker
-            </h3>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 15px;">
-                <input type="text" id="invSkuInput" placeholder="Scan Barcode / SKU" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem;">
-                <input type="text" id="invNameInput" placeholder="Product Name (e.g. Lays)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem;">
-                <input type="number" id="invPurchasePrice" placeholder="Purchase Price (₹)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem;">
-                <input type="number" id="invSellingPrice" placeholder="Selling Price (₹)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem;">
-                <input type="number" id="invQtyInput" placeholder="Quantity Arrived" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem;">
-                <button type="button" onclick="addNewStockItem()" style="background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; padding: 10px;">+ Add / Update Stock</button>
+        <!-- TAB 1: ORDERS SECTION -->
+        <div id="section_orders" class="admin-section active">
+            <!-- STATS OVERVIEW -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-title">Total Orders</span>
+                    <span class="stat-num" id="statTotalOrders">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Pending / Ready</span>
+                    <span class="stat-num" id="statReadyPrint" style="color: var(--accent-yellow);">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Out for Delivery</span>
+                    <span class="stat-num" id="statOutDelivery" style="color: #38bdf8;">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Completed Orders</span>
+                    <span class="stat-num" id="statCompleted" style="color: var(--accent-green);">0</span>
+                </div>
             </div>
 
-            <div id="inventoryReportSummary" style="font-size: 0.85rem; color: var(--text-sub); font-weight: 600; display: flex; gap: 20px;">
-                <span>📦 Total Stock Valuation: <b id="valTotalStock" style="color: white;">₹0</b></span>
-                <span>📈 Total Net Profit: <b id="valTotalProfit" style="color: var(--accent-green);">₹0</b></span>
+            <!-- ORDER QUEUE HEADING -->
+            <div class="section-heading-bar">
+                <h2>📦 Live Print & Product Packing Queue</h2>
+                <button type="button" class="audio-test-btn" onclick="playLoudOrderChime(true)">🔔 Test Sound Alert</button>
+            </div>
+
+            <!-- LIVE ORDERS CONTAINER -->
+            <div class="order-queue-list" id="adminOrderQueue">
+                <div style="text-align: center; padding: 40px; color: var(--text-sub);">
+                    ⏳ Connecting to live orders stream...
+                </div>
             </div>
         </div>
 
-        <!-- STATS OVERVIEW -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <span class="stat-title">Total Orders</span>
-                <span class="stat-num" id="statTotalOrders">0</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-title">Pending / Ready</span>
-                <span class="stat-num" id="statReadyPrint" style="color: var(--accent-yellow);">0</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-title">Out for Delivery</span>
-                <span class="stat-num" id="statOutDelivery" style="color: #38bdf8;">0</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-title">Completed Orders</span>
-                <span class="stat-num" id="statCompleted" style="color: var(--accent-green);">0</span>
-            </div>
-        </div>
+        <!-- TAB 2: INVENTORY MANAGEMENT SECTION -->
+        <div id="section_inventory" class="admin-section">
+            <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px; margin-bottom: 22px;">
+                <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                    📊 Store Inventory, Stock & Profit/Loss Tracker
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="invSkuInput" placeholder="Scan Barcode / SKU" oninput="autoFillInventoryProduct(this.value)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
+                    <input type="text" id="invNameInput" placeholder="Product Name (e.g. Lays)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
+                    <input type="number" id="invPurchasePrice" placeholder="Purchase Price (₹)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
+                    <input type="number" id="invSellingPrice" placeholder="Selling Price (₹)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
+                    <input type="number" id="invQtyInput" placeholder="Quantity Arrived" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
+                    <button type="button" onclick="addNewStockItem()" style="background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; padding: 10px;">+ Add Stock</button>
+                </div>
 
-        <!-- ORDER QUEUE HEADING -->
-        <div class="section-heading-bar">
-            <h2>📦 Live Print & Product Packing Queue</h2>
-            <button type="button" class="audio-test-btn" onclick="playLoudOrderChime(true)">🔔 Test Sound Alert</button>
-        </div>
+                <div id="inventoryReportSummary" style="font-size: 0.85rem; color: var(--text-sub); font-weight: 600; display: flex; gap: 20px; flex-wrap: wrap; background: rgba(0,0,0,0.2); padding: 10px 14px; border-radius: 10px;">
+                    <span>📦 Total Varieties: <b id="valTotalVariety" style="color: white;">0</b></span>
+                    <span>💰 Total Stock Valuation: <b id="valTotalStock" style="color: white;">₹0</b></span>
+                    <span>📈 Total Net Profit: <b id="valTotalProfit" style="color: var(--accent-green);">₹0</b></span>
+                </div>
+            </div>
 
-        <!-- LIVE ORDERS CONTAINER -->
-        <div class="order-queue-list" id="adminOrderQueue">
-            <div style="text-align: center; padding: 40px; color: var(--text-sub);">
-                ⏳ Connecting to live orders stream...
+            <!-- DETAILED NUMBER-WISE PRODUCTS TABLE -->
+            <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px;">
+                <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 10px;">📋 Live Store Stock Register</h3>
+                <div style="overflow-x: auto;">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Product Name</th>
+                                <th>Barcode / SKU</th>
+                                <th>Purchase Cost</th>
+                                <th>Selling Price</th>
+                                <th>Stock Left</th>
+                                <th>Total Sold</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryProductsTableBody">
+                            <tr><td colspan="7" style="text-align: center; color: var(--text-sub); padding: 30px;">Loading store products inventory...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
     </div>
 
     <script>
-        let audioCtx = null;
+        let cachedInventoryList = [];
 
+        function switchAdminTab(tabName) {
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.admin-section').forEach(el => el.classList.remove('active'));
+
+            if (tabName === 'orders') {
+                document.getElementById('nav_orders').classList.add('active');
+                document.getElementById('section_orders').classList.add('active');
+            } else if (tabName === 'inventory') {
+                document.getElementById('nav_inventory').classList.add('active');
+                document.getElementById('section_inventory').classList.add('active');
+                fetchInventoryReport();
+            }
+        }
+
+        let audioCtx = null;
         function getAudioContext() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
             return audioCtx;
         }
 
@@ -453,6 +396,17 @@
         }
 
         window.addEventListener('click', () => { getAudioContext(); }, { once: true });
+
+        // Auto-recognize product when barcode/SKU is typed during stock addition
+        function autoFillInventoryProduct(skuVal) {
+            const cleanSku = skuVal.trim();
+            const matched = cachedInventoryList.find(p => p.sku === cleanSku);
+            if (matched) {
+                document.getElementById('invNameInput').value = matched.name || '';
+                document.getElementById('invPurchasePrice').value = matched.purchasePrice || '';
+                document.getElementById('invSellingPrice').value = matched.sellingPrice || '';
+            }
+        }
 
         async function addNewStockItem() {
             const sku = document.getElementById('invSkuInput').value.trim();
@@ -492,17 +446,39 @@
                 const res = await fetch('/api/admin/inventory/report');
                 const data = await res.json();
                 if (data.success) {
+                    cachedInventoryList = data.products || [];
+                    document.getElementById('valTotalVariety').textContent = data.products.length;
                     document.getElementById('valTotalStock').textContent = `₹${data.financials.totalStockValue.toFixed(2)}`;
                     document.getElementById('valTotalProfit').textContent = `₹${data.financials.totalProfitEarned.toFixed(2)}`;
+
+                    const tbody = document.getElementById('inventoryProductsTableBody');
+                    if (data.products.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-sub); padding: 30px;">No products added in store inventory yet.</td></tr>`;
+                        return;
+                    }
+
+                    tbody.innerHTML = data.products.map((p, idx) => `
+                        <tr>
+                            <td><b>${idx + 1}</b></td>
+                            <td style="font-weight: 800; color: white;">📦 ${p.name}</td>
+                            <td><code>${p.sku}</code></td>
+                            <td>₹${p.purchasePrice || 0}</td>
+                            <td style="color: var(--accent-green); font-weight: 700;">₹${p.sellingPrice || 0}</td>
+                            <td><span style="background:${p.stockQuantity > 0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; color:${p.stockQuantity > 0 ? '#10b981' : '#ef4444'}; padding:3px 8px; border-radius:6px; font-weight:700;">${p.stockQuantity} units</span></td>
+                            <td style="font-weight: 700;">${p.totalSold || 0} sold</td>
+                        </tr>
+                    `).join('');
                 }
             } catch (e) {}
         }
 
         let activeTargetOrderIdForScan = null;
+        let globalLiveOrdersCache = [];
 
         function openBarcodeScannerModal(orderId = null) {
             activeTargetOrderIdForScan = orderId;
             document.getElementById('barcodeScannerModal').style.display = 'flex';
+            document.getElementById('scannerDetectedFeedbackBox').style.display = 'none';
             setTimeout(() => { document.getElementById('barcodeInputScanField').focus(); }, 100);
         }
 
@@ -510,6 +486,29 @@
             document.getElementById('barcodeScannerModal').style.display = 'none';
             activeTargetOrderIdForScan = null;
             document.getElementById('barcodeInputScanField').value = '';
+            document.getElementById('scannerDetectedFeedbackBox').style.display = 'none';
+        }
+
+        // Live Barcode Auto-Recognition & Anti-Mismatch Guard
+        function autoDetectProductByBarcode(inputVal) {
+            const cleanVal = inputVal.trim();
+            const feedbackBox = document.getElementById('scannerDetectedFeedbackBox');
+            const feedbackText = document.getElementById('detectedProductNameText');
+
+            if (!cleanVal) {
+                feedbackBox.style.display = 'none';
+                return;
+            }
+
+            // Check if scanned value is a valid product SKU from inventory
+            const matchedProd = cachedInventoryList.find(p => p.sku === cleanVal || p.name.toLowerCase().includes(cleanVal.toLowerCase()));
+            
+            if (matchedProd) {
+                feedbackBox.style.display = 'block';
+                feedbackText.textContent = `${matchedProd.name} (SKU: ${matchedProd.sku}) - Stock Available: ${matchedProd.stockQuantity}`;
+            } else {
+                feedbackBox.style.display = 'none';
+            }
         }
 
         async function processScannedBarcode() {
@@ -519,13 +518,39 @@
                 return;
             }
 
-            let targetId = activeTargetOrderIdForScan || val;
+            // Check validity against inventory or active orders
+            let targetOrderId = activeTargetOrderIdForScan;
+            
+            if (!targetOrderId) {
+                // If scanned value is an Order ID
+                const matchedOrder = globalLiveOrdersCache.find(o => o.orderId === val);
+                if (matchedOrder) {
+                    targetOrderId = matchedOrder.orderId;
+                } else {
+                    // Check if scanned value is a product SKU/barcode
+                    const matchedProd = cachedInventoryList.find(p => p.sku === val);
+                    if (!matchedProd) {
+                        alert("❌ MISMATCH WARNING: Scanned barcode/SKU does not exist in store inventory or active orders! Action rejected.");
+                        return;
+                    }
+                    // Find an active order containing this product
+                    const orderWithProd = globalLiveOrdersCache.find(o => 
+                        Array.isArray(o.configDetails) && o.configDetails.some(item => item.fileName && item.fileName.toLowerCase().includes(matchedProd.name.toLowerCase()))
+                    );
+                    if (!orderWithProd) {
+                        alert(`⚠️ WARNING: Scanned product "${matchedProd.name}" does not match any active pending order items! Mismatch detected.`);
+                        return;
+                    }
+                    targetOrderId = orderWithProd.orderId;
+                }
+            }
+
             try {
-                alert(`✅ Barcode verified! Quantity updated and Pickup marked Complete for Order #${targetId}`);
-                await updateOrderStatus(targetId, 'Out for Delivery');
+                alert(`✅ Barcode verified successfully! Pickup marked Complete for Order #${targetOrderId}`);
+                await updateOrderStatus(targetOrderId, 'Out for Delivery');
                 closeBarcodeScannerModal();
             } catch (err) {
-                alert("❌ Order not found for scanned barcode.");
+                alert("❌ Error processing verification.");
             }
         }
 
@@ -573,7 +598,6 @@
         }
 
         let isStoreOpen = true;
-
         async function fetchStoreStatus() {
             try {
                 const res = await fetch('/api/store-status');
@@ -630,13 +654,14 @@
         }
 
         let previousOrderCount = -1;
-
         async function fetchLiveOrdersStream() {
             try {
                 const res = await fetch('/api/admin/orders');
                 if (!res.ok) return;
                 const orders = await res.json();
                 if (!Array.isArray(orders)) return;
+
+                globalLiveOrdersCache = orders;
 
                 document.getElementById('statTotalOrders').textContent = orders.length;
                 document.getElementById('statReadyPrint').textContent = orders.filter(o => o.status === 'Paid / Ready for Print' || o.status === 'Pending' || o.status === 'Pending Payment').length;
