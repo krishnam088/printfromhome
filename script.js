@@ -647,7 +647,11 @@ document.addEventListener('DOMContentLoaded', () => {
             order.details.forEach(file => {
                 const row = document.createElement('div');
                 row.style = 'display:flex; justify-content:space-between; font-size:0.8rem; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0; font-weight:600;';
-                row.innerHTML = `<span>📄 ${file.fileName} (${file.copies} copies)</span><span style="color:var(--blinkit-green);">${file.printType === 'bw' ? 'B&W' : 'Color'} Print</span>`;
+                if (file.printType === 'snack') {
+                    row.innerHTML = `<span>📦 ${file.fileName} (${file.copies} units)</span><span style="color:#d97706;">Product / Snack</span>`;
+                } else {
+                    row.innerHTML = `<span>📄 ${file.fileName} (${file.copies} copies)</span><span style="color:var(--blinkit-green);">${file.printType === 'bw' ? 'B&W' : 'Color'} Print</span>`;
+                }
                 listContainer.appendChild(row);
             });
         }
@@ -713,7 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
         printForm.addEventListener('submit', (e) => {
             e.preventDefault();
             if (masterFilesArray.length === 0) {
-                alert("⚠️ Please upload at least one document to add to cart.");
+                alert("⚠️ Please upload at least one valid document to add to cart.");
                 return;
             }
 
@@ -731,7 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             persistCartStateData();
-            alert("🎉 Print job(s) successfully added to Cart!");
+            alert("🎉 Valid print job(s) successfully added to Cart!");
             masterFilesArray = [];
             sessionStorage.removeItem('savedPrintFiles');
             printForm.reset();
@@ -753,6 +757,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalSnacksVal = 0;
         const finalMetaConfig = [];
 
+        // STRICT SEPARATION: Only valid print jobs generate print commands for printer/admin
         window.cartPrintJobsArray.forEach(job => {
             const cost = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
             totalPrintVal += cost;
@@ -768,10 +773,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        // Snacks/Products go as itemized list with quantities and pricing for packing
         window.cartSnacksArray.forEach(snack => {
             totalSnacksVal += snack.price * snack.qty;
             finalMetaConfig.push({
-                fileName: `Snack: ${snack.name}`,
+                fileName: `Product: ${snack.name} (Qty: ${snack.qty}, Price: ₹${snack.price} each)`,
                 copies: snack.qty,
                 printType: 'snack',
                 pages: 1
@@ -816,7 +822,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     orderId: data.order_id || 'COD-' + Date.now(),
                     date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), 
                     amount: grandTotal.toFixed(2), 
-                    status: "COD / Ready for Print", 
+                    status: "COD / Ready for Print & Packing", 
                     details: finalMetaConfig,
                     address: selectedActiveAddress 
                 };
@@ -850,7 +856,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             orderId: data.order_id,
                             date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), 
                             amount: grandTotal.toFixed(2), 
-                            status: "Paid / Ready for Print", 
+                            status: "Paid / Ready for Print & Packing", 
                             details: finalMetaConfig,
                             address: selectedActiveAddress 
                         };
