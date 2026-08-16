@@ -12,6 +12,8 @@
 
     <!-- Chart.js for Dashboard Profit Graph -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Html5-Qrcode Scanner Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -221,12 +223,11 @@
             <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 6px;">📷 Product Barcode & SKU Scanner</h3>
             <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 10px;">Use live camera or type SKU manually below.</p>
             
-            <!-- Live Camera View Container -->
-            <div id="cameraScannerContainer" style="display:none; width: 100%; height: 180px; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 10px; position: relative;">
-                <video id="liveCameraVideoFeed" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
-                <div style="position: absolute; inset: 0; border: 2px dashed rgba(16,185,129,0.7); pointer-events: none;"></div>
-            </div>
-
+        <!-- Live Camera View Container -->
+<div id="cameraScannerContainer" style="display:none; width: 100%; height: 180px; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 10px; position: relative;">
+    <div id="liveCameraVideoFeed" style="width: 100%; height: 100%;"></div>
+    <div style="position: absolute; inset: 0; border: 2px dashed rgba(16,185,129,0.7); pointer-events: none; z-index: 10;"></div>
+</div>
             <div style="display: flex; gap: 8px; margin-bottom: 10px;">
                 <button type="button" id="btnToggleCamera" onclick="toggleCameraScanner()" style="flex: 1; padding: 8px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">📷 Open Camera</button>
             </div>
@@ -370,6 +371,7 @@
 
     <script>
         let cachedInventoryList = [];
+        let html5QrCodeScanner = null;
         let globalLiveOrdersCache = [];
         let activeTargetOrderIdForScan = null;
         let activeCameraStream = null;
@@ -560,26 +562,49 @@
 
         async function toggleCameraScanner() {
             const container = document.getElementById('cameraScannerContainer');
-            const videoElem = document.getElementById('liveCameraVideoFeed');
             const btn = document.getElementById('btnToggleCamera');
 
-            if (activeCameraStream) {
-                activeCameraStream.getTracks().forEach(t => t.stop());
-                activeCameraStream = null;
+            if (html5QrCodeScanner) {
+                try {
+                    await html5QrCodeScanner.stop();
+                    html5QrCodeScanner.clear();
+                } catch(e) {}
+                html5QrCodeScanner = null;
                 container.style.display = 'none';
                 btn.textContent = '📷 Open Camera';
                 return;
             }
 
-            try {
-                activeCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                videoElem.srcObject = activeCameraStream;
-                container.style.display = 'block';
-                btn.textContent = '❌ Close Camera';
-            } catch (err) {
-                alert("⚠️ Camera access denied or not supported. Please use manual typing.");
-            }
+            container.style.display = 'block';
+            btn.textContent = '❌ Close Camera';
+
+            // Html5-Qrcode professional scanner initialization
+            html5QrCodeScanner = new Html5Qrcode("liveCameraVideoFeed");
+            
+            const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+            
+            html5QrCodeScanner.start(
+                { facingMode: "environment" }, 
+                config, 
+                (decodedText, decodedResult) => {
+                    // Jaise hi camera real barcode/QR read karega, yeh turant fill karke verify kar dega
+                    console.log(`Scan result: ${decodedText}`, decodedResult);
+                    document.getElementById('barcodeInputScanField').value = decodedText;
+                    autoDetectProductByBarcode(decodedText);
+                    
+                    toggleCameraScanner();
+                    processScannedBarcode();
+                },
+                (errorMessage) => {
+                    // Scanning in progress (ignoring frame errors)
+                }
+            ).catch(err => {
+                alert("⚠️ Camera start error: " + err);
+                container.style.display = 'none';
+                btn.textContent = '📷 Open Camera';
+            });
         }
+        
 
         function autoDetectProductByBarcode(inputVal) {
             const cleanVal = inputVal.trim();
