@@ -9,6 +9,9 @@
     <link rel="manifest" href="/manifest-admin.json">
     <meta name="theme-color" content="#0070f3">
 
+    <!-- Chart.js for Dashboard Profit Graph -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         :root {
@@ -216,10 +219,19 @@
     <div id="barcodeScannerModal">
         <div class="scanner-card">
             <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 6px;">📷 Product Barcode & SKU Scanner</h3>
-            <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 12px;">Scan with camera or type SKU manually to verify items.</p>
+            <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 10px;">Use live camera or type SKU manually below.</p>
             
-            <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 14px; border: 2px dashed var(--border-color); margin-bottom: 12px;">
-                <div style="font-size: 2rem; margin-bottom: 4px;">🔍</div>
+            <!-- Live Camera View Container -->
+            <div id="cameraScannerContainer" style="display:none; width: 100%; height: 180px; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 10px; position: relative;">
+                <video id="liveCameraVideoFeed" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                <div style="position: absolute; inset: 0; border: 2px dashed rgba(16,185,129,0.7); pointer-events: none;"></div>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <button type="button" id="btnToggleCamera" onclick="toggleCameraScanner()" style="flex: 1; padding: 8px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">📷 Open Camera</button>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 14px; border: 2px dashed var(--border-color); margin-bottom: 12px;">
                 <input type="text" id="barcodeInputScanField" placeholder="Type Barcode / SKU / Product Name..." oninput="autoDetectProductByBarcode(this.value)" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 700; text-align: center; outline: none;">
             </div>
 
@@ -294,9 +306,8 @@
 
             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px;">
                 <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px;">📈 Store Financial & Profit/Loss Overview</h3>
-                <div style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px; text-align: center; color: var(--text-sub);">
-                    <div style="font-size: 2.5rem; margin-bottom: 8px;">📊</div>
-                    <p style="font-size: 0.9rem; font-weight: 600;">Profit & Loss analytics calculated dynamically from live item sales vs purchase costs.</p>
+                <div style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
+                    <canvas id="storeProfitTrendChart" style="width: 100%; max-height: 250px;"></canvas>
                 </div>
             </div>
         </div>
@@ -361,6 +372,9 @@
         let cachedInventoryList = [];
         let globalLiveOrdersCache = [];
         let activeTargetOrderIdForScan = null;
+        let activeCameraStream = null;
+        let openDrawers = new Set();
+        let profitChartInstance = null;
 
         function switchAdminTab(tabName) {
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
@@ -369,10 +383,12 @@
             if (tabName === 'dashboard') {
                 document.getElementById('nav_dashboard').classList.add('active');
                 document.getElementById('section_dashboard').classList.add('active');
+                fetchDashboardStats();
                 fetchInventoryReport();
             } else if (tabName === 'orders') {
                 document.getElementById('nav_orders').classList.add('active');
                 document.getElementById('section_orders').classList.add('active');
+                fetchLiveOrdersStream();
             } else if (tabName === 'inventory') {
                 document.getElementById('nav_inventory').classList.add('active');
                 document.getElementById('section_inventory').classList.add('active');
@@ -443,10 +459,53 @@
                     document.getElementById('invSellingPrice').value = '';
                     document.getElementById('invQtyInput').value = '';
                     fetchInventoryReport();
+                    fetchDashboardStats();
                 }
             } catch (e) {
                 alert("❌ Error updating stock.");
             }
+        }
+
+        async function fetchDashboardStats() {
+            try {
+                const res = await fetch('/api/admin/stats');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('statDashTotalOrders').textContent = data.totalOrders;
+                    document.getElementById('statDashNetProfit').textContent = `₹${data.totalProfit.toFixed(2)}`;
+                    renderProfitChart([data.totalProfit * 0.2, data.totalProfit * 0.4, data.totalProfit * 0.6, data.totalProfit * 0.8, data.totalProfit]);
+                }
+            } catch (e) {}
+        }
+
+        function renderProfitChart(profitValues) {
+            const ctx = document.getElementById('storeProfitTrendChart').getContext('2d');
+            if (profitChartInstance) {
+                profitChartInstance.destroy();
+            }
+            profitChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Today'],
+                    datasets: [{
+                        label: 'Net Profit Trend (₹)',
+                        data: profitValues,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#f8fafc' } } },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                    }
+                }
+            });
         }
 
         async function fetchInventoryReport() {
@@ -457,7 +516,6 @@
                     cachedInventoryList = data.products || [];
                     document.getElementById('statDashVarieties').textContent = data.products.length;
                     document.getElementById('statDashStockVal').textContent = `₹${data.financials.totalStockValue.toFixed(2)}`;
-                    document.getElementById('statDashNetProfit').textContent = `₹${data.financials.totalProfitEarned.toFixed(2)}`;
 
                     const tbody = document.getElementById('inventoryProductsTableBody');
                     if (data.products.length === 0) {
@@ -488,10 +546,39 @@
         }
 
         function closeBarcodeScannerModal() {
+            if (activeCameraStream) {
+                activeCameraStream.getTracks().forEach(track => track.stop());
+                activeCameraStream = null;
+            }
+            document.getElementById('cameraScannerContainer').style.display = 'none';
+            document.getElementById('btnToggleCamera').textContent = '📷 Open Camera';
             document.getElementById('barcodeScannerModal').style.display = 'none';
             activeTargetOrderIdForScan = null;
             document.getElementById('barcodeInputScanField').value = '';
             document.getElementById('scannerDetectedFeedbackBox').style.display = 'none';
+        }
+
+        async function toggleCameraScanner() {
+            const container = document.getElementById('cameraScannerContainer');
+            const videoElem = document.getElementById('liveCameraVideoFeed');
+            const btn = document.getElementById('btnToggleCamera');
+
+            if (activeCameraStream) {
+                activeCameraStream.getTracks().forEach(t => t.stop());
+                activeCameraStream = null;
+                container.style.display = 'none';
+                btn.textContent = '📷 Open Camera';
+                return;
+            }
+
+            try {
+                activeCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                videoElem.srcObject = activeCameraStream;
+                container.style.display = 'block';
+                btn.textContent = '❌ Close Camera';
+            } catch (err) {
+                alert("⚠️ Camera access denied or not supported. Please use manual typing.");
+            }
         }
 
         function autoDetectProductByBarcode(inputVal) {
@@ -559,7 +646,13 @@
         function toggleOrderDetailsDrawer(orderId) {
             const panel = document.getElementById(`orderDetailsPanel_${orderId}`);
             if (panel) {
-                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+                if (panel.style.display === 'none' || panel.style.display === '') {
+                    panel.style.display = 'block';
+                    openDrawers.add(orderId);
+                } else {
+                    panel.style.display = 'none';
+                    openDrawers.delete(orderId);
+                }
             }
         }
 
@@ -654,11 +747,18 @@
                 previousOrderCount = orders.length;
 
                 renderOrdersList(orders);
-            } catch (err) {}
+            } catch (err) {
+                const container = document.getElementById('adminOrderQueue');
+                if (container) {
+                    container.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--accent-red);">⚠️ Error connecting to live orders stream. Retrying...</div>`;
+                }
+            }
         }
 
         function renderOrdersList(orders) {
             const container = document.getElementById('adminOrderQueue');
+            if (!container) return;
+
             if (orders.length === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 40px; background: var(--surface-card); border-radius: 16px; border: 1px solid var(--border-color);">
@@ -691,6 +791,7 @@
                 let allProductsVerified = totalPackingItems === 0 || verifiedItemsList.length >= totalPackingItems;
 
                 const primaryFileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '';
+                const isDrawerOpen = openDrawers.has(order.orderId);
 
                 return `
                     <div class="order-card" id="card_${order.orderId}">
@@ -706,7 +807,7 @@
                         </div>
 
                         <!-- Collapsible Order Details Panel -->
-                        <div id="orderDetailsPanel_${orderId}" style="display: none; background: rgba(15,23,42,0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
+                        <div id="orderDetailsPanel_${orderId}" style="display: ${isDrawerOpen ? 'block' : 'none'}; background: rgba(15,23,42,0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
                             <div class="order-customer-box" style="margin-bottom: 12px;">
                                 <div class="cust-field"><b>Customer Name</b><span>${order.customerName || 'Customer'}</span></div>
                                 <div class="cust-field"><b>Contact Number</b><span><a href="tel:${order.phone || ''}" style="color: #38bdf8; text-decoration: none;">${order.phone || 'N/A'}</a></span></div>
@@ -759,6 +860,7 @@
 
         fetchStoreStatus();
         fetchInventoryReport();
+        fetchDashboardStats();
         fetchLiveOrdersStream();
         setInterval(fetchLiveOrdersStream, 3500);
     </script>
