@@ -52,7 +52,8 @@ const orderSchema = new mongoose.Schema({
     status: String,
     date: String,
     timestamp: String,
-    paymentId: String
+    paymentId: String,
+    verifiedItems: { type: Array, default: [] } // Track item-by-item verified SKUs/Names for packing
 });
 const Order = mongoose.model('Order', orderSchema);
 
@@ -236,6 +237,47 @@ app.get('/api/store/products', async (req, res) => {
     try {
         const products = await Product.find();
         res.json({ success: true, products });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// --- ITEM-BY-ITEM VERIFICATION API FOR ADMIN PACKING ---
+app.post('/api/admin/verify-item', async (req, res) => {
+    try {
+        const { orderId, skuOrName } = req.body;
+        const order = await Order.findOne({ orderId });
+        if (!order) return res.status(404).json({ success: false, message: "Order not found!" });
+
+        // Find if scanned SKU/Name matches any product in store inventory
+        const product = await Product.findOne({ $or: [{ sku: skuOrName }, { name: { $regex: new RegExp(skuOrName, 'i') } }] });
+        
+        let targetItemName = skuOrName;
+        if (product) targetItemName = product.name;
+
+        // Verify if this item exists in the order's configDetails
+        const itemExists = order.configDetails.find(item => {
+            let itemName = item.fileName.replace('Product: ', '').split(' (Qty:')[0].trim();
+            return itemName.toLowerCase().includes(targetItemName.toLowerCase()) || targetItemName.toLowerCase().includes(itemName.toLowerCase());
+        });
+
+        if (!itemExists) {
+            return res.status(400).json({ success: false, message: `⚠️ Mismatch! "${skuOrName}" is not part of this order.` });
+        }
+
+        // Track verified item uniquely
+        if (!order.verifiedItems) order.verifiedItems = [];
+        if (!order.verifiedItems.includes(targetItemName)) {
+            order.verifiedItems.push(targetItemName);
+            await order.save();
+        }
+
+        res.json({ 
+            success: true, 
+            verifiedCount: order.verifiedItems.length, 
+            totalItems: order.configDetails.length,
+            message: `✅ Verified "${targetItemName}" successfully!` 
+        });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

@@ -180,7 +180,7 @@
 
         .packing-list-box { background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 12px; padding: 12px 14px; }
         .packing-title { font-size: 0.78rem; font-weight: 800; color: var(--accent-yellow); text-transform: uppercase; margin-bottom: 6px; }
-        .packing-item-row { display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; padding: 4px 0; border-bottom: 1px dashed rgba(255,255,255,0.05); }
+        .packing-item-row { display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,0.05); align-items: center; }
 
         .file-action-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
         .btn-download-file { background: #334155; color: white; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
@@ -194,6 +194,7 @@
         }
         .btn-step.active { background: var(--accent-green); color: white; border-color: var(--accent-green); }
         .btn-step.current-phase { background: var(--accent-yellow); color: black; border-color: var(--accent-yellow); font-weight: 800; }
+        .btn-step:disabled { opacity: 0.4; cursor: not-allowed; }
 
         /* INVENTORY TABLE STYLING */
         .inventory-table {
@@ -211,25 +212,24 @@
     <!-- Hidden Iframe for Direct Silent Auto-Printing -->
     <iframe id="silentPrintFrame"></iframe>
 
-    <!-- Barcode Scanner Simulation Modal with Anti-Mismatch Guard -->
+    <!-- Barcode Scanner Modal with Camera + Manual Input -->
     <div id="barcodeScannerModal">
         <div class="scanner-card">
-            <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 8px;">📷 Product Barcode & SKU Scanner</h3>
-            <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 12px;">Scan product barcode or type SKU to verify and auto-complete order pickup.</p>
+            <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 6px;">📷 Product Barcode & SKU Scanner</h3>
+            <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 12px;">Scan with camera or type SKU manually to verify items.</p>
             
-            <div style="background: rgba(0,0,0,0.3); padding: 24px; border-radius: 14px; border: 2px dashed var(--border-color); margin-bottom: 12px;">
-                <div style="font-size: 2.2rem; margin-bottom: 6px;">🔍</div>
-                <input type="text" id="barcodeInputScanField" placeholder="Scan Barcode / SKU / Order ID..." oninput="autoDetectProductByBarcode(this.value)" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 700; text-align: center; outline: none;">
+            <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 14px; border: 2px dashed var(--border-color); margin-bottom: 12px;">
+                <div style="font-size: 2rem; margin-bottom: 4px;">🔍</div>
+                <input type="text" id="barcodeInputScanField" placeholder="Type Barcode / SKU / Product Name..." oninput="autoDetectProductByBarcode(this.value)" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 700; text-align: center; outline: none;">
             </div>
 
-            <!-- Auto-Detected Product Feedback Box -->
             <div id="scannerDetectedFeedbackBox" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); border-radius: 10px; padding: 10px; margin-bottom: 15px; display: none; text-align: left;">
-                <p style="font-size: 0.72rem; font-weight: 800; color: var(--accent-green); text-transform: uppercase;">⚡ Verified Product Match:</p>
+                <p style="font-size: 0.72rem; font-weight: 800; color: var(--accent-green); text-transform: uppercase;">⚡ Verified Match:</p>
                 <p id="detectedProductNameText" style="font-size: 0.85rem; font-weight: 700; color: white; margin-top: 2px;"></p>
             </div>
 
             <div style="display: flex; gap: 10px;">
-                <button type="button" onclick="processScannedBarcode()" style="flex: 1; padding: 10px; background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Verify & Complete Pickup</button>
+                <button type="button" onclick="processScannedBarcode()" style="flex: 1; padding: 10px; background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Verify Item</button>
                 <button type="button" onclick="closeBarcodeScannerModal()" style="padding: 10px 16px; background: var(--accent-red); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Cancel</button>
             </div>
         </div>
@@ -241,8 +241,9 @@
             <h2>Print<span>Admin</span></h2>
         </div>
         <ul class="sidebar-menu">
-            <li class="sidebar-item active" id="nav_orders" onclick="switchAdminTab('orders')">📦 Live Orders Queue</li>
-            <li class="sidebar-item" id="nav_inventory" onclick="switchAdminTab('inventory')">📊 Inventory & Stock Manager</li>
+            <li class="sidebar-item active" id="nav_dashboard" onclick="switchAdminTab('dashboard')">📊 Dashboard & Profit</li>
+            <li class="sidebar-item" id="nav_orders" onclick="switchAdminTab('orders')">📦 Live Orders Queue</li>
+            <li class="sidebar-item" id="nav_inventory" onclick="switchAdminTab('inventory')">📦 Inventory & Stock Manager</li>
         </ul>
     </nav>
 
@@ -269,29 +270,39 @@
             </div>
         </header>
 
-        <!-- TAB 1: ORDERS SECTION -->
-        <div id="section_orders" class="admin-section active">
+        <!-- TAB 1: DASHBOARD & PROFIT GRAPH SECTION -->
+        <div id="section_dashboard" class="admin-section active">
             <!-- STATS OVERVIEW -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <span class="stat-title">Total Orders</span>
-                    <span class="stat-num" id="statTotalOrders">0</span>
+                    <span class="stat-num" id="statDashTotalOrders">0</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-title">Pending / Ready</span>
-                    <span class="stat-num" id="statReadyPrint" style="color: var(--accent-yellow);">0</span>
+                    <span class="stat-title">Store Varieties</span>
+                    <span class="stat-num" id="statDashVarieties" style="color: #38bdf8;">0</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-title">Out for Delivery</span>
-                    <span class="stat-num" id="statOutDelivery" style="color: #38bdf8;">0</span>
+                    <span class="stat-title">Stock Valuation</span>
+                    <span class="stat-num" id="statDashStockVal" style="color: var(--accent-yellow);">₹0</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-title">Completed Orders</span>
-                    <span class="stat-num" id="statCompleted" style="color: var(--accent-green);">0</span>
+                    <span class="stat-title">Total Net Profit</span>
+                    <span class="stat-num" id="statDashNetProfit" style="color: var(--accent-green);">₹0</span>
                 </div>
             </div>
 
-            <!-- ORDER QUEUE HEADING -->
+            <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px;">
+                <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px;">📈 Store Financial & Profit/Loss Overview</h3>
+                <div style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px; text-align: center; color: var(--text-sub);">
+                    <div style="font-size: 2.5rem; margin-bottom: 8px;">📊</div>
+                    <p style="font-size: 0.9rem; font-weight: 600;">Profit & Loss analytics calculated dynamically from live item sales vs purchase costs.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: ORDERS SECTION -->
+        <div id="section_orders" class="admin-section">
             <div class="section-heading-bar">
                 <h2>📦 Live Print & Product Packing Queue</h2>
                 <button type="button" class="audio-test-btn" onclick="playLoudOrderChime(true)">🔔 Test Sound Alert</button>
@@ -305,12 +316,10 @@
             </div>
         </div>
 
-        <!-- TAB 2: INVENTORY MANAGEMENT SECTION -->
+        <!-- TAB 3: INVENTORY MANAGEMENT SECTION -->
         <div id="section_inventory" class="admin-section">
             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px; margin-bottom: 22px;">
-                <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
-                    📊 Store Inventory, Stock Restock & Profit Tracker
-                </h3>
+                <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px;">📊 Store Inventory, Stock Restock & Profit Tracker</h3>
                 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 15px;">
                     <input type="text" id="invSkuInput" placeholder="Scan Barcode / SKU" oninput="autoFillInventoryProduct(this.value)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
@@ -320,15 +329,9 @@
                     <input type="number" id="invQtyInput" placeholder="Add / Restock Qty" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
                     <button type="button" onclick="addNewStockItem()" style="background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; padding: 10px;">+ Save / Restock</button>
                 </div>
-
-                <div id="inventoryReportSummary" style="font-size: 0.85rem; color: var(--text-sub); font-weight: 600; display: flex; gap: 20px; flex-wrap: wrap; background: rgba(0,0,0,0.2); padding: 10px 14px; border-radius: 10px;">
-                    <span>📦 Total Varieties: <b id="valTotalVariety" style="color: white;">0</b></span>
-                    <span>💰 Total Stock Valuation: <b id="valTotalStock" style="color: white;">₹0</b></span>
-                    <span>📈 Total Net Profit: <b id="valTotalProfit" style="color: var(--accent-green);">₹0</b></span>
-                </div>
             </div>
 
-            <!-- DETAILED NUMBER-WISE PRODUCTS TABLE -->
+            <!-- DETAILED PRODUCTS TABLE -->
             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px;">
                 <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 10px;">📋 Live Store Stock Register</h3>
                 <div style="overflow-x: auto;">
@@ -345,7 +348,7 @@
                             </tr>
                         </thead>
                         <tbody id="inventoryProductsTableBody">
-                            <tr><td colspan="7" style="text-align: center; color: var(--text-sub); padding: 30px;">Loading store products inventory...</td></tr>
+                            <tr><td colspan="7" style="text-align: center; color: var(--text-sub); padding: 30px;">Loading inventory...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -356,12 +359,18 @@
 
     <script>
         let cachedInventoryList = [];
+        let globalLiveOrdersCache = [];
+        let activeTargetOrderIdForScan = null;
 
         function switchAdminTab(tabName) {
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.admin-section').forEach(el => el.classList.remove('active'));
 
-            if (tabName === 'orders') {
+            if (tabName === 'dashboard') {
+                document.getElementById('nav_dashboard').classList.add('active');
+                document.getElementById('section_dashboard').classList.add('active');
+                fetchInventoryReport();
+            } else if (tabName === 'orders') {
                 document.getElementById('nav_orders').classList.add('active');
                 document.getElementById('section_orders').classList.add('active');
             } else if (tabName === 'inventory') {
@@ -378,7 +387,7 @@
             return audioCtx;
         }
 
-        function playLoudOrderChime(isTest = false) {
+        function playLoudOrderChime() {
             try {
                 const ctx = getAudioContext();
                 const now = ctx.currentTime;
@@ -397,7 +406,6 @@
 
         window.addEventListener('click', () => { getAudioContext(); }, { once: true });
 
-        // Auto-fill existing product details for restock and price/rate update
         function autoFillInventoryProduct(skuVal) {
             const cleanSku = skuVal.trim();
             const matched = cachedInventoryList.find(p => p.sku === cleanSku);
@@ -447,9 +455,9 @@
                 const data = await res.json();
                 if (data.success) {
                     cachedInventoryList = data.products || [];
-                    document.getElementById('valTotalVariety').textContent = data.products.length;
-                    document.getElementById('valTotalStock').textContent = `₹${data.financials.totalStockValue.toFixed(2)}`;
-                    document.getElementById('valTotalProfit').textContent = `₹${data.financials.totalProfitEarned.toFixed(2)}`;
+                    document.getElementById('statDashVarieties').textContent = data.products.length;
+                    document.getElementById('statDashStockVal').textContent = `₹${data.financials.totalStockValue.toFixed(2)}`;
+                    document.getElementById('statDashNetProfit').textContent = `₹${data.financials.totalProfitEarned.toFixed(2)}`;
 
                     const tbody = document.getElementById('inventoryProductsTableBody');
                     if (data.products.length === 0) {
@@ -472,9 +480,6 @@
             } catch (e) {}
         }
 
-        let activeTargetOrderIdForScan = null;
-        let globalLiveOrdersCache = [];
-
         function openBarcodeScannerModal(orderId = null) {
             activeTargetOrderIdForScan = orderId;
             document.getElementById('barcodeScannerModal').style.display = 'flex';
@@ -489,7 +494,6 @@
             document.getElementById('scannerDetectedFeedbackBox').style.display = 'none';
         }
 
-        // Live Barcode / SKU Recognition & Anti-Mismatch Guard
         function autoDetectProductByBarcode(inputVal) {
             const cleanVal = inputVal.trim();
             const feedbackBox = document.getElementById('scannerDetectedFeedbackBox');
@@ -501,10 +505,9 @@
             }
 
             const matchedProd = cachedInventoryList.find(p => p.sku === cleanVal || p.name.toLowerCase().includes(cleanVal.toLowerCase()));
-            
             if (matchedProd) {
                 feedbackBox.style.display = 'block';
-                feedbackText.textContent = `${matchedProd.name} (SKU: ${matchedProd.sku}) - Stock Available: ${matchedProd.stockQuantity}`;
+                feedbackText.textContent = `${matchedProd.name} (SKU: ${matchedProd.sku}) - Stock: ${matchedProd.stockQuantity}`;
             } else {
                 feedbackBox.style.display = 'none';
             }
@@ -513,39 +516,51 @@
         async function processScannedBarcode() {
             const val = document.getElementById('barcodeInputScanField').value.trim();
             if (!val) {
-                alert("⚠️ Please scan or enter a valid product barcode/SKU or Order ID!");
+                alert("⚠️ Please scan or enter a valid product barcode/SKU!");
                 return;
             }
 
             let targetOrderId = activeTargetOrderIdForScan;
-            
             if (!targetOrderId) {
-                const matchedOrder = globalLiveOrdersCache.find(o => o.orderId === val);
-                if (matchedOrder) {
-                    targetOrderId = matchedOrder.orderId;
-                } else {
-                    const matchedProd = cachedInventoryList.find(p => p.sku === val || p.name.toLowerCase().includes(val.toLowerCase()));
-                    if (!matchedProd) {
-                        alert("❌ MISMATCH WARNING: Scanned barcode/SKU is invalid or does not exist in store inventory! Action rejected.");
-                        return;
-                    }
-                    const orderWithProd = globalLiveOrdersCache.find(o => 
-                        Array.isArray(o.configDetails) && o.configDetails.some(item => item.fileName && item.fileName.toLowerCase().includes(matchedProd.name.toLowerCase()))
-                    );
-                    if (!orderWithProd) {
-                        alert(`⚠️ WARNING: Scanned product "${matchedProd.name}" does not match any active pending order items! Mismatch detected.`);
-                        return;
-                    }
-                    targetOrderId = orderWithProd.orderId;
+                // Find pending order containing this item
+                const matchedProd = cachedInventoryList.find(p => p.sku === val || p.name.toLowerCase().includes(val.toLowerCase()));
+                if (!matchedProd) {
+                    alert("❌ Invalid Barcode or SKU!");
+                    return;
                 }
+                const pendingOrder = globalLiveOrdersCache.find(o => 
+                    o.status !== 'Delivered' && Array.isArray(o.configDetails) && o.configDetails.some(item => item.fileName && item.fileName.toLowerCase().includes(matchedProd.name.toLowerCase()))
+                );
+                if (!pendingOrder) {
+                    alert(`⚠️ No active pending order found containing "${matchedProd.name}"!`);
+                    return;
+                }
+                targetOrderId = pendingOrder.orderId;
             }
 
             try {
-                alert(`✅ Barcode verified successfully! Pickup marked Complete for Order #${targetOrderId}`);
-                await updateOrderStatus(targetOrderId, 'Out for Delivery');
-                closeBarcodeScannerModal();
+                const res = await fetch('/api/admin/verify-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: targetOrderId, skuOrName: val })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    closeBarcodeScannerModal();
+                    fetchLiveOrdersStream();
+                } else {
+                    alert(data.message);
+                }
             } catch (err) {
-                alert("❌ Error processing verification.");
+                alert("❌ Verification failed.");
+            }
+        }
+
+        function toggleOrderDetailsDrawer(orderId) {
+            const panel = document.getElementById(`orderDetailsPanel_${orderId}`);
+            if (panel) {
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
             }
         }
 
@@ -572,19 +587,11 @@
         updateAutoPrintButtonUI();
 
         function triggerPrintJob(fileUrl, orderId) {
-            if (!fileUrl || fileUrl === '#') {
-                alert("No printable document file attached to this order!");
-                return;
-            }
+            if (!fileUrl || fileUrl === '#') return;
             const frame = document.getElementById('silentPrintFrame');
             frame.src = fileUrl;
             frame.onload = function () {
-                try {
-                    frame.contentWindow.focus();
-                    frame.contentWindow.print();
-                } catch (e) {
-                    window.open(fileUrl, '_blank');
-                }
+                try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (e) { window.open(fileUrl, '_blank'); }
             };
             if (orderId) {
                 processedAutoPrintOrderIds.add(orderId);
@@ -597,10 +604,7 @@
             try {
                 const res = await fetch('/api/store-status');
                 const data = await res.json();
-                if (data.success !== undefined) {
-                    isStoreOpen = data.isOpen;
-                    updateStoreButtonUI();
-                }
+                if (data.success !== undefined) { isStoreOpen = data.isOpen; updateStoreButtonUI(); }
             } catch (err) {}
         }
 
@@ -613,26 +617,15 @@
                     body: JSON.stringify({ isOpen: nextState })
                 });
                 const data = await res.json();
-                if (data.success) {
-                    isStoreOpen = data.isOpen;
-                    updateStoreButtonUI();
-                }
-            } catch (e) {
-                isStoreOpen = nextState;
-                updateStoreButtonUI();
-            }
+                if (data.success) { isStoreOpen = data.isOpen; updateStoreButtonUI(); }
+            } catch (e) { isStoreOpen = nextState; updateStoreButtonUI(); }
         }
 
         function updateStoreButtonUI() {
             const btn = document.getElementById('storeStatusToggleBtn');
             const txt = document.getElementById('storeStatusStateText');
-            if (isStoreOpen) {
-                btn.className = "toggle-badge-btn btn-store-open";
-                txt.textContent = "OPEN";
-            } else {
-                btn.className = "toggle-badge-btn btn-store-closed";
-                txt.textContent = "CLOSED";
-            }
+            if (isStoreOpen) { btn.className = "toggle-badge-btn btn-store-open"; txt.textContent = "OPEN"; } 
+            else { btn.className = "toggle-badge-btn btn-store-closed"; txt.textContent = "CLOSED"; }
         }
 
         async function updateOrderStatus(orderId, newStatus) {
@@ -643,9 +636,7 @@
                     body: JSON.stringify({ status: newStatus })
                 });
                 fetchLiveOrdersStream();
-            } catch (err) {
-                fetchLiveOrdersStream();
-            }
+            } catch (err) {}
         }
 
         let previousOrderCount = -1;
@@ -658,41 +649,12 @@
 
                 globalLiveOrdersCache = orders;
 
-                document.getElementById('statTotalOrders').textContent = orders.length;
-                document.getElementById('statReadyPrint').textContent = orders.filter(o => o.status === 'Paid / Ready for Print' || o.status === 'Pending' || o.status === 'Pending Payment').length;
-                document.getElementById('statOutDelivery').textContent = orders.filter(o => o.status === 'Out for Delivery').length;
-                document.getElementById('statCompleted').textContent = orders.filter(o => o.status === 'Delivered').length;
+                document.getElementById('statDashTotalOrders').textContent = orders.length;
 
-                if (previousOrderCount !== -1 && orders.length > previousOrderCount) {
-                    playLoudOrderChime();
-                }
+                if (previousOrderCount !== -1 && orders.length > previousOrderCount) { playLoudOrderChime(); }
                 previousOrderCount = orders.length;
 
                 renderOrdersList(orders);
-
-                if (autoPrintEnabled) {
-                    orders.forEach(order => {
-                        const isReady = order.status === 'Paid / Ready for Print' || order.status === 'Paid';
-                        if (isReady && !processedAutoPrintOrderIds.has(order.orderId)) {
-                            let hasPrintFiles = false;
-                            if (Array.isArray(order.configDetails)) {
-                                hasPrintFiles = order.configDetails.some(item => item.printType !== 'snack' && (!item.fileName || !item.fileName.startsWith('Product:')));
-                            } else if (order.fileUrl || (order.files && order.files.length > 0)) {
-                                hasPrintFiles = true;
-                            }
-
-                            if (hasPrintFiles) {
-                                const fileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '';
-                                if (fileUrl) {
-                                    triggerPrintJob(fileUrl, order.orderId);
-                                }
-                            } else {
-                                processedAutoPrintOrderIds.add(order.orderId);
-                                localStorage.setItem('printed_orders', JSON.stringify(Array.from(processedAutoPrintOrderIds)));
-                            }
-                        }
-                    });
-                }
             } catch (err) {}
         }
 
@@ -703,7 +665,6 @@
                     <div style="text-align: center; padding: 40px; background: var(--surface-card); border-radius: 16px; border: 1px solid var(--border-color);">
                         <div style="font-size: 2.5rem; margin-bottom: 8px;">📭</div>
                         <h3>No Active Orders</h3>
-                        <p style="color: var(--text-sub); font-size: 0.85rem; margin-top: 4px;">Orders placed on the store will appear here.</p>
                     </div>
                 `;
                 return;
@@ -726,95 +687,72 @@
                     });
                 }
 
-                const primaryFileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '';
-                const primaryFileName = printFilesList.length > 0 ? printFilesList[0].fileName : (order.fileName || 'Document.pdf');
-                const isNew = currentStatus === 'Pending' || currentStatus === 'Pending Payment' || currentStatus === 'Paid / Ready for Print';
+                // Check item verification status
+                let totalPackingItems = productItemsList.length;
+                let verifiedItemsList = Array.isArray(order.verifiedItems) ? order.verifiedItems : [];
+                let allProductsVerified = totalPackingItems === 0 || verifiedItemsList.length >= totalPackingItems;
 
-                let orderTypeBadge = '';
-                if (printFilesList.length > 0 && productItemsList.length > 0) {
-                    orderTypeBadge = `<span style="background: rgba(245,158,11,0.2); color: #f59e0b; border: 1px solid #f59e0b; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 800;">🖨️+🛒 MIXED ORDER</span>`;
-                } else if (printFilesList.length > 0) {
-                    orderTypeBadge = `<span style="background: rgba(0,112,243,0.2); color: #38bdf8; border: 1px solid #0070f3; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 800;">🖨️ PRINT JOB ONLY</span>`;
-                } else {
-                    orderTypeBadge = `<span style="background: rgba(16,185,129,0.2); color: #10b981; border: 1px solid #10b981; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 800;">🛒 GROCERY ORDER</span>`;
-                }
+                const primaryFileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '';
 
                 return `
-                    <div class="order-card ${isNew ? 'new-order-pulse' : ''}" id="card_${order.orderId}">
+                    <div class="order-card" id="card_${order.orderId}">
                         <div class="order-card-header">
                             <div class="order-id-meta">
-                                <h3>Order #${order.orderId} ${orderTypeBadge}</h3>
+                                <h3>Order #${order.orderId}</h3>
                                 <div class="order-time">Received: ${order.date || 'Just now'}</div>
                             </div>
-                            <div style="text-align: right;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
                                 <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-green);">₹${order.totalAmount || order.amount || 0}</div>
-                                <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase;">${order.paymentId === 'CASH ON DELIVERY' ? 'COD' : 'Prepaid Online'}</span>
+                                <button type="button" onclick="toggleOrderDetailsDrawer('${order.orderId}')" style="background: var(--surface-card-hover); color: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">📋 View Details</button>
                             </div>
                         </div>
 
-                        <!-- Customer Full Updated Location Meta -->
-                        <div class="order-customer-box">
-                            <div class="cust-field">
-                                <b>Customer Name</b>
-                                <span>${order.customerName || 'Customer'}</span>
+                        <!-- Collapsible Order Details Panel -->
+                        <div id="orderDetailsPanel_${orderId}" style="display: none; background: rgba(15,23,42,0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
+                            <div class="order-customer-box" style="margin-bottom: 12px;">
+                                <div class="cust-field"><b>Customer Name</b><span>${order.customerName || 'Customer'}</span></div>
+                                <div class="cust-field"><b>Contact Number</b><span><a href="tel:${order.phone || ''}" style="color: #38bdf8; text-decoration: none;">${order.phone || 'N/A'}</a></span></div>
+                                <div class="cust-field" style="grid-column: 1 / -1;"><b>📍 Address</b><span>${order.address || 'N/A'}</span></div>
                             </div>
-                            <div class="cust-field">
-                                <b>Contact Number</b>
-                                <span><a href="tel:${order.phone || ''}" style="color: #38bdf8; text-decoration: none;">${order.phone || 'N/A'}</a></span>
-                            </div>
-                            <div class="cust-field" style="grid-column: 1 / -1;">
-                                <b>📍 Complete Delivery Address & Location</b>
-                                <span style="color: var(--text-main); font-weight: 700; font-size: 0.85rem; line-height: 1.4; display: block; margin-top: 2px;">${order.address || 'Standard Delivery Location'}</span>
-                            </div>
-                        </div>
 
-                        <!-- Print Hardware Specifications -->
-                        ${printFilesList.length > 0 ? `
-                        <div class="specs-container">
-                            <div class="specs-title">🖨️ Print Hardware Job</div>
-                            ${printFilesList.map(job => `
-                                <div class="specs-tags-row">
-                                    <div class="spec-tag highlight">📑 ${job.pages || 1} Pages</div>
-                                    <div class="spec-tag highlight">✖️ ${job.copies || 1} Copies</div>
-                                    <div class="spec-tag">🎨 ${(job.printType || 'bw').toUpperCase()}</div>
-                                    <div class="spec-tag">📎 Binding: ${job.binding || 'None'}</div>
+                            ${printFilesList.length > 0 ? `
+                            <div class="specs-container" style="margin-bottom: 12px;">
+                                <div class="specs-title">🖨️ Print Job</div>
+                                ${printFilesList.map(job => `<div class="spec-tag highlight">📑 ${job.pages || 1} Pages | ✖️ ${job.copies || 1} Copies | 🎨 ${(job.printType || 'bw').toUpperCase()}</div>`).join('')}
+                                <div class="file-action-row" style="margin-top:8px;">
+                                    <a href="${primaryFileUrl}" target="_blank" download class="btn-download-file">📥 Download File</a>
+                                    <button type="button" class="btn-manual-print" onclick="triggerPrintJob('${primaryFileUrl}', '${order.orderId}')">🖨️ Print Now</button>
                                 </div>
-                            `).join('')}
-
-                            <div class="file-action-row">
-                                <a href="${primaryFileUrl}" target="_blank" download class="btn-download-file">
-                                    📥 Download (${primaryFileName.substring(0, 18)}...)
-                                </a>
-                                <button type="button" class="btn-manual-print" onclick="triggerPrintJob('${primaryFileUrl}', '${order.orderId}')">
-                                    🖨️ Print Document Now
-                                </button>
                             </div>
-                        </div>
-                        ` : ''}
+                            ` : ''}
 
-                        <!-- Packing List for Snacks / Products with Barcode Scan Verification -->
-                        ${productItemsList.length > 0 ? `
-                        <div class="packing-list-box">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <div class="packing-title" style="margin-bottom:0;">🛒 Items to Pack (Groceries / Snacks)</div>
-                                <button type="button" onclick="openBarcodeScannerModal('${order.orderId}')" style="background: #8b5cf6; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer;">📷 Scan Barcode / Verify</button>
-                            </div>
-                            ${productItemsList.map(prod => `
-                                <div class="packing-item-row">
-                                    <span>📦 ${prod.fileName}</span>
-                                    <span>Qty: <b>${prod.copies || prod.qty || 1}</b></span>
+                            ${productItemsList.length > 0 ? `
+                            <div class="packing-list-box">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                    <div class="packing-title" style="margin-bottom:0;">🛒 Item-by-Item Verification (${verifiedItemsList.length}/${totalPackingItems} verified)</div>
+                                    <button type="button" onclick="openBarcodeScannerModal('${order.orderId}')" style="background: #8b5cf6; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer;">📷 Scan/Type Item</button>
                                 </div>
-                            `).join('')}
+                                ${productItemsList.map(prod => {
+                                    let prodCleanName = prod.fileName.replace('Product: ', '').split(' (Qty:')[0].trim();
+                                    let isItemVerified = verifiedItemsList.some(v => v.toLowerCase().includes(prodCleanName.toLowerCase()));
+                                    return `
+                                        <div class="packing-item-row">
+                                            <span style="color:${isItemVerified ? 'var(--accent-green)' : 'white'};">📦 ${prod.fileName}</span>
+                                            <span>${isItemVerified ? '✅ VERIFIED' : '⏳ PENDING'}</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                            ` : ''}
                         </div>
-                        ` : ''}
 
-                        <!-- 4-Stage Stepper -->
+                        <!-- 4-Stage Stepper (Out for Delivery is disabled until all items are verified) -->
                         <div class="stepper-actions-bar">
                             <span class="stepper-label">Set Status:</span>
-                            <button type="button" class="btn-step ${currentStatus === 'Paid / Ready for Print' || currentStatus === 'Pending' || currentStatus === 'Pending Payment' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Paid / Ready for Print')">1. Ready</button>
-                            <button type="button" class="btn-step ${currentStatus === 'Printing' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Printing')">2. 🖨️ Processing</button>
-                            <button type="button" class="btn-step ${currentStatus === 'Out for Delivery' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Out for Delivery')">3. 🛵 Out for Delivery</button>
-                            <button type="button" class="btn-step ${currentStatus === 'Delivered' ? 'active' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Delivered')">4. ✅ Delivered</button>
+                            <button type="button" class="btn-step ${currentStatus === 'Paid / Ready for Print' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Paid / Ready for Print')">1. Ready</button>
+                            <button type="button" class="btn-step ${currentStatus === 'Printing' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Printing')">2. Processing</button>
+                            <button type="button" class="btn-step ${currentStatus === 'Out for Delivery' ? 'current-phase' : ''}" ${!allProductsVerified ? 'disabled title="Verify all items first!"' : ''} onclick="updateOrderStatus('${order.orderId}', 'Out for Delivery')">3. Out for Delivery</button>
+                            <button type="button" class="btn-step ${currentStatus === 'Delivered' ? 'active' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Delivered')">4. Delivered</button>
                         </div>
                     </div>
                 `;
