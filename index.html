@@ -506,7 +506,7 @@
                     return;
                 }
 
-                window.storeInventoryProducts.forEach(prod => {
+                window.storeInventoryProducts.forEach((prod, index) => {
                     const isOutOfStock = (prod.stockQuantity <= 0);
                     const card = document.createElement('div');
                     card.className = 'blinkit-cat-card';
@@ -527,7 +527,11 @@
                         flex-shrink: 0;
                     `;
                     
-                    card.onclick = () => openProductDetailModal(prod);
+                    // Tap anywhere on card (except add button) opens modal smoothly
+                    card.onclick = (e) => {
+                        if (e.target.tagName === 'BUTTON') return;
+                        openProductDetailModal(window.storeInventoryProducts[index]);
+                    };
 
                     const imageHtml = prod.imageUrl 
                         ? `<img src="${prod.imageUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px; display:block;" />` 
