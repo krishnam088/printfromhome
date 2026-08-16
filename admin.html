@@ -211,7 +211,7 @@
     <!-- Hidden Iframe for Direct Silent Auto-Printing -->
     <iframe id="silentPrintFrame"></iframe>
 
-    <!-- Barcode Scanner Simulation Modal with Auto-Recognition & Anti-Mismatch Guard -->
+    <!-- Barcode Scanner Simulation Modal with Anti-Mismatch Guard -->
     <div id="barcodeScannerModal">
         <div class="scanner-card">
             <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 8px;">📷 Product Barcode & SKU Scanner</h3>
@@ -224,7 +224,7 @@
 
             <!-- Auto-Detected Product Feedback Box -->
             <div id="scannerDetectedFeedbackBox" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); border-radius: 10px; padding: 10px; margin-bottom: 15px; display: none; text-align: left;">
-                <p style="font-size: 0.72rem; font-weight: 800; color: var(--accent-green); text-transform: uppercase;">⚡ Auto-Recognized Product:</p>
+                <p style="font-size: 0.72rem; font-weight: 800; color: var(--accent-green); text-transform: uppercase;">⚡ Verified Product Match:</p>
                 <p id="detectedProductNameText" style="font-size: 0.85rem; font-weight: 700; color: white; margin-top: 2px;"></p>
             </div>
 
@@ -309,7 +309,7 @@
         <div id="section_inventory" class="admin-section">
             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px; margin-bottom: 22px;">
                 <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
-                    📊 Store Inventory, Stock & Profit/Loss Tracker
+                    📊 Store Inventory, Stock Restock & Profit Tracker
                 </h3>
                 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 15px;">
@@ -317,8 +317,8 @@
                     <input type="text" id="invNameInput" placeholder="Product Name (e.g. Lays)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
                     <input type="number" id="invPurchasePrice" placeholder="Purchase Price (₹)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
                     <input type="number" id="invSellingPrice" placeholder="Selling Price (₹)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
-                    <input type="number" id="invQtyInput" placeholder="Quantity Arrived" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
-                    <button type="button" onclick="addNewStockItem()" style="background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; padding: 10px;">+ Add Stock</button>
+                    <input type="number" id="invQtyInput" placeholder="Add / Restock Qty" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
+                    <button type="button" onclick="addNewStockItem()" style="background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; padding: 10px;">+ Save / Restock</button>
                 </div>
 
                 <div id="inventoryReportSummary" style="font-size: 0.85rem; color: var(--text-sub); font-weight: 600; display: flex; gap: 20px; flex-wrap: wrap; background: rgba(0,0,0,0.2); padding: 10px 14px; border-radius: 10px;">
@@ -397,7 +397,7 @@
 
         window.addEventListener('click', () => { getAudioContext(); }, { once: true });
 
-        // Auto-recognize product when barcode/SKU is typed during stock addition
+        // Auto-fill existing product details for restock and price/rate update
         function autoFillInventoryProduct(skuVal) {
             const cleanSku = skuVal.trim();
             const matched = cachedInventoryList.find(p => p.sku === cleanSku);
@@ -428,7 +428,7 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert("✅ Stock updated successfully!");
+                    alert("✅ Stock updated / restocked successfully!");
                     document.getElementById('invSkuInput').value = '';
                     document.getElementById('invNameInput').value = '';
                     document.getElementById('invPurchasePrice').value = '';
@@ -489,7 +489,7 @@
             document.getElementById('scannerDetectedFeedbackBox').style.display = 'none';
         }
 
-        // Live Barcode Auto-Recognition & Anti-Mismatch Guard
+        // Live Barcode / SKU Recognition & Anti-Mismatch Guard
         function autoDetectProductByBarcode(inputVal) {
             const cleanVal = inputVal.trim();
             const feedbackBox = document.getElementById('scannerDetectedFeedbackBox');
@@ -500,7 +500,6 @@
                 return;
             }
 
-            // Check if scanned value is a valid product SKU from inventory
             const matchedProd = cachedInventoryList.find(p => p.sku === cleanVal || p.name.toLowerCase().includes(cleanVal.toLowerCase()));
             
             if (matchedProd) {
@@ -518,22 +517,18 @@
                 return;
             }
 
-            // Check validity against inventory or active orders
             let targetOrderId = activeTargetOrderIdForScan;
             
             if (!targetOrderId) {
-                // If scanned value is an Order ID
                 const matchedOrder = globalLiveOrdersCache.find(o => o.orderId === val);
                 if (matchedOrder) {
                     targetOrderId = matchedOrder.orderId;
                 } else {
-                    // Check if scanned value is a product SKU/barcode
-                    const matchedProd = cachedInventoryList.find(p => p.sku === val);
+                    const matchedProd = cachedInventoryList.find(p => p.sku === val || p.name.toLowerCase().includes(val.toLowerCase()));
                     if (!matchedProd) {
-                        alert("❌ MISMATCH WARNING: Scanned barcode/SKU does not exist in store inventory or active orders! Action rejected.");
+                        alert("❌ MISMATCH WARNING: Scanned barcode/SKU is invalid or does not exist in store inventory! Action rejected.");
                         return;
                     }
-                    // Find an active order containing this product
                     const orderWithProd = globalLiveOrdersCache.find(o => 
                         Array.isArray(o.configDetails) && o.configDetails.some(item => item.fileName && item.fileName.toLowerCase().includes(matchedProd.name.toLowerCase()))
                     );
