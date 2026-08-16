@@ -302,3 +302,25 @@ body.theme-festive-diwali .wallet-modal-card {
     z-index: 10000; 
     cursor: pointer; 
 }
+
+/* ========================================
+   MOBILE VIEW & CART DRAWER OPTIMIZATIONS
+   ======================================== */
+.cart-drawer-card {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    display: flex;
+    flex-direction: column;
+}
+
+#cartDrawerItemsList {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling for iPhone */
+}
+
+/* Ensure images don't break layout */
+.blinkit-file-card img, .blinkit-cat-card img {
+    max-width: 100%;
+    height: auto;
+}
