@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let masterFilesArray = []; 
     window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]'); 
-    window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');     
+    window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');    
     window.savedUserAddresses = JSON.parse(localStorage.getItem('saved_addresses') || '[]');  
     let selectedActiveAddress = localStorage.getItem('selected_active_address') || "";  
     window.storeInventoryProducts = []; // Live Admin Store Inventory Products Cache
@@ -53,27 +53,65 @@ document.addEventListener('DOMContentLoaded', () => {
         if (gridContainers.length === 0) return;
 
         gridContainers.forEach(container => {
+            if (!container.style.display || container.style.display === "") {
+                container.style.display = 'flex';
+                container.style.gap = '12px';
+                container.style.overflowX = 'auto';
+                container.style.padding = '10px 4px';
+                container.style.width = '100%';
+                container.style.scrollbarWidth = 'none';
+            }
+
             container.innerHTML = '';
             if (window.storeInventoryProducts.length === 0) {
                 container.innerHTML = `<p style="font-size:0.75rem; color:#64748b; padding:10px;">No store products available currently.</p>`;
                 return;
             }
 
-            window.storeInventoryProducts.forEach(prod => {
+            window.storeInventoryProducts.forEach((prod, index) => {
                 const isOutOfStock = (prod.stockQuantity <= 0);
+                const finalImgUrl = prod.imageUrl || prod.image || '';
+
                 const card = document.createElement('div');
                 card.className = 'blinkit-cat-card';
-                card.style.cssText = `position: relative; opacity: ${isOutOfStock ? '0.7' : '1'};`;
+                card.style.cssText = `
+                    min-width: 110px;
+                    width: 110px;
+                    background: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 14px;
+                    padding: 10px;
+                    position: relative; 
+                    opacity: ${isOutOfStock ? '0.7' : '1'}; 
+                    display: flex; 
+                    flex-direction: column; 
+                    align-items: center; 
+                    cursor: pointer;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+                    flex-shrink: 0;
+                `;
                 
-                card.innerHTML = `
-                    <div class="blinkit-cat-img">📦</div>
-                    <div class="blinkit-cat-name" title="${prod.name}">${prod.name}</div>
-                    <div class="blinkit-cat-price">₹${prod.sellingPrice || 0}</div>
-                    ${isOutOfStock 
-                        ? `<button type="button" class="btn-quick-add" style="background:#ef4444; color:white;" onclick="notifyWhenAvailable('${prod.name}')">Notify Me</button>`
-                        : `<button type="button" class="btn-quick-add" onclick="addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
+                // Tap anywhere on card (except add button) opens HD product detail modal smoothly
+                card.onclick = (e) => {
+                    if (e.target.tagName === 'BUTTON') return;
+                    if (typeof openProductDetailModal === 'function') {
+                        openProductDetailModal(window.storeInventoryProducts[index]);
                     }
-                    ${isOutOfStock ? `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.6rem; padding:2px 5px; border-radius:4px; font-weight:800;">OUT OF STOCK</span>` : ''}
+                };
+
+                const imageHtml = finalImgUrl 
+                    ? `<img src="${finalImgUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px; display:block;" />` 
+                    : `<div style="font-size:2rem; margin-bottom:6px; height:65px; display:flex; align-items:center; justify-content:center;">📦</div>`;
+
+                card.innerHTML = `
+                    ${imageHtml}
+                    <div title="${prod.name}" style="font-weight:700; font-size:0.78rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; color:#0f172a;">${prod.name}</div>
+                    <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
+                    ${isOutOfStock 
+                        ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); notifyWhenAvailable('${prod.name}')">Notify</button>`
+                        : `<button type="button" style="background:var(--blinkit-green, #10b981); color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
+                    }
+                    ${isOutOfStock ? `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.55rem; padding:2px 4px; border-radius:4px; font-weight:800;">OUT</span>` : ''}
                 `;
                 container.appendChild(card);
             });
@@ -113,7 +151,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const sideDrawer = document.getElementById('userSideDrawer');
         const addressModal = document.getElementById('addressManagerModal');
         const configScreen = document.getElementById('configurationScreenState');
+        const productModal = document.getElementById('productDetailModal');
         
+        if (productModal && productModal.style.display === 'flex') {
+            productModal.style.display = 'none';
+            return;
+        }
         if (cartOverlay && cartOverlay.style.display === 'flex') {
             cartOverlay.style.display = 'none';
             return;
