@@ -242,6 +242,28 @@ app.get('/api/store/products', async (req, res) => {
     }
 });
 
+// --- ADMIN STATS API ---
+app.get('/api/admin/stats', async (req, res) => {
+    try {
+        const orders = await Order.find();
+        const products = await Product.find();
+        
+        let totalProfit = 0;
+        orders.forEach(o => {
+            totalProfit += parseFloat(o.totalAmount || 0); 
+        });
+
+        res.json({
+            success: true,
+            totalOrders: orders.length,
+            totalProfit: totalProfit,
+            variety: products.length
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // --- ITEM-BY-ITEM VERIFICATION API FOR ADMIN PACKING ---
 app.post('/api/admin/verify-item', async (req, res) => {
     try {
@@ -249,13 +271,11 @@ app.post('/api/admin/verify-item', async (req, res) => {
         const order = await Order.findOne({ orderId });
         if (!order) return res.status(404).json({ success: false, message: "Order not found!" });
 
-        // Find if scanned SKU/Name matches any product in store inventory
         const product = await Product.findOne({ $or: [{ sku: skuOrName }, { name: { $regex: new RegExp(skuOrName, 'i') } }] });
         
         let targetItemName = skuOrName;
         if (product) targetItemName = product.name;
 
-        // Verify if this item exists in the order's configDetails
         const itemExists = order.configDetails.find(item => {
             let itemName = item.fileName.replace('Product: ', '').split(' (Qty:')[0].trim();
             return itemName.toLowerCase().includes(targetItemName.toLowerCase()) || targetItemName.toLowerCase().includes(itemName.toLowerCase());
@@ -265,7 +285,6 @@ app.post('/api/admin/verify-item', async (req, res) => {
             return res.status(400).json({ success: false, message: `⚠️ Mismatch! "${skuOrName}" is not part of this order.` });
         }
 
-        // Track verified item uniquely
         if (!order.verifiedItems) order.verifiedItems = [];
         if (!order.verifiedItems.includes(targetItemName)) {
             order.verifiedItems.push(targetItemName);
@@ -311,7 +330,6 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
         let parsedConfig = [];
         try { parsedConfig = configDetails ? JSON.parse(configDetails) : []; } catch(e){}
 
-        // Automatically deduct inventory stock when items are ordered
         if (parsedConfig && parsedConfig.length > 0) {
             for (const item of parsedConfig) {
                 if (item.printType === 'snack' || (item.fileName && item.fileName.startsWith('Product:'))) {
@@ -328,7 +346,6 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
             }
         }
 
-        // Cash on Delivery (COD) Flow
         if (selectedPaymentMode === 'cod') {
             const codOrderId = 'COD-' + Date.now();
             const newOrder = new Order({
@@ -356,7 +373,6 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
             return res.status(201).json({ success: true, isCod: true, order_id: codOrderId });
         }
 
-        // Online Razorpay Payment Flow
         let razorpayOrder;
         try {
             razorpayOrder = await razorpay.orders.create({ 
