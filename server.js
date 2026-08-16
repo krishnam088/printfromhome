@@ -62,7 +62,6 @@ const storeConfigSchema = new mongoose.Schema({
 });
 const StoreConfig = mongoose.model('StoreConfig', storeConfigSchema);
 
-// --- INVENTORY / PRODUCT SCHEMA FOR STOCK & P&L ---
 const productSchema = new mongoose.Schema({
     sku: { type: String, unique: true },
     name: String,
@@ -232,7 +231,7 @@ app.get('/api/admin/inventory/report', async (req, res) => {
     }
 });
 
-// Orders & Payments APIs
+// Orders & Payments APIs (Extracting Name and Phone directly from Address/Form payload)
 app.post('/api/create-order', upload.array('document', 20), async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
@@ -242,6 +241,20 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
         const { totalAmount, configDetails, address, customerName, phone, paymentMode } = req.body;
         const finalAmount = totalAmount ? totalAmount.toString().trim() : "42";
         const selectedPaymentMode = paymentMode || "online";
+
+        // Extract Customer Name and Phone from address string if formatted as "... | Contact: Name (Mobile)"
+        let parsedCustomerName = customerName || 'Customer';
+        let parsedPhone = phone || 'N/A';
+
+        if (address && address.includes('Contact:')) {
+            try {
+                const contactPart = address.split('Contact:')[1].trim();
+                const namePart = contactPart.split('(')[0].trim();
+                const phonePart = contactPart.split('(')[1].replace(')', '').trim();
+                if (namePart) parsedCustomerName = namePart;
+                if (phonePart) parsedPhone = phonePart;
+            } catch (e) {}
+        }
 
         const filesMappedList = req.files ? req.files.map(f => ({ name: f.originalname, filename: f.filename, url: `/uploads/${f.filename}` })) : [];
         let parsedConfig = [];
@@ -269,8 +282,8 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
             const codOrderId = 'COD-' + Date.now();
             const newOrder = new Order({
                 orderId: codOrderId,
-                customerName: customerName || 'Customer',
-                phone: phone || 'N/A',
+                customerName: parsedCustomerName,
+                phone: parsedPhone,
                 files: filesMappedList,
                 fileUrl: filesMappedList.length > 0 ? filesMappedList[0].url : '',
                 fileName: filesMappedList.length > 0 ? filesMappedList[0].name : 'Document.pdf',
@@ -307,11 +320,11 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
         
         const newOrder = new Order({
             orderId: razorpayOrder.id,
-            customerName: customerName || 'Customer',
-            phone: phone || 'N/A',
+            customerName: parsedCustomerName,
+            phone: parsedPhone,
             files: filesMappedList,
             fileUrl: filesMappedList.length > 0 ? filesMappedList[0].url : '',
-            fileName: filesMappedList.length > 0 ? filesMappedList[0].name : 'Document.pdf',
+            fileName: filesMappedList.length > 0 ? filesNavList[0].name : 'Document.pdf',
             configDetails: parsedConfig,
             pages: parsedConfig.length > 0 ? (parsedConfig[0].pages || 1) : 1,
             copies: parsedConfig.length > 0 ? (parsedConfig[0].copies || 1) : 1,
