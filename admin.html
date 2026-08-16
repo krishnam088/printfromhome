@@ -823,7 +823,7 @@
                         </div>
 
                         <!-- Collapsible Order Details Panel -->
-                        <div id="orderDetailsPanel_${orderId}" style="display: ${isDrawerOpen ? 'block' : 'none'}; background: rgba(15,23,42,0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
+                <div id="orderDetailsPanel_${order.orderId}" style="display: ${isDrawerOpen ? 'block' : 'none'}; background: rgba(15,23,42,0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
                             <div class="order-customer-box" style="margin-bottom: 12px;">
                                 <div class="cust-field"><b>Customer Name</b><span>${order.customerName || 'Customer'}</span></div>
                                 <div class="cust-field"><b>Contact Number</b><span><a href="tel:${order.phone || ''}" style="color: #38bdf8; text-decoration: none;">${order.phone || 'N/A'}</a></span></div>
