@@ -5,6 +5,8 @@ const Razorpay = require('razorpay');
 const cors = require('cors'); 
 const fs = require('fs');
 const mongoose = require('mongoose');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 require('dotenv').config();
 
 const app = express();
@@ -24,6 +26,22 @@ mongoose.connect(process.env.MONGO_URI, {
 })
     .then(() => console.log('✅ Connected to MongoDB Atlas successfully!'))
     .catch((err) => console.error('❌ MongoDB Connection Error:', err));
+
+// Configure Cloudinary Storage for Permanent Image Hosting
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'kvooufhc',
+    api_key: process.env.CLOUDINARY_API_KEY || '421693327289623',
+    api_secret: process.env.CLOUDINARY_API_SECRET || '8sI8_nKannw61Ew8xbvvsvLn4ms'
+});
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'print-from-home-products',
+        allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    },
+});
+const upload = multer({ storage: storage });
 
 // Mongoose Schemas & Models
 const userSchema = new mongoose.Schema({
@@ -71,21 +89,9 @@ const productSchema = new mongoose.Schema({
     stockQuantity: Number,
     totalSold: { type: Number, default: 0 },
     barcode: { type: String, default: '' },
-    imageUrl: { type: String, default: '' } // Product Image URL / Path
+    imageUrl: { type: String, default: '' } // Permanent Cloudinary Secure URL
 });
 const Product = mongoose.model('Product', productSchema);
-
-// Multer Setup for File Uploads
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)){
-    fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => { cb(null, uploadsDir); },
-    filename: (req, file, cb) => { cb(null, Date.now() + '-' + file.originalname); }
-});
-const upload = multer({ storage: storage });
 
 // Razorpay Setup
 const razorpay = new Razorpay({
@@ -189,8 +195,8 @@ app.post('/api/admin/inventory/add', upload.single('productImage'), async (req, 
         let product = await Product.findOne({ $or: [{ sku }, ...(barcode ? [{ barcode }] : [])] });
         
         let imageUrl = product ? product.imageUrl : '';
-        if (req.file) {
-            imageUrl = `/uploads/${req.file.filename}`;
+        if (req.file && req.file.path) {
+            imageUrl = req.file.path; // Cloudinary Permanent Secure URL
         } else if (externalImageUrl) {
             imageUrl = externalImageUrl;
         }
@@ -343,8 +349,8 @@ app.post('/api/admin/verify-item', async (req, res) => {
     }
 });
 
-// Orders & Payments APIs
-app.post('/api/create-order', upload.array('document', 20), async (req, res) => {
+// Orders & Payments APIs (Using upload.any() for documents since product images use cloudinary storage)
+app.post('/api/create-order', upload.any(), async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
         const isOpen = config ? config.isOpen : true;
@@ -367,7 +373,10 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
             } catch (e) {}
         }
 
-        const filesMappedList = req.files ? req.files.map(f => ({ name: f.originalname, filename: f.filename, url: `/uploads/${f.filename}` })) : [];
+        // Filter uploaded files that belong to the document field
+        const docFiles = req.files ? req.files.filter(f => f.fieldname === 'document') : [];
+        const filesMappedList = docFiles.map(f => ({ name: f.originalname, filename: f.filename, url: f.path || f.url }));
+        
         let parsedConfig = [];
         try { parsedConfig = configDetails ? JSON.parse(configDetails) : []; } catch(e){}
 
