@@ -185,7 +185,7 @@
         }
         .cust-field b { color: var(--text-sub); font-size: 0.72rem; display: block; text-transform: uppercase; }
 
-        /* PRINT SPECS CONTAINER */
+        /* PRINT SPECS & PRODUCTS CONTAINER */
         .specs-container {
             background: rgba(0, 112, 243, 0.05);
             border: 1px solid rgba(0, 112, 243, 0.2);
@@ -214,13 +214,31 @@
             color: var(--accent-green);
         }
 
+        /* PACKING / PRODUCTS LIST BOX */
+        .packing-list-box {
+            background: rgba(245, 158, 11, 0.05);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-top: 10px;
+        }
+        .packing-title { font-size: 0.78rem; font-weight: 800; color: var(--accent-yellow); text-transform: uppercase; margin-bottom: 6px; }
+        .packing-item-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 4px 0;
+            border-bottom: 1px dashed rgba(255,255,255,0.05);
+        }
+
         .file-action-row {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
             gap: 10px;
-            margin-top: 6px;
+            margin-top: 10px;
         }
         .btn-download-file {
             background: #334155;
@@ -344,7 +362,7 @@
 
         <!-- ORDER QUEUE HEADING -->
         <div class="section-heading-bar">
-            <h2>📦 Live Hardware Print Queue</h2>
+            <h2>📦 Live Hardware Print & Packing Queue</h2>
             <button type="button" class="audio-test-btn" onclick="playLoudOrderChime(true)">🔔 Test Sound Alert</button>
         </div>
 
@@ -378,7 +396,6 @@
                 const ctx = getAudioContext();
                 const now = ctx.currentTime;
 
-                // High pitch beep 1
                 const osc1 = ctx.createOscillator();
                 const gain1 = ctx.createGain();
                 osc1.type = 'triangle';
@@ -390,7 +407,6 @@
                 osc1.start(now);
                 osc1.stop(now + 0.35);
 
-                // High pitch beep 2 (Louder bell finish)
                 const osc2 = ctx.createOscillator();
                 const gain2 = ctx.createGain();
                 osc2.type = 'sine';
@@ -402,7 +418,7 @@
                 osc2.start(now + 0.2);
                 osc2.stop(now + 0.8);
             } catch (e) {
-                console.warn("Audio unlock required: Click anywhere on dashboard", e);
+                console.warn("Audio unlock required", e);
             }
         }
 
@@ -434,8 +450,8 @@
         updateAutoPrintButtonUI();
 
         function triggerPrintJob(fileUrl, orderId) {
-            if (!fileUrl) {
-                alert("File URL not found for this order!");
+            if (!fileUrl || fileUrl === '#') {
+                alert("No printable document file attached to this order!");
                 return;
             }
 
@@ -551,7 +567,6 @@
                     orders.forEach(order => {
                         const isReady = order.status === 'Paid / Ready for Print' || order.status === 'Paid';
                         if (isReady && !processedAutoPrintOrderIds.has(order.orderId)) {
-                            console.log(`🤖 Auto-Printing Job for Order: ${order.orderId}`);
                             const fileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '';
                             if (fileUrl) {
                                 triggerPrintJob(fileUrl, order.orderId);
@@ -582,13 +597,24 @@
 
             container.innerHTML = sorted.map(order => {
                 const currentStatus = order.status || 'Pending';
-                const fileUrl = order.fileUrl || (order.files && order.files[0]?.url) || (order.file ? `/uploads/${order.file}` : '#');
-                const fileName = order.fileName || (order.files && order.files[0]?.name) || order.file || 'Print_Document.pdf';
-                const pages = order.pages || order.pageCount || 1;
-                const copies = order.copies || 1;
-                const printType = order.printType || (order.isColor ? 'Color' : 'Black & White');
-                const binding = order.binding || order.bindingType || 'None';
-                const totalAmt = order.totalAmount || order.amount || 0;
+                
+                // Separate Print Files vs Product/Snack items from configDetails
+                let printFilesList = [];
+                let productItemsList = [];
+
+                if (Array.isArray(order.configDetails)) {
+                    order.configDetails.forEach(item => {
+                        if (item.printType === 'snack' || (item.fileName && item.fileName.startsWith('Product:'))) {
+                            productItemsList.push(item);
+                        } else {
+                            printFilesList.push(item);
+                        }
+                    });
+                }
+
+                // Fallback file info if configDetails is empty
+                const primaryFileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '';
+                const primaryFileName = printFilesList.length > 0 ? printFilesList[0].fileName : (order.fileName || 'Document.pdf');
 
                 const isNew = currentStatus === 'Pending' || currentStatus === 'Pending Payment' || currentStatus === 'Paid / Ready for Print';
 
@@ -597,11 +623,11 @@
                         <div class="order-card-header">
                             <div class="order-id-meta">
                                 <h3>Order #${order.orderId}</h3>
-                                <div class="order-time">Received: ${order.date || (order.timestamp ? new Date(order.timestamp).toLocaleTimeString() : 'Just now')}</div>
+                                <div class="order-time">Received: ${order.date || 'Just now'}</div>
                             </div>
                             <div style="text-align: right;">
-                                <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-green);">₹${totalAmt}</div>
-                                <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase;">${order.paymentMethod || 'Prepaid'}</span>
+                                <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-green);">₹${order.totalAmount || order.amount || 0}</div>
+                                <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase;">${order.paymentId === 'CASH ON DELIVERY' ? 'COD' : 'Prepaid Online'}</span>
                             </div>
                         </div>
 
@@ -609,7 +635,7 @@
                         <div class="order-customer-box">
                             <div class="cust-field">
                                 <b>Customer Name</b>
-                                <span>${order.customerName || order.userName || 'Customer'}</span>
+                                <span>${order.customerName || 'Customer'}</span>
                             </div>
                             <div class="cust-field">
                                 <b>Contact Number</b>
@@ -622,24 +648,41 @@
                         </div>
 
                         <!-- Print Hardware Specifications -->
+                        ${printFilesList.length > 0 ? `
                         <div class="specs-container">
-                            <div class="specs-title">🖨️ Hardware Specifications</div>
-                            <div class="specs-tags-row">
-                                <div class="spec-tag highlight">📑 ${pages} Pages</div>
-                                <div class="spec-tag highlight">✖️ ${copies} Copies</div>
-                                <div class="spec-tag">🎨 ${printType}</div>
-                                <div class="spec-tag">📎 Binding: ${binding}</div>
-                            </div>
+                            <div class="specs-title">🖨️ Print Hardware Job</div>
+                            ${printFilesList.map(job => `
+                                <div class="specs-tags-row">
+                                    <div class="spec-tag highlight">📑 ${job.pages || 1} Pages</div>
+                                    <div class="spec-tag highlight">✖️ ${job.copies || 1} Copies</div>
+                                    <div class="spec-tag">🎨 ${(job.printType || 'bw').toUpperCase()}</div>
+                                    <div class="spec-tag">📎 Binding: ${job.binding || 'None'}</div>
+                                </div>
+                            `).join('')}
 
                             <div class="file-action-row">
-                                <a href="${fileUrl}" target="_blank" download class="btn-download-file">
-                                    📥 Download File (${fileName.substring(0, 24)}...)
+                                <a href="${primaryFileUrl}" target="_blank" download class="btn-download-file">
+                                    📥 Download File (${primaryFileName.substring(0, 22)}...)
                                 </a>
-                                <button type="button" class="btn-manual-print" onclick="triggerPrintJob('${fileUrl}', '${order.orderId}')">
+                                <button type="button" class="btn-manual-print" onclick="triggerPrintJob('${primaryFileUrl}', '${order.orderId}')">
                                     🖨️ Print Document Now
                                 </button>
                             </div>
                         </div>
+                        ` : ''}
+
+                        <!-- Packing List for Snacks / Products -->
+                        ${productItemsList.length > 0 ? `
+                        <div class="packing-list-box">
+                            <div class="packing-title">🛒 Items to Pack (Groceries / Snacks)</div>
+                            ${productItemsList.map(prod => `
+                                <div class="packing-item-row">
+                                    <span>📦 ${prod.fileName}</span>
+                                    <span>Qty: <b>${prod.copies || prod.qty || 1}</b></span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ` : ''}
 
                         <!-- 4-Stage Stepper -->
                         <div class="stepper-actions-bar">
