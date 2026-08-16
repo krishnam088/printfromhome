@@ -20,7 +20,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 3. Clean Fetch Event (No forced redirects to root page)
+// 3. Clean Fetch Event (No forced redirects & safe response fallbacks)
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') {
     return;
@@ -28,18 +28,23 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Admin routes ya API requests ko seedha server par jaane do bina intercept kiye
-  if (url.pathname.includes('/admin') || url.pathname.includes('/api/')) {
+  // 🛑 CRITICAL FIX: Bypass all API requests completely so they never hit service worker caching/response errors
+  if (url.pathname.startsWith('/api/') || url.pathname.includes('/api/')) {
+    return;
+  }
+
+  // Admin routes
+  if (url.pathname.includes('/admin')) {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
+      fetch(event.request).catch(() => caches.match(event.request) || new Response("Offline", { status: 503, headers: { "Content-Type": "text/plain" } }))
     );
     return;
   }
 
-  // Standard cache-first or network fallback for normal assets/pages
+  // Standard cache-first or network fallback for normal assets/pages with safe Response fallback
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request).catch(() => {});
+      return cachedResponse || fetch(event.request).catch(() => new Response("Offline", { status: 503, headers: { "Content-Type": "text/plain" } }));
     })
   );
 });
