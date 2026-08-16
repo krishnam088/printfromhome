@@ -242,7 +242,7 @@
             </div>
 
             <div style="display: flex; gap: 10px;">
-                <button type="button" onclick="processScannedBarcode()" style="flex: 1; padding: 10px; background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Verify Item</button>
+                <button type="button" onclick="processScannedBarcode()" style="flex: 1; padding: 10px; background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Verify / Fill</button>
                 <button type="button" onclick="closeBarcodeScannerModal()" style="padding: 10px 16px; background: var(--accent-red); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Cancel</button>
             </div>
         </div>
@@ -334,7 +334,10 @@
                 <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px;">📊 Store Inventory, UPC Barcode & Restock Tracker</h3>
                 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 15px;">
-                    <input type="text" id="invSkuInput" placeholder="Scan/Type Barcode (UPC)" oninput="autoFillInventoryProduct(this.value)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="invSkuInput" placeholder="Scan/Type Barcode (UPC)" oninput="autoFillInventoryProduct(this.value)" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
+                        <button type="button" onclick="openBarcodeScannerModal('inventory')" style="background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; padding: 0 12px; font-size: 0.8rem;">📷 Scan</button>
+                    </div>
                     <input type="text" id="invNameInput" placeholder="Product Name (e.g. Lays)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
                     <input type="number" id="invPurchasePrice" placeholder="Purchase Price (₹)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
                     <input type="number" id="invSellingPrice" placeholder="Selling Price (₹)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
@@ -622,7 +625,14 @@
         async function processScannedBarcode() {
             const val = document.getElementById('barcodeInputScanField').value.trim();
             if (!val) {
-                alert("⚠️ Please scan or enter a valid registered product barcode/UPC!");
+                alert("⚠️ Please scan or enter a valid barcode/UPC!");
+                return;
+            }
+
+            if (activeTargetOrderIdForScan === 'inventory') {
+                document.getElementById('invSkuInput').value = val;
+                autoFillInventoryProduct(val);
+                closeBarcodeScannerModal();
                 return;
             }
 
