@@ -24,12 +24,85 @@ document.addEventListener('DOMContentLoaded', () => {
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');     
     window.savedUserAddresses = JSON.parse(localStorage.getItem('saved_addresses') || '[]');  
     let selectedActiveAddress = localStorage.getItem('selected_active_address') || "";  
+    window.storeInventoryProducts = []; // Live Admin Store Inventory Products Cache
 
     // 🔥 LIVE RE-ROUTE CONFIGS
     const LIVE_SERVER_URL = window.location.origin;
 
     // 🔥 CRITICAL LIVE INTERCEPTOR CACHE ARRAY CORES
     window.globalRawOrdersCache = [];
+
+    // ==========================================
+    // 🛒 FETCH LIVE ADMIN PRODUCTS & INVENTORY
+    // ==========================================
+    async function loadDynamicStoreProducts() {
+        try {
+            const res = await fetch('/api/store/products');
+            const data = await res.json();
+            if (data.success && Array.isArray(data.products)) {
+                window.storeInventoryProducts = data.products;
+                renderStoreProductsUI();
+            }
+        } catch (e) {
+            console.error("Failed to load store inventory:", e);
+        }
+    }
+
+    function renderStoreProductsUI() {
+        const gridContainers = document.querySelectorAll('.snacks-horizontal-slider');
+        if (gridContainers.length === 0) return;
+
+        gridContainers.forEach(container => {
+            container.innerHTML = '';
+            if (window.storeInventoryProducts.length === 0) {
+                container.innerHTML = `<p style="font-size:0.75rem; color:#64748b; padding:10px;">No store products available currently.</p>`;
+                return;
+            }
+
+            window.storeInventoryProducts.forEach(prod => {
+                const isOutOfStock = (prod.stockQuantity <= 0);
+                const card = document.createElement('div');
+                card.className = 'blinkit-cat-card';
+                card.style.cssText = `position: relative; opacity: ${isOutOfStock ? '0.7' : '1'};`;
+                
+                card.innerHTML = `
+                    <div class="blinkit-cat-img">📦</div>
+                    <div class="blinkit-cat-name" title="${prod.name}">${prod.name}</div>
+                    <div class="blinkit-cat-price">₹${prod.sellingPrice || 0}</div>
+                    ${isOutOfStock 
+                        ? `<button type="button" class="btn-quick-add" style="background:#ef4444; color:white;" onclick="notifyWhenAvailable('${prod.name}')">Notify Me</button>`
+                        : `<button type="button" class="btn-quick-add" onclick="addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
+                    }
+                    ${isOutOfStock ? `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.6rem; padding:2px 5px; border-radius:4px; font-weight:800;">OUT OF STOCK</span>` : ''}
+                `;
+                container.appendChild(card);
+            });
+        });
+    }
+
+    window.notifyWhenAvailable = function(prodName) {
+        alert(`🔔 We have noted your request! You will be notified when "${prodName}" is back in stock.`);
+    }
+
+    window.addDynamicProductToCart = function(sku, name, price, currentStock) {
+        const existing = window.cartSnacksArray.find(item => item.name === name);
+        const currentCartQty = existing ? existing.qty : 0;
+
+        if (currentCartQty + 1 > currentStock) {
+            alert(`⚠️ Sorry! Only ${currentStock} units of "${name}" available in store stock.`);
+            return;
+        }
+
+        if (existing) {
+            existing.qty += 1;
+        } else {
+            window.cartSnacksArray.push({ name, price, qty: 1 });
+        }
+        persistCartStateData();
+        updateFloatingCartBar();
+        calculateTotal();
+        alert(`✅ Added "${name}" to cart!`);
+    }
 
     // ==========================================
     // 🔙 PHONE BACK BUTTON / HISTORY HANDLER
@@ -218,6 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             if (Array.isArray(data)) {
                 window.globalRawOrdersCache = data;
+                loadDynamicStoreProducts();
                 
                 const currentActiveTrackingId = document.getElementById('trackOrderIdLabel')?.textContent?.replace('ID Reference: ', '')?.replace('ID: ', '')?.trim();
                 if (currentActiveTrackingId && typeof window.executeLiveTimelineStateStepper === 'function') {
@@ -324,6 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
             loadSavedFilesFromSession();
             loadUserAddressesFromStorage();
+            loadDynamicStoreProducts();
             renderOrderHistoryUI(sessionActiveUser);
             synchronizeWalletInterfaceBalance();
         } else {
@@ -418,6 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
                     
                     loadUserAddressesFromStorage();
+                    loadDynamicStoreProducts();
                     renderOrderHistoryUI(activeUserName);
                     synchronizeWalletInterfaceBalance();
                 } else {
@@ -591,26 +667,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const summaryTotal = document.getElementById('summaryTotal');
         if (!summaryPrint || !summaryBinding || !summaryDelivery || !summaryTotal) return;
         
-        let snacksTotal = 0;
-        if (window.cartSnacksArray) {
-            snacksTotal = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
-        }
-        let printJobsTotal = 0;
-        if (window.cartPrintJobsArray) {
-            window.cartPrintJobsArray.forEach(job => {
-                const cost = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
-                printJobsTotal += cost;
-            });
-        }
+        let snacksTotal = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
+        let printJobsTotal = window.cartPrintJobsArray.reduce((acc, job) => acc + (job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0);
 
         if (masterFilesArray.length === 0 && snacksTotal === 0 && printJobsTotal === 0) { 
             summaryPrint.textContent = `₹0.00`; summaryBinding.textContent = `₹0.00`; summaryDelivery.textContent = `₹0.00`; summaryTotal.textContent = `₹0.00`; return; 
         }
 
         masterFilesArray.forEach((item) => {
-            const pages = parseInt(item.config.pages) || 1; const printType = item.config.printType; const binding = item.config.binding; const copies = parseInt(item.config.copies) || 1;
-            totalPrintCost += (pages * ((printType === 'bw') ? 3.00 : 10.00)) * copies;
-            if (binding === 'spiral') totalBindingCost += 30.00 * copies;
+            const pages = parseInt(item.config.pages) || 1; 
+            totalPrintCost += (pages * ((item.config.printType === 'bw') ? 3.00 : 10.00)) * item.config.copies;
+            if (item.config.binding === 'spiral') totalBindingCost += 30.00 * item.config.copies;
         });
 
         let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal + printJobsTotal;
@@ -624,18 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.openOrderDeepTrackingWorkspacePage = function(orderStringPayload) {
         const order = JSON.parse(decodeURIComponent(orderStringPayload));
-        
-        let liveCloudStatus = order.status;
-        if (window.globalRawOrdersCache && window.globalRawOrdersCache.length > 0) {
-            const realTimeMatchNode = window.globalRawOrdersCache.find(o => o.orderId === order.orderId);
-            if (realTimeMatchNode) {
-                liveCloudStatus = realTimeMatchNode.status;
-            }
-        }
-
-        if(typeof navigateDrawerSection === 'function') {
-            navigateDrawerSection('order_tracking'); 
-        }
+        if(typeof navigateDrawerSection === 'function') navigateDrawerSection('order_tracking'); 
 
         document.getElementById('trackOrderIdLabel').textContent = `ID Reference: ${order.orderId || 'PFH-' + Date.now()}`;
         document.getElementById('trackGrandTotalBadge').textContent = `₹${order.amount}`;
@@ -648,16 +704,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const row = document.createElement('div');
                 row.style = 'display:flex; justify-content:space-between; font-size:0.8rem; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0; font-weight:600;';
                 if (file.printType === 'snack') {
-                    row.innerHTML = `<span>📦 ${file.fileName} (${file.copies} units)</span><span style="color:#d97706;">Product / Snack</span>`;
+                    row.innerHTML = `<span>📦 ${file.fileName}</span><span style="color:#d97706;">Product / Snack</span>`;
                 } else {
                     row.innerHTML = `<span>📄 ${file.fileName} (${file.copies} copies)</span><span style="color:var(--blinkit-green);">${file.printType === 'bw' ? 'B&W' : 'Color'} Print</span>`;
                 }
                 listContainer.appendChild(row);
             });
         }
-
         if(typeof window.executeLiveTimelineStateStepper === 'function') {
-            window.executeLiveTimelineStateStepper(liveCloudStatus);
+            window.executeLiveTimelineStateStepper(order.status);
         }
     }
 
@@ -669,43 +724,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const parsedHistory = JSON.parse(rawHistory).reverse(); 
-        
-        if (renderHistoryContainerClean) {
-            ordersHistoryContainer.innerHTML = '';
-        } else {
-            const activeCardsList = ordersHistoryContainer.querySelectorAll('.history-card-item');
-            if (activeCardsList.length === parsedHistory.length) {
-                parsedHistory.forEach((order, idx) => {
-                    const badge = activeCardsList[idx].querySelector('span[style*="background:#fff3e0"]');
-                    if(badge) badge.textContent = order.status || 'Paid / Ready for Print';
-                });
-                return;
-            }
-            ordersHistoryContainer.innerHTML = '';
-        }
+        ordersHistoryContainer.innerHTML = '';
 
         parsedHistory.forEach(order => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'history-card-item';
-            
-            let currentStatus = order.status || 'Paid / Ready for Print';
-            if (window.globalRawOrdersCache && window.globalRawOrdersCache.length > 0) {
-                const match = window.globalRawOrdersCache.find(o => o.orderId === order.orderId);
-                if (match) currentStatus = match.status;
-            }
-
             const stringifiedPayload = encodeURIComponent(JSON.stringify(order));
             itemDiv.setAttribute('onclick', `openOrderDeepTrackingWorkspacePage('${stringifiedPayload}')`);
 
-            let filesDetailsHtml = order.details ? order.details.map(f => `• ${f.fileName} (${f.copies} copies)`).join('<br>') : 'Document Package';
             itemDiv.innerHTML = `
                 <div style="display:flex; justify-content:space-between; font-weight:700; color:#1a202c; border-bottom:1px solid #e2e8f0; padding-bottom:4px; margin-bottom:6px; font-size:0.85rem;">
                     <span>📅 ${order.date}</span> <span style="color:#0C8346;">₹${order.amount}</span>
                 </div>
-                <div style="color:#4a5568; line-height:1.4; font-size:0.78rem; margin-bottom:6px;">${filesDetailsHtml}</div>
                 <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
                     <span style="color:var(--blinkit-green); font-weight:700;">👁️ Tap to View Details &rarr;</span>
-                    <span style="background:#fff3e0; padding:2px 6px; border-radius:4px; color:#e67e22; font-weight:600;">${currentStatus}</span>
+                    <span style="background:#fff3e0; padding:2px 6px; border-radius:4px; color:#e67e22; font-weight:600;">${order.status || 'Active'}</span>
                 </div>
             `;
             ordersHistoryContainer.appendChild(itemDiv);
@@ -735,7 +768,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             persistCartStateData();
-            alert("🎉 Valid print job(s) successfully added to Cart!");
+            alert("🎉 Print job(s) successfully added to Cart!");
             masterFilesArray = [];
             sessionStorage.removeItem('savedPrintFiles');
             printForm.reset();
@@ -757,31 +790,15 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalSnacksVal = 0;
         const finalMetaConfig = [];
 
-        // STRICT SEPARATION: Only valid print jobs generate print commands for printer/admin
         window.cartPrintJobsArray.forEach(job => {
             const cost = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
             totalPrintVal += cost;
-            finalMetaConfig.push({
-                fileName: job.fileName,
-                pages: job.pages,
-                printType: job.printType,
-                sides: job.sides,
-                binding: job.binding,
-                copies: job.copies,
-                orientation: job.orientation,
-                colorMode: job.printType
-            });
+            finalMetaConfig.push({ fileName: job.fileName, pages: job.pages, printType: job.printType, binding: job.binding, copies: job.copies });
         });
 
-        // Snacks/Products go as itemized list with quantities and pricing for packing
         window.cartSnacksArray.forEach(snack => {
             totalSnacksVal += snack.price * snack.qty;
-            finalMetaConfig.push({
-                fileName: `Product: ${snack.name} (Qty: ${snack.qty}, Price: ₹${snack.price} each)`,
-                copies: snack.qty,
-                printType: 'snack',
-                pages: 1
-            });
+            finalMetaConfig.push({ fileName: `Product: ${snack.name} (Qty: ${snack.qty}, Price: ₹${snack.price} each)`, copies: snack.qty, printType: 'snack', pages: 1 });
         });
 
         if (finalMetaConfig.length === 0) {
@@ -817,16 +834,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('🎉 Order Placed Successfully via Cash on Delivery!');
                 const activeUserToken = localStorage.getItem('printAppUser');
                 const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
-                
                 const newOrderPayload = { 
                     orderId: data.order_id || 'COD-' + Date.now(),
-                    date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), 
+                    date: new Date().toLocaleString(), 
                     amount: grandTotal.toFixed(2), 
                     status: "COD / Ready for Print & Packing", 
                     details: finalMetaConfig,
                     address: selectedActiveAddress 
                 };
-                
                 currentHistoryArray.push(newOrderPayload);
                 localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
                 
@@ -835,13 +850,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 persistCartStateData();
                 toggleCartDrawer(false);
                 renderOrderHistoryUI(activeUserToken);
-                calculateTotal();
-                
                 openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
                 return;
             }
 
-            // Online Razorpay Flow
             const options = {
                 "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Print From Home", "order_id": data.order_id,
                 "handler": async function (response){
@@ -851,16 +863,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         alert('🎉 Payment Successful!');
                         const activeUserToken = localStorage.getItem('printAppUser');
                         const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
-                        
                         const newOrderPayload = { 
                             orderId: data.order_id,
-                            date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), 
+                            date: new Date().toLocaleString(), 
                             amount: grandTotal.toFixed(2), 
                             status: "Paid / Ready for Print & Packing", 
                             details: finalMetaConfig,
                             address: selectedActiveAddress 
                         };
-                        
                         currentHistoryArray.push(newOrderPayload);
                         localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
                         
@@ -869,15 +879,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         persistCartStateData();
                         toggleCartDrawer(false);
                         renderOrderHistoryUI(activeUserToken);
-                        calculateTotal();
-                        
                         openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
                     }
                 }, "theme": { "color": "#F4C430" }
             };
             const rzp1 = new Razorpay(options); rzp1.open();
         } catch (error) {
-            console.error(error);
             alert("❌ Connection Breakdown during order placement.");
         }
     };

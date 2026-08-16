@@ -179,7 +179,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-// --- INVENTORY MANAGEMENT APIS ---
+// --- INVENTORY MANAGEMENT & PUBLIC PRODUCTS API ---
 app.post('/api/admin/inventory/add', async (req, res) => {
     try {
         const { sku, name, purchasePrice, sellingPrice, quantity } = req.body;
@@ -231,7 +231,17 @@ app.get('/api/admin/inventory/report', async (req, res) => {
     }
 });
 
-// Orders & Payments APIs (Extracting Name and Phone directly from Address/Form payload)
+// Public API for User App to fetch admin store products & live stock status
+app.get('/api/store/products', async (req, res) => {
+    try {
+        const products = await Product.find();
+        res.json({ success: true, products });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Orders & Payments APIs
 app.post('/api/create-order', upload.array('document', 20), async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
@@ -242,7 +252,6 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
         const finalAmount = totalAmount ? totalAmount.toString().trim() : "42";
         const selectedPaymentMode = paymentMode || "online";
 
-        // Extract Customer Name and Phone from address string if formatted as "... | Contact: Name (Mobile)"
         let parsedCustomerName = customerName || 'Customer';
         let parsedPhone = phone || 'N/A';
 
@@ -324,7 +333,7 @@ app.post('/api/create-order', upload.array('document', 20), async (req, res) => 
             phone: parsedPhone,
             files: filesMappedList,
             fileUrl: filesMappedList.length > 0 ? filesMappedList[0].url : '',
-            fileName: filesMappedList.length > 0 ? filesNavList[0].name : 'Document.pdf',
+            fileName: filesMappedList.length > 0 ? filesMappedList[0].name : 'Document.pdf',
             configDetails: parsedConfig,
             pages: parsedConfig.length > 0 ? (parsedConfig[0].pages || 1) : 1,
             copies: parsedConfig.length > 0 ? (parsedConfig[0].copies || 1) : 1,

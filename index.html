@@ -321,35 +321,12 @@
                         </div>
                     </div>
 
-                    <!-- 🍟 SNACKS & MUNCHIES HORIZONTAL SLIDER -->
+                    <!-- 📦 DYNAMIC ADMIN STORE PRODUCTS & SNACKS GRID -->
                     <div class="category-section-title">
-                        <span>⚡ Snacks & Munchies (Slide &rarr;)</span>
+                        <span>⚡ Store Products & Snacks (Slide &rarr;)</span>
                     </div>
                     <div class="snacks-horizontal-slider" id="homeSnacksGrid">
-                        <div class="blinkit-cat-card">
-                            <div class="blinkit-cat-img">🥔</div>
-                            <div class="blinkit-cat-name">Lays Classic Chips</div>
-                            <div class="blinkit-cat-price">₹20</div>
-                            <button type="button" class="btn-quick-add" onclick="addSnackToCart('Lays Classic Chips', 20)">+ Add</button>
-                        </div>
-                        <div class="blinkit-cat-card">
-                            <div class="blinkit-cat-img">🍪</div>
-                            <div class="blinkit-cat-name">Hide & Seek Biscuit</div>
-                            <div class="blinkit-cat-price">₹30</div>
-                            <button type="button" class="btn-quick-add" onclick="addSnackToCart('Hide & Seek Biscuit', 30)">+ Add</button>
-                        </div>
-                        <div class="blinkit-cat-card">
-                            <div class="blinkit-cat-img">🥤</div>
-                            <div class="blinkit-cat-name">Coca Cola 500ml</div>
-                            <div class="blinkit-cat-price">₹40</div>
-                            <button type="button" class="btn-quick-add" onclick="addSnackToCart('Coca Cola 500ml', 40)">+ Add</button>
-                        </div>
-                        <div class="blinkit-cat-card">
-                            <div class="blinkit-cat-img">🍫</div>
-                            <div class="blinkit-cat-name">Dairy Milk Silk</div>
-                            <div class="blinkit-cat-price">₹80</div>
-                            <button type="button" class="btn-quick-add" onclick="addSnackToCart('Dairy Milk Silk', 80)">+ Add</button>
-                        </div>
+                        <!-- Dynamically loaded from Admin Inventory -->
                     </div>
                 </div>
 
@@ -361,26 +338,9 @@
 
                     <!-- 🍟 SLIDING SNACKS BAR ON PRINT CONFIG -->
                     <div style="background:var(--surface); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:15px;">
-                        <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:10px; color:#1e293b;">⚡ Hungry while waiting? Add Snacks</h4>
-                        <div class="snacks-horizontal-slider">
-                            <div class="blinkit-cat-card">
-                                <div class="blinkit-cat-img">🥔</div>
-                                <div class="blinkit-cat-name">Lays Chips</div>
-                                <div class="blinkit-cat-price">₹20</div>
-                                <button type="button" class="btn-quick-add" onclick="addSnackToCart('Lays Classic Chips', 20)">+ Add</button>
-                            </div>
-                            <div class="blinkit-cat-card">
-                                <div class="blinkit-cat-img">🍪</div>
-                                <div class="blinkit-cat-name">Hide & Seek</div>
-                                <div class="blinkit-cat-price">₹30</div>
-                                <button type="button" class="btn-quick-add" onclick="addSnackToCart('Hide & Seek Biscuit', 30)">+ Add</button>
-                            </div>
-                            <div class="blinkit-cat-card">
-                                <div class="blinkit-cat-img">🥤</div>
-                                <div class="blinkit-cat-name">Coca Cola</div>
-                                <div class="blinkit-cat-price">₹40</div>
-                                <button type="button" class="btn-quick-add" onclick="addSnackToCart('Coca Cola 500ml', 40)">+ Add</button>
-                            </div>
+                        <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:10px; color:#1e293b;">⚡ Hungry while waiting? Add Store Products</h4>
+                        <div class="snacks-horizontal-slider" id="configSnacksGrid">
+                            <!-- Dynamically loaded from Admin Inventory -->
                         </div>
                     </div>
 
@@ -489,13 +449,70 @@
 
     <script>
         // ==========================================
-        // 🛒 GLOBAL UNIFIED CART STATE MANAGEMENT WITH ROW-WISE RENDERING
+        // 🛒 GLOBAL UNIFIED CART STATE MANAGEMENT WITH ROW-WISE RENDERING & DYNAMIC ADMIN STORE PRODUCTS
         // ==========================================
         window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
         window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
+        window.storeInventoryProducts = [];
 
-        function addSnackToCart(name, price) {
+        async function loadDynamicStoreProducts() {
+            try {
+                const res = await fetch('/api/store/products');
+                const data = await res.json();
+                if (data.success && Array.isArray(data.products)) {
+                    window.storeInventoryProducts = data.products;
+                    renderStoreProductsUI();
+                }
+            } catch (e) {
+                console.error("Failed to load store inventory:", e);
+            }
+        }
+
+        function renderStoreProductsUI() {
+            const gridContainers = document.querySelectorAll('.snacks-horizontal-slider');
+            if (gridContainers.length === 0) return;
+
+            gridContainers.forEach(container => {
+                container.innerHTML = '';
+                if (window.storeInventoryProducts.length === 0) {
+                    container.innerHTML = `<p style="font-size:0.75rem; color:#64748b; padding:10px;">No store products available currently.</p>`;
+                    return;
+                }
+
+                window.storeInventoryProducts.forEach(prod => {
+                    const isOutOfStock = (prod.stockQuantity <= 0);
+                    const card = document.createElement('div');
+                    card.className = 'blinkit-cat-card';
+                    card.style.cssText = `position: relative; opacity: ${isOutOfStock ? '0.7' : '1'};`;
+                    
+                    card.innerHTML = `
+                        <div class="blinkit-cat-img">📦</div>
+                        <div class="blinkit-cat-name" title="${prod.name}">${prod.name}</div>
+                        <div class="blinkit-cat-price">₹${prod.sellingPrice || 0}</div>
+                        ${isOutOfStock 
+                            ? `<button type="button" class="btn-quick-add" style="background:#ef4444; color:white;" onclick="notifyWhenAvailable('${prod.name}')">Notify Me</button>`
+                            : `<button type="button" class="btn-quick-add" onclick="addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
+                        }
+                        ${isOutOfStock ? `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.6rem; padding:2px 5px; border-radius:4px; font-weight:800;">OUT OF STOCK</span>` : ''}
+                    `;
+                    container.appendChild(card);
+                });
+            });
+        }
+
+        window.notifyWhenAvailable = function(prodName) {
+            alert(`🔔 We have noted your request! You will be notified when "${prodName}" is back in stock.`);
+        }
+
+        window.addDynamicProductToCart = function(sku, name, price, currentStock) {
             const existing = window.cartSnacksArray.find(item => item.name === name);
+            const currentCartQty = existing ? existing.qty : 0;
+
+            if (currentCartQty + 1 > currentStock) {
+                alert(`⚠️ Sorry! Only ${currentStock} units of "${name}" available in store stock.`);
+                return;
+            }
+
             if (existing) {
                 existing.qty += 1;
             } else {
@@ -504,7 +521,12 @@
             if (typeof persistCartStateData === 'function') persistCartStateData();
             updateFloatingCartBar();
             if (typeof calculateTotal === 'function') calculateTotal();
+            alert(`✅ Added "${name}" to cart!`);
         }
+
+        // Trigger dynamic products load on startup
+        loadDynamicStoreProducts();
+        setInterval(loadDynamicStoreProducts, 5000);
 
         window.updateFloatingCartBar = function() {
             const bar = document.getElementById('floatingCartFooterBar');
