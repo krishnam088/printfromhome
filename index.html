@@ -127,6 +127,21 @@
         </div>
     </div>
 
+    <!-- 📍 ADDRESS MANAGER MODAL WITH LEAFLET MAP -->
+    <div id="addressManagerModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:18000; display:none; justify-content:center; align-items:center; padding:20px;">
+        <div style="background:#ffffff; border-radius:24px; padding:24px; max-width:460px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.3); text-align:left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a;">📍 Select Delivery Location</h3>
+                <span style="cursor:pointer; font-size:1.5rem; font-weight:bold; color:#64748b;" onclick="closeAddressManagerModal()">&times;</span>
+            </div>
+            <p style="font-size:0.75rem; color:#64748b; margin-bottom:10px;">Drag the pin on map to pin your precise address</p>
+            <div id="userDeliveryMap" style="width:100%; height:240px; border-radius:12px; border:1px solid #cbd5e1; margin-bottom:12px; z-index:999;"></div>
+            <label style="font-size:0.75rem; font-weight:700; color:#4a5568; display:block; margin-bottom:4px;">Confirmed Address:</label>
+            <textarea id="mapSelectedAddressInput" rows="2" style="width:100%; padding:10px; border-radius:10px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none; margin-bottom:15px; background:#f8fafc;" placeholder="Fetching address..."></textarea>
+            <button type="button" onclick="confirmNewAddressFromMap()" style="width:100%; padding:12px; background:var(--blinkit-green); color:white; border:none; border-radius:10px; font-weight:700; font-size:0.9rem; cursor:pointer;">Save & Use This Address</button>
+        </div>
+    </div>
+
     <!-- 🛒 UNIFIED CHECKOUT CART DRAWER -->
     <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:16000; display:none; justify-content:flex-end;">
         <div class="cart-drawer-card" onclick="event.stopPropagation()" style="background:#f8fafc; width:100%; max-width:440px; height:100vh; padding:20px; display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.15); overflow-y:auto;">
@@ -134,7 +149,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:15px; background:#ffffff; padding:10px 15px; border-radius:14px;">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <span style="cursor:pointer; font-size:1.2rem; font-weight:bold;" onclick="toggleCartDrawer(false)">&larr;</span>
-                    <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a;">Checkout & Cart</h3>
+                    <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a;">Review Cart & Checkout</h3>
                 </div>
                 <span style="font-size:0.8rem; font-weight:700; color:var(--blinkit-green); background:#f0fdf4; padding:4px 10px; border-radius:8px; cursor:pointer;" onclick="toggleCartDrawer(false)">Close</span>
             </div>
@@ -145,6 +160,15 @@
                 <div style="width: 100%; background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
                     <div id="freeDeliveryFillBar" style="width: 0%; background: #16a34a; height: 100%; transition: width 0.3s ease;"></div>
                 </div>
+            </div>
+
+            <!-- Permanent Saved Addresses Selection Section -->
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:0.75rem; font-weight:800; color:#64748b; text-transform:uppercase;">📍 Delivery Address</span>
+                    <span style="font-size:0.75rem; font-weight:700; color:var(--blinkit-green); cursor:pointer;" onclick="openAddressManagerModal()">+ Add New Address</span>
+                </div>
+                <div id="cartSavedAddressesList" style="max-height:120px; overflow-y:auto; margin-bottom:4px;"></div>
             </div>
 
             <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
@@ -174,22 +198,23 @@
                 </div>
             </div>
 
+            <!-- Cart Payment Mode Selection -->
             <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <span style="font-size:0.75rem; font-weight:800; color:#64748b; text-transform:uppercase;">Delivering to Home</span>
-                    <span style="font-size:0.75rem; font-weight:700; color:var(--blinkit-green); cursor:pointer;" onclick="document.getElementById('address').scrollIntoView({behavior:'smooth'}); toggleCartDrawer(false);">Change</span>
+                <label style="font-size:0.75rem; font-weight:800; color:#64748b; text-transform:uppercase; display:block; margin-bottom:8px;">💳 Select Payment Method</label>
+                <div style="display:flex; gap:15px;">
+                    <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="cartPaymentMode" value="online" checked> Razorpay Online</label>
+                    <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="cartPaymentMode" value="cod"> Cash on Delivery (COD)</label>
                 </div>
-                <p style="font-size:0.8rem; font-weight:600; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="cartDrawerAddressSummary">Varanasi, Uttar Pradesh</p>
             </div>
 
             <div style="background:#ffffff; border-top:1px solid #e2e8f0; padding:15px; border-radius:16px; box-shadow:0 -4px 15px rgba(0,0,0,0.03);">
-                <div style="display:flex; align-items:center; justify-content:space-between; background:var(--blinkit-green); color:white; border-radius:14px; padding:12px 18px; cursor:pointer;" onclick="proceedToCheckoutFromCart()">
+                <div style="display:flex; align-items:center; justify-content:space-between; background:var(--blinkit-green); color:white; border-radius:14px; padding:12px 18px; cursor:pointer;" onclick="executeFinalCartOrderPlacement()">
                     <div>
                         <div style="font-size:1.1rem; font-weight:900;" id="cartDrawerGrandTotal">₹0.00</div>
                         <div style="font-size:0.65rem; font-weight:700; opacity:0.9; text-transform:uppercase;">TOTAL AMOUNT</div>
                     </div>
                     <div style="display:flex; align-items:center; gap:6px; font-size:0.95rem; font-weight:800;">
-                        <span>Proceed & Pay</span> &rarr;
+                        <span>Place Order & Pay</span> &rarr;
                     </div>
                 </div>
             </div>
@@ -293,7 +318,7 @@
 
                 <div id="configurationScreenState" class="hidden" style="width:100%;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <h3 style="font-size:1.1rem; font-weight:800;">Configure Print & Add Snacks</h3>
+                        <h3 style="font-size:1.1rem; font-weight:800;">Configure Print & Add to Cart</h3>
                         <button type="button" onclick="forceReturnToUploadView()" style="background:none; border:none; color:var(--blinkit-green); font-weight:700; cursor:pointer; font-size:0.85rem;">&larr; Back to Upload</button>
                     </div>
 
@@ -325,23 +350,8 @@
                     <form id="printForm" enctype="multipart/form-data" style="width:100%;">
                         <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
                         
-                        <div class="form-group" style="background: var(--surface); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); width:100%; margin-bottom:20px;">
-                            <label style="font-weight: 700; margin-bottom:8px; display: block; font-size: 0.9rem;">📍 Drag Pin to Your Delivery Location:</label>
-                            <div id="userDeliveryMap" style="width: 100%; height: 280px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 12px; position: relative; z-index: 999;"></div>
-                            <label style="font-weight: 700; margin-bottom:4px; display: block; font-size: 0.8rem; color: var(--text-sub);">Selected Address / Landmarks:</label>
-                            <textarea id="address" name="address" rows="3" placeholder="Map se pin drag karein ya apna full address yahan likhein..." required></textarea>
-                        </div>
-                        
-                        <!-- PAYMENT MODE CHOICE -->
-                        <div class="form-group" style="background: var(--surface); padding: 16px; border-radius: 16px; border: 1px solid var(--border-color); width:100%; margin-bottom:20px;">
-                            <label style="font-weight: 700; margin-bottom:8px; display: block; font-size: 0.85rem;">💳 Select Payment Mode:</label>
-                            <div style="display:flex; gap:15px;">
-                                <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="paymentMode" value="online" checked> Razorpay Online</label>
-                                <label style="font-size:0.8rem; font-weight:600; cursor:pointer;"><input type="radio" name="paymentMode" value="cod"> Cash on Delivery (COD)</label>
-                            </div>
-                        </div>
-
-                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">Proceed to Payment</button>
+                        <!-- Map removed from here as per instructions, now managed in address modal/cart -->
+                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">Add Print Job to Cart</button>
                     </form>
                 </div>
             </div>
@@ -452,6 +462,7 @@
                 window.cartSnacksArray.push({ name, price, qty: 1 });
             }
             updateFloatingCartBar();
+            if (typeof calculateTotal === 'function') calculateTotal();
         }
 
         function updateFloatingCartBar() {
@@ -465,13 +476,11 @@
 
             let printTotalVal = 0;
             let printFilesCount = 0;
-            if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
-                masterFilesArray.forEach((item) => {
-                    const pages = parseInt(item.config.pages) || 1;
-                    const copies = parseInt(item.config.copies) || 1;
-                    const cost = pages * (item.config.printType === 'bw' ? 3 : 10) * copies + (item.config.binding === 'spiral' ? 30 * copies : 0);
+            if (window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0) {
+                window.cartPrintJobsArray.forEach((job) => {
+                    const cost = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
                     printTotalVal += cost;
-                    printFilesCount += copies;
+                    printFilesCount += job.copies;
                 });
             }
 
@@ -494,6 +503,7 @@
             if (open) {
                 history.pushState({ cartOpen: true }, '', '');
                 overlay.style.display = 'flex';
+                if (typeof loadUserAddressesFromStorage === 'function') loadUserAddressesFromStorage();
                 renderCartDrawerContents();
             } else {
                 overlay.style.display = 'none';
@@ -504,7 +514,6 @@
             const container = document.getElementById('cartDrawerItemsList');
             const grandTotalNode = document.getElementById('cartDrawerGrandTotal');
             const itemsCountNode = document.getElementById('shipmentItemsCountText');
-            const addressSummaryNode = document.getElementById('cartDrawerAddressSummary');
             const subtotalNode = document.getElementById('cartItemSubtotal');
             const deliveryNode = document.getElementById('cartDeliveryFee');
             const summaryGrandNode = document.getElementById('cartGrandTotalSummary');
@@ -514,11 +523,6 @@
             container.innerHTML = '';
             let subtotal = 0;
             let totalItemsCount = 0;
-
-            const addressInput = document.getElementById('address');
-            if (addressInput && addressSummaryNode) {
-                addressSummaryNode.textContent = addressInput.value || "Varanasi, Uttar Pradesh";
-            }
 
             // Render Snacks with Green Steppers
             window.cartSnacksArray.forEach((snack, idx) => {
@@ -544,15 +548,13 @@
                 container.appendChild(row);
             });
 
-            // Render Print Files
+            // Render Cart Print Jobs
             let printTotal = 0;
-            if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
-                masterFilesArray.forEach((item) => {
-                    const pages = parseInt(item.config.pages) || 1;
-                    const copies = parseInt(item.config.copies) || 1;
-                    const cost = pages * (item.config.printType === 'bw' ? 3 : 10) * copies + (item.config.binding === 'spiral' ? 30 * copies : 0);
+            if (window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0) {
+                window.cartPrintJobsArray.forEach((job, jobIdx) => {
+                    const cost = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
                     printTotal += cost;
-                    totalItemsCount += copies;
+                    totalItemsCount += job.copies;
 
                     const row = document.createElement('div');
                     row.style = "display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:12px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 2px 6px rgba(0,0,0,0.02);";
@@ -560,14 +562,12 @@
                         <div style="display:flex; align-items:center; gap:12px;">
                             <div style="font-size:2rem; background:#f0fdf4; padding:8px; border-radius:12px; border:1px solid #bbf7d0;">📄</div>
                             <div>
-                                <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; max-width:150px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${item.name}">${item.name}</h4>
-                                <p style="font-size:0.7rem; color:var(--blinkit-green); font-weight:700;">${item.config.printType.toUpperCase()} | ${copies} copy</p>
+                                <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${job.fileName}">${job.fileName}</h4>
+                                <p style="font-size:0.7rem; color:var(--blinkit-green); font-weight:700;">${job.printType.toUpperCase()} | ${job.copies} copy</p>
                                 <p style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-top:2px;">₹${cost.toFixed(2)}</p>
                             </div>
                         </div>
-                        <div style="font-size:0.75rem; font-weight:700; color:#64748b; background:#f1f5f9; padding:6px 10px; border-radius:8px;">
-                            Configured
-                        </div>
+                        <button type="button" onclick="removePrintJobFromCart(${jobIdx})" style="background:#fef2f2; border:1px solid #fecaca; color:#ef4444; width:26px; height:26px; border-radius:50%; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem;">&times;</button>
                     `;
                     container.appendChild(row);
                 });
@@ -596,6 +596,13 @@
             if (grandTotalNode) grandTotalNode.textContent = `₹${grandTotal.toFixed(2)}`;
         }
 
+        window.removePrintJobFromCart = function(index) {
+            window.cartPrintJobsArray.splice(index, 1);
+            renderCartDrawerContents();
+            updateFloatingCartBar();
+            if (typeof calculateTotal === 'function') calculateTotal();
+        }
+
         function adjustSnackQty(index, delta) {
             window.cartSnacksArray[index].qty += delta;
             if (window.cartSnacksArray[index].qty <= 0) {
@@ -604,15 +611,6 @@
             renderCartDrawerContents();
             updateFloatingCartBar();
             if (typeof calculateTotal === 'function') calculateTotal();
-        }
-
-        function proceedToCheckoutFromCart() {
-            toggleCartDrawer(false);
-            if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
-                document.getElementById('printForm').scrollIntoView({ behavior: 'smooth' });
-            } else {
-                alert("💡 Proceeding with your cart items checkout!");
-            }
         }
 
         // ==========================================
@@ -701,7 +699,7 @@
                 if (isTimeOpen && data.isOpen !== false) {
                     badge.textContent = "OPEN 🟢"; badge.className = "shop-status-text-badge open";
                     btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
-                    if(btn.textContent.includes('Store Closed')) btn.textContent = "Proceed to Payment";
+                    if(btn.textContent.includes('Store Closed')) btn.textContent = "Add Print Job to Cart";
                     if (noticeBox) noticeBox.classList.add('hidden');
                 } else {
                     badge.textContent = "CLOSED 🔴"; badge.className = "shop-status-text-badge closed";
@@ -729,7 +727,10 @@
         let deliveryMarker = null;
 
         function initBlinkitStyleMap() {
-            if (deliveryMap) return;
+            if (deliveryMap) {
+                setTimeout(() => { deliveryMap.invalidateSize(); }, 300);
+                return;
+            }
             let centerLat = 25.3176, centerLng = 82.9739;
             deliveryMap = L.map('userDeliveryMap', { center: [centerLat, centerLng], zoom: 15 });
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(deliveryMap);
@@ -743,8 +744,8 @@
             try {
                 const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
                 const data = await res.json();
-                if (data && data.display_name) document.getElementById('address').value = data.display_name;
-            }  catch (e) { document.getElementById('address').value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`; }
+                if (data && data.display_name) document.getElementById('mapSelectedAddressInput').value = data.display_name;
+            }  catch (e) { document.getElementById('mapSelectedAddressInput').value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`; }
         }
 
         function toggleUserDrawer(open) {
@@ -778,17 +779,6 @@
                 if(activeSubPanel) activeSubPanel.classList.add('active');
             }
         }
-
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.attributeName === 'class') {
-                    const configScreen = document.getElementById('configurationScreenState');
-                    if (configScreen && !configScreen.classList.contains('hidden')) initBlinkitStyleMap();
-                }
-            });
-        });
-        const targetConfigScreen = document.getElementById('configurationScreenState');
-        if(targetConfigScreen) observer.observe(targetConfigScreen, { attributes: true });
     </script>
     <script src="script.js"></script>
 </body>

@@ -20,7 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const ordersHistoryContainer = document.getElementById('ordersHistoryContainer');
 
     let masterFilesArray = []; 
-    let isFirstTimeUser = true; 
+    window.cartPrintJobsArray = []; // Cart print jobs storage
+    window.cartSnacksArray = [];     // Cart snacks storage
+    window.savedUserAddresses = [];  // User saved addresses list
+    let selectedActiveAddress = "";  // Currently selected delivery address
 
     // 🔥 LIVE RE-ROUTE CONFIGS
     const LIVE_SERVER_URL = window.location.origin;
@@ -35,9 +38,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const cartOverlay = document.getElementById('cartDrawerOverlay');
         const walletModal = document.getElementById('walletDepositModal');
         const sideDrawer = document.getElementById('userSideDrawer');
+        const addressModal = document.getElementById('addressManagerModal');
         
         if (cartOverlay && cartOverlay.style.display === 'flex') {
             cartOverlay.style.display = 'none';
+            return;
+        }
+        if (addressModal && addressModal.style.display === 'flex') {
+            addressModal.style.display = 'none';
             return;
         }
         if (walletModal && walletModal.style.display === 'flex') {
@@ -54,6 +62,90 @@ document.addEventListener('DOMContentLoaded', () => {
             navigateDrawerSection('store');
         }
     });
+
+    // ==========================================
+    // 📍 ADDRESS MANAGEMENT CORE
+    // ==========================================
+    window.loadUserAddressesFromStorage = function() {
+        const activeUser = localStorage.getItem('printAppUser') || 'default_user';
+        const raw = localStorage.getItem(`addresses_${activeUser}`);
+        if (raw) {
+            try { window.savedUserAddresses = JSON.parse(raw); } catch(e) { window.savedUserAddresses = []; }
+        } else {
+            window.savedUserAddresses = [];
+        }
+        if (window.savedUserAddresses.length > 0 && !selectedActiveAddress) {
+            selectedActiveAddress = window.savedUserAddresses[0];
+        }
+        renderSavedAddressesUI();
+    }
+
+    window.saveAddressToStorage = function(newAddressText) {
+        if (!newAddressText || newAddressText.trim() === "") return;
+        const activeUser = localStorage.getItem('printAppUser') || 'default_user';
+        if (!window.savedUserAddresses.includes(newAddressText)) {
+            window.savedUserAddresses.push(newAddressText);
+        }
+        selectedActiveAddress = newAddressText;
+        localStorage.setItem(`addresses_${activeUser}`, JSON.stringify(window.savedUserAddresses));
+        renderSavedAddressesUI();
+    }
+
+    function renderSavedAddressesUI() {
+        const listContainer = document.getElementById('cartSavedAddressesList');
+        const summaryNode = document.getElementById('cartDrawerAddressSummary');
+        if (summaryNode) summaryNode.textContent = selectedActiveAddress || "No address selected. Please add one.";
+        if (!listContainer) return;
+
+        listContainer.innerHTML = '';
+        if (window.savedUserAddresses.length === 0) {
+            listContainer.innerHTML = `<p style="font-size:0.75rem; color:#ef4444; font-weight:600;">⚠️ No saved address found. Please add a delivery address.</p>`;
+            return;
+        }
+
+        window.savedUserAddresses.forEach((addr, idx) => {
+            const isChecked = addr === selectedActiveAddress ? 'checked' : '';
+            const card = document.createElement('label');
+            card.style = `display:flex; align-items:flex-start; gap:10px; background:${isChecked ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${isChecked ? '#16a34a' : '#cbd5e1'}; padding:10px 12px; border-radius:10px; cursor:pointer; font-size:0.78rem; font-weight:600; color:#0f172a; margin-bottom:6px;`;
+            card.innerHTML = `
+                <input type="radio" name="selectedDeliveryAddressRadio" value="${idx}" ${isChecked} onchange="selectActiveAddressByIndex(${idx})" style="margin-top:2px;">
+                <span style="flex:1; word-break:break-word;">📍 ${addr}</span>
+            `;
+            listContainer.appendChild(card);
+        });
+    }
+
+    window.selectActiveAddressByIndex = function(idx) {
+        if (window.savedUserAddresses[idx]) {
+            selectedActiveAddress = window.savedUserAddresses[idx];
+            renderSavedAddressesUI();
+        }
+    }
+
+    window.openAddressManagerModal = function() {
+        const modal = document.getElementById('addressManagerModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            history.pushState({ addressModalOpen: true }, '', '');
+            setTimeout(() => { if (typeof initBlinkitStyleMap === 'function') initBlinkitStyleMap(); }, 200);
+        }
+    }
+
+    window.closeAddressManagerModal = function() {
+        const modal = document.getElementById('addressManagerModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    window.confirmNewAddressFromMap = function() {
+        const addressInput = document.getElementById('mapSelectedAddressInput');
+        if (addressInput && addressInput.value.trim() !== "") {
+            saveAddressToStorage(addressInput.value.trim());
+            closeAddressManagerModal();
+            renderCartDrawerContents();
+        } else {
+            alert("⚠️ Please select a valid location on the map.");
+        }
+    }
 
     // ==========================================
     // 📱 PERMANENT USER APP INSTALL HANDLER
@@ -211,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${sessionActiveUser}</span>`;
             if(mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
             loadSavedFilesFromSession();
+            loadUserAddressesFromStorage();
             renderOrderHistoryUI(sessionActiveUser);
             synchronizeWalletInterfaceBalance();
         } else {
@@ -303,6 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (authScreen) authScreen.classList.add('app-hidden');
                     if (mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
                     
+                    loadUserAddressesFromStorage();
                     renderOrderHistoryUI(activeUserName);
                     synchronizeWalletInterfaceBalance();
                 } else {
@@ -480,8 +574,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.cartSnacksArray) {
             snacksTotal = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
         }
+        let printJobsTotal = 0;
+        if (window.cartPrintJobsArray) {
+            window.cartPrintJobsArray.forEach(job => {
+                const cost = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
+                printJobsTotal += cost;
+            });
+        }
 
-        if (masterFilesArray.length === 0 && snacksTotal === 0) { 
+        if (masterFilesArray.length === 0 && snacksTotal === 0 && printJobsTotal === 0) { 
             summaryPrint.textContent = `₹0.00`; summaryBinding.textContent = `₹0.00`; summaryDelivery.textContent = `₹0.00`; summaryTotal.textContent = `₹0.00`; return; 
         }
 
@@ -491,11 +592,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (binding === 'spiral') totalBindingCost += 30.00 * copies;
         });
 
-        let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal;
+        let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal + printJobsTotal;
         let accurateDeliveryCharge = (finalDocumentCost >= 99.00 || finalDocumentCost === 0) ? 0.00 : 25.00;
 
-        summaryPrint.textContent = `₹${totalPrintCost.toFixed(2)}`;
-        summaryBinding.textContent = `₹${(totalBindingCost + snacksTotal).toFixed(2)}`; // Includes snacks inside summary view
+        summaryPrint.textContent = `₹${(totalPrintCost + printJobsTotal).toFixed(2)}`;
+        summaryBinding.textContent = `₹${(totalBindingCost + snacksTotal).toFixed(2)}`;
         summaryDelivery.textContent = accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`;
         summaryTotal.textContent = `₹${(finalDocumentCost + accurateDeliveryCharge).toFixed(2)}`;
     }
@@ -586,106 +687,173 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Print Form submission now adds to cart instead of ordering directly
     const printForm = document.getElementById('printForm');
     if(printForm) {
-        printForm.addEventListener('submit', async (e) => {
+        printForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const summaryTotal = document.getElementById('summaryTotal');
-            const totalAmountText = summaryTotal ? summaryTotal.textContent.replace('₹', '') : "0";
-            
-            // Check selected payment mode (Online via Razorpay or COD)
-            const selectedPaymentRadio = document.querySelector('input[name="paymentMode"]:checked');
-            const paymentMode = selectedPaymentRadio ? selectedPaymentRadio.value : 'online';
-
-            const formData = new FormData();
-            masterFilesArray.forEach((item) => { if(item.fileData) formData.append('document', item.fileData); });
-
-            const finalMetaConfig = masterFilesArray.map((item) => {
-                return { 
-                    fileName: item.name, 
-                    pages: item.config.pages, 
-                    printType: item.config.printType, 
-                    sides: item.config.orientation === 'portrait' ? 'single' : 'landscape', 
-                    binding: item.config.binding, 
-                    copies: item.config.copies,
-                    orientation: item.config.orientation, 
-                    colorMode: item.config.printType      
-                };
-            });
-
-            // Include snacks info if any
-            if (window.cartSnacksArray && window.cartSnacksArray.length > 0) {
-                window.cartSnacksArray.forEach(snack => {
-                    finalMetaConfig.push({ fileName: `Snack: ${snack.name}`, copies: snack.qty, printType: 'snack', pages: 1 });
-                });
+            if (masterFilesArray.length === 0) {
+                alert("⚠️ Please upload at least one document to add to cart.");
+                return;
             }
 
-            formData.append('totalAmount', totalAmountText);
-            formData.append('configDetails', JSON.stringify(finalMetaConfig));
-            formData.append('address', document.getElementById('address').value);
+            masterFilesArray.forEach(item => {
+                window.cartPrintJobsArray.push({
+                    fileName: item.name,
+                    pages: parseInt(item.config.pages) || 1,
+                    printType: item.config.printType,
+                    sides: item.config.orientation === 'portrait' ? 'single' : 'landscape',
+                    binding: item.config.binding,
+                    copies: parseInt(item.config.copies) || 1,
+                    orientation: item.config.orientation,
+                    fileData: item.fileData
+                });
+            });
 
-            try {
-                const response = await fetch('/api/create-order', { method: 'POST', body: formData });
-                const data = await response.json();
-                if (!data.success) return;
-
-                if (paymentMode === 'cod') {
-                    // Cash on Delivery direct flow
-                    alert('🎉 Order Placed Successfully via Cash on Delivery!');
-                    const activeUserToken = localStorage.getItem('printAppUser');
-                    const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
-                    
-                    const newOrderPayload = { 
-                        orderId: data.order_id || 'COD-' + Date.now(),
-                        date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), 
-                        amount: totalAmountText, 
-                        status: "COD / Ready for Print", 
-                        details: finalMetaConfig,
-                        address: document.getElementById('address').value 
-                    };
-                    
-                    currentHistoryArray.push(newOrderPayload);
-                    localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
-                    
-                    isFirstTimeUser = false; sessionStorage.removeItem('savedPrintFiles'); printForm.reset(); multiFilesContainer.innerHTML = ''; masterFilesArray = []; window.cartSnacksArray = [];
-                    renderOrderHistoryUI(activeUserToken); calculateTotal(); updateFloatingCartBar();
-                    
-                    openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
-                    return;
-                }
-
-                // Online Razorpay Flow
-                const options = {
-                    "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Print From Home", "order_id": data.order_id,
-                    "handler": async function (response){
-                        const verifyRes = await fetch('/api/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: data.order_id, paymentId: response.razorpay_payment_id }) });
-                        const verifyData = await verifyRes.json();
-                        if(verifyData.success) {
-                            alert('🎉 Payment Successful!');
-                            const activeUserToken = localStorage.getItem('printAppUser');
-                            const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
-                            
-                            const newOrderPayload = { 
-                                orderId: data.order_id,
-                                date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), 
-                                amount: totalAmountText, 
-                                status: "Paid / Ready for Print", 
-                                details: finalMetaConfig,
-                                address: document.getElementById('address').value 
-                            };
-                            
-                            currentHistoryArray.push(newOrderPayload);
-                            localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
-                            
-                            isFirstTimeUser = false; sessionStorage.removeItem('savedPrintFiles'); printForm.reset(); multiFilesContainer.innerHTML = ''; masterFilesArray = []; window.cartSnacksArray = [];
-                            renderOrderHistoryUI(activeUserToken); calculateTotal(); updateFloatingCartBar();
-                            
-                            openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
-                        }
-                    }, "theme": { "color": "#F4C430" }
-                };
-                const rzp1 = new Razorpay(options); rzp1.open();
-            } catch (error) {}
+            alert("🎉 Print job(s) successfully added to Cart!");
+            masterFilesArray = [];
+            sessionStorage.removeItem('savedPrintFiles');
+            printForm.reset();
+            if(multiFilesContainer) multiFilesContainer.innerHTML = '';
+            refreshInvoiceTabState();
+            calculateTotal();
+            updateFloatingCartBar();
+            toggleCartDrawer(true);
         });
     }
+
+    // Final Order Placement from Cart Drawer
+    window.executeFinalCartOrderPlacement = async function() {
+        if (!selectedActiveAddress || selectedActiveAddress.trim() === "") {
+            alert("⚠️ Please select or add a delivery address first!");
+            openAddressManagerModal();
+            return;
+        }
+
+        let totalPrintVal = 0;
+        let totalSnacksVal = 0;
+        const finalMetaConfig = [];
+
+        window.cartPrintJobsArray.forEach(job => {
+            const cost = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
+            totalPrintVal += cost;
+            finalMetaConfig.push({
+                fileName: job.fileName,
+                pages: job.pages,
+                printType: job.printType,
+                sides: job.sides,
+                binding: job.binding,
+                copies: job.copies,
+                orientation: job.orientation,
+                colorMode: job.printType
+            });
+        });
+
+        window.cartSnacksArray.forEach(snack => {
+            totalSnacksVal += snack.price * snack.qty;
+            finalMetaConfig.push({
+                fileName: `Snack: ${snack.name}`,
+                copies: snack.qty,
+                printType: 'snack',
+                pages: 1
+            });
+        });
+
+        if (finalMetaConfig.length === 0) {
+            alert("⚠️ Your cart is empty!");
+            return;
+        }
+
+        let subtotal = totalPrintVal + totalSnacksVal;
+        let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
+        let grandTotal = subtotal + delivery;
+
+        const selectedPaymentRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
+        const paymentMode = selectedPaymentRadio ? selectedPaymentRadio.value : 'online';
+
+        const formData = new FormData();
+        window.cartPrintJobsArray.forEach(job => {
+            if (job.fileData) formData.append('document', job.fileData);
+        });
+
+        formData.append('totalAmount', grandTotal.toFixed(2));
+        formData.append('configDetails', JSON.stringify(finalMetaConfig));
+        formData.append('address', selectedActiveAddress);
+
+        try {
+            const response = await fetch('/api/create-order', { method: 'POST', body: formData });
+            const data = await response.json();
+            if (!data.success) {
+                alert(`⚠️ Error: ${data.message || 'Failed to create order'}`);
+                return;
+            }
+
+            if (paymentMode === 'cod') {
+                alert('🎉 Order Placed Successfully via Cash on Delivery!');
+                const activeUserToken = localStorage.getItem('printAppUser');
+                const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
+                
+                const newOrderPayload = { 
+                    orderId: data.order_id || 'COD-' + Date.now(),
+                    date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), 
+                    amount: grandTotal.toFixed(2), 
+                    status: "COD / Ready for Print", 
+                    details: finalMetaConfig,
+                    address: selectedActiveAddress 
+                };
+                
+                currentHistoryArray.push(newOrderPayload);
+                localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
+                
+                window.cartPrintJobsArray = [];
+                window.cartSnacksArray = [];
+                toggleCartDrawer(false);
+                renderOrderHistoryUI(activeUserToken);
+                calculateTotal();
+                updateFloatingCartBar();
+                
+                openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
+                return;
+            }
+
+            // Online Razorpay Flow
+            const options = {
+                "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Print From Home", "order_id": data.order_id,
+                "handler": async function (response){
+                    const verifyRes = await fetch('/api/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: data.order_id, paymentId: response.razorpay_payment_id }) });
+                    const verifyData = await verifyRes.json();
+                    if(verifyData.success) {
+                        alert('🎉 Payment Successful!');
+                        const activeUserToken = localStorage.getItem('printAppUser');
+                        const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
+                        
+                        const newOrderPayload = { 
+                            orderId: data.order_id,
+                            date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}), 
+                            amount: grandTotal.toFixed(2), 
+                            status: "Paid / Ready for Print", 
+                            details: finalMetaConfig,
+                            address: selectedActiveAddress 
+                        };
+                        
+                        currentHistoryArray.push(newOrderPayload);
+                        localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
+                        
+                        window.cartPrintJobsArray = [];
+                        window.cartSnacksArray = [];
+                        toggleCartDrawer(false);
+                        renderOrderHistoryUI(activeUserToken);
+                        calculateTotal();
+                        updateFloatingCartBar();
+                        
+                        openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
+                    }
+                }, "theme": { "color": "#F4C430" }
+            };
+            const rzp1 = new Razorpay(options); rzp1.open();
+        } catch (error) {
+            console.error(error);
+            alert("❌ Connection Breakdown during order placement.");
+        }
+    };
 });
