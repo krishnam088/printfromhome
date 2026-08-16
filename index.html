@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-    
 <head>
     <link rel="icon" href="data:,">
     <meta charset="UTF-8">
@@ -35,6 +34,23 @@
 </head>
 <body>
 
+    <!-- 🔍 GLOBAL PRODUCT DETAIL & HD IMAGE VIEWER MODAL -->
+    <div id="productDetailModal" onclick="closeProductDetailModal(event)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); z-index:99999; display:none; justify-content:center; align-items:center; padding:20px;">
+        <div style="background:#ffffff; border-radius:24px; padding:24px; max-width:380px; width:100%; box-shadow:0 25px 60px rgba(0,0,0,0.3); text-align:center; position:relative; animation:popupBounceAnimation 0.25s ease;">
+            <span style="position:absolute; top:12px; right:16px; cursor:pointer; font-size:1.6rem; font-weight:bold; color:#64748b;" onclick="closeProductDetailModal()">&times;</span>
+            
+            <div id="modalProductImgContainer" style="width:100%; height:200px; background:#f8fafc; border-radius:16px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; overflow:hidden; border:1px solid #e2e8f0;">
+                <!-- Product Image or Fallback -->
+            </div>
+            
+            <h3 id="modalProductName" style="font-size:1.2rem; font-weight:800; color:#0f172a; margin-bottom:6px;">Product Name</h3>
+            <p id="modalProductPrice" style="font-size:1.1rem; font-weight:900; color:var(--blinkit-green); margin-bottom:12px;">₹0.00</p>
+            <p id="modalProductStock" style="font-size:0.78rem; font-weight:700; color:#64748b; background:#f1f5f9; padding:6px 12px; border-radius:8px; display:inline-block; margin-bottom:18px;">Stock: Available</p>
+            
+            <button type="button" id="modalAddToCartBtn" style="width:100%; padding:12px; background:var(--blinkit-green); color:white; border:none; border-radius:12px; font-weight:800; font-size:0.9rem; cursor:pointer;">+ Add to Cart</button>
+        </div>
+    </div>
+
     <!-- 🔒 SPLASH SCREEN -->
     <div id="splashScreen" class="splash-container">
         <div class="splash-content">
@@ -43,7 +59,7 @@
         </div>
     </div>
 
-    <!-- 🔒 AUTHENTICATION SCREEN WITH EMAIL/OTP & PASSWORD -->
+    <!-- 🔒 AUTHENTICATION SCREEN -->
     <div id="authScreen" class="auth-container app-hidden">
         <div class="auth-card">
             <div class="auth-brand">print<span class="brand-green">from</span>home</div>
@@ -51,10 +67,7 @@
             <form id="authForm">
                 <div class="form-group signup-only hidden"><label>Full Name</label><input type="text" id="authName" placeholder="Enter your full name"></div>
                 <div class="form-group"><label>Mobile Number</label><input type="text" id="authIdentity" placeholder="Enter 10-digit mobile number" maxlength="10" required></div>
-                
-                <!-- PASSWORD FIELD -->
                 <div class="form-group" id="passwordGroup"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters" required></div>
-
                 <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
             </form>
             <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
@@ -91,12 +104,9 @@
         </div>
 
         <div id="drawer_panel_help" class="drawer-subpanel-content">
-            <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:8px; color:var(--text-main); border-bottom:1px solid var(--border-color); padding-bottom:4px;">
-                Help Desk & Support
-            </h4>
-            <p style="font-size:0.75rem; color:var(--text-sub); margin-bottom:12px;">Our support executives are active from 7:00 AM to 12:00 AM for instant resolution.</p>
-            
-            <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Print%20From%20Home%20Team,%20I%20need%20assistance%20regarding%20my%20print%20order.%0A%0A*Order%20ID%20(if%20any):*%20%0A*Issue%20Details:*" target="_blank" class="whatsapp-support-btn" style="display:flex; align-items:center; justify-content:center; gap:8px; background:#25D366; color:white; padding:12px; border-radius:12px; font-weight:700; text-decoration:none; font-size:0.85rem;">
+            <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:8px; color:var(--text-main); border-bottom:1px solid var(--border-color); padding-bottom:4px;">Help Desk & Support</h4>
+            <p style="font-size:0.75rem; color:var(--text-sub); margin-bottom:12px;">Support active from 7:00 AM to 12:00 AM.</p>
+            <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Print%20From%20Home%20Team" target="_blank" class="whatsapp-support-btn" style="display:flex; align-items:center; justify-content:center; gap:8px; background:#25D366; color:white; padding:12px; border-radius:12px; font-weight:700; text-decoration:none; font-size:0.85rem;">
                 <span>💬</span> Connect with Official Support
             </a>
         </div>
@@ -129,7 +139,7 @@
         </div>
     </div>
 
-    <!-- 📍 DETAILED ADDRESS MANAGER MODAL WITH FORM & MAP -->
+    <!-- 📍 ADDRESS MANAGER MODAL -->
     <div id="addressManagerModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:18000; display:none; justify-content:center; align-items:center; padding:15px; overflow-y:auto;">
         <div style="background:#ffffff; border-radius:24px; padding:20px; max-width:480px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.3); text-align:left; max-height:90vh; overflow-y:auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -216,7 +226,7 @@
             <!-- Row-wise Cart Items Container -->
             <div id="cartDrawerItemsList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
 
-            <!-- Realistic Detailed Bill Invoice Box inside Cart -->
+            <!-- Bill Invoice Summary Box -->
             <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:16px; margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                 <h4 style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:6px;">📄 Bill Invoice Summary</h4>
                 <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#4a5568; margin-bottom:5px;">
@@ -261,7 +271,7 @@
         </div>
     </div>
 
-    <!-- 📱 MAIN APP (Shown After Login) -->
+    <!-- 📱 MAIN APP -->
     <div id="mainApp" class="app-hidden">
         <header class="brand-premium-header">
             <div class="header-container">
@@ -323,13 +333,11 @@
                         </div>
                     </div>
 
-                    <!-- 📦 DYNAMIC ADMIN STORE PRODUCTS & SNACKS GRID -->
+                    <!-- 📦 STORE PRODUCTS GRID -->
                     <div class="category-section-title">
                         <span>⚡ Store Products & Snacks (Slide &rarr;)</span>
                     </div>
-                    <div class="snacks-horizontal-slider" id="homeSnacksGrid">
-                        <!-- Dynamically loaded from Admin Inventory -->
-                    </div>
+                    <div class="snacks-horizontal-slider" id="homeSnacksGrid"></div>
                 </div>
 
                 <div id="configurationScreenState" class="hidden" style="width:100%;">
@@ -338,17 +346,13 @@
                         <button type="button" onclick="forceReturnToUploadView()" style="background:none; border:none; color:var(--blinkit-green); font-weight:700; cursor:pointer; font-size:0.85rem;">&larr; Back to Upload</button>
                     </div>
 
-                    <!-- 🍟 SLIDING SNACKS BAR ON PRINT CONFIG -->
                     <div style="background:var(--surface); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:15px;">
                         <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:10px; color:#1e293b;">⚡ Hungry while waiting? Add Store Products</h4>
-                        <div class="snacks-horizontal-slider" id="configSnacksGrid">
-                            <!-- Dynamically loaded from Admin Inventory -->
-                        </div>
+                        <div class="snacks-horizontal-slider" id="configSnacksGrid"></div>
                     </div>
 
                     <form id="printForm" enctype="multipart/form-data" style="width:100%;">
                         <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
-                        
                         <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: var(--blinkit-green); font-weight: 700; width: 100%;">Add Print Job to Cart</button>
                     </form>
                 </div>
@@ -408,7 +412,7 @@
         </div>
     </div>
 
-    <!-- 🛒 FLOATING VIEW CART FOOTER BAR WITH CANCEL BUTTON -->
+    <!-- 🛒 FLOATING VIEW CART FOOTER BAR -->
     <div id="floatingCartFooterBar" class="floating-cart-footer hidden" style="display:flex; justify-content:space-between; align-items:center;">
         <div class="floating-cart-left" style="display:flex; align-items:center; gap:12px; cursor:pointer; flex:1;" onclick="toggleCartDrawer(true)">
             <div style="display:flex; align-items:center; margin-left:4px;">
@@ -439,9 +443,9 @@
         <button type="button" id="userInstallTriggerBtn" style="background: var(--blinkit-green); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">Install App</button>
     </div>
 
-    <!-- STORE CLOSED POPUP MODAL -->
+    <!-- STORE CLOSED MODAL -->
     <div id="storeClosedPopupModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 99999; display: none; justify-content: center; align-items: center; padding: 20px;">
-        <div style="background: #ffffff; border-radius: 24px; padding: 30px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 3px solid #ef4444; animation: popupBounceAnimation 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        <div style="background: #ffffff; border-radius: 24px; padding: 30px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 3px solid #ef4444;">
             <div style="font-size: 3.5rem; margin-bottom: 10px;">🏪🚨</div>
             <h3 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Store is Currently Closed</h3>
             <p style="font-size: 0.88rem; color: #64748b; line-height: 1.6; margin-bottom: 20px; font-weight: 500;">We are currently not accepting any print orders at the moment.</p>
@@ -450,9 +454,6 @@
     </div>
 
     <script>
-        // ==========================================
-        // 🛒 GLOBAL UNIFIED CART STATE MANAGEMENT WITH ROW-WISE RENDERING & DYNAMIC ADMIN STORE PRODUCTS
-        // ==========================================
         window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
         window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
         window.storeInventoryProducts = [];
@@ -462,8 +463,13 @@
                 const res = await fetch('/api/store/products');
                 const data = await res.json();
                 if (data.success && Array.isArray(data.products)) {
-                    window.storeInventoryProducts = data.products;
-                    renderStoreProductsUI();
+                    // Check if products actually changed to prevent DOM blinking/flashing
+                    const newProductsJson = JSON.stringify(data.products);
+                    const oldProductsJson = JSON.stringify(window.storeInventoryProducts);
+                    if (newProductsJson !== oldProductsJson) {
+                        window.storeInventoryProducts = data.products;
+                        renderStoreProductsUI();
+                    }
                 }
             } catch (e) {
                 console.error("Failed to load store inventory:", e);
@@ -485,10 +491,13 @@
                     const isOutOfStock = (prod.stockQuantity <= 0);
                     const card = document.createElement('div');
                     card.className = 'blinkit-cat-card';
-                    card.style.cssText = `position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; display:flex; flex-direction:column; align-items:center;`;
+                    card.style.cssText = `position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; display:flex; flex-direction:column; align-items:center; cursor:pointer;`;
                     
+                    // Clicking anywhere on the card opens HD Image & Details popup
+                    card.onclick = () => openProductDetailModal(prod);
+
                     const imageHtml = prod.imageUrl 
-                        ? `<img src="${prod.imageUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px;" />` 
+                        ? `<img src="${prod.imageUrl}" style="width:70px; height:70px; object-fit:cover; border-radius:10px; margin-bottom:6px;" />` 
                         : `<div class="blinkit-cat-img" style="font-size:2rem; margin-bottom:6px;">📦</div>`;
 
                     card.innerHTML = `
@@ -496,14 +505,61 @@
                         <div class="blinkit-cat-name" title="${prod.name}" style="font-weight:700; font-size:0.8rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name}</div>
                         <div class="blinkit-cat-price" style="font-weight:800; font-size:0.8rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
                         ${isOutOfStock 
-                            ? `<button type="button" class="btn-quick-add" style="background:#ef4444; color:white;" onclick="notifyWhenAvailable('${prod.name}')">Notify</button>`
-                            : `<button type="button" class="btn-quick-add" onclick="addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
+                            ? `<button type="button" class="btn-quick-add" style="background:#ef4444; color:white;" onclick="event.stopPropagation(); notifyWhenAvailable('${prod.name}')">Notify</button>`
+                            : `<button type="button" class="btn-quick-add" onclick="event.stopPropagation(); addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
                         }
                         ${isOutOfStock ? `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.6rem; padding:2px 5px; border-radius:4px; font-weight:800;">OUT</span>` : ''}
                     `;
                     container.appendChild(card);
                 });
             });
+        }
+
+        // 🔍 GLOBAL PRODUCT DETAIL POPUP HANDLERS
+        window.openProductDetailModal = function(prod) {
+            const modal = document.getElementById('productDetailModal');
+            const imgContainer = document.getElementById('modalProductImgContainer');
+            const nameEl = document.getElementById('modalProductName');
+            const priceEl = document.getElementById('modalProductPrice');
+            const stockEl = document.getElementById('modalProductStock');
+            const addBtn = document.getElementById('modalAddToCartBtn');
+
+            if (!modal) return;
+
+            nameEl.textContent = prod.name;
+            priceEl.textContent = `₹${prod.sellingPrice || 0}`;
+            stockEl.textContent = prod.stockQuantity > 0 ? `Stock Left: ${prod.stockQuantity} units` : `Status: Out of Stock`;
+            stockEl.style.color = prod.stockQuantity > 0 ? '#16a34a' : '#ef4444';
+            stockEl.style.background = prod.stockQuantity > 0 ? '#f0fdf4' : '#fef2f2';
+
+            if (prod.imageUrl) {
+                imgContainer.innerHTML = `<img src="${prod.imageUrl}" style="width:100%; height:100%; object-fit:contain;" />`;
+            } else {
+                imgContainer.innerHTML = `<span style="font-size:3.5rem;">📦</span>`;
+            }
+
+            if (prod.stockQuantity <= 0) {
+                addBtn.style.background = '#ef4444';
+                addBtn.textContent = 'Out of Stock';
+                addBtn.onclick = () => notifyWhenAvailable(prod.name);
+            } else {
+                addBtn.style.background = 'var(--blinkit-green)';
+                addBtn.textContent = '+ Add to Cart';
+                addBtn.onclick = () => {
+                    addDynamicProductToCart(prod.sku, prod.name, prod.sellingPrice || 0, prod.stockQuantity);
+                    closeProductDetailModal();
+                };
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        window.closeProductDetailModal = function(event) {
+            const modal = document.getElementById('productDetailModal');
+            if (!modal) return;
+            if (!event || event.target === modal || event.target.tagName === 'SPAN') {
+                modal.style.display = 'none';
+            }
         }
 
         window.notifyWhenAvailable = function(prodName) {
@@ -530,9 +586,8 @@
             alert(`✅ Added "${name}" to cart!`);
         }
 
-        // Trigger dynamic products load on startup
         loadDynamicStoreProducts();
-        setInterval(loadDynamicStoreProducts, 5000);
+        setInterval(loadDynamicStoreProducts, 8000); // Stable interval to prevent flickering
 
         window.updateFloatingCartBar = function() {
             const bar = document.getElementById('floatingCartFooterBar');
@@ -595,17 +650,22 @@
             let subtotal = 0;
             let totalItemsCount = 0;
 
-            // Render Snacks Row-wise with Plus / Minus buttons
+            // Render Snacks in Cart with Clickable Image/Name to View Details
             window.cartSnacksArray.forEach((snack, idx) => {
                 subtotal += snack.price * snack.qty;
                 totalItemsCount += snack.qty;
+                
+                // Find product matching image from inventory
+                const matchedProd = window.storeInventoryProducts.find(p => p.name === snack.name);
+                const imgUrl = matchedProd ? matchedProd.imageUrl : '';
+
                 const row = document.createElement('div');
                 row.style = "display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:10px 14px; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 1px 4px rgba(0,0,0,0.02);";
                 row.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
-                        <span style="font-size:1.4rem;">📦</span>
+                    <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden; cursor:pointer;" onclick='openProductDetailModal(${JSON.stringify(matchedProd || {name: snack.name, sellingPrice: snack.price, stockQuantity: 99, imageUrl: imgUrl})})'>
+                        ${imgUrl ? `<img src="${imgUrl}" style="width:36px; height:36px; object-fit:cover; border-radius:6px;" />` : `<span style="font-size:1.4rem;">📦</span>`}
                         <div style="overflow:hidden;">
-                            <h4 style="font-size:0.8rem; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</h4>
+                            <h4 style="font-size:0.8rem; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${snack.name}">${snack.name}</h4>
                             <p style="font-size:0.7rem; color:#64748b; font-weight:600;">₹${snack.price} each</p>
                         </div>
                     </div>
@@ -621,7 +681,6 @@
                 container.appendChild(row);
             });
 
-            // Render Cart Print Jobs Row-wise with Plus / Minus buttons
             if (window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0) {
                 window.cartPrintJobsArray.forEach((job, jobIdx) => {
                     const cost = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
@@ -674,9 +733,7 @@
 
         window.adjustPrintJobCopies = function(index, delta) {
             window.cartPrintJobsArray[index].copies += delta;
-            if (window.cartPrintJobsArray[index].copies <= 0) {
-                window.cartPrintJobsArray.splice(index, 1);
-            }
+            if (window.cartPrintJobsArray[index].copies <= 0) window.cartPrintJobsArray.splice(index, 1);
             if (typeof persistCartStateData === 'function') persistCartStateData();
             renderCartDrawerContents();
             updateFloatingCartBar();
@@ -685,9 +742,7 @@
 
         window.adjustSnackQty = function(index, delta) {
             window.cartSnacksArray[index].qty += delta;
-            if (window.cartSnacksArray[index].qty <= 0) {
-                window.cartSnacksArray.splice(index, 1);
-            }
+            if (window.cartSnacksArray[index].qty <= 0) window.cartSnacksArray.splice(index, 1);
             if (typeof persistCartStateData === 'function') persistCartStateData();
             renderCartDrawerContents();
             updateFloatingCartBar();
