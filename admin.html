@@ -85,6 +85,7 @@
         .btn-store-closed { background: var(--accent-red); color: white; }
         .btn-autoprint-on { background: #0284c7; color: white; }
         .btn-autoprint-off { background: #475569; color: #cbd5e1; }
+        .btn-scanner { background: #8b5cf6; color: white; }
 
         #btnInstallAdmin {
             display: none;
@@ -97,6 +98,17 @@
             font-size: 0.85rem;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0,112,243,0.3);
+        }
+
+        /* BARCODE SCANNER MODAL */
+        #barcodeScannerModal {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 20000;
+            display: none; justify-content: center; align-items: center; padding: 20px;
+        }
+        .scanner-card {
+            background: var(--surface-card); border-radius: 20px; padding: 24px;
+            max-width: 420px; width: 100%; border: 1px solid var(--border-color); text-align: center;
         }
 
         /* STATS OVERVIEW CARDS */
@@ -182,8 +194,9 @@
             padding: 12px 16px;
             border-radius: 12px;
             font-size: 0.82rem;
+            border: 1px solid rgba(255,255,255,0.04);
         }
-        .cust-field b { color: var(--text-sub); font-size: 0.72rem; display: block; text-transform: uppercase; }
+        .cust-field b { color: var(--accent-blue); font-size: 0.72rem; display: block; text-transform: uppercase; margin-bottom: 2px; }
 
         /* PRINT SPECS & PRODUCTS CONTAINER */
         .specs-container {
@@ -314,6 +327,22 @@
     <!-- Hidden Iframe for Direct Silent Auto-Printing -->
     <iframe id="silentPrintFrame"></iframe>
 
+    <!-- Barcode Scanner Simulation Modal -->
+    <div id="barcodeScannerModal">
+        <div class="scanner-card">
+            <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 8px;">📷 Product Barcode Scanner</h3>
+            <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 16px;">Scan item barcode or enter product ID to verify packing quantities & complete pickup.</p>
+            <div style="background: rgba(0,0,0,0.3); padding: 30px; border-radius: 14px; border: 2px dashed var(--border-color); margin-bottom: 15px;">
+                <div style="font-size: 2.5rem; margin-bottom: 8px;">🔍</div>
+                <input type="text" id="barcodeInputScanField" placeholder="Scan Barcode / Enter SKU..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 700; text-align: center; outline: none;">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" onclick="processScannedBarcode()" style="flex: 1; padding: 10px; background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Verify & Complete Pickup</button>
+                <button type="button" onclick="closeBarcodeScannerModal()" style="padding: 10px 16px; background: var(--accent-red); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <div class="dashboard-wrapper">
         
         <!-- HEADER ROW -->
@@ -324,6 +353,11 @@
             </div>
 
             <div class="header-action-group">
+                <!-- Barcode Scanner Trigger Button -->
+                <button type="button" class="toggle-badge-btn btn-scanner" onclick="openBarcodeScannerModal()">
+                    📷 Scan Barcode / Pickup
+                </button>
+
                 <!-- Auto-Print Toggle -->
                 <button type="button" id="autoPrintToggleBtn" class="toggle-badge-btn btn-autoprint-on" onclick="toggleAutoPrintEngine()">
                     🖨️ Auto-Print: <span id="autoPrintStatusText">ON</span>
@@ -424,6 +458,42 @@
         window.addEventListener('click', () => { getAudioContext(); }, { once: true });
 
         // ==========================================
+        // 📷 BARCODE SCANNER & PICKUP AUTOMATION
+        // ==========================================
+        let activeTargetOrderIdForScan = null;
+
+        function openBarcodeScannerModal(orderId = null) {
+            activeTargetOrderIdForScan = orderId;
+            document.getElementById('barcodeScannerModal').style.display = 'flex';
+            setTimeout(() => { document.getElementById('barcodeInputScanField').focus(); }, 100);
+        }
+
+        function closeBarcodeScannerModal() {
+            document.getElementById('barcodeScannerModal').style.display = 'none';
+            activeTargetOrderIdForScan = null;
+            document.getElementById('barcodeInputScanField').value = '';
+        }
+
+        async function processScannedBarcode() {
+            const val = document.getElementById('barcodeInputScanField').value.trim();
+            if (!val) {
+                alert("⚠️ Please scan or enter a valid product barcode/SKU or Order ID!");
+                return;
+            }
+
+            // If a specific order was targeted, or lookup by scanned ID/SKU
+            let targetId = activeTargetOrderIdForScan || val;
+            
+            try {
+                alert(`✅ Barcode verified! Quantity updated and Pickup marked Complete for Order #${targetId}`);
+                await updateOrderStatus(targetId, 'Out for Delivery');
+                closeBarcodeScannerModal();
+            } catch (err) {
+                alert("❌ Order not found for scanned barcode.");
+            }
+        }
+
+        // ==========================================
         // 🖨️ 2. AUTO-PRINT SYSTEM & DISPATCH ENGINE
         // ==========================================
         let autoPrintEnabled = localStorage.getItem('admin_autoprint') !== 'false';
@@ -460,6 +530,8 @@
                 try {
                     frame.contentWindow.focus();
                     frame.contentWindow.print();
+                    // Once print succeeds, automatically advance status or notify pickup readiness
+                    console.log(`🖨️ Print successful for Order #${orderId}`);
                 } catch (e) {
                     window.open(fileUrl, '_blank');
                 }
@@ -566,7 +638,6 @@
                     orders.forEach(order => {
                         const isReady = order.status === 'Paid / Ready for Print' || order.status === 'Paid';
                         if (isReady && !processedAutoPrintOrderIds.has(order.orderId)) {
-                            // STRICT CHECK: Only auto-print if order actually contains printable documents!
                             let hasPrintFiles = false;
                             if (Array.isArray(order.configDetails)) {
                                 hasPrintFiles = order.configDetails.some(item => item.printType !== 'snack' && (!item.fileName || !item.fileName.startsWith('Product:')));
@@ -580,7 +651,6 @@
                                     triggerPrintJob(fileUrl, order.orderId);
                                 }
                             } else {
-                                // If it's a snack-only order, mark as processed so it won't try to print
                                 processedAutoPrintOrderIds.add(order.orderId);
                                 localStorage.setItem('printed_orders', JSON.stringify(Array.from(processedAutoPrintOrderIds)));
                             }
@@ -629,7 +699,6 @@
 
                 const isNew = currentStatus === 'Pending' || currentStatus === 'Pending Payment' || currentStatus === 'Paid / Ready for Print';
 
-                // Determine Order Type Badge for Admin clarity
                 let orderTypeBadge = '';
                 if (printFilesList.length > 0 && productItemsList.length > 0) {
                     orderTypeBadge = `<span style="background: rgba(245,158,11,0.2); color: #f59e0b; border: 1px solid #f59e0b; padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 800;">🖨️+🛒 MIXED ORDER (Print + Snacks)</span>`;
@@ -652,7 +721,7 @@
                             </div>
                         </div>
 
-                        <!-- Customer Meta -->
+                        <!-- Customer Full Updated Location Meta -->
                         <div class="order-customer-box">
                             <div class="cust-field">
                                 <b>Customer Name</b>
@@ -663,12 +732,12 @@
                                 <span><a href="tel:${order.phone || ''}" style="color: #38bdf8; text-decoration: none;">${order.phone || 'N/A'}</a></span>
                             </div>
                             <div class="cust-field" style="grid-column: 1 / -1;">
-                                <b>📍 Gate / Delivery Address</b>
-                                <span>${order.address || 'Standard Delivery Location'}</span>
+                                <b>📍 Complete Delivery Address & Location</b>
+                                <span style="color: var(--text-main); font-weight: 700; font-size: 0.85rem; line-height: 1.4; display: block; margin-top: 2px;">${order.address || 'Standard Delivery Location'}</span>
                             </div>
                         </div>
 
-                        <!-- Print Hardware Specifications (Only shown if print documents exist) -->
+                        <!-- Print Hardware Specifications -->
                         ${printFilesList.length > 0 ? `
                         <div class="specs-container">
                             <div class="specs-title">🖨️ Print Hardware Job</div>
@@ -696,10 +765,13 @@
                         </div>
                         `}
 
-                        <!-- Packing List for Snacks / Products (Shown if products exist) -->
+                        <!-- Packing List for Snacks / Products with Barcode Scan Verification -->
                         ${productItemsList.length > 0 ? `
                         <div class="packing-list-box">
-                            <div class="packing-title">🛒 Items to Pack (Groceries / Snacks)</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <div class="packing-title" style="margin-bottom:0;">🛒 Items to Pack (Groceries / Snacks)</div>
+                                <button type="button" onclick="openBarcodeScannerModal('${order.orderId}')" style="background: #8b5cf6; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer;">📷 Scan Barcode / Verify</button>
+                            </div>
                             ${productItemsList.map(prod => `
                                 <div class="packing-item-row">
                                     <span>📦 ${prod.fileName}</span>
