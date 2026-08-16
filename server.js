@@ -53,7 +53,7 @@ const orderSchema = new mongoose.Schema({
     date: String,
     timestamp: String,
     paymentId: String,
-    verifiedItems: { type: Array, default: [] } // Track item-by-item verified UPCs/Names for packing
+    verifiedItems: { type: Array, default: [] }
 });
 const Order = mongoose.model('Order', orderSchema);
 
@@ -70,7 +70,8 @@ const productSchema = new mongoose.Schema({
     sellingPrice: Number,
     stockQuantity: Number,
     totalSold: { type: Number, default: 0 },
-    barcode: { type: String, default: '' } // Added UPC / Barcode field for real camera/typing verification
+    barcode: { type: String, default: '' },
+    imageUrl: { type: String, default: '' } // Product Image URL / Path
 });
 const Product = mongoose.model('Product', productSchema);
 
@@ -182,17 +183,25 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // --- INVENTORY MANAGEMENT & PUBLIC PRODUCTS API ---
-app.post('/api/admin/inventory/add', async (req, res) => {
+app.post('/api/admin/inventory/add', upload.single('productImage'), async (req, res) => {
     try {
-        const { sku, name, purchasePrice, sellingPrice, quantity, barcode } = req.body;
+        const { sku, name, purchasePrice, sellingPrice, quantity, barcode, externalImageUrl } = req.body;
         let product = await Product.findOne({ $or: [{ sku }, ...(barcode ? [{ barcode }] : [])] });
         
+        let imageUrl = product ? product.imageUrl : '';
+        if (req.file) {
+            imageUrl = `/uploads/${req.file.filename}`;
+        } else if (externalImageUrl) {
+            imageUrl = externalImageUrl;
+        }
+
         if (product) {
             product.stockQuantity += Number(quantity);
             if (purchasePrice) product.purchasePrice = Number(purchasePrice);
             if (sellingPrice) product.sellingPrice = Number(sellingPrice);
             if (name) product.name = name;
             if (barcode) product.barcode = barcode;
+            if (imageUrl) product.imageUrl = imageUrl;
             await product.save();
         } else {
             product = new Product({
@@ -201,11 +210,23 @@ app.post('/api/admin/inventory/add', async (req, res) => {
                 purchasePrice: Number(purchasePrice),
                 sellingPrice: Number(sellingPrice),
                 stockQuantity: Number(quantity),
-                barcode: barcode || ''
+                barcode: barcode || '',
+                imageUrl: imageUrl || ''
             });
             await product.save();
         }
         res.json({ success: true, product });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Delete Inventory Item API
+app.delete('/api/admin/inventory/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await Product.findByIdAndDelete(id);
+        res.json({ success: true, message: "Product removed from inventory successfully!" });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -235,7 +256,6 @@ app.get('/api/admin/inventory/report', async (req, res) => {
     }
 });
 
-// Public API for User App to fetch admin store products & live stock status
 app.get('/api/store/products', async (req, res) => {
     try {
         const products = await Product.find();
@@ -267,7 +287,7 @@ app.get('/api/admin/stats', async (req, res) => {
     }
 });
 
-// --- ITEM-BY-ITEM UPC / BARCODE VERIFICATION API FOR ADMIN PACKING & AUTO STATUS ---
+// --- ITEM-BY-ITEM UPC / BARCODE VERIFICATION API ---
 app.post('/api/admin/verify-item', async (req, res) => {
     try {
         const { orderId, barcode, skuOrName } = req.body;
@@ -276,7 +296,6 @@ app.post('/api/admin/verify-item', async (req, res) => {
         const order = await Order.findOne({ orderId });
         if (!order) return res.status(404).json({ success: false, message: "Order not found!" });
 
-        // 1. Check if barcode/SKU/name exists in registered inventory
         const product = await Product.findOne({ $or: [{ barcode: searchKey }, { sku: searchKey }, { name: { $regex: new RegExp(searchKey, 'i') } }] });
         
         if (!product) {
@@ -285,7 +304,6 @@ app.post('/api/admin/verify-item', async (req, res) => {
 
         let targetItemName = product.name;
 
-        // 2. Check if product is part of this specific order
         let configItems = order.configDetails || [];
         if (typeof configItems === 'string') {
             try { configItems = JSON.parse(configItems); } catch(e) { configItems = []; }
@@ -305,10 +323,8 @@ app.post('/api/admin/verify-item', async (req, res) => {
             order.verifiedItems.push(targetItemName);
         }
 
-        // Count total unique product items in this order
         let totalPackingItems = configItems.filter(item => item.printType === 'snack' || (item.fileName && item.fileName.startsWith('Product:'))).length;
 
-        // Auto shift status to "Out for Delivery" if all products are verified
         if (totalPackingItems > 0 && order.verifiedItems.length >= totalPackingItems) {
             order.status = 'Out for Delivery';
         }
