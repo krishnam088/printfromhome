@@ -295,7 +295,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
     }
 });
 
-// --- UPDATED BROADCAST NOTIFICATION API (Using Brevo HTTP API to bypass Render SMTP block) ---
+// --- UPDATED BROADCAST NOTIFICATION API (Using Verified Sender Email) ---
 app.post('/api/admin/send-notification', async (req, res) => {
     try {
         const { subject, message } = req.body;
@@ -313,18 +313,18 @@ app.post('/api/admin/send-notification', async (req, res) => {
         // Response turant bhej diya taaki admin panel hang na ho
         res.json({ success: true, message: `✅ Broadcasting started via Brevo API to ${recipientEmails.length} users in background!` });
 
-        // Background loop using Brevo HTTP API (HTTPS Port 443 - Never blocked by Render)
+        // Background loop using Brevo HTTP API with verified sender email
         for (const email of recipientEmails) {
             try {
                 const response = await fetch('https://api.brevo.com/v3/smtp/email', {
                     method: 'POST',
                     headers: {
                         'accept': 'application/json',
-                        'api-key': process.env.SMTP_PASS, // Yahan aapka wahi Brevo SMTP/API Key use hoga
+                        'api-key': process.env.SMTP_PASS,
                         'content-type': 'application/json'
                     },
                     body: JSON.stringify({
-                        sender: { name: "Print From Home", email: process.env.SMTP_USER },
+                        sender: { name: "Print From Home", email: "printfromhomesupport@gmail.com" },
                         to: [{ email: email }],
                         subject: subject,
                         htmlContent: `
