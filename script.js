@@ -49,7 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!data.isOpen) {
                     // Store is CLOSED
                     if (storeClosedNotice) storeClosedNotice.classList.remove('hidden');
-                    if (storeClosedModal) storeClosedModal.style.display = 'flex';
+                    if (storeClosedModal && sessionStorage.getItem('storeModalDismissed') !== 'true') {
+                        storeClosedModal.style.display = 'flex';
+                    }
                     if (userShopStatus) {
                         userShopStatus.textContent = 'CLOSED 🔴';
                         userShopStatus.className = 'shop-status-text-badge closed';
@@ -63,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Store is OPEN
                     if (storeClosedNotice) storeClosedNotice.classList.add('hidden');
                     if (storeClosedModal) storeClosedModal.style.display = 'none';
+                    sessionStorage.removeItem('storeModalDismissed');
                     if (userShopStatus) {
                         userShopStatus.textContent = 'OPEN 🟢';
                         userShopStatus.className = 'shop-status-text-badge open';
@@ -88,7 +91,30 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (storeClosedNotice) storeClosedNotice.classList.add('hidden');
         if (storeClosedModal) storeClosedModal.style.display = 'none';
+        sessionStorage.setItem('storeModalDismissed', 'true');
     };
+
+    // ==========================================
+    // 🛵 LIVE STATUS & DELIVERY EXECUTIVE STEPPER
+    // ==========================================
+    window.executeLiveTimelineStateStepper = function(statusText) {
+        const statusBadge = document.getElementById('liveOrderStatusBadge');
+        const execName = document.getElementById('deliveryExecutiveName');
+        const execPhone = document.getElementById('deliveryExecutivePhone');
+        const callBtn = document.getElementById('callExecutiveBtn');
+
+        if (statusBadge) statusBadge.textContent = statusText || "Processing Order...";
+
+        if (statusText && (statusText.includes('Out for Delivery') || statusText.includes('Ready'))) {
+            if (execName) execName.textContent = "Rajesh Kumar (Delivery Partner)";
+            if (execPhone) execPhone.textContent = "+91 98765 43210";
+            if (callBtn) callBtn.href = "tel:9876543210";
+        } else {
+            if (execName) execName.textContent = "Assigning Delivery Executive...";
+            if (execPhone) execPhone.textContent = "Will be assigned shortly";
+            if (callBtn) callBtn.href = "tel:7007626731";
+        }
+    }
 
     // ==========================================
     // 🛒 FETCH LIVE ADMIN PRODUCTS & INVENTORY
@@ -791,6 +817,28 @@ document.addEventListener('DOMContentLoaded', () => {
         summaryTotal.textContent = `₹${(finalDocumentCost + accurateDeliveryCharge).toFixed(2)}`;
     }
 
+    // ==========================================
+    // 🛵 LIVE STATUS & DELIVERY EXECUTIVE STEPPER
+    // ==========================================
+    window.executeLiveTimelineStateStepper = function(statusText) {
+        const statusBadge = document.getElementById('liveOrderStatusBadge');
+        const execName = document.getElementById('deliveryExecutiveName');
+        const execPhone = document.getElementById('deliveryExecutivePhone');
+        const callBtn = document.getElementById('callExecutiveBtn');
+
+        if (statusBadge) statusBadge.textContent = statusText || "Processing Order...";
+
+        if (statusText && (statusText.includes('Out for Delivery') || statusText.includes('Ready'))) {
+            if (execName) execName.textContent = "Rajesh Kumar (Delivery Partner)";
+            if (execPhone) execPhone.textContent = "+91 98765 43210";
+            if (callBtn) callBtn.href = "tel:9876543210";
+        } else {
+            if (execName) execName.textContent = "Assigning Delivery Executive...";
+            if (execPhone) execPhone.textContent = "Will be assigned shortly";
+            if (callBtn) callBtn.href = "tel:7007626731";
+        }
+    }
+
     window.openOrderDeepTrackingWorkspacePage = function(orderStringPayload) {
         const order = JSON.parse(decodeURIComponent(orderStringPayload));
         if(typeof navigateDrawerSection === 'function') navigateDrawerSection('order_tracking'); 
@@ -813,9 +861,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 listContainer.appendChild(row);
             });
         }
-        if(typeof window.executeLiveTimelineStateStepper === 'function') {
-            window.executeLiveTimelineStateStepper(order.status);
-        }
+        window.executeLiveTimelineStateStepper(order.status);
     }
 
     function renderOrderHistoryUI(userId, renderHistoryContainerClean = true) {
