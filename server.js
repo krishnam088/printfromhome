@@ -388,14 +388,29 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
         let finalAmountNumeric = parseFloat(String(totalAmount || '42').replace(/[₹,]/g, ''));
         if (isNaN(finalAmountNumeric)) finalAmountNumeric = 42;
 
+        let parsedConfig = [];
+        try { parsedConfig = configDetails ? JSON.parse(configDetails) : []; } catch(e){}
+
+        // STRICT INVENTORY CHECK (Server Guard)
+        for (const item of parsedConfig) {
+            if (item.printType === 'snack' || (item.fileName && item.fileName.startsWith('Product:'))) {
+                let prodName = item.fileName.replace('Product: ', '').split(' (Qty:')[0].trim();
+                let qtyRequested = item.copies || item.qty || 1;
+                let product = await Product.findOne({ name: { $regex: new RegExp(prodName, 'i') } });
+                if (!product || product.stockQuantity < qtyRequested) {
+                    return res.status(400).json({ 
+                        success: false, 
+                        message: `⚠️ Sorry! "${prodName}" has only ${product ? product.stockQuantity : 0} units left in stock.` 
+                    });
+                }
+            }
+        }
+
         const selectedPaymentMode = paymentMode || "online";
         const numericId = String(Math.floor(100000 + Math.random() * 900000));
 
         const docFiles = req.files ? req.files.filter(f => f.fieldname === 'document') : [];
         const filesMappedList = docFiles.map(f => ({ name: f.originalname, filename: f.filename, url: f.path || f.url }));
-        
-        let parsedConfig = [];
-        try { parsedConfig = configDetails ? JSON.parse(configDetails) : []; } catch(e){}
 
         if (selectedPaymentMode === 'cod') {
             await deductStockForOrder(parsedConfig);
