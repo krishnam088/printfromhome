@@ -296,7 +296,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
     }
 });
 
-// --- HELPER FUNCTION TO SEND BROADCAST EMAILS ---
+// --- HELPER FUNCTION FOR PERSONALIZED BROADCASTS ---
 async function sendBroadcastEmail(subject, message) {
     const users = await User.find({});
     const recipients = users.filter(u => u.email && u.email.includes('@'));
@@ -342,7 +342,7 @@ async function sendBroadcastEmail(subject, message) {
     }
 }
 
-// --- PERSONALIZED & PROFESSIONAL MANUAL BROADCAST API ---
+// --- PERSONALIZED MANUAL BROADCAST API ---
 app.post('/api/admin/send-notification', async (req, res) => {
     try {
         const { subject, message } = req.body;
@@ -359,7 +359,6 @@ app.post('/api/admin/send-notification', async (req, res) => {
 
         res.json({ success: true, message: `✅ Personalized broadcasting to ${recipients.length} users started in background!` });
 
-        // Call helper function asynchronously
         sendBroadcastEmail(subject, message);
     } catch (err) {
         console.error("Email Broadcast Error:", err);
@@ -369,11 +368,28 @@ app.post('/api/admin/send-notification', async (req, res) => {
     }
 });
 
-// --- AUTOMATIC FESTIVAL SCHEDULER (Runs every day at 12:00 AM) ---
+// --- AUTOMATIC FESTIVAL SCHEDULER (2026 Calendar) ---
 const festivalCalendar = {
-    "01-01": { subject: "Happy New Year: Exclusive Printing Offers!", message: "Happy New Year! Start your year with our exclusive calendar offers and special discounts on all prints." },
-    "15-08": { subject: "Happy Independence Day: Special Printing Deals!", message: "Happy Independence Day! Celebrate with our special printing discounts available today at Print From Home." },
-    "24-10": { subject: "Happy Diwali: Exclusive Festive Printing Deals!", message: "We are excited to share our latest festive calendar deals with you! As a valued member of Print From Home, we are offering you an exclusive discount on all your printing requirements." }
+    "23-01": { subject: "Happy Vasant Panchami: Celebrate with Exclusive Prints!", message: "Wishing you a auspicious Vasant Panchami! May Goddess Saraswati bring wisdom and creativity into your life. Celebrate the season with special discounts on all your printing needs at Print From Home." },
+    "15-02": { subject: "Happy Maha Shivaratri: Special Blessings & Offers!", message: "Wishing you a blessed Maha Shivaratri! May Lord Shiva fulfill all your wishes. Explore our special devotional prints and custom orders today." },
+    "04-03": { subject: "Happy Holi: Add Vibrant Colors to Your Prints!", message: "Wishing you and your family a very Happy and Colorful Holi! Celebrate the festival of joy with exclusive discounts on custom prints and vibrant posters at Print From Home." },
+    "26-03": { subject: "Happy Ram Navami: Auspicious Greetings from Print From Home!", message: "Happy Ram Navami! May Lord Rama shower his divine blessings upon you and your family. Avail our special festival printing offers today." },
+    "02-04": { subject: "Happy Hanuman Jayanti: Blessings & Special Deals!", message: "Happy Hanuman Jayanti! May Bajrangbali give you strength and success. Check out our latest store offers and place your print orders today." },
+    "15-08": { subject: "Happy Independence Day: Special Printing Deals!", message: "Happy Independence Day! Celebrate the spirit of freedom with special patriotic prints and exclusive discounts available today at Print From Home." },
+    "28-08": { subject: "Happy Raksha Bandhan: Celebrate Sibling Bonds!", message: "Happy Raksha Bandhan! Make this bond special by gifting customized photo prints and personalized gifts crafted with love at Print From Home." },
+    "04-09": { subject: "Happy Janmashtami: Divine Blessings & Offers!", message: "Wishing you a joyous Janmashtami! Celebrate Lord Krishna's birth with our special devotional prints and festive offers." },
+    "14-09": { subject: "Happy Ganesh Chaturthi: Welcome Bappa with Joy!", message: "Happy Ganesh Chaturthi! May Lord Ganesha bring prosperity and success to your home and business. Explore our festive printing collection today." },
+    "02-10": { subject: "Gandhi Jayanti Greetings from Print From Home", message: "Remembering Mahatma Gandhi on his birth anniversary. Wishing you a peaceful and productive day ahead from Print From Home, Varanasi." },
+    "11-10": { subject: "Happy Sharad Navratri: Nine Nights of Devotion & Deals!", message: "Wishing you a joyous Sharad Navratri! May Goddess Durga bring energy and happiness. Enjoy special discounts on all your printing requirements throughout Navratri." },
+    "20-10": { subject: "Happy Dussehra: Victory of Good Over Evil!", message: "Wishing you a very Happy Dussehra (Vijayadashami)! May this auspicious day bring triumph in all your endeavors. Check out our store for exclusive festive offers." },
+    "29-10": { subject: "Happy Karva Chauth: Special Greetings!", message: "Happy Karva Chauth! Wishing all celebrating couples a blessed and long-lasting bond. Explore our personalized photo printing gifts for your loved ones." },
+    "08-11": { subject: "Happy Diwali: Exclusive Festive Printing Deals for You!", message: "We are excited to share our latest festive calendar deals with you! As a valued member of Print From Home, we are offering you an exclusive flat discount on all your printing and gifting requirements this Diwali. Visit our store to place your order today!" },
+    "10-11": { subject: "Happy Govardhan Puja: Greetings & Blessings!", message: "Wishing you and your family a Happy Govardhan Puja! May Lord Krishna protect and bless your home with prosperity." },
+    "11-11": { subject: "Happy Bhai Dooj: Celebrate the Sibling Bond!", message: "Happy Bhai Dooj! Share love and sweet memories with customized prints and gifts from Print From Home." },
+    "15-11": { subject: "Happy Chhath Puja: Devotion & Surya Worship!", message: "Wishing you a pious and blessed Chhath Puja! May the Sun God fulfill all your wishes and bring good health and prosperity." },
+    "24-11": { subject: "Happy Guru Nanak Jayanti: Warm Greetings!", message: "Wishing you a peaceful and blessed Guru Nanak Jayanti. May teachings of Guru Nanak Dev Ji guide you on the path of truth and kindness." },
+    "25-12": { subject: "Merry Christmas & Happy Holidays!", message: "Merry Christmas from Print From Home! Spread joy, warmth, and festive cheer. Enjoy special year-end discounts on all custom printing services." },
+    "01-01": { subject: "Happy New Year: Exclusive Calendar Offers!", message: "Happy New Year! Start your year right with our brand new custom calendars and special discounts on all prints. Visit our store today!" }
 };
 
 cron.schedule('0 0 * * *', async () => {
@@ -746,6 +762,25 @@ app.get('/api/admin/orders', async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
+const handleStatusUpdate = async (req, res) => {
+    try {
+        const orderId = req.params.orderId || req.body.orderId;
+        const status = req.body.status;
+        const order = await Order.findOne({ orderId });
+        if (order) {
+            if (order.status && order.status.includes('Delivered')) {
+                return res.status(400).json({ success: false, message: "Cannot modify delivered order." });
+            }
+            order.status = status; 
+            await order.save();
+            return res.json({ success: true });
+        }
+        res.status(404).json({ success: false });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
 
 app.post('/api/admin/orders/update-status', handleStatusUpdate);
 app.post('/api/admin/orders/:orderId/status', handleStatusUpdate);
