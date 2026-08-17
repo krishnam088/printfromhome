@@ -205,7 +205,6 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-// --- NEW API: UPDATE GMAIL FOR EXISTING USERS ---
 app.post('/api/auth/update-email', async (req, res) => {
     try {
         const { identity, email } = req.body;
@@ -227,7 +226,6 @@ app.post('/api/auth/update-email', async (req, res) => {
     }
 });
 
-// --- NEW API: PARTIAL PROFILE UPDATE (Name, Password Check) ---
 app.post('/api/auth/update-profile', async (req, res) => {
     try {
         const { identity, name, currentPassword, newPassword } = req.body;
@@ -254,7 +252,6 @@ app.post('/api/auth/update-profile', async (req, res) => {
     }
 });
 
-// --- NEW API: FORGET PASSWORD - VERIFY MOBILE IDENTITY ---
 app.post('/api/auth/verify-identity', async (req, res) => {
     try {
         const { identity } = req.body;
@@ -270,7 +267,6 @@ app.post('/api/auth/verify-identity', async (req, res) => {
     }
 });
 
-// --- NEW API: RESET PASSWORD ---
 app.post('/api/auth/reset-password', async (req, res) => {
     try {
         const { identity, newPassword } = req.body;
@@ -290,7 +286,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
     }
 });
 
-// --- BROADCAST EMAIL & WHATSAPP NOTIFICATION API ---
+// --- UPDATED BROADCAST NOTIFICATION API (Non-blocking background loop) ---
 app.post('/api/admin/send-notification', async (req, res) => {
     try {
         const { subject, message, sendVia } = req.body;
@@ -300,45 +296,44 @@ app.post('/api/admin/send-notification', async (req, res) => {
 
         const users = await User.find({});
         const recipientEmails = users.map(u => u.email).filter(em => em && em.includes('@'));
-        const recipientPhones = users.map(u => u.identity).filter(ph => ph && ph.length === 10);
 
-        let emailSentCount = 0;
-        let whatsappStatus = "Skipped";
-
-        if ((sendVia === 'email' || sendVia === 'both') && recipientEmails.length > 0) {
-            const htmlTemplate = `
-                <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                    <div style="background: #0070f3; color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
-                        <h2 style="margin: 0; font-size: 1.2rem;">📢 Print From Home - Special Offer</h2>
-                    </div>
-                    <div style="background: #ffffff; padding: 24px; border-radius: 0 0 10px 10px; color: #1e293b;">
-                        <h3 style="color: #0f172a; margin-top: 0;">${subject}</h3>
-                        <p style="font-size: 0.95rem; line-height: 1.6; color: #475569; white-space: pre-line;">${message}</p>
-                        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
-                        <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 0;">Print From Home, Varanasi.</p>
-                    </div>
-                </div>
-            `;
-            await transporter.sendMail({
-                from: '"Print From Home" <no-reply@printfromhome.com>',
-                bcc: recipientEmails,
-                subject: subject,
-                html: htmlTemplate
-            });
-            emailSentCount = recipientEmails.length;
+        if (recipientEmails.length === 0) {
+            return res.status(400).json({ success: false, message: "No users with email found!" });
         }
 
-        if (sendVia === 'whatsapp' || sendVia === 'both') {
-            whatsappStatus = `Queued for ${recipientPhones.length} WhatsApp numbers via API`;
-        }
+        // Response turant bhej diya taaki "Sending" par hang na ho
+        res.json({ success: true, message: `✅ Broadcasting started to ${recipientEmails.length} users in background!` });
 
-        res.json({ 
-            success: true, 
-            message: `✅ Broadcast successful! Sent via Gmail to ${emailSentCount} users. WhatsApp: ${whatsappStatus}` 
-        });
+        // Background loop to send mails safely without timeout
+        for (const email of recipientEmails) {
+            try {
+                await transporter.sendMail({
+                    from: `"Print From Home" <${process.env.EMAIL_USER}>`,
+                    to: email,
+                    subject: subject,
+                    html: `
+                        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                            <div style="background: #0070f3; color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+                                <h2 style="margin: 0; font-size: 1.2rem;">📢 Print From Home - Update</h2>
+                            </div>
+                            <div style="background: #ffffff; padding: 24px; border-radius: 0 0 10px 10px; color: #1e293b;">
+                                <h3 style="color: #0f172a; margin-top: 0;">${subject}</h3>
+                                <p style="font-size: 0.95rem; line-height: 1.6; color: #475569; white-space: pre-line;">${message}</p>
+                                <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                                <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 0;">Print From Home, Varanasi.</p>
+                            </div>
+                        </div>
+                    `
+                });
+            } catch (innerErr) {
+                console.error(`Failed to send to ${email}:`, innerErr);
+            }
+        }
     } catch (err) {
-        console.error("Broadcast Notification Error:", err);
-        res.status(500).json({ success: false, message: "Broadcast failed: " + err.message });
+        console.error("Email Broadcast Error:", err);
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, message: "Email send failed: " + err.message });
+        }
     }
 });
 
@@ -663,7 +658,6 @@ app.post('/api/verify-payment', async (req, res) => {
     }
 });
 
-// --- CANCEL ORDER API ---
 app.post('/api/orders/cancel', async (req, res) => {
     try {
         const { orderId } = req.body;

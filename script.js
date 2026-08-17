@@ -251,17 +251,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const configScreen = document.getElementById('configurationScreenState');
         const productModal = document.getElementById('productDetailModal');
         
-        if (productModal && productModal.style.display === 'flex') { productModal.style.display = 'none'; return; }
-        if (cartOverlay && cartOverlay.style.display === 'flex') { cartOverlay.style.display = 'none'; return; }
-        if (addressModal && addressModal.style.display === 'flex') { addressModal.style.display = 'none'; return; }
-        if (walletModal && walletModal.style.display === 'flex') { walletModal.style.display = 'none'; return; }
+        if (productModal && productModal.style.display === 'flex') {
+            productModal.style.display = 'none';
+            return;
+        }
+        if (cartOverlay && cartOverlay.style.display === 'flex') {
+            cartOverlay.style.display = 'none';
+            return;
+        }
+        if (addressModal && addressModal.style.display === 'flex') {
+            addressModal.style.display = 'none';
+            return;
+        }
+        if (walletModal && walletModal.style.display === 'flex') {
+            walletModal.style.display = 'none';
+            return;
+        }
         if (sideDrawer && sideDrawer.classList.contains('active')) {
             sideDrawer.classList.remove('active');
             document.getElementById('drawerOverlay').classList.remove('active');
             return;
         }
-        if (configScreen && !configScreen.classList.contains('hidden')) { forceReturnToUploadView(); return; }
-        if (typeof navigateDrawerSection === 'function') navigateDrawerSection('store');
+        if (configScreen && !configScreen.classList.contains('hidden')) {
+            forceReturnToUploadView();
+            return;
+        }
+        
+        if (typeof navigateDrawerSection === 'function') {
+            navigateDrawerSection('store');
+        }
     });
 
     window.persistCartStateData = function() {
@@ -275,7 +293,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     window.loadUserAddressesFromStorage = function() {
         const raw = localStorage.getItem('saved_addresses');
-        if (raw) { try { window.savedUserAddresses = JSON.parse(raw); } catch(e) { window.savedUserAddresses = []; } }
+        if (raw) {
+            try { window.savedUserAddresses = JSON.parse(raw); } catch(e) { window.savedUserAddresses = []; }
+        }
         if (window.savedUserAddresses.length > 0 && !selectedActiveAddress) {
             selectedActiveAddress = localStorage.getItem('selected_active_address') || window.savedUserAddresses[0];
         }
@@ -290,18 +310,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const mobile = document.getElementById('addrContactMobile').value.trim();
         const fullGeo = document.getElementById('mapSelectedAddressInput').value.trim();
 
-        if (!flat || !name || !mobile) { alert("⚠️ Please enter Building/Flat number, Contact Name, and Mobile Number!"); return; }
+        if (!flat || !name || !mobile) {
+            alert("⚠️ Please enter Building/Flat number, Contact Name, and Mobile Number!");
+            return;
+        }
 
         const formattedAddress = `${flat}${floor ? ', Floor: ' + floor : ''}${landmark ? ', Landmark: ' + landmark : ''} | Area: ${fullGeo || 'Varanasi'} | Contact: ${name} (${mobile})`;
         
-        if (!window.savedUserAddresses.includes(formattedAddress)) window.savedUserAddresses.push(formattedAddress);
+        if (!window.savedUserAddresses.includes(formattedAddress)) {
+            window.savedUserAddresses.push(formattedAddress);
+        }
         selectedActiveAddress = formattedAddress;
         localStorage.setItem('saved_addresses', JSON.stringify(window.savedUserAddresses));
         localStorage.setItem('selected_active_address', selectedActiveAddress);
         
         closeAddressManagerModal();
         renderSavedAddressesUI();
-        if (document.getElementById('cartDrawerOverlay').style.display === 'flex') renderCartDrawerContents();
+        if (document.getElementById('cartDrawerOverlay').style.display === 'flex') {
+            renderCartDrawerContents();
+        }
         alert("✅ Address saved successfully!");
     }
 
@@ -415,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- NEW: FORGET PASSWORD / RESET PASSWORD LOGIC (FOR LOGIN & PROFILE) ---
+    // --- NEW: FORGET PASSWORD / RESET PASSWORD LOGIC ---
     window.initiatePasswordReset = async function() {
         const identityInput = document.getElementById('authIdentity');
         const identity = identityInput ? identityInput.value.trim() : prompt("Enter your registered 10-digit mobile number:");
