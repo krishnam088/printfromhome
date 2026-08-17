@@ -225,13 +225,18 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(`🔔 We have noted your request! You will be notified when "${prodName}" is back in stock.`);
     }
 
-    // 🔒 STRICT INVENTORY ADD TO CART LOGIC
+    // 🔒 STRICT INVENTORY ADD TO CART LOGIC (Updated to check stock limit)
     window.addDynamicProductToCart = function(sku, name, price, currentStock) {
+        if (currentStock <= 0) {
+            alert(`⚠️ Sorry! "${name}" is currently out of stock.`);
+            return;
+        }
+
         const existing = window.cartSnacksArray.find(item => item.name === name);
         const currentCartQty = existing ? existing.qty : 0;
 
         if (currentCartQty + 1 > currentStock) {
-            alert(`⚠️ Sorry! Only ${currentStock} units of "${name}" available in store stock.`);
+            alert(`⚠️ Sorry! Only ${currentStock} units of "${name}" are available in stock.`);
             return;
         }
 
@@ -547,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
             synchronizeWalletInterfaceBalance();
             checkStoreStatusRealtime();
         } else {
-            if(authScreen) { authScreen.classList.remove('app-hidden'); authScreen.style.display = 'flex'; }
+            if(authScreen) { authScreen.classList.add('app-hidden'); authScreen.style.display = 'flex'; }
         }
         calculateTotal();
         updateFloatingCartBar();
