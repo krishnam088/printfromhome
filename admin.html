@@ -114,7 +114,7 @@
         .btn-autoprint-on { background: #0284c7; color: white; }
         .btn-autoprint-off { background: #475569; color: #cbd5e1; }
         .btn-scanner { background: #8b5cf6; color: white; }
-        .btn-archive { background: #3b82f6; color: white; }
+        .btn-history { background: #3b82f6; color: white; }
 
         #btnInstallAdmin {
             display: none; padding: 8px 16px; background: var(--accent-blue); color: white;
@@ -136,14 +136,14 @@
             max-width: 420px; width: 100%; border: 1px solid var(--border-color); text-align: center;
         }
 
-        /* OLD ORDERS ARCHIVE MODAL DRAWER */
+        /* ORDER HISTORY MODAL DRAWER */
         #oldOrdersArchiveModal {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 30000;
             display: none; justify-content: flex-end;
         }
         .archive-drawer-card {
-            background: var(--surface-card); width: 100%; max-width: 480px; height: 100vh;
+            background: var(--surface-card); width: 100%; max-width: 540px; height: 100vh;
             display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.3); overflow: hidden;
             border-left: 1px solid var(--border-color); animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -288,18 +288,19 @@
         </div>
     </div>
 
-    <!-- OLD ORDERS ARCHIVE VAULT DRAWER -->
+    <!-- ORDER HISTORY REGISTER DRAWER -->
     <div id="oldOrdersArchiveModal" onclick="toggleOldOrdersArchiveModal(false)">
         <div class="archive-drawer-card" onclick="event.stopPropagation()">
             <div style="padding: 18px 20px; background: var(--bg-dark); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="font-size: 1.05rem; font-weight: 800; color: white;">📁 Old Orders Archive Vault</h3>
+                <h3 style="font-size: 1.05rem; font-weight: 800; color: white;">📁 Order History Register</h3>
                 <span style="cursor: pointer; font-size: 1.5rem; font-weight: bold; color: var(--text-sub);" onclick="toggleOldOrdersArchiveModal(false)">&times;</span>
             </div>
-            <div style="padding: 12px 20px; background: rgba(59, 130, 246, 0.08); border-bottom: 1px solid var(--border-color); font-size: 0.75rem; color: var(--text-sub);">
-                Previous days' completed or archived orders are stored here securely for emergency reference.
+            <div style="padding: 12px 20px; background: rgba(59, 130, 246, 0.08); border-bottom: 1px solid var(--border-color); display: flex; gap: 10px; flex-wrap: wrap;">
+                <input type="date" id="historyDateFilter" onchange="renderOrderHistoryList()" style="padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.78rem; outline: none;">
+                <input type="text" id="historySearchInput" placeholder="Search by Order ID (#)..." oninput="renderOrderHistoryList()" style="flex: 1; min-width: 150px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.78rem; outline: none;">
             </div>
             <div id="oldOrdersArchiveList" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-                <div style="text-align: center; padding: 30px; color: var(--text-sub);">No archived orders found.</div>
+                <div style="text-align: center; padding: 30px; color: var(--text-sub);">Loading order history...</div>
             </div>
         </div>
     </div>
@@ -326,8 +327,8 @@
             </div>
 
             <div class="header-action-group">
-                <button type="button" class="toggle-badge-btn btn-archive" onclick="toggleOldOrdersArchiveModal(true)">
-                    📁 Archive Vault
+                <button type="button" class="toggle-badge-btn btn-history" onclick="toggleOldOrdersArchiveModal(true)">
+                    📁 Order History
                 </button>
                 <button type="button" class="toggle-badge-btn btn-scanner" onclick="openBarcodeScannerModal()">
                     📷 Scan Barcode
@@ -375,7 +376,7 @@
         <!-- TAB 2: ORDERS SECTION -->
         <div id="section_orders" class="admin-section">
             <div class="section-heading-bar">
-                <h2>📦 Live Print & Product Packing Queue (Newest First)</h2>
+                <h2>📦 Today's Live Print & Product Queue (Newest First)</h2>
                 <button type="button" class="audio-test-btn" onclick="playLoudOrderChime()">🔔 Test Sound Alert</button>
             </div>
 
@@ -831,8 +832,28 @@
             }
         }
 
+        // Helper for formatting IST time & numeric order IDs
+        function formatOrderDisplay(order) {
+            let cleanId = order.orderId;
+            if (cleanId.startsWith('COD-') || cleanId.startsWith('rzp_')) {
+                cleanId = cleanId.replace(/\D/g, '').slice(-6); // Extract last 6 numeric digits
+                if (!cleanId) cleanId = Math.floor(100000 + Math.random() * 900000);
+            }
+            
+            // Format timestamp / date in IST
+            let dateObj = order.timestamp ? new Date(order.timestamp) : new Date();
+            let istString = dateObj.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+            return { cleanId, istString, rawDateObj: dateObj };
+        }
+
         function toggleOldOrdersArchiveModal(open) {
             document.getElementById('oldOrdersArchiveModal').style.display = open ? 'flex' : 'none';
+            if (open) {
+                if (!document.getElementById('historyDateFilter').value) {
+                    document.getElementById('historyDateFilter').value = new Date().toISOString().split('T')[0];
+                }
+                renderOrderHistoryList();
+            }
         }
 
         let autoPrintEnabled = localStorage.getItem('admin_autoprint') !== 'false';
@@ -936,143 +957,144 @@
             }
         }
 
+        function buildOrderCardHtml(order) {
+            let printFilesList = [];
+            let productItemsList = [];
+
+            let configItems = order.configDetails || [];
+            if (typeof configItems === 'string') {
+                try { configItems = JSON.parse(configItems); } catch(e) { configItems = []; }
+            }
+
+            if (Array.isArray(configItems)) {
+                configItems.forEach(item => {
+                    if (item.printType === 'snack' || (item.fileName && item.fileName.startsWith('Product:'))) {
+                        productItemsList.push(item);
+                    } else {
+                        printFilesList.push(item);
+                    }
+                });
+            }
+
+            const hasRealFiles = Array.isArray(order.files) && order.files.length > 0;
+            const isPureProductOrder = productItemsList.length > 0 && printFilesList.length === 0 && !hasRealFiles;
+
+            if (printFilesList.length === 0 && hasRealFiles && !isPureProductOrder) {
+                printFilesList.push({
+                    fileName: order.fileName || (order.files[0] ? order.files[0].name : 'Document.pdf'),
+                    pages: order.pages || 1,
+                    copies: order.copies || 1,
+                    printType: order.printType || 'bw'
+                });
+            }
+
+            if (isPureProductOrder) {
+                printFilesList = [];
+            }
+
+            let totalPackingItems = productItemsList.length;
+            let verifiedItemsList = Array.isArray(order.verifiedItems) ? order.verifiedItems : [];
+            let allProductsVerified = totalPackingItems === 0 || verifiedItemsList.length >= totalPackingItems;
+
+            const primaryFileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '#';
+            const isDrawerOpen = openDrawers.has(order.orderId);
+            const currentStatus = order.status || 'Pending';
+            const { cleanId, istString } = formatOrderDisplay(order);
+
+            return `
+                <div class="order-card" id="card_${order.orderId}">
+                    <div class="order-card-header">
+                        <div class="order-id-meta">
+                            <h3>Order #${cleanId} <span style="font-size:0.7rem; color:var(--text-sub); font-weight:normal;">(Ref: ${order.orderId})</span></h3>
+                            <div class="order-time">Received: ${istString}</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-green);">₹${order.totalAmount || order.amount || 0}</div>
+                            <button type="button" onclick="toggleOrderDetailsDrawer('${order.orderId}')" style="background: var(--surface-card-hover); color: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">📋 View Details</button>
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Order Details Panel -->
+                    <div id="orderDetailsPanel_${order.orderId}" style="display: ${isDrawerOpen ? 'block' : 'none'}; background: rgba(15,23,42,0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
+                        <div class="order-customer-box" style="margin-bottom: 12px;">
+                            <div class="cust-field"><b>Customer Name</b><span>${order.customerName || 'Customer'}</span></div>
+                            <div class="cust-field"><b>Contact Number</b><span><a href="tel:${order.phone || ''}" style="color: #38bdf8; text-decoration: none;">${order.phone || 'N/A'}</a></span></div>
+                            <div class="cust-field" style="grid-column: 1 / -1;"><b>📍 Address</b><span>${order.address || 'N/A'}</span></div>
+                        </div>
+
+                        ${printFilesList.length > 0 ? `
+                        <div class="specs-container" style="margin-bottom: 12px;">
+                            <div class="specs-title">🖨️ Print Job Files</div>
+                            ${printFilesList.map(job => `<div class="spec-tag highlight" style="margin-bottom:6px; display:block;">📑 ${job.fileName || 'File'} (${job.pages || 1} Pages | ✖️ ${job.copies || 1} Copies | 🎨 ${String(job.printType || 'bw').toUpperCase()})</div>`).join('')}
+                            <div class="file-action-row" style="margin-top:8px;">
+                                ${primaryFileUrl !== '#' ? `<a href="${primaryFileUrl}" target="_blank" download class="btn-download-file">📥 Download File</a>` : ''}
+                                <button type="button" class="btn-manual-print" onclick="triggerPrintJob('${primaryFileUrl}', '${order.orderId}')">🖨️ Print Now</button>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        ${productItemsList.length > 0 ? `
+                        <div class="packing-list-box">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <div class="packing-title" style="margin-bottom:0;">🛒 Item Verification (${verifiedItemsList.length}/${totalPackingItems} verified)</div>
+                                <button type="button" onclick="openBarcodeScannerModal('${order.orderId}')" style="background: #8b5cf6; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer;">📷 Scan Item</button>
+                            </div>
+                            ${productItemsList.map(prod => {
+                                let prodCleanName = prod.fileName ? prod.fileName.replace('Product: ', '').split(' (Qty:')[0].trim() : 'Item';
+                                let isItemVerified = verifiedItemsList.some(v => v.toLowerCase().includes(prodCleanName.toLowerCase()));
+                                return `
+                                    <div class="packing-item-row">
+                                        <span style="color:${isItemVerified ? 'var(--accent-green)' : 'white'};">📦 ${prod.fileName}</span>
+                                        <span>${isItemVerified ? '✅ VERIFIED' : '⏳ PENDING'}</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- 4-Stage Stepper -->
+                    <div class="stepper-actions-bar">
+                        <span class="stepper-label">Set Status:</span>
+                        <button type="button" class="btn-step ${currentStatus === 'Paid / Ready for Print' || currentStatus === 'COD / Ready for Print' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Paid / Ready for Print')">1. Ready</button>
+                        <button type="button" class="btn-step ${currentStatus === 'Printing' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Printing')">2. Processing</button>
+                        <button type="button" class="btn-step ${currentStatus === 'Out for Delivery' ? 'current-phase' : ''}" ${!allProductsVerified ? 'disabled title="Verify all items first!"' : ''} onclick="updateOrderStatus('${order.orderId}', 'Out for Delivery')">3. Out for Delivery</button>
+                        <button type="button" class="btn-step ${currentStatus === 'Delivered' ? 'active' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Delivered')">4. Delivered</button>
+                    </div>
+                </div>
+            `;
+        }
+
         function renderOrdersList(orders) {
             const container = document.getElementById('adminOrderQueue');
-            const archiveContainer = document.getElementById('oldOrdersArchiveList');
             if (!container) return;
 
             if (!Array.isArray(orders) || orders.length === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 40px; background: var(--surface-card); border-radius: 16px; border: 1px solid var(--border-color);">
                         <div style="font-size: 2.5rem; margin-bottom: 8px;">📭</div>
-                        <h3>No Active Orders</h3>
+                        <h3>No Active Orders Today</h3>
                     </div>
                 `;
-                if (archiveContainer) archiveContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-sub);">No archived orders found.</div>`;
                 return;
             }
 
-            const todayStr = new Date().toDateString();
-            let liveHtml = '';
-            let archiveHtml = '';
+            const nowIst = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+            const todayDateKey = new Date(nowIst).toDateString();
 
-            // Sort orders newest first (based on timestamp or date)
+            let liveHtml = '';
+
+            // Sort orders newest first
             const sorted = [...orders].sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
 
             sorted.forEach(order => {
-                const orderDateObj = new Date(order.timestamp || order.date);
-                const orderDateStr = orderDateObj.toDateString();
-                const isToday = (orderDateStr === todayStr);
+                const { rawDateObj } = formatOrderDisplay(order);
+                const orderDateKey = rawDateObj.toDateString();
+                const isToday = (orderDateKey === todayDateKey);
 
-                let printFilesList = [];
-                let productItemsList = [];
-
-                let configItems = order.configDetails || [];
-                if (typeof configItems === 'string') {
-                    try { configItems = JSON.parse(configItems); } catch(e) { configItems = []; }
-                }
-
-                if (Array.isArray(configItems)) {
-                    configItems.forEach(item => {
-                        if (item.printType === 'snack' || (item.fileName && item.fileName.startsWith('Product:'))) {
-                            productItemsList.push(item);
-                        } else {
-                            printFilesList.push(item);
-                        }
-                    });
-                }
-
-                const hasRealFiles = Array.isArray(order.files) && order.files.length > 0;
-                const isPureProductOrder = productItemsList.length > 0 && printFilesList.length === 0 && !hasRealFiles;
-
-                if (printFilesList.length === 0 && hasRealFiles && !isPureProductOrder) {
-                    printFilesList.push({
-                        fileName: order.fileName || (order.files[0] ? order.files[0].name : 'Document.pdf'),
-                        pages: order.pages || 1,
-                        copies: order.copies || 1,
-                        printType: order.printType || 'bw'
-                    });
-                }
-
-                if (isPureProductOrder) {
-                    printFilesList = [];
-                }
-
-                let totalPackingItems = productItemsList.length;
-                let verifiedItemsList = Array.isArray(order.verifiedItems) ? order.verifiedItems : [];
-                let allProductsVerified = totalPackingItems === 0 || verifiedItemsList.length >= totalPackingItems;
-
-                const primaryFileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '#';
-                const isDrawerOpen = openDrawers.has(order.orderId);
-                const currentStatus = order.status || 'Pending';
-
-                const cardTemplate = `
-                    <div class="order-card" id="card_${order.orderId}">
-                        <div class="order-card-header">
-                            <div class="order-id-meta">
-                                <h3>Order #${order.orderId}</h3>
-                                <div class="order-time">Received: ${order.date || 'Just now'}</div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-green);">₹${order.totalAmount || order.amount || 0}</div>
-                                <button type="button" onclick="toggleOrderDetailsDrawer('${order.orderId}')" style="background: var(--surface-card-hover); color: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">📋 View Details</button>
-                            </div>
-                        </div>
-
-                        <!-- Collapsible Order Details Panel -->
-                        <div id="orderDetailsPanel_${order.orderId}" style="display: ${isDrawerOpen ? 'block' : 'none'}; background: rgba(15,23,42,0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
-                            <div class="order-customer-box" style="margin-bottom: 12px;">
-                                <div class="cust-field"><b>Customer Name</b><span>${order.customerName || 'Customer'}</span></div>
-                                <div class="cust-field"><b>Contact Number</b><span><a href="tel:${order.phone || ''}" style="color: #38bdf8; text-decoration: none;">${order.phone || 'N/A'}</a></span></div>
-                                <div class="cust-field" style="grid-column: 1 / -1;"><b>📍 Address</b><span>${order.address || 'N/A'}</span></div>
-                            </div>
-
-                            ${printFilesList.length > 0 ? `
-                            <div class="specs-container" style="margin-bottom: 12px;">
-                                <div class="specs-title">🖨️ Print Job Files</div>
-                                ${printFilesList.map(job => `<div class="spec-tag highlight" style="margin-bottom:6px; display:block;">📑 ${job.fileName || 'File'} (${job.pages || 1} Pages | ✖️ ${job.copies || 1} Copies | 🎨 ${String(job.printType || 'bw').toUpperCase()})</div>`).join('')}
-                                <div class="file-action-row" style="margin-top:8px;">
-                                    ${primaryFileUrl !== '#' ? `<a href="${primaryFileUrl}" target="_blank" download class="btn-download-file">📥 Download File</a>` : ''}
-                                    <button type="button" class="btn-manual-print" onclick="triggerPrintJob('${primaryFileUrl}', '${order.orderId}')">🖨️ Print Now</button>
-                                </div>
-                            </div>
-                            ` : ''}
-
-                            ${productItemsList.length > 0 ? `
-                            <div class="packing-list-box">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                    <div class="packing-title" style="margin-bottom:0;">🛒 Item Verification (${verifiedItemsList.length}/${totalPackingItems} verified)</div>
-                                    <button type="button" onclick="openBarcodeScannerModal('${order.orderId}')" style="background: #8b5cf6; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer;">📷 Scan Item</button>
-                                </div>
-                                ${productItemsList.map(prod => {
-                                    let prodCleanName = prod.fileName ? prod.fileName.replace('Product: ', '').split(' (Qty:')[0].trim() : 'Item';
-                                    let isItemVerified = verifiedItemsList.some(v => v.toLowerCase().includes(prodCleanName.toLowerCase()));
-                                    return `
-                                        <div class="packing-item-row">
-                                            <span style="color:${isItemVerified ? 'var(--accent-green)' : 'white'};">📦 ${prod.fileName}</span>
-                                            <span>${isItemVerified ? '✅ VERIFIED' : '⏳ PENDING'}</span>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                            ` : ''}
-                        </div>
-
-                        <!-- 4-Stage Stepper -->
-                        <div class="stepper-actions-bar">
-                            <span class="stepper-label">Set Status:</span>
-                            <button type="button" class="btn-step ${currentStatus === 'Paid / Ready for Print' || currentStatus === 'COD / Ready for Print' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Paid / Ready for Print')">1. Ready</button>
-                            <button type="button" class="btn-step ${currentStatus === 'Printing' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Printing')">2. Processing</button>
-                            <button type="button" class="btn-step ${currentStatus === 'Out for Delivery' ? 'current-phase' : ''}" ${!allProductsVerified ? 'disabled title="Verify all items first!"' : ''} onclick="updateOrderStatus('${order.orderId}', 'Out for Delivery')">3. Out for Delivery</button>
-                            <button type="button" class="btn-step ${currentStatus === 'Delivered' ? 'active' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Delivered')">4. Delivered</button>
-                        </div>
-                    </div>
-                `;
-
+                // Show only today's orders in the main active queue
                 if (isToday) {
-                    liveHtml += cardTemplate;
-                } else {
-                    archiveHtml += cardTemplate;
+                    liveHtml += buildOrderCardHtml(order);
                 }
             });
 
@@ -1080,12 +1102,46 @@
                 <div style="text-align: center; padding: 40px; background: var(--surface-card); border-radius: 16px; border: 1px solid var(--border-color);">
                     <div style="font-size: 2.5rem; margin-bottom: 8px;">📭</div>
                     <h3>No Active Orders Today</h3>
+                    <p style="font-size: 0.78rem; color: var(--text-sub); margin-top: 4px;">Previous orders have been safely moved to Order History.</p>
                 </div>
             `;
+        }
 
-            if (archiveContainer) {
-                archiveContainer.innerHTML = archiveHtml || `<div style="text-align: center; padding: 30px; color: var(--text-sub);">No archived old orders found.</div>`;
+        function renderOrderHistoryList() {
+            const archiveContainer = document.getElementById('oldOrdersArchiveList');
+            const dateFilterVal = document.getElementById('historyDateFilter').value;
+            const searchVal = document.getElementById('historySearchInput').value.toLowerCase().trim();
+
+            if (!archiveContainer) return;
+
+            if (!globalLiveOrdersCache || globalLiveOrdersCache.length === 0) {
+                archiveContainer.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--text-sub);">No orders recorded in history.</div>`;
+                return;
             }
+
+            const sorted = [...globalLiveOrdersCache].sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
+            let filteredHtml = '';
+
+            sorted.forEach(order => {
+                const { cleanId, rawDateObj } = formatOrderDisplay(order);
+                const orderDateIso = rawDateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+
+                // Apply Date Filter
+                if (dateFilterVal && orderDateIso !== dateFilterVal) {
+                    return;
+                }
+
+                // Apply Search Filter (by Order ID or Customer Name)
+                if (searchVal) {
+                    const matchId = cleanId.toLowerCase().includes(searchVal) || order.orderId.toLowerCase().includes(searchVal);
+                    const matchName = (order.customerName || '').toLowerCase().includes(searchVal);
+                    if (!matchId && !matchName) return;
+                }
+
+                filteredHtml += buildOrderCardHtml(order);
+            });
+
+            archiveContainer.innerHTML = filteredHtml || `<div style="text-align: center; padding: 30px; color: var(--text-sub);">No matching orders found for selected date/search.</div>`;
         }
 
         fetchStoreStatus();
