@@ -22,7 +22,11 @@ mongoose.connect(process.env.MONGO_URI, {
     serverSelectionTimeoutMS: 30000, 
     socketTimeoutMS: 45000
 })
-    .then(() => console.log('✅ Connected to MongoDB Atlas successfully!'))
+    .then(async () => {
+        console.log('✅ Connected to MongoDB Atlas successfully!');
+        // Clean start: Uncomment the line below once if you want to wipe old test orders from the database
+        // await Order.deleteMany({}); console.log('🗑️ All old orders wiped for clean fresh start!');
+    })
     .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
 cloudinary.config({
@@ -109,6 +113,16 @@ app.get('/manifest-festive.json', (req, res) => {
 
 app.get('/sw-admin.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw-admin.js')); });
 app.get('/sw.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw.js')); });
+
+// Helper to wipe all orders for clean start
+app.get('/api/admin/reset-database', async (req, res) => {
+    try {
+        await Order.deleteMany({});
+        res.json({ success: true, message: "🧹 All orders cleared successfully for fresh start!" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 app.get('/api/store-status', async (req, res) => {
     try {
@@ -264,19 +278,30 @@ app.get('/api/store/products', async (req, res) => {
     }
 });
 
+// Admin Stats API filtered by Date
 app.get('/api/admin/stats', async (req, res) => {
     try {
-        const orders = await Order.find({ status: { $ne: 'Pending Payment' } });
+        const requestedDate = req.query.date; // Format YYYY-MM-DD
+        const allOrders = await Order.find({ status: { $ne: 'Pending Payment' } });
         const products = await Product.find();
         
+        let filteredOrders = allOrders;
+        if (requestedDate) {
+            filteredOrders = allOrders.filter(o => {
+                let dObj = o.timestamp ? new Date(o.timestamp) : new Date();
+                let isoDate = dObj.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+                return isoDate === requestedDate;
+            });
+        }
+
         let totalProfit = 0;
-        orders.forEach(o => {
-            totalProfit += parseFloat(o.totalAmount || 0); 
+        filteredOrders.forEach(o => {
+            totalProfit += parseFloat(o.totalAmount || o.amount || 0); 
         });
 
         res.json({
             success: true,
-            totalOrders: orders.length,
+            totalOrders: filteredOrders.length,
             totalProfit: totalProfit,
             variety: products.length
         });
