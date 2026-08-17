@@ -98,11 +98,11 @@ const razorpay = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET || 'PcaWJEUMGjhn7Cfa04IlzYd9'
 });
 
-// Nodemailer Transporter Setup with Timeout Protection
+// Nodemailer Transporter Setup using Port 465 (SSL) to bypass Render port 587 restriction
 const transporter = nodemailer.createTransport({
     host: 'smtp-relay.brevo.com',
-    port: 587,
-    secure: false, // port 587 ke liye false hota hai
+    port: 465,
+    secure: true, // Port 465 ke liye true hota hai (SSL)
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
@@ -110,10 +110,11 @@ const transporter = nodemailer.createTransport({
     tls: {
         rejectUnauthorized: false
     },
-    connectionTimeout: 60000, // 60 seconds timeout limit
+    connectionTimeout: 60000,
     greetingTimeout: 30000,
     socketTimeout: 60000
 });
+
 
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/admin-panel', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
