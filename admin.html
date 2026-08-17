@@ -442,7 +442,8 @@
                         <textarea id="broadcastMessageInput" rows="6" placeholder="Write your festive offer or stock update details here..." style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.85rem; outline: none; resize: vertical;"></textarea>
                     </div>
 
-                    <button type="button" onclick="sendBroadcastNotification()" style="background: var(--accent-blue); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 800; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <!-- 🔥 FIXED: event pass kiya gaya hai -->
+                    <button type="button" onclick="sendBroadcastNotification(event)" style="background: var(--accent-blue); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 800; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                         🚀 Send Broadcast Email to All Users
                     </button>
                 </div>
@@ -487,7 +488,9 @@
             }
         }
 
-        async function sendBroadcastNotification() {
+        // 🔥 FIXED: event parameter safe handling
+        async function sendBroadcastNotification(event) {
+            const btn = event ? event.target : document.querySelector("button[onclick*='sendBroadcastNotification']");
             const subject = document.getElementById('broadcastSubjectInput').value.trim();
             const message = document.getElementById('broadcastMessageInput').value.trim();
 
@@ -499,9 +502,10 @@
             if (!confirm("⚠️ Are you sure you want to broadcast this email to all registered users?")) return;
 
             try {
-                const btn = event.target;
-                btn.disabled = true;
-                btn.textContent = "Sending Broadcast...";
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = "Sending Broadcast...";
+                }
 
                 const res = await fetch('/api/admin/send-notification', {
                     method: 'POST',
@@ -520,8 +524,10 @@
             } catch (err) {
                 alert("❌ Failed to broadcast notification.");
             } finally {
-                event.target.disabled = false;
-                event.target.textContent = "🚀 Send Broadcast Email to All Users";
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = "🚀 Send Broadcast Email to All Users";
+                }
             }
         }
 
