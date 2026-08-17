@@ -507,7 +507,7 @@ app.post('/api/orders/cancel', async (req, res) => {
         if (order.status && (order.status.includes('Out for Delivery') || order.status.includes('Delivered'))) {
             return res.status(400).json({ 
                 success: false, 
-                message: "Order is Out for Delivery or Delivered. Cannot be cancelled. Please contact customer support." 
+                message: "Order is Out for Delivery or Delivered. Cannot be cancelled." 
             });
         }
 
@@ -535,6 +535,9 @@ const handleStatusUpdate = async (req, res) => {
         const status = req.body.status;
         const order = await Order.findOne({ orderId });
         if (order) {
+            if (order.status && order.status.includes('Delivered')) {
+                return res.status(400).json({ success: false, message: "Cannot modify delivered order." });
+            }
             order.status = status; 
             await order.save();
             return res.json({ success: true });

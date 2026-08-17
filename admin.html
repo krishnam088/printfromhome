@@ -163,7 +163,7 @@
             background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px;
             padding: 20px; display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden;
         }
-        .order-card.cancelled { border-color: var(--accent-red); opacity: 0.8; background: rgba(239, 68, 68, 0.03); }
+        .order-card.cancelled { border-color: var(--accent-red); opacity: 0.85; background: rgba(239, 68, 68, 0.03); }
 
         .order-card-header {
             display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start;
@@ -1005,7 +1005,9 @@
             const primaryFileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '#';
             const isDrawerOpen = openDrawers.has(order.orderId);
             const currentStatus = order.status || 'Pending';
-            const isCancelled = currentStatus.includes('Cancelled');
+            
+            const isDelivered = currentStatus.includes('Delivered');
+            const isCancelled = currentStatus.includes('Cancelled') || isDelivered;
             const { cleanId, istString } = formatOrderDisplay(order);
 
             return `
@@ -1023,7 +1025,7 @@
 
                     ${isCancelled ? `
                         <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid var(--accent-red); padding: 10px 14px; border-radius: 10px; font-size: 0.8rem; font-weight: 800; color: #f87171; text-align: center;">
-                            🚫 THIS ORDER HAS BEEN CANCELLED (${currentStatus}). No further work required.
+                            🚫 THIS ORDER HAS BEEN ${currentStatus.toUpperCase()}. No further work required.
                         </div>
                     ` : ''}
 
@@ -1071,7 +1073,7 @@
                             <button type="button" class="btn-step ${currentStatus.includes('Ready') ? 'current-phase' : ''}" ${isCancelled ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Ready for Print')">1. Ready</button>
                             <button type="button" class="btn-step ${currentStatus === 'Printing' ? 'current-phase' : ''}" ${isCancelled ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Printing')">2. Processing</button>
                             <button type="button" class="btn-step ${currentStatus === 'Out for Delivery' ? 'current-phase' : ''}" ${isCancelled || !allProductsVerified ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Out for Delivery')">3. Out for Delivery</button>
-                            <button type="button" class="btn-step ${currentStatus === 'Delivered' ? 'active' : ''}" ${isCancelled ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Delivered')">4. Delivered</button>
+                            <button type="button" class="btn-step ${currentStatus === 'Delivered' ? 'active' : ''}" ${isCancelled && !currentStatus.includes('Delivered') ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Delivered')">4. Delivered</button>
                         </div>
                         ${!isCancelled ? `
                             <button type="button" onclick="adminCancelOrder('${order.orderId}')" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; padding: 8px 12px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
