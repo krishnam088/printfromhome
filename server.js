@@ -124,19 +124,13 @@ app.get('/api/store-status', async (req, res) => {
             config = await StoreConfig.create({ isOpen: true, updatedAt: new Date().toISOString() });
         }
 
-        // Convert current server UTC time to IST (UTC + 5:30)
         const now = new Date();
         const utcHours = now.getUTCHours();
         const utcMinutes = now.getUTCMinutes();
         const istTotalMinutes = (utcHours * 60 + utcMinutes) + (5 * 60 + 30);
         const istHours = Math.floor(istTotalMinutes / 60) % 24;
 
-        // Operating hours: 7 AM (7) to 10 PM (22)
         const isTimeWithinOperatingHours = istHours >= 7 && istHours < 22;
-
-        // Optional: If you want strict auto time-off at 10 PM and auto on at 7 AM regardless of DB toggle, 
-        // OR respect database toggle only within 7 AM - 10 PM.
-        // Here, store opens only if admin toggle is true AND time is between 7 AM and 10 PM.
         const finalIsOpen = isTimeWithinOperatingHours && config.isOpen;
 
         res.json({ success: true, isOpen: finalIsOpen, manualOverride: config.isOpen, currentIstHour: istHours });
@@ -212,7 +206,7 @@ app.post('/api/admin/inventory/add', upload.single('productImage'), async (req, 
         
         let imageUrl = product ? product.imageUrl : '';
         if (req.file && req.file.path) {
-            imageUrl = req.file.path; // Cloudinary Permanent Secure URL
+            imageUrl = req.file.path; 
         } else if (externalImageUrl) {
             imageUrl = externalImageUrl;
         }
@@ -243,7 +237,6 @@ app.post('/api/admin/inventory/add', upload.single('productImage'), async (req, 
     }
 });
 
-// Delete Inventory Item API
 app.delete('/api/admin/inventory/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -290,7 +283,7 @@ app.get('/api/store/products', async (req, res) => {
 // --- ADMIN STATS API ---
 app.get('/api/admin/stats', async (req, res) => {
     try {
-        const orders = await Order.find();
+        const orders = await Order.find({ status: { $ne: 'Pending Payment' } });
         const products = await Product.find();
         
         let totalProfit = 0;
@@ -365,6 +358,25 @@ app.post('/api/admin/verify-item', async (req, res) => {
     }
 });
 
+// Helper function for stock deduction
+async function deductStockForOrder(parsedConfig) {
+    if (parsedConfig && parsedConfig.length > 0) {
+        for (const item of parsedConfig) {
+            if (item.printType === 'snack' || (item.fileName && item.fileName.startsWith('Product:'))) {
+                let prodName = item.fileName.replace('Product: ', '').split(' (Qty:')[0].trim();
+                let qty = item.copies || item.qty || 1;
+                
+                let matchedProd = await Product.findOne({ name: { $regex: new RegExp(prodName, 'i') } });
+                if (matchedProd) {
+                    matchedProd.stockQuantity = Math.max(0, matchedProd.stockQuantity - qty);
+                    matchedProd.totalSold += qty;
+                    await matchedProd.save();
+                }
+            }
+        }
+    }
+}
+
 // Orders & Payments APIs
 app.post('/api/create-order', upload.any(), async (req, res) => {
     try {
@@ -404,23 +416,10 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
         let parsedConfig = [];
         try { parsedConfig = configDetails ? JSON.parse(configDetails) : []; } catch(e){}
 
-        if (parsedConfig && parsedConfig.length > 0) {
-            for (const item of parsedConfig) {
-                if (item.printType === 'snack' || (item.fileName && item.fileName.startsWith('Product:'))) {
-                    let prodName = item.fileName.replace('Product: ', '').split(' (Qty:')[0].trim();
-                    let qty = item.copies || item.qty || 1;
-                    
-                    let matchedProd = await Product.findOne({ name: { $regex: new RegExp(prodName, 'i') } });
-                    if (matchedProd) {
-                        matchedProd.stockQuantity = Math.max(0, matchedProd.stockQuantity - qty);
-                        matchedProd.totalSold += qty;
-                        await matchedProd.save();
-                    }
-                }
-            }
-        }
-
+        // If Cash on Delivery, deduct stock immediately and create active order
         if (selectedPaymentMode === 'cod') {
+            await deductStockForOrder(parsedConfig);
+
             const codOrderId = 'COD-' + Date.now();
             const newOrder = new Order({
                 orderId: codOrderId,
@@ -447,6 +446,7 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
             return res.status(201).json({ success: true, isCod: true, order_id: codOrderId });
         }
 
+        // For Online Payment: Create Razorpay order but save with 'Pending Payment' status so admin doesn't see it yet
         let razorpayOrder;
         try {
             razorpayOrder = await razorpay.orders.create({ 
@@ -495,17 +495,26 @@ app.post('/api/verify-payment', async (req, res) => {
             order.status = 'Paid / Ready for Print';
             order.paymentId = paymentId; 
             await order.save();
+
+            // Deduct stock only after payment is successfully verified
+            let parsedConfig = order.configDetails || [];
+            if (typeof parsedConfig === 'string') {
+                try { parsedConfig = JSON.parse(parsedConfig); } catch(e){}
+            }
+            await deductStockForOrder(parsedConfig);
+
             return res.json({ success: true });
         }
-        res.status(404).json({ success: false });
+        res.status(404).json({ success: false, message: "Order not found" });
     } catch (err) {
-        res.status(500).json({ success: false });
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
+// Admin orders API updated to exclude 'Pending Payment' unverified orders
 app.get('/api/admin/orders', async (req, res) => { 
     try {
-        const orders = await Order.find().sort({ timestamp: -1 });
+        const orders = await Order.find({ status: { $ne: 'Pending Payment' } }).sort({ timestamp: -1 });
         res.json(orders); 
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
