@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.globalRawOrdersCache = [];
 
     // ==========================================
-    // 🕒 REAL-TIME STORE STATUS AUTO-CHECKER
+    // 🕒 REAL-TIME STORE STATUS AUTO-CHECKER & DISMISS HANDLER
     // ==========================================
     async function checkStoreStatusRealtime() {
         try {
@@ -81,6 +81,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Har 3 seconds mein status check karega taaki admin ke toggle karte hi turant user app pe reflect ho
     setInterval(checkStoreStatusRealtime, 3000);
+
+    window.dismissStoreClosedNotice = function() {
+        const storeClosedNotice = document.getElementById('storeClosedNoticeBox');
+        const storeClosedModal = document.getElementById('storeClosedPopupModal');
+        
+        if (storeClosedNotice) storeClosedNotice.classList.add('hidden');
+        if (storeClosedModal) storeClosedModal.style.display = 'none';
+    };
 
     // ==========================================
     // 🛒 FETCH LIVE ADMIN PRODUCTS & INVENTORY
@@ -141,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     flex-shrink: 0;
                 `;
                 
-                // Tap anywhere on card (except add button) opens HD product detail modal smoothly
                 card.onclick = (e) => {
                     if (e.target.tagName === 'BUTTON') return;
                     if (typeof openProductDetailModal === 'function') {
