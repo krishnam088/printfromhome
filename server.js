@@ -295,7 +295,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
     }
 });
 
-// --- UPDATED BROADCAST NOTIFICATION API (Using Verified Sender Email) ---
+// --- PERSONALIZED & PROFESSIONAL BROADCAST NOTIFICATION API ---
 app.post('/api/admin/send-notification', async (req, res) => {
     try {
         const { subject, message } = req.body;
@@ -304,18 +304,36 @@ app.post('/api/admin/send-notification', async (req, res) => {
         }
 
         const users = await User.find({});
-        const recipientEmails = users.map(u => u.email).filter(em => em && em.includes('@'));
+        const recipients = users.filter(u => u.email && u.email.includes('@'));
 
-        if (recipientEmails.length === 0) {
+        if (recipients.length === 0) {
             return res.status(400).json({ success: false, message: "No users with email found!" });
         }
 
         // Response turant bhej diya taaki admin panel hang na ho
-        res.json({ success: true, message: `✅ Broadcasting started via Brevo API to ${recipientEmails.length} users in background!` });
+        res.json({ success: true, message: `✅ Personalized broadcasting to ${recipients.length} users started in background!` });
 
-        // Background loop using Brevo HTTP API with verified sender email
-        for (const email of recipientEmails) {
+        // Background loop to send customized professional emails to each user
+        for (const user of recipients) {
             try {
+                const personalizedHTML = `
+                    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <div style="background: #0070f3; color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+                            <h2 style="margin: 0; font-size: 1.3rem; letter-spacing: 0.5px;">Print From Home</h2>
+                            <p style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.9;">Professional Printing & Delivery Services</p>
+                        </div>
+                        <div style="background: #ffffff; padding: 24px; border-radius: 0 0 10px 10px; color: #1e293b;">
+                            <p style="font-size: 1rem; color: #0f172a; margin-top: 0;">Hello <strong>${user.name || 'Valued Customer'}</strong>,</p>
+                            <p style="font-size: 0.95rem; line-height: 1.6; color: #475569; white-space: pre-line;">${message}</p>
+                            <div style="margin: 25px 0; text-align: center;">
+                                <a href="https://printfromhome.onrender.com" style="background-color: #0070f3; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.95rem; display: inline-block;">Visit Store & Order Now</a>
+                            </div>
+                            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                            <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 0;">Print From Home, Varanasi | You are receiving this update as a registered user.</p>
+                        </div>
+                    </div>
+                `;
+
                 const response = await fetch('https://api.brevo.com/v3/smtp/email', {
                     method: 'POST',
                     headers: {
@@ -325,30 +343,18 @@ app.post('/api/admin/send-notification', async (req, res) => {
                     },
                     body: JSON.stringify({
                         sender: { name: "Print From Home", email: "printfromhomesupport@gmail.com" },
-                        to: [{ email: email }],
+                        to: [{ email: user.email, name: user.name || 'Customer' }],
                         subject: subject,
-                        htmlContent: `
-                            <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                                <div style="background: #0070f3; color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
-                                    <h2 style="margin: 0; font-size: 1.2rem;">📢 Print From Home - Update</h2>
-                                </div>
-                                <div style="background: #ffffff; padding: 24px; border-radius: 0 0 10px 10px; color: #1e293b;">
-                                    <h3 style="color: #0f172a; margin-top: 0;">${subject}</h3>
-                                    <p style="font-size: 0.95rem; line-height: 1.6; color: #475569; white-space: pre-line;">${message}</p>
-                                    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
-                                    <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 0;">Print From Home, Varanasi.</p>
-                                </div>
-                            </div>
-                        `
+                        htmlContent: personalizedHTML
                     })
                 });
 
                 const result = await response.json();
                 if (!response.ok) {
-                    console.error(`Brevo API Error for ${email}:`, result);
+                    console.error(`Brevo API Error for ${user.email}:`, result);
                 }
             } catch (innerErr) {
-                console.error(`Failed to send via API to ${email}:`, innerErr);
+                console.error(`Failed to send via API to ${user.email}:`, innerErr);
             }
         }
     } catch (err) {
