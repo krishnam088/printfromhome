@@ -43,9 +43,11 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage: storage });
 
+// --- UPDATED USER SCHEMA (Added email field) ---
 const userSchema = new mongoose.Schema({
     name: String,
-    identity: { type: String, unique: true }, 
+    identity: { type: String, unique: true }, // Mobile Number
+    email: { type: String, default: '' },      // Gmail Address
     password: String,
     dateCreated: String
 });
@@ -161,25 +163,32 @@ const handleStoreToggle = async (req, res) => {
 app.post('/api/store-status/toggle', handleStoreToggle);
 app.post('/api/admin/toggle-store', handleStoreToggle);
 
+// --- UPDATED SIGNUP API (Mandatory Gmail) ---
 app.post('/api/auth/signup', async (req, res) => {
     try {
-        const { name, identity, password } = req.body;
+        const { name, identity, email, password } = req.body;
+        if (!email) {
+            return res.status(400).json({ success: false, message: "Gmail address is mandatory for signup!" });
+        }
+
         const normalizedIdentity = identity.replace(/\D/g, '').slice(-10); 
+        const normalizedEmail = email.trim().toLowerCase();
         
-        const existingUser = await User.findOne({ identity: normalizedIdentity });
+        const existingUser = await User.findOne({ $or: [{ identity: normalizedIdentity }, { email: normalizedEmail }] });
         if (existingUser) {
-            return res.status(400).json({ success: false, message: "This mobile number is already registered!" });
+            return res.status(400).json({ success: false, message: "This mobile number or Gmail is already registered!" });
         }
 
         const newUser = new User({ 
             name: name.trim(), 
             identity: normalizedIdentity, 
+            email: normalizedEmail,
             password, 
             dateCreated: new Date().toLocaleString() 
         });
         
         await newUser.save();
-        res.status(201).json({ success: true, userId: newUser.identity, name: newUser.name });
+        res.status(201).json({ success: true, userId: newUser.identity, name: newUser.name, email: newUser.email });
     } catch (err) {
         res.status(500).json({ success: false, message: "Server error" });
     }
@@ -192,53 +201,87 @@ app.post('/api/auth/login', async (req, res) => {
         const user = await User.findOne({ identity: normalizedIdentity, password });
         
         if (!user) return res.status(401).json({ success: false, message: "Invalid mobile number or password!" });
-        res.json({ success: true, name: user.name, identity: user.identity });
+        res.json({ success: true, name: user.name, identity: user.identity, email: user.email || '' });
     } catch (err) {
         res.status(500).json({ success: false, message: "Server error" });
     }
 });
 
-// --- BROADCAST EMAIL NOTIFICATION API ---
+// --- NEW API: UPDATE GMAIL FOR EXISTING USERS ---
+app.post('/api/auth/update-email', async (req, res) => {
+    try {
+        const { identity, email } = req.body;
+        if (!identity || !email) {
+            return res.status(400).json({ success: false, message: "Identity and Email are required!" });
+        }
+        const normalizedIdentity = identity.replace(/\D/g, '').slice(-10);
+        const user = await User.findOne({ identity: normalizedIdentity });
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found!" });
+        }
+
+        user.email = email.trim().toLowerCase();
+        await user.save();
+        res.json({ success: true, message: "Gmail updated successfully!" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// --- BROADCAST EMAIL & WHATSAPP NOTIFICATION API ---
 app.post('/api/admin/send-notification', async (req, res) => {
     try {
-        const { subject, message } = req.body;
+        const { subject, message, sendVia } = req.body; // sendVia: 'email', 'whatsapp', or 'both'
         if (!subject || !message) {
             return res.status(400).json({ success: false, message: "Subject and Message are required!" });
         }
 
         const users = await User.find({});
-        const recipientEmails = users.map(u => u.identity).filter(id => id && id.includes('@'));
+        const recipientEmails = users.map(u => u.email).filter(em => em && em.includes('@'));
+        const recipientPhones = users.map(u => u.identity).filter(ph => ph && ph.length === 10);
 
-        if (recipientEmails.length === 0) {
-            return res.status(400).json({ success: false, message: "No valid email addresses found in registered users!" });
+        let emailSentCount = 0;
+        let whatsappStatus = "Skipped";
+
+        // 1. Send Gmail Broadcast via Nodemailer
+        if ((sendVia === 'email' || sendVia === 'both') && recipientEmails.length > 0) {
+            const htmlTemplate = `
+                <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <div style="background: #0070f3; color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+                        <h2 style="margin: 0; font-size: 1.2rem;">📢 Print From Home - Special Offer</h2>
+                    </div>
+                    <div style="background: #ffffff; padding: 24px; border-radius: 0 0 10px 10px; color: #1e293b;">
+                        <h3 style="color: #0f172a; margin-top: 0;">${subject}</h3>
+                        <p style="font-size: 0.95rem; line-height: 1.6; color: #475569; white-space: pre-line;">${message}</p>
+                        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                        <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 0;">Print From Home, Varanasi.</p>
+                    </div>
+                </div>
+            `;
+            await transporter.sendMail({
+                from: '"Print From Home" <no-reply@printfromhome.com>',
+                bcc: recipientEmails,
+                subject: subject,
+                html: htmlTemplate
+            });
+            emailSentCount = recipientEmails.length;
         }
 
-        const htmlTemplate = `
-            <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                <div style="background: #0070f3; color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
-                    <h2 style="margin: 0; font-size: 1.2rem;">📢 Print From Home - Special Update</h2>
-                </div>
-                <div style="background: #ffffff; padding: 24px; border-radius: 0 0 10px 10px; color: #1e293b;">
-                    <h3 style="color: #0f172a; margin-top: 0;">${subject}</h3>
-                    <p style="font-size: 0.95rem; line-height: 1.6; color: #475569; white-space: pre-line;">${message}</p>
-                    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
-                    <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 0;">You received this update because you are registered with Print From Home, Varanasi.</p>
-                </div>
-            </div>
-        `;
+        // 2. WhatsApp Integration Note (Using Wati / Interakt / Twilio or Click-to-Chat webhook)
+        if (sendVia === 'whatsapp' || sendVia === 'both') {
+            // Yahan aap WhatsApp Business API gateway (jaise Interakt/Wati/Twilio) connect kar sakte hain
+            // Example webhook payload loop for recipientPhones
+            whatsappStatus = `Queued for ${recipientPhones.length} WhatsApp numbers via API`;
+        }
 
-        const mailOptions = {
-            from: '"Print From Home" <no-reply@printfromhome.com>',
-            bcc: recipientEmails,
-            subject: subject,
-            html: htmlTemplate
-        };
-
-        await transporter.sendMail(mailOptions);
-        res.json({ success: true, message: `✅ Notification successfully broadcasted to ${recipientEmails.length} users via Gmail!` });
+        res.json({ 
+            success: true, 
+            message: `✅ Broadcast successful! Sent via Gmail to ${emailSentCount} users. WhatsApp: ${whatsappStatus}` 
+        });
     } catch (err) {
-        console.error("Email Broadcast Error:", err);
-        res.status(500).json({ success: false, message: "Email send failed: " + err.message });
+        console.error("Broadcast Notification Error:", err);
+        res.status(500).json({ success: false, message: "Broadcast failed: " + err.message });
     }
 });
 

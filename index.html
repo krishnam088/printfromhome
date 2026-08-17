@@ -83,6 +83,8 @@
             <form id="authForm">
                 <div class="form-group signup-only hidden"><label>Full Name</label><input type="text" id="authName" placeholder="Enter your full name"></div>
                 <div class="form-group"><label>Mobile Number</label><input type="text" id="authIdentity" placeholder="Enter 10-digit mobile number" maxlength="10" required></div>
+                <!-- 🔥 NEW: MANDATORY GMAIL FIELD FOR NEW SIGNUPS -->
+                <div class="form-group signup-only hidden"><label>Gmail Address (For Order & Offer Updates)</label><input type="email" id="authEmailInput" placeholder="Enter your Gmail address"></div>
                 <div class="form-group" id="passwordGroup"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters" required></div>
                 <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
             </form>
@@ -116,6 +118,14 @@
                 <div class="drawer-input-group"><label>Change Account Password</label><input type="password" id="drawerEditPassword" required></div>
                 <button type="submit" class="btn-drawer-action">Update Account Info</button>
             </form>
+            
+            <!-- 🔥 NEW: PROFILE GMAIL UPDATE WIDGET -->
+            <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                <label style="font-size: 0.78rem; font-weight: 700; display: block; margin-bottom: 4px;">Update Notification Gmail:</label>
+                <input type="email" id="userProfileEmailField" placeholder="Enter new Gmail address" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 6px; font-size: 0.8rem; background: var(--bg-primary); color: white; outline: none;">
+                <button type="button" onclick="updateUserGmailProfile()" style="background: var(--blinkit-green); color: white; border: none; padding: 8px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; width: 100%; cursor: pointer;">Save New Gmail</button>
+            </div>
+
             <div id="profileUpdateSuccessMsg" style="display:none; color:var(--blinkit-green); font-size:0.75rem; font-weight:700; margin-top:8px; text-align:center;">✅ Updated Successfully!</div>
         </div>
 
@@ -710,22 +720,18 @@
                 if (countText) countText.textContent = `${totalItemsCombined} item${totalItemsCombined > 1 ? 's' : ''}`;
                 if (priceText) priceText.textContent = `₹${(grandTotalCombined + deliveryFee).toFixed(2)}`;
 
-                // Gather item images for the stack effect
                 if (imagesStack) {
                     imagesStack.innerHTML = '';
                     let collectedImages = [];
 
-                    // Collect snack images
                     window.cartSnacksArray.forEach(snack => {
                         const matched = window.storeInventoryProducts.find(p => p.name === snack.name);
                         const img = matched ? (matched.imageUrl || matched.image || '') : '';
                         if (img) collectedImages.push(img);
                     });
 
-                    // Take up to 3 distinct product/document images to stack
                     let displayImgs = collectedImages.slice(0, 3);
                     if (displayImgs.length === 0) {
-                        // Fallback icon if no product image found
                         imagesStack.innerHTML = `<div style="width:34px; height:34px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--blinkit-green); font-size:0.85rem; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🛒</div>`;
                     } else {
                         displayImgs.forEach((imgUrl, idx) => {
@@ -912,7 +918,7 @@
                 const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
                 const data = await res.json();
                 if (data && data.display_name) document.getElementById('mapSelectedAddressInput').value = data.display_name;
-            }  catch (e) { document.getElementById('mapSelectedAddressInput').value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`; }
+            } catch (e) { document.getElementById('mapSelectedAddressInput').value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`; }
         }
 
         function toggleUserDrawer(open) {

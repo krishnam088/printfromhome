@@ -389,6 +389,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modal) modal.style.display = 'none';
     }
 
+    // --- NEW: Profile Gmail Update Function for Existing Users ---
+    window.updateUserGmailProfile = async function() {
+        const emailInput = document.getElementById('userProfileEmailField');
+        if (!emailInput || !emailInput.value.trim()) { alert("⚠️ Please enter a valid Gmail address!"); return; }
+        
+        const activeUserToken = localStorage.getItem('printAppUser');
+        try {
+            const res = await fetch('/api/auth/update-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ identity: activeUserToken, email: emailInput.value.trim() })
+            });
+            const data = await res.json();
+            if (data.success) alert("✅ Gmail updated successfully!");
+            else alert("❌ " + data.message);
+        } catch (e) {
+            alert("❌ Failed to update Gmail.");
+        }
+    }
+
     // ==========================================
     // 📱 PERMANENT USER APP INSTALL HANDLER
     // ==========================================
@@ -552,12 +572,13 @@ document.addEventListener('DOMContentLoaded', () => {
             synchronizeWalletInterfaceBalance();
             checkStoreStatusRealtime();
         } else {
-            if(authScreen) { authScreen.classList.add('app-hidden'); authScreen.style.display = 'flex'; }
+            if(authScreen) { authScreen.classList.remove('app-hidden'); authScreen.style.display = 'flex'; }
         }
         calculateTotal();
         updateFloatingCartBar();
     }, 2500);
 
+    // --- UPDATED AUTH FORM (Handles Signup with Mandatory Gmail) ---
     if (authForm) {
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -571,6 +592,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (isSignUpModeActive) {
                 payloadData.name = authName.value.trim();
+                const emailField = document.getElementById('authEmailInput');
+                payloadData.email = emailField ? emailField.value.trim() : '';
+                if (!payloadData.email) {
+                    alert("⚠️ Gmail address is required for registration!");
+                    return;
+                }
             }
 
             try {
@@ -816,7 +843,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         window.executeLiveTimelineStateStepper(order.status);
 
-        // ❌ Dynamic Cancel Order Button Handler
         let cancelSectionNode = document.getElementById('dynamicCancelOrderSection');
         if (!cancelSectionNode) {
             cancelSectionNode = document.createElement('div');
