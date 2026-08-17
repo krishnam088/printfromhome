@@ -210,7 +210,7 @@
                     <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a;">Review Cart & Checkout</h3>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <button type="button" onclick="clearEntireCartData()" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; cursor:pointer;">🗑️ Clean Cart</button>
+                    <button type="button" onclick="clearEntireCartData()" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; padding:5px 10px; border-radius:8px; font-size:0.72rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px;">Clear</button>
                     <span style="font-size:0.8rem; font-weight:700; color:var(--blinkit-green); background:#f0fdf4; padding:4px 10px; border-radius:8px; cursor:pointer;" onclick="toggleCartDrawer(false)">Close</span>
                 </div>
             </div>
@@ -485,7 +485,7 @@
             </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
-            <button type="button" onclick="clearEntireCartData()" style="background:#ef4444; color:white; border:none; padding:6px 10px; border-radius:8px; font-size:0.7rem; font-weight:800; cursor:pointer;" title="Clear Cart">❌ Clear</button>
+            <button type="button" onclick="clearEntireCartData()" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:8px; font-size:0.72rem; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px;" title="Clear Cart">Clear</button>
             <div class="floating-cart-right" style="display:flex; align-items:center; gap:6px; font-size:0.9rem; font-weight:800; background:rgba(0,0,0,0.15); padding:8px 14px; border-radius:12px; cursor:pointer;" onclick="toggleCartDrawer(true)">
                 <span>View cart</span> &rarr;
             </div>
@@ -751,7 +751,7 @@
                 row.style = "display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:10px 14px; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 1px 4px rgba(0,0,0,0.02);";
                 row.innerHTML = `
                     <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden; cursor:pointer;" onclick='openProductDetailModal(${JSON.stringify(matchedProd || {name: snack.name, sellingPrice: snack.price, stockQuantity: 99, imageUrl: finalImgUrl})})'>
-                        ${finalImgUrl ? `<img src="${finalImgUrl}" style="width:36px; height:36px; object-fit:cover; border-radius:6px;" />` : `<span style="font-size:1.4rem;">📦</span>`}
+                        ${finalImgUrl ? `<img src="${finalImgUrl}" style="width:38px; height:38px; object-fit:cover; border-radius:8px;" />` : `<span style="font-size:1.4rem;">📦</span>`}
                         <div style="overflow:hidden;">
                             <h4 style="font-size:0.8rem; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${snack.name}">${snack.name}</h4>
                             <p style="font-size:0.7rem; color:#64748b; font-weight:600;">₹${snack.price} each</p>
@@ -779,7 +779,7 @@
                     row.style = "display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:10px 14px; border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 1px 4px rgba(0,0,0,0.02);";
                     row.innerHTML = `
                         <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
-                            <span style="font-size:1.4rem;">📄</span>
+                            <div style="width:38px; height:38px; background:#f1f5f9; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;">📄</div>
                             <div style="overflow:hidden;">
                                 <h4 style="font-size:0.8rem; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${job.fileName}">${job.fileName}</h4>
                                 <p style="font-size:0.68rem; color:var(--blinkit-green); font-weight:700;">${job.printType.toUpperCase()} (${job.pages}p)</p>
