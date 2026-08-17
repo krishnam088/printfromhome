@@ -339,11 +339,11 @@
                     </div>
                     
                     <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border: 1px solid #ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%; display: flex; justify-content: space-between; align-items: center;">
-    <div>
-        🚨 <b>Store is Closed!</b> We are not taking orders currently.
-    </div>
-    <button type="button" onclick="dismissStoreClosedNotice()" style="background: none; border: none; font-size: 1.3rem; font-weight: bold; color: #991b1b; cursor: pointer; padding: 0 5px;">&times;</button>
-</div>
+                        <div>
+                            🚨 <b>Store is Closed!</b> We are not taking orders currently.
+                        </div>
+                        <button type="button" onclick="dismissStoreClosedNotice()" style="background: none; border: none; font-size: 1.3rem; font-weight: bold; color: #991b1b; cursor: pointer; padding: 0 5px;">&times;</button>
+                    </div>
 
                     <div class="store-header-box">
                         <h2>Print Store</h2>
@@ -400,6 +400,7 @@
                 </div>
             </div>
 
+            <!-- 🚚 LIVE ORDER STATUS & DELIVERY SUPPORT TRACKING SECTION -->
             <div id="user_section_order_tracking" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%; text-align:left;">
                     <button type="button" class="back-to-upload-link" onclick="navigateDrawerSection('history')">&larr; Back to All Orders</button>
@@ -412,14 +413,41 @@
                         <div id="trackGrandTotalBadge" style="font-size:1.4rem; font-weight:900; color:var(--blinkit-green);">₹0.00</div>
                     </div>
 
-                    <div id="liveTrackingTimelineContainer">
-                        <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); margin-top:20px; text-transform:uppercase;">📦 Real-Time Package Journey</h4>
-                        <div class="tracking-timeline-box">
-                            <div class="timeline-step" id="step_pending"><div class="step-node-dot"></div><div class="step-meta-details"><p class="step-main-label">Order Received</p><p class="step-desc-label">Awaiting verification parameters sync</p></div></div>
-                            <div class="timeline-step" id="step_paid"><div class="step-node-dot"></div><div class="step-meta-details"><p class="step-main-label">Payment Confirmed</p><p class="step-desc-label">Order routed successfully</p></div></div>
-                            <div class="timeline-step" id="step_printing"><div class="step-node-dot"></div><div class="step-meta-details"><p class="step-main-label">Printing Document</p><p class="step-desc-label">HP Smart Tank running active logs</p></div></div>
-                            <div class="timeline-step" id="step_delivery"><div class="step-node-dot"></div><div class="step-meta-details"><p class="step-main-label">Out For Delivery</p><p class="step-desc-label">Delivery Executive arriving</p></div></div>
+                    <!-- Live Order Status Box -->
+                    <div style="margin-top:20px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 16px; padding: 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase;">Live Status</span>
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; color: var(--blinkit-green);">
+                                🟢 ACTIVE TRACKING
+                            </div>
                         </div>
+                        <h3 id="liveOrderStatusBadge" style="font-size: 1.2rem; font-weight: 900; color: var(--blinkit-green);">Processing Order...</h3>
+                    </div>
+
+                    <!-- Delivery Executive Info Box -->
+                    <div style="margin-top: 15px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 44px; height: 44px; background: #0f172a; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                                🛵
+                            </div>
+                            <div>
+                                <h4 style="font-size: 0.88rem; font-weight: 800; color: var(--text-main);" id="deliveryExecutiveName">Assigning Delivery Partner...</h4>
+                                <p style="font-size: 0.72rem; font-weight: 600; color: var(--text-sub); margin-top: 2px;" id="deliveryExecutivePhone">Will be assigned shortly</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <a id="callExecutiveBtn" href="tel:" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1rem;" title="Call Delivery Executive">📞</a>
+                        </div>
+                    </div>
+
+                    <!-- Help & Support Actions -->
+                    <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <a href="https://wa.me/917007626731?text=Hello%20Print%20From%20Home%20Support,%20I%20need%20help%20regarding%20my%20order." target="_blank" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; padding: 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 800; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            💬 WhatsApp Support
+                        </a>
+                        <a href="tel:7007626731" style="background: #fffbeb; border: 1px solid #fed7aa; color: #b45309; padding: 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 800; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            📞 Call Customer Care
+                        </a>
                     </div>
 
                     <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); margin-top:25px; text-transform:uppercase; border-bottom:1px dashed var(--border-color); padding-bottom:6px;">📄 Printable Items & Products Summary</h4>
@@ -483,6 +511,7 @@
             <h3 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Store is Currently Closed</h3>
             <p style="font-size: 0.88rem; color: #64748b; line-height: 1.6; margin-bottom: 20px; font-weight: 500;">We are currently not accepting any orders at the moment.</p>
             <button type="button" onclick="dismissStoreClosedNotice()" style="width: 100%; padding: 12px; background: #0f172a; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">Understood, Got It!</button>
+        </div>
     </div>
 
     <script>
