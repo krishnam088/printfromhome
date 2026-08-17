@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const nodemailer = require('nodemailer');
+const cron = require('node-cron'); // Added for auto festival scheduler
 require('dotenv').config();
 
 const app = express();
@@ -295,7 +296,53 @@ app.post('/api/auth/reset-password', async (req, res) => {
     }
 });
 
-// --- PERSONALIZED & PROFESSIONAL BROADCAST NOTIFICATION API ---
+// --- HELPER FUNCTION TO SEND BROADCAST EMAILS ---
+async function sendBroadcastEmail(subject, message) {
+    const users = await User.find({});
+    const recipients = users.filter(u => u.email && u.email.includes('@'));
+    if (recipients.length === 0) return;
+
+    for (const user of recipients) {
+        try {
+            const personalizedHTML = `
+                <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <div style="background: #0070f3; color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+                        <h2 style="margin: 0; font-size: 1.3rem; letter-spacing: 0.5px;">Print From Home</h2>
+                        <p style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.9;">Professional Printing & Delivery Services</p>
+                    </div>
+                    <div style="background: #ffffff; padding: 24px; border-radius: 0 0 10px 10px; color: #1e293b;">
+                        <p style="font-size: 1rem; color: #0f172a; margin-top: 0;">Hello <strong>${user.name || 'Valued Customer'}</strong>,</p>
+                        <p style="font-size: 0.95rem; line-height: 1.6; color: #475569; white-space: pre-line;">${message}</p>
+                        <div style="margin: 25px 0; text-align: center;">
+                            <a href="https://printfromhome.onrender.com" style="background-color: #0070f3; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.95rem; display: inline-block;">Visit Store & Order Now</a>
+                        </div>
+                        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                        <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 0;">Print From Home, Varanasi | You are receiving this update as a registered user.</p>
+                    </div>
+                </div>
+            `;
+
+            await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'api-key': process.env.SMTP_PASS,
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sender: { name: "Print From Home", email: "printfromhomesupport@gmail.com" },
+                    to: [{ email: user.email, name: user.name || 'Customer' }],
+                    subject: subject,
+                    htmlContent: personalizedHTML
+                })
+            });
+        } catch (innerErr) {
+            console.error(`Failed to send via API to ${user.email}:`, innerErr);
+        }
+    }
+}
+
+// --- PERSONALIZED & PROFESSIONAL MANUAL BROADCAST API ---
 app.post('/api/admin/send-notification', async (req, res) => {
     try {
         const { subject, message } = req.body;
@@ -310,58 +357,38 @@ app.post('/api/admin/send-notification', async (req, res) => {
             return res.status(400).json({ success: false, message: "No users with email found!" });
         }
 
-        // Response turant bhej diya taaki admin panel hang na ho
         res.json({ success: true, message: `✅ Personalized broadcasting to ${recipients.length} users started in background!` });
 
-        // Background loop to send customized professional emails to each user
-        for (const user of recipients) {
-            try {
-                const personalizedHTML = `
-                    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                        <div style="background: #0070f3; color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
-                            <h2 style="margin: 0; font-size: 1.3rem; letter-spacing: 0.5px;">Print From Home</h2>
-                            <p style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.9;">Professional Printing & Delivery Services</p>
-                        </div>
-                        <div style="background: #ffffff; padding: 24px; border-radius: 0 0 10px 10px; color: #1e293b;">
-                            <p style="font-size: 1rem; color: #0f172a; margin-top: 0;">Hello <strong>${user.name || 'Valued Customer'}</strong>,</p>
-                            <p style="font-size: 0.95rem; line-height: 1.6; color: #475569; white-space: pre-line;">${message}</p>
-                            <div style="margin: 25px 0; text-align: center;">
-                                <a href="https://printfromhome.onrender.com" style="background-color: #0070f3; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.95rem; display: inline-block;">Visit Store & Order Now</a>
-                            </div>
-                            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
-                            <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 0;">Print From Home, Varanasi | You are receiving this update as a registered user.</p>
-                        </div>
-                    </div>
-                `;
-
-                const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-                    method: 'POST',
-                    headers: {
-                        'accept': 'application/json',
-                        'api-key': process.env.SMTP_PASS,
-                        'content-type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        sender: { name: "Print From Home", email: "printfromhomesupport@gmail.com" },
-                        to: [{ email: user.email, name: user.name || 'Customer' }],
-                        subject: subject,
-                        htmlContent: personalizedHTML
-                    })
-                });
-
-                const result = await response.json();
-                if (!response.ok) {
-                    console.error(`Brevo API Error for ${user.email}:`, result);
-                }
-            } catch (innerErr) {
-                console.error(`Failed to send via API to ${user.email}:`, innerErr);
-            }
-        }
+        // Call helper function asynchronously
+        sendBroadcastEmail(subject, message);
     } catch (err) {
         console.error("Email Broadcast Error:", err);
         if (!res.headersSent) {
             res.status(500).json({ success: false, message: "Email send failed: " + err.message });
         }
+    }
+});
+
+// --- AUTOMATIC FESTIVAL SCHEDULER (Runs every day at 12:00 AM) ---
+const festivalCalendar = {
+    "01-01": { subject: "Happy New Year: Exclusive Printing Offers!", message: "Happy New Year! Start your year with our exclusive calendar offers and special discounts on all prints." },
+    "15-08": { subject: "Happy Independence Day: Special Printing Deals!", message: "Happy Independence Day! Celebrate with our special printing discounts available today at Print From Home." },
+    "24-10": { subject: "Happy Diwali: Exclusive Festive Printing Deals!", message: "We are excited to share our latest festive calendar deals with you! As a valued member of Print From Home, we are offering you an exclusive discount on all your printing requirements." }
+};
+
+cron.schedule('0 0 * * *', async () => {
+    try {
+        const today = new Date();
+        const dateKey = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (festivalCalendar[dateKey]) {
+            console.log(`🎉 Festival match found for date: ${dateKey}. Initiating automatic broadcast...`);
+            const festival = festivalCalendar[dateKey];
+            await sendBroadcastEmail(festival.subject, festival.message);
+            console.log(`✅ Automatic festival broadcast completed for ${dateKey}`);
+        }
+    } catch (cronErr) {
+        console.error("Automatic Cron Scheduler Error:", cronErr);
     }
 });
 
@@ -719,25 +746,6 @@ app.get('/api/admin/orders', async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
-
-const handleStatusUpdate = async (req, res) => {
-    try {
-        const orderId = req.params.orderId || req.body.orderId;
-        const status = req.body.status;
-        const order = await Order.findOne({ orderId });
-        if (order) {
-            if (order.status && order.status.includes('Delivered')) {
-                return res.status(400).json({ success: false, message: "Cannot modify delivered order." });
-            }
-            order.status = status; 
-            await order.save();
-            return res.json({ success: true });
-        }
-        res.status(404).json({ success: false });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-};
 
 app.post('/api/admin/orders/update-status', handleStatusUpdate);
 app.post('/api/admin/orders/:orderId/status', handleStatusUpdate);
