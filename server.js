@@ -387,7 +387,6 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
 
         const { totalAmount, configDetails, address, customerName, phone, paymentMode } = req.body;
         
-        // FIX: Properly parse and clean amount
         let finalAmountNumeric = parseFloat(String(totalAmount || '42').replace(/[₹,]/g, ''));
         if (isNaN(finalAmountNumeric)) finalAmountNumeric = 42;
 
@@ -428,7 +427,6 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
             return res.status(201).json({ success: true, isCod: true, order_id: numericId });
         }
 
-        // Online Payment Gateway Order Creation
         let razorpayOrder;
         try {
             razorpayOrder = await razorpay.orders.create({ 
@@ -493,6 +491,32 @@ app.post('/api/verify-payment', async (req, res) => {
             return res.json({ success: true });
         }
         res.status(404).json({ success: false, message: "Order not found" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// --- CANCEL ORDER API ---
+app.post('/api/orders/cancel', async (req, res) => {
+    try {
+        const { orderId } = req.body;
+        const order = await Order.findOne({ orderId });
+        
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found!" });
+        }
+
+        if (order.status && (order.status.includes('Out for Delivery') || order.status.includes('Delivered'))) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Order is Out for Delivery or Delivered. Cannot be cancelled. Please contact customer support." 
+            });
+        }
+
+        order.status = 'Cancelled by Customer';
+        await order.save();
+
+        res.json({ success: true, message: "Order cancelled successfully!" });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

@@ -786,6 +786,60 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         window.executeLiveTimelineStateStepper(order.status);
+
+        // ❌ Dynamic Cancel Order Button Handler
+        let cancelSectionNode = document.getElementById('dynamicCancelOrderSection');
+        if (!cancelSectionNode) {
+            cancelSectionNode = document.createElement('div');
+            cancelSectionNode.id = 'dynamicCancelOrderSection';
+            cancelSectionNode.style.marginTop = '20px';
+            const parentTrackingBox = document.querySelector('#user_section_order_tracking > div');
+            if (parentTrackingBox) parentTrackingBox.appendChild(cancelSectionNode);
+        }
+
+        const isLocked = order.status && (order.status.includes('Out for Delivery') || order.status.includes('Delivered') || order.status.includes('Cancelled'));
+        
+        if (isLocked) {
+            cancelSectionNode.innerHTML = `
+                <div style="background:#fef2f2; border:1px solid #fecaca; padding:12px; border-radius:12px; text-align:center;">
+                    <p style="font-size:0.78rem; font-weight:700; color:#991b1b;">🔒 Cancellation Not Available</p>
+                    <p style="font-size:0.72rem; color:#b91c1c; margin-top:2px;">Order is ${order.status}. Please contact customer care for assistance.</p>
+                </div>
+            `;
+        } else {
+            cancelSectionNode.innerHTML = `
+                <button type="button" onclick="executeUserCancelOrder('${order.orderId}')" style="width:100%; padding:12px; background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:12px; font-weight:800; font-size:0.85rem; cursor:pointer;">
+                    ❌ Cancel Order
+                </button>
+            `;
+        }
+    }
+
+    window.executeUserCancelOrder = async function(orderId) {
+        if (!confirm("⚠️ Are you sure you want to cancel this order?")) return;
+        try {
+            const res = await fetch('/api/orders/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("✅ Order cancelled successfully!");
+                const activeUserToken = localStorage.getItem('printAppUser');
+                const localHistory = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
+                localHistory.forEach(item => {
+                    if (item.orderId === orderId) item.status = "Cancelled by Customer";
+                });
+                localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(localHistory));
+                renderOrderHistoryUI(activeUserToken);
+                navigateDrawerSection('history');
+            } else {
+                alert(`⚠️ ${data.message}`);
+            }
+        } catch (e) {
+            alert("❌ Failed to cancel order. Please contact customer care.");
+        }
     }
 
     function renderOrderHistoryUI(userId, renderHistoryContainerClean = true) {
@@ -810,7 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
                     <span style="color:var(--blinkit-green); font-weight:700;">👁️ Tap to View Details &rarr;</span>
-                    <span style="background:#fff3e0; padding:2px 6px; border-radius:4px; color:#e67e22; font-weight:600;">${order.status || 'Active'}</span>
+                    <span style="background:${order.status && order.status.includes('Cancelled') ? '#fee2e2' : '#fff3e0'}; padding:2px 6px; border-radius:4px; color:${order.status && order.status.includes('Cancelled') ? '#dc2626' : '#e67e22'}; font-weight:600;">${order.status || 'Active'}</span>
                 </div>
             `;
             ordersHistoryContainer.appendChild(itemDiv);
