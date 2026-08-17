@@ -24,8 +24,6 @@ mongoose.connect(process.env.MONGO_URI, {
 })
     .then(async () => {
         console.log('✅ Connected to MongoDB Atlas successfully!');
-        // Fresh start wipe helper (uncomment if you want to wipe old data on restart)
-        // await Order.deleteMany({}); console.log('🧹 Wiped old orders for fresh start!');
     })
     .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
