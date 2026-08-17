@@ -33,6 +33,29 @@ document.addEventListener('DOMContentLoaded', () => {
     window.globalRawOrdersCache = [];
 
     // ==========================================
+    // 🔔 PUSH NOTIFICATION PERMISSION REQUEST
+    // ==========================================
+    async function requestUserPushNotificationPermission() {
+        try {
+            if (!("Notification" in window)) {
+                console.log("This browser does not support notifications.");
+                return;
+            }
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                console.log('✅ Notification permission granted.');
+            } else {
+                console.log('❌ Notification permission denied.');
+            }
+        } catch (err) {
+            console.error('Push permission error:', err);
+        }
+    }
+
+    // App load hone ke thodi der baad popup permission trigger karein
+    setTimeout(requestUserPushNotificationPermission, 4000);
+
+    // ==========================================
     // 🕒 REAL-TIME STORE STATUS AUTO-CHECKER & DISMISS HANDLER
     // ==========================================
     async function checkStoreStatusRealtime() {
