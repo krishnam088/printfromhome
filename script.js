@@ -33,6 +33,56 @@ document.addEventListener('DOMContentLoaded', () => {
     window.globalRawOrdersCache = [];
 
     // ==========================================
+    // 🕒 REAL-TIME STORE STATUS AUTO-CHECKER
+    // ==========================================
+    async function checkStoreStatusRealtime() {
+        try {
+            const res = await fetch('/api/store-status');
+            const data = await res.json();
+            
+            const storeClosedNotice = document.getElementById('storeClosedNoticeBox');
+            const storeClosedModal = document.getElementById('storeClosedPopupModal');
+            const submitOrderBtn = document.getElementById('submitOrderBtn');
+            const userShopStatus = document.getElementById('userShopStatus');
+            
+            if (data.success) {
+                if (!data.isOpen) {
+                    // Store is CLOSED
+                    if (storeClosedNotice) storeClosedNotice.classList.remove('hidden');
+                    if (storeClosedModal) storeClosedModal.style.display = 'flex';
+                    if (userShopStatus) {
+                        userShopStatus.textContent = 'CLOSED 🔴';
+                        userShopStatus.className = 'shop-status-text-badge closed';
+                    }
+                    if (submitOrderBtn) {
+                        submitOrderBtn.disabled = true;
+                        submitOrderBtn.style.background = '#94a3b8';
+                        submitOrderBtn.textContent = 'Store is Closed 🚫';
+                    }
+                } else {
+                    // Store is OPEN
+                    if (storeClosedNotice) storeClosedNotice.classList.add('hidden');
+                    if (storeClosedModal) storeClosedModal.style.display = 'none';
+                    if (userShopStatus) {
+                        userShopStatus.textContent = 'OPEN 🟢';
+                        userShopStatus.className = 'shop-status-text-badge open';
+                    }
+                    if (submitOrderBtn) {
+                        submitOrderBtn.disabled = false;
+                        submitOrderBtn.style.background = 'var(--blinkit-green)';
+                        submitOrderBtn.textContent = 'Add Print Job to Cart';
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Store status sync error:", e);
+        }
+    }
+
+    // Har 3 seconds mein status check karega taaki admin ke toggle karte hi turant user app pe reflect ho
+    setInterval(checkStoreStatusRealtime, 3000);
+
+    // ==========================================
     // 🛒 FETCH LIVE ADMIN PRODUCTS & INVENTORY
     // ==========================================
     async function loadDynamicStoreProducts() {
@@ -444,6 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadDynamicStoreProducts();
             renderOrderHistoryUI(sessionActiveUser);
             synchronizeWalletInterfaceBalance();
+            checkStoreStatusRealtime();
         } else {
             if(authScreen) { authScreen.classList.remove('app-hidden'); authScreen.style.display = 'flex'; }
         }
@@ -539,6 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadDynamicStoreProducts();
                     renderOrderHistoryUI(activeUserName);
                     synchronizeWalletInterfaceBalance();
+                    checkStoreStatusRealtime();
                 } else {
                     alert(`⚠️ Oye Bhai: ${data.message}`);
                 }
