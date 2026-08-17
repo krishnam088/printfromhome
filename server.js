@@ -116,14 +116,23 @@ app.get('/manifest-festive.json', (req, res) => {
 app.get('/sw-admin.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw-admin.js')); });
 app.get('/sw.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw.js')); });
 
-// Store Status APIs
+// Store Status APIs with Automatic Time-Based Check (7:00 AM to 12:00 AM)
 app.get('/api/store-status', async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
         if (!config) {
             config = await StoreConfig.create({ isOpen: true, updatedAt: new Date().toISOString() });
         }
-        res.json({ success: true, isOpen: config.isOpen });
+
+        // Automatic Time-Based Check (7 AM to 12 AM Midnight)
+        const now = new Date();
+        const currentHour = now.getHours(); // 0 to 23 format
+        const isTimeWithinOperatingHours = currentHour >= 7 && currentHour < 24;
+
+        // Store is open only if manual admin toggle is true AND current time is within 7 AM - 12 AM
+        const finalIsOpen = isTimeWithinOperatingHours && config.isOpen;
+
+        res.json({ success: true, isOpen: finalIsOpen, manualOverride: config.isOpen });
     } catch (err) {
         res.status(500).json({ success: false, isOpen: true });
     }
@@ -353,7 +362,13 @@ app.post('/api/admin/verify-item', async (req, res) => {
 app.post('/api/create-order', upload.any(), async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
-        const isOpen = config ? config.isOpen : true;
+        
+        // Auto Time Check + Manual Config Check
+        const now = new Date();
+        const currentHour = now.getHours();
+        const isTimeWithinOperatingHours = currentHour >= 7 && currentHour < 24;
+        const isOpen = config ? (isTimeWithinOperatingHours && config.isOpen) : isTimeWithinOperatingHours;
+
         if (!isOpen) return res.status(403).json({ success: false, message: "Store is closed" });
 
         const { totalAmount, configDetails, address, customerName, phone, paymentMode } = req.body;
