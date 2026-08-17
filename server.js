@@ -116,7 +116,7 @@ app.get('/manifest-festive.json', (req, res) => {
 app.get('/sw-admin.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw-admin.js')); });
 app.get('/sw.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw.js')); });
 
-// Store Status APIs with Automatic Time-Based Check (7:00 AM to 12:00 AM)
+// Store Status API with IST Time Zone Check (7:00 AM to 10:00 PM) + Admin Toggle
 app.get('/api/store-status', async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
@@ -124,15 +124,22 @@ app.get('/api/store-status', async (req, res) => {
             config = await StoreConfig.create({ isOpen: true, updatedAt: new Date().toISOString() });
         }
 
-        // Automatic Time-Based Check (7 AM to 12 AM Midnight)
+        // Convert current server UTC time to IST (UTC + 5:30)
         const now = new Date();
-        const currentHour = now.getHours(); // 0 to 23 format
-        const isTimeWithinOperatingHours = currentHour >= 7 && currentHour < 24;
+        const utcHours = now.getUTCHours();
+        const utcMinutes = now.getUTCMinutes();
+        const istTotalMinutes = (utcHours * 60 + utcMinutes) + (5 * 60 + 30);
+        const istHours = Math.floor(istTotalMinutes / 60) % 24;
 
-        // Store is open only if manual admin toggle is true AND current time is within 7 AM - 12 AM
+        // Operating hours: 7 AM (7) to 10 PM (22)
+        const isTimeWithinOperatingHours = istHours >= 7 && istHours < 22;
+
+        // Optional: If you want strict auto time-off at 10 PM and auto on at 7 AM regardless of DB toggle, 
+        // OR respect database toggle only within 7 AM - 10 PM.
+        // Here, store opens only if admin toggle is true AND time is between 7 AM and 10 PM.
         const finalIsOpen = isTimeWithinOperatingHours && config.isOpen;
 
-        res.json({ success: true, isOpen: finalIsOpen, manualOverride: config.isOpen });
+        res.json({ success: true, isOpen: finalIsOpen, manualOverride: config.isOpen, currentIstHour: istHours });
     } catch (err) {
         res.status(500).json({ success: false, isOpen: true });
     }
@@ -358,15 +365,18 @@ app.post('/api/admin/verify-item', async (req, res) => {
     }
 });
 
-// Orders & Payments APIs (Using upload.any() for documents since product images use cloudinary storage)
+// Orders & Payments APIs
 app.post('/api/create-order', upload.any(), async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
         
-        // Auto Time Check + Manual Config Check
         const now = new Date();
-        const currentHour = now.getHours();
-        const isTimeWithinOperatingHours = currentHour >= 7 && currentHour < 24;
+        const utcHours = now.getUTCHours();
+        const utcMinutes = now.getUTCMinutes();
+        const istTotalMinutes = (utcHours * 60 + utcMinutes) + (5 * 60 + 30);
+        const istHours = Math.floor(istTotalMinutes / 60) % 24;
+        const isTimeWithinOperatingHours = istHours >= 7 && istHours < 22;
+        
         const isOpen = config ? (isTimeWithinOperatingHours && config.isOpen) : isTimeWithinOperatingHours;
 
         if (!isOpen) return res.status(403).json({ success: false, message: "Store is closed" });
@@ -388,7 +398,6 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
             } catch (e) {}
         }
 
-        // Filter uploaded files that belong to the document field
         const docFiles = req.files ? req.files.filter(f => f.fieldname === 'document') : [];
         const filesMappedList = docFiles.map(f => ({ name: f.originalname, filename: f.filename, url: f.path || f.url }));
         
