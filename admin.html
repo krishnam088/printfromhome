@@ -6,13 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Print From Home - Admin Control Center</title>
     
-    <!-- Isolated PWA Manifest for Admin App -->
     <link rel="manifest" href="/manifest-admin.json">
     <meta name="theme-color" content="#0070f3">
 
-    <!-- Chart.js for Dashboard Profit Graph -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Html5-Qrcode Scanner Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
     <style>
@@ -38,7 +35,6 @@
             overflow-x: hidden;
         }
 
-        /* SIDEBAR NAVIGATION */
         .admin-sidebar {
             width: 260px;
             background: var(--surface-card);
@@ -62,7 +58,6 @@
         }
         .sidebar-item:hover, .sidebar-item.active { background: var(--surface-card-hover); color: var(--text-main); }
 
-        /* MAIN CONTENT WRAPPER */
         .admin-main-content {
             margin-left: 260px;
             flex: 1;
@@ -71,7 +66,6 @@
             max-width: 1400px;
         }
 
-        /* HEADER & TOP CONTROLS */
         .admin-header {
             display: flex;
             flex-wrap: wrap;
@@ -96,7 +90,6 @@
             gap: 10px;
         }
 
-        /* TOGGLE BUTTONS & BADGES */
         .toggle-badge-btn {
             display: inline-flex;
             align-items: center;
@@ -121,11 +114,9 @@
             border: none; border-radius: 10px; font-weight: 700; font-size: 0.82rem; cursor: pointer;
         }
 
-        /* VIEW SECTIONS */
         .admin-section { display: none; }
         .admin-section.active { display: block; }
 
-        /* BARCODE SCANNER MODAL */
         #barcodeScannerModal {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 20000;
@@ -136,7 +127,6 @@
             max-width: 420px; width: 100%; border: 1px solid var(--border-color); text-align: center;
         }
 
-        /* ORDER HISTORY MODAL DRAWER */
         #oldOrdersArchiveModal {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 30000;
@@ -149,7 +139,6 @@
         }
         @keyframes slideLeft { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
-        /* STATS OVERVIEW CARDS */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -163,7 +152,6 @@
         .stat-title { font-size: 0.78rem; font-weight: 600; color: var(--text-sub); text-transform: uppercase; }
         .stat-num { font-size: 1.6rem; font-weight: 800; color: var(--text-main); }
 
-        /* LIVE ORDER QUEUE CONTAINER */
         .section-heading-bar {
             display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 4px;
         }
@@ -179,7 +167,6 @@
             background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px;
             padding: 20px; display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden;
         }
-        .order-card.new-order-pulse { border-color: var(--accent-yellow); box-shadow: 0 0 20px rgba(245,158,11,0.2); }
 
         .order-card-header {
             display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start;
@@ -217,7 +204,6 @@
         .btn-step.current-phase { background: var(--accent-yellow); color: black; border-color: var(--accent-yellow); font-weight: 800; }
         .btn-step:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        /* INVENTORY TABLE STYLING */
         .inventory-table {
             width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.82rem; background: var(--surface-card); border-radius: 12px; overflow: hidden;
         }
@@ -227,7 +213,6 @@
 
         #silentPrintFrame { display: none; width: 0; height: 0; border: 0; }
 
-        /* MOBILE RESPONSIVE MEDIA QUERY */
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .admin-sidebar {
@@ -254,16 +239,13 @@
 </head>
 <body>
 
-    <!-- Hidden Iframe for Direct Silent Auto-Printing -->
     <iframe id="silentPrintFrame"></iframe>
 
-    <!-- Barcode Scanner Modal with Camera + Manual Input -->
     <div id="barcodeScannerModal">
         <div class="scanner-card">
             <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 6px;">📷 Product Barcode & SKU Scanner</h3>
             <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 10px;">Use live camera or type SKU/UPC manually below.</p>
             
-            <!-- Live Camera View Container -->
             <div id="cameraScannerContainer" style="display:none; width: 100%; height: 180px; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 10px; position: relative;">
                 <div id="liveCameraVideoFeed" style="width: 100%; height: 100%;"></div>
                 <div style="position: absolute; inset: 0; border: 2px dashed rgba(16,185,129,0.7); pointer-events: none; z-index: 10;"></div>
@@ -288,7 +270,6 @@
         </div>
     </div>
 
-    <!-- ORDER HISTORY REGISTER DRAWER -->
     <div id="oldOrdersArchiveModal" onclick="toggleOldOrdersArchiveModal(false)">
         <div class="archive-drawer-card" onclick="event.stopPropagation()">
             <div style="padding: 18px 20px; background: var(--bg-dark); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
@@ -305,7 +286,6 @@
         </div>
     </div>
 
-    <!-- SIDEBAR NAVIGATION -->
     <nav class="admin-sidebar">
         <div class="sidebar-brand">
             <h2>Print<span>Admin</span></h2>
@@ -319,7 +299,6 @@
 
     <div class="admin-main-content">
         
-        <!-- HEADER ROW -->
         <header class="admin-header">
             <div class="brand-title">
                 <h1>Print From Home <span>Control Center</span></h1>
@@ -343,9 +322,7 @@
             </div>
         </header>
 
-        <!-- TAB 1: DASHBOARD & PROFIT GRAPH SECTION -->
         <div id="section_dashboard" class="admin-section">
-            <!-- STATS OVERVIEW -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <span class="stat-title">Total Orders</span>
@@ -373,14 +350,12 @@
             </div>
         </div>
 
-        <!-- TAB 2: ORDERS SECTION -->
         <div id="section_orders" class="admin-section">
             <div class="section-heading-bar">
                 <h2>📦 Today's Live Print & Product Queue (Newest First)</h2>
                 <button type="button" class="audio-test-btn" onclick="playLoudOrderChime()">🔔 Test Sound Alert</button>
             </div>
 
-            <!-- LIVE ORDERS CONTAINER -->
             <div class="order-queue-list" id="adminOrderQueue">
                 <div style="text-align: center; padding: 40px; color: var(--text-sub);">
                     ⏳ Connecting to live orders stream...
@@ -388,7 +363,6 @@
             </div>
         </div>
 
-        <!-- TAB 3: INVENTORY MANAGEMENT SECTION -->
         <div id="section_inventory" class="admin-section">
             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px; margin-bottom: 22px;">
                 <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px;">📊 Store Inventory, UPC Barcode & Restock Tracker</h3>
@@ -403,7 +377,6 @@
                     <input type="number" id="invSellingPrice" placeholder="Selling Price (₹)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
                     <input type="number" id="invQtyInput" placeholder="Add / Restock Qty" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
                     
-                    <!-- HD PRODUCT IMAGE UPLOAD FIELD -->
                     <div style="grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; background: var(--bg-dark); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
                         <label style="font-size: 0.75rem; color: var(--text-sub); font-weight:700;">HD Product Image (Optional):</label>
                         <input type="file" id="invImageFile" accept="image/*" style="color: white; font-size: 0.8rem;">
@@ -413,7 +386,6 @@
                 </div>
             </div>
 
-            <!-- DETAILED PRODUCTS TABLE -->
             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px;">
                 <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 10px;">📋 Live Store Stock Register</h3>
                 <div style="overflow-x: auto;">
@@ -832,25 +804,27 @@
             }
         }
 
-        // Helper for formatting IST time & numeric order IDs
+        // Helper for formatting IST time & strictly numeric order IDs
         function formatOrderDisplay(order) {
-            let cleanId = order.orderId;
-            if (cleanId.startsWith('COD-') || cleanId.startsWith('rzp_')) {
-                cleanId = cleanId.replace(/\D/g, '').slice(-6); // Extract last 6 numeric digits
-                if (!cleanId) cleanId = Math.floor(100000 + Math.random() * 900000);
+            let rawId = String(order.orderId || '');
+            let numericId = rawId.replace(/\D/g, '');
+            if (numericId.length > 6) {
+                numericId = numericId.slice(-6); // Last 6 digits
+            }
+            if (!numericId) {
+                numericId = Math.floor(100000 + Math.random() * 900000);
             }
             
-            // Format timestamp / date in IST
             let dateObj = order.timestamp ? new Date(order.timestamp) : new Date();
             let istString = dateObj.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
-            return { cleanId, istString, rawDateObj: dateObj };
+            return { cleanId: numericId, istString, rawDateObj: dateObj };
         }
 
         function toggleOldOrdersArchiveModal(open) {
             document.getElementById('oldOrdersArchiveModal').style.display = open ? 'flex' : 'none';
             if (open) {
                 if (!document.getElementById('historyDateFilter').value) {
-                    document.getElementById('historyDateFilter').value = new Date().toISOString().split('T')[0];
+                    document.getElementById('historyDateFilter').value = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
                 }
                 renderOrderHistoryList();
             }
@@ -950,10 +924,6 @@
                 renderOrdersList(orders);
             } catch (err) {
                 console.warn("Stream warning:", err);
-                const container = document.getElementById('adminOrderQueue');
-                if (container && container.innerHTML.includes('Connecting')) {
-                    container.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--accent-yellow);">⚠️ Reconnecting to live orders stream...</div>`;
-                }
             }
         }
 
@@ -1014,7 +984,6 @@
                         </div>
                     </div>
 
-                    <!-- Collapsible Order Details Panel -->
                     <div id="orderDetailsPanel_${order.orderId}" style="display: ${isDrawerOpen ? 'block' : 'none'}; background: rgba(15,23,42,0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
                         <div class="order-customer-box" style="margin-bottom: 12px;">
                             <div class="cust-field"><b>Customer Name</b><span>${order.customerName || 'Customer'}</span></div>
@@ -1053,10 +1022,9 @@
                         ` : ''}
                     </div>
 
-                    <!-- 4-Stage Stepper -->
                     <div class="stepper-actions-bar">
                         <span class="stepper-label">Set Status:</span>
-                        <button type="button" class="btn-step ${currentStatus === 'Paid / Ready for Print' || currentStatus === 'COD / Ready for Print' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Paid / Ready for Print')">1. Ready</button>
+                        <button type="button" class="btn-step ${currentStatus.includes('Ready') ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Paid / Ready for Print')">1. Ready</button>
                         <button type="button" class="btn-step ${currentStatus === 'Printing' ? 'current-phase' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Printing')">2. Processing</button>
                         <button type="button" class="btn-step ${currentStatus === 'Out for Delivery' ? 'current-phase' : ''}" ${!allProductsVerified ? 'disabled title="Verify all items first!"' : ''} onclick="updateOrderStatus('${order.orderId}', 'Out for Delivery')">3. Out for Delivery</button>
                         <button type="button" class="btn-step ${currentStatus === 'Delivered' ? 'active' : ''}" onclick="updateOrderStatus('${order.orderId}', 'Delivered')">4. Delivered</button>
@@ -1079,21 +1047,17 @@
                 return;
             }
 
-            const nowIst = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
-            const todayDateKey = new Date(nowIst).toDateString();
-
+            const todayDateKey = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // YYYY-MM-DD in IST
             let liveHtml = '';
 
-            // Sort orders newest first
             const sorted = [...orders].sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
 
             sorted.forEach(order => {
                 const { rawDateObj } = formatOrderDisplay(order);
-                const orderDateKey = rawDateObj.toDateString();
-                const isToday = (orderDateKey === todayDateKey);
-
-                // Show only today's orders in the main active queue
-                if (isToday) {
+                const orderDateKey = rawDateObj.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+                
+                // Strict check: Only show orders whose date matches today in IST
+                if (orderDateKey === todayDateKey) {
                     liveHtml += buildOrderCardHtml(order);
                 }
             });
@@ -1102,7 +1066,7 @@
                 <div style="text-align: center; padding: 40px; background: var(--surface-card); border-radius: 16px; border: 1px solid var(--border-color);">
                     <div style="font-size: 2.5rem; margin-bottom: 8px;">📭</div>
                     <h3>No Active Orders Today</h3>
-                    <p style="font-size: 0.78rem; color: var(--text-sub); margin-top: 4px;">Previous orders have been safely moved to Order History.</p>
+                    <p style="font-size: 0.78rem; color: var(--text-sub); margin-top: 4px;">Previous orders are saved in Order History.</p>
                 </div>
             `;
         }
@@ -1124,14 +1088,12 @@
 
             sorted.forEach(order => {
                 const { cleanId, rawDateObj } = formatOrderDisplay(order);
-                const orderDateIso = rawDateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+                const orderDateIso = rawDateObj.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 
-                // Apply Date Filter
                 if (dateFilterVal && orderDateIso !== dateFilterVal) {
                     return;
                 }
 
-                // Apply Search Filter (by Order ID or Customer Name)
                 if (searchVal) {
                     const matchId = cleanId.toLowerCase().includes(searchVal) || order.orderId.toLowerCase().includes(searchVal);
                     const matchName = (order.customerName || '').toLowerCase().includes(searchVal);
@@ -1150,7 +1112,6 @@
         fetchLiveOrdersStream();
         setInterval(fetchLiveOrdersStream, 3500);
 
-        // Restore active tab after page refresh
         const savedTab = localStorage.getItem('admin_active_tab') || 'dashboard';
         switchAdminTab(savedTab);
     </script>

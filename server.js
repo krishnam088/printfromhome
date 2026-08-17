@@ -12,14 +12,12 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname)); 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Connect to MongoDB Atlas using MONGO_URI from Render Environment Variables
 mongoose.connect(process.env.MONGO_URI, {
     serverSelectionTimeoutMS: 30000, 
     socketTimeoutMS: 45000
@@ -27,7 +25,6 @@ mongoose.connect(process.env.MONGO_URI, {
     .then(() => console.log('✅ Connected to MongoDB Atlas successfully!'))
     .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
-// Configure Cloudinary Storage for Permanent Image Hosting
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'kvooufhc',
     api_key: process.env.CLOUDINARY_API_KEY || '421693327289623',
@@ -43,7 +40,6 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage: storage });
 
-// Mongoose Schemas & Models
 const userSchema = new mongoose.Schema({
     name: String,
     identity: { type: String, unique: true }, 
@@ -89,17 +85,15 @@ const productSchema = new mongoose.Schema({
     stockQuantity: Number,
     totalSold: { type: Number, default: 0 },
     barcode: { type: String, default: '' },
-    imageUrl: { type: String, default: '' } // Permanent Cloudinary Secure URL
+    imageUrl: { type: String, default: '' }
 });
 const Product = mongoose.model('Product', productSchema);
 
-// Razorpay Setup
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_Sz27MnobxedYSU', 
     key_secret: process.env.RAZORPAY_KEY_SECRET || 'PcaWJEUMGjhn7Cfa04IlzYd9'
 });
 
-// Web entry & Manifest cache control routes
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/admin-panel', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
 
@@ -116,7 +110,6 @@ app.get('/manifest-festive.json', (req, res) => {
 app.get('/sw-admin.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw-admin.js')); });
 app.get('/sw.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw.js')); });
 
-// Store Status API with IST Time Zone Check (7:00 AM to 10:00 PM) + Admin Toggle
 app.get('/api/store-status', async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
@@ -143,9 +136,7 @@ const handleStoreToggle = async (req, res) => {
     try {
         const { isOpen } = req.body;
         let config = await StoreConfig.findOne();
-        if (!config) {
-            config = new StoreConfig();
-        }
+        if (!config) { config = new StoreConfig(); }
         config.isOpen = Boolean(isOpen);
         config.updatedAt = new Date().toISOString();
         await config.save();
@@ -158,7 +149,6 @@ const handleStoreToggle = async (req, res) => {
 app.post('/api/store-status/toggle', handleStoreToggle);
 app.post('/api/admin/toggle-store', handleStoreToggle);
 
-// --- Auth APIs ---
 app.post('/api/auth/signup', async (req, res) => {
     try {
         const { name, identity, password } = req.body;
@@ -179,7 +169,6 @@ app.post('/api/auth/signup', async (req, res) => {
         await newUser.save();
         res.status(201).json({ success: true, userId: newUser.identity, name: newUser.name });
     } catch (err) {
-        console.error("Signup Error:", err);
         res.status(500).json({ success: false, message: "Server error" });
     }
 });
@@ -193,12 +182,10 @@ app.post('/api/auth/login', async (req, res) => {
         if (!user) return res.status(401).json({ success: false, message: "Invalid mobile number or password!" });
         res.json({ success: true, name: user.name, identity: user.identity });
     } catch (err) {
-        console.error("Login Error:", err);
         res.status(500).json({ success: false, message: "Server error" });
     }
 });
 
-// --- INVENTORY MANAGEMENT & PUBLIC PRODUCTS API ---
 app.post('/api/admin/inventory/add', upload.single('productImage'), async (req, res) => {
     try {
         const { sku, name, purchasePrice, sellingPrice, quantity, barcode, externalImageUrl } = req.body;
@@ -261,10 +248,7 @@ app.get('/api/admin/inventory/report', async (req, res) => {
         res.json({
             success: true,
             products,
-            financials: {
-                totalStockValue,
-                totalProfitEarned: totalPotentialProfit
-            }
+            financials: { totalStockValue, totalProfitEarned: totalPotentialProfit }
         });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -280,7 +264,6 @@ app.get('/api/store/products', async (req, res) => {
     }
 });
 
-// --- ADMIN STATS API ---
 app.get('/api/admin/stats', async (req, res) => {
     try {
         const orders = await Order.find({ status: { $ne: 'Pending Payment' } });
@@ -302,7 +285,6 @@ app.get('/api/admin/stats', async (req, res) => {
     }
 });
 
-// --- ITEM-BY-ITEM UPC / BARCODE VERIFICATION API ---
 app.post('/api/admin/verify-item', async (req, res) => {
     try {
         const { orderId, barcode, skuOrName } = req.body;
@@ -318,7 +300,6 @@ app.post('/api/admin/verify-item', async (req, res) => {
         }
 
         let targetItemName = product.name;
-
         let configItems = order.configDetails || [];
         if (typeof configItems === 'string') {
             try { configItems = JSON.parse(configItems); } catch(e) { configItems = []; }
@@ -358,7 +339,6 @@ app.post('/api/admin/verify-item', async (req, res) => {
     }
 });
 
-// Helper function for stock deduction
 async function deductStockForOrder(parsedConfig) {
     if (parsedConfig && parsedConfig.length > 0) {
         for (const item of parsedConfig) {
@@ -377,7 +357,6 @@ async function deductStockForOrder(parsedConfig) {
     }
 }
 
-// Orders & Payments APIs
 app.post('/api/create-order', upload.any(), async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
@@ -390,7 +369,6 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
         const isTimeWithinOperatingHours = istHours >= 7 && istHours < 22;
         
         const isOpen = config ? (isTimeWithinOperatingHours && config.isOpen) : isTimeWithinOperatingHours;
-
         if (!isOpen) return res.status(403).json({ success: false, message: "Store is closed" });
 
         const { totalAmount, configDetails, address, customerName, phone, paymentMode } = req.body;
@@ -416,13 +394,12 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
         let parsedConfig = [];
         try { parsedConfig = configDetails ? JSON.parse(configDetails) : []; } catch(e){}
 
-        // If Cash on Delivery, deduct stock immediately and create active order
         if (selectedPaymentMode === 'cod') {
             await deductStockForOrder(parsedConfig);
 
-            const codOrderId = 'COD-' + Date.now();
+            const numericCodId = String(Math.floor(100000 + Math.random() * 900000));
             const newOrder = new Order({
-                orderId: codOrderId,
+                orderId: numericCodId,
                 customerName: parsedCustomerName,
                 phone: parsedPhone,
                 files: filesMappedList,
@@ -436,17 +413,16 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
                 address: address || 'N/A',
                 amount: finalAmount,
                 totalAmount: finalAmount,
-                status: 'COD / Ready for Print',
-                date: new Date().toLocaleString(),
+                status: 'Paid / Ready for Print',
+                date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
                 timestamp: new Date().toISOString(),
                 paymentId: 'CASH ON DELIVERY'
             });
 
             await newOrder.save();
-            return res.status(201).json({ success: true, isCod: true, order_id: codOrderId });
+            return res.status(201).json({ success: true, isCod: true, order_id: numericCodId });
         }
 
-        // For Online Payment: Create Razorpay order but save with 'Pending Payment' status so admin doesn't see it yet
         let razorpayOrder;
         try {
             razorpayOrder = await razorpay.orders.create({ 
@@ -455,12 +431,12 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
                 receipt: `rcpt_${Date.now()}` 
             });
         } catch (rzpErr) {
-            console.error("Razorpay API Error:", rzpErr);
             return res.status(500).json({ success: false, message: "Payment gateway error" });
         }
         
+        const numericRzpId = String(Math.floor(100000 + Math.random() * 900000));
         const newOrder = new Order({
-            orderId: razorpayOrder.id,
+            orderId: numericRzpId,
             customerName: parsedCustomerName,
             phone: parsedPhone,
             files: filesMappedList,
@@ -475,14 +451,13 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
             amount: finalAmount,
             totalAmount: finalAmount,
             status: 'Pending Payment',
-            date: new Date().toLocaleString(),
+            date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
             timestamp: new Date().toISOString()
         });
 
         await newOrder.save();
-        res.status(201).json({ success: true, order_id: razorpayOrder.id, amount: razorpayOrder.amount, key_id: razorpay.key_id });
+        res.status(201).json({ success: true, order_id: numericRzpId, amount: razorpayOrder.amount, key_id: razorpay.key_id, rzp_real_id: razorpayOrder.id });
     } catch (error) {
-        console.error("Create Order Error:", error);
         res.status(500).json({ success: false, message: error.message || "Order creation failed" });
     }
 });
@@ -496,7 +471,6 @@ app.post('/api/verify-payment', async (req, res) => {
             order.paymentId = paymentId; 
             await order.save();
 
-            // Deduct stock only after payment is successfully verified
             let parsedConfig = order.configDetails || [];
             if (typeof parsedConfig === 'string') {
                 try { parsedConfig = JSON.parse(parsedConfig); } catch(e){}
@@ -511,7 +485,6 @@ app.post('/api/verify-payment', async (req, res) => {
     }
 });
 
-// Admin orders API updated to exclude 'Pending Payment' unverified orders
 app.get('/api/admin/orders', async (req, res) => { 
     try {
         const orders = await Order.find({ status: { $ne: 'Pending Payment' } }).sort({ timestamp: -1 });
