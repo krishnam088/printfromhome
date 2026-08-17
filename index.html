@@ -473,11 +473,11 @@
         </div>
     </div>
 
-    <!-- 🛒 FLOATING VIEW CART FOOTER BAR -->
+    <!-- 🛒 FLOATING VIEW CART FOOTER BAR WITH STACKED PRODUCT IMAGES -->
     <div id="floatingCartFooterBar" class="floating-cart-footer hidden" style="display:flex; justify-content:space-between; align-items:center;">
         <div class="floating-cart-left" style="display:flex; align-items:center; gap:12px; cursor:pointer; flex:1;" onclick="toggleCartDrawer(true)">
-            <div style="display:flex; align-items:center; margin-left:4px;">
-                <div style="width:32px; height:32px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--blinkit-green); font-size:0.9rem; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🛒</div>
+            <div id="floatingCartImagesStack" style="display:flex; align-items:center; position:relative; min-width:40px; height:36px; margin-left:4px;">
+                <!-- Stacked product images injected dynamically via JS -->
             </div>
             <div class="cart-title-info" style="display:flex; flex-direction:column; text-align:left;">
                 <span class="cart-items-count" id="floatingCartCountText" style="font-size:0.75rem; font-weight:700; color:#ffffff; opacity:0.9;">3 items</span>
@@ -530,6 +530,7 @@
                         lastRenderedData = newProductsJson;
                         window.storeInventoryProducts = data.products;
                         renderStoreProductsUI();
+                        updateFloatingCartBar();
                     }
                 }
             } catch (e) {
@@ -683,6 +684,7 @@
             const bar = document.getElementById('floatingCartFooterBar');
             const countText = document.getElementById('floatingCartCountText');
             const priceText = document.getElementById('floatingCartTotalPriceText');
+            const imagesStack = document.getElementById('floatingCartImagesStack');
             if (!bar) return;
             
             let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0);
@@ -707,6 +709,45 @@
                 bar.style.display = 'flex';
                 if (countText) countText.textContent = `${totalItemsCombined} item${totalItemsCombined > 1 ? 's' : ''}`;
                 if (priceText) priceText.textContent = `₹${(grandTotalCombined + deliveryFee).toFixed(2)}`;
+
+                // Gather item images for the stack effect
+                if (imagesStack) {
+                    imagesStack.innerHTML = '';
+                    let collectedImages = [];
+
+                    // Collect snack images
+                    window.cartSnacksArray.forEach(snack => {
+                        const matched = window.storeInventoryProducts.find(p => p.name === snack.name);
+                        const img = matched ? (matched.imageUrl || matched.image || '') : '';
+                        if (img) collectedImages.push(img);
+                    });
+
+                    // Take up to 3 distinct product/document images to stack
+                    let displayImgs = collectedImages.slice(0, 3);
+                    if (displayImgs.length === 0) {
+                        // Fallback icon if no product image found
+                        imagesStack.innerHTML = `<div style="width:34px; height:34px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--blinkit-green); font-size:0.85rem; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🛒</div>`;
+                    } else {
+                        displayImgs.forEach((imgUrl, idx) => {
+                            const imgThumb = document.createElement('img');
+                            imgThumb.src = imgUrl;
+                            imgThumb.style.cssText = `
+                                width: 34px;
+                                height: 34px;
+                                object-fit: cover;
+                                border-radius: 50%;
+                                border: 2px solid #ffffff;
+                                position: absolute;
+                                left: ${idx * 16}px;
+                                top: 0;
+                                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                                background: #fff;
+                                z-index: ${10 - idx};
+                            `;
+                            imagesStack.appendChild(imgThumb);
+                        });
+                    }
+                }
             } else {
                 bar.classList.add('hidden');
                 bar.style.display = 'none';
@@ -817,6 +858,7 @@
             if (deliveryNode) deliveryNode.textContent = delivery === 0 ? "FREE" : `₹${delivery.toFixed(2)}`;
             if (summaryGrandNode) summaryGrandNode.textContent = `₹${grandTotal.toFixed(2)}`;
             if (grandTotalNode) grandTotalNode.textContent = `₹${grandTotal.toFixed(2)}`;
+            updateFloatingCartBar();
         }
 
         window.adjustPrintJobCopies = function(index, delta) {
