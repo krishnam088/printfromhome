@@ -24,8 +24,8 @@ mongoose.connect(process.env.MONGO_URI, {
 })
     .then(async () => {
         console.log('✅ Connected to MongoDB Atlas successfully!');
-        // Clean start: Uncomment the line below once if you want to wipe old test orders from the database
-        // await Order.deleteMany({}); console.log('🗑️ All old orders wiped for clean fresh start!');
+        // Fresh start wipe helper (uncomment if you want to wipe old data on restart)
+        // await Order.deleteMany({}); console.log('🧹 Wiped old orders for fresh start!');
     })
     .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
@@ -113,16 +113,6 @@ app.get('/manifest-festive.json', (req, res) => {
 
 app.get('/sw-admin.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw-admin.js')); });
 app.get('/sw.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw.js')); });
-
-// Helper to wipe all orders for clean start
-app.get('/api/admin/reset-database', async (req, res) => {
-    try {
-        await Order.deleteMany({});
-        res.json({ success: true, message: "🧹 All orders cleared successfully for fresh start!" });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
 
 app.get('/api/store-status', async (req, res) => {
     try {
@@ -278,10 +268,9 @@ app.get('/api/store/products', async (req, res) => {
     }
 });
 
-// Admin Stats API filtered by Date
 app.get('/api/admin/stats', async (req, res) => {
     try {
-        const requestedDate = req.query.date; // Format YYYY-MM-DD
+        const requestedDate = req.query.date;
         const allOrders = await Order.find({ status: { $ne: 'Pending Payment' } });
         const products = await Product.find();
         
@@ -397,21 +386,13 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
         if (!isOpen) return res.status(403).json({ success: false, message: "Store is closed" });
 
         const { totalAmount, configDetails, address, customerName, phone, paymentMode } = req.body;
-        const finalAmount = totalAmount ? totalAmount.toString().trim() : "42";
+        
+        // FIX: Properly parse and clean amount
+        let finalAmountNumeric = parseFloat(String(totalAmount || '42').replace(/[₹,]/g, ''));
+        if (isNaN(finalAmountNumeric)) finalAmountNumeric = 42;
+
         const selectedPaymentMode = paymentMode || "online";
-
-        let parsedCustomerName = customerName || 'Customer';
-        let parsedPhone = phone || 'N/A';
-
-        if (address && address.includes('Contact:')) {
-            try {
-                const contactPart = address.split('Contact:')[1].trim();
-                const namePart = contactPart.split('(')[0].trim();
-                const phonePart = contactPart.split('(')[1].replace(')', '').trim();
-                if (namePart) parsedCustomerName = namePart;
-                if (phonePart) parsedPhone = phonePart;
-            } catch (e) {}
-        }
+        const numericId = String(Math.floor(100000 + Math.random() * 900000));
 
         const docFiles = req.files ? req.files.filter(f => f.fieldname === 'document') : [];
         const filesMappedList = docFiles.map(f => ({ name: f.originalname, filename: f.filename, url: f.path || f.url }));
@@ -422,11 +403,10 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
         if (selectedPaymentMode === 'cod') {
             await deductStockForOrder(parsedConfig);
 
-            const numericCodId = String(Math.floor(100000 + Math.random() * 900000));
             const newOrder = new Order({
-                orderId: numericCodId,
-                customerName: parsedCustomerName,
-                phone: parsedPhone,
+                orderId: numericId,
+                customerName: customerName || 'Customer',
+                phone: phone || 'N/A',
                 files: filesMappedList,
                 fileUrl: filesMappedList.length > 0 ? filesMappedList[0].url : '',
                 fileName: filesMappedList.length > 0 ? filesMappedList[0].name : 'Document.pdf',
@@ -436,34 +416,35 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
                 printType: parsedConfig.length > 0 ? (parsedConfig[0].isColor ? 'Color' : 'Black & White') : 'Black & White',
                 binding: parsedConfig.length > 0 ? (parsedConfig[0].binding || 'None') : 'None',
                 address: address || 'N/A',
-                amount: finalAmount,
-                totalAmount: finalAmount,
-                status: 'Paid / Ready for Print',
+                amount: finalAmountNumeric.toFixed(2),
+                totalAmount: finalAmountNumeric.toFixed(2),
+                status: 'Ready for Print',
                 date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
                 timestamp: new Date().toISOString(),
                 paymentId: 'CASH ON DELIVERY'
             });
 
             await newOrder.save();
-            return res.status(201).json({ success: true, isCod: true, order_id: numericCodId });
+            return res.status(201).json({ success: true, isCod: true, order_id: numericId });
         }
 
+        // Online Payment Gateway Order Creation
         let razorpayOrder;
         try {
             razorpayOrder = await razorpay.orders.create({ 
-                amount: Math.round(parseFloat(finalAmount) * 100), 
+                amount: Math.round(finalAmountNumeric * 100), 
                 currency: "INR", 
-                receipt: `rcpt_${Date.now()}` 
+                receipt: `rcpt_${numericId}` 
             });
         } catch (rzpErr) {
-            return res.status(500).json({ success: false, message: "Payment gateway error" });
+            console.error("Razorpay Error:", rzpErr);
+            return res.status(500).json({ success: false, message: "Payment gateway error: " + rzpErr.message });
         }
         
-        const numericRzpId = String(Math.floor(100000 + Math.random() * 900000));
         const newOrder = new Order({
-            orderId: numericRzpId,
-            customerName: parsedCustomerName,
-            phone: parsedPhone,
+            orderId: numericId,
+            customerName: customerName || 'Customer',
+            phone: phone || 'N/A',
             files: filesMappedList,
             fileUrl: filesMappedList.length > 0 ? filesMappedList[0].url : '',
             fileName: filesMappedList.length > 0 ? filesMappedList[0].name : 'Document.pdf',
@@ -473,16 +454,23 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
             printType: parsedConfig.length > 0 ? (parsedConfig[0].isColor ? 'Color' : 'Black & White') : 'Black & White',
             binding: parsedConfig.length > 0 ? (parsedConfig[0].binding || 'None') : 'None',
             address: address || 'N/A',
-            amount: finalAmount,
-            totalAmount: finalAmount,
+            amount: finalAmountNumeric.toFixed(2),
+            totalAmount: finalAmountNumeric.toFixed(2),
             status: 'Pending Payment',
             date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
             timestamp: new Date().toISOString()
         });
 
         await newOrder.save();
-        res.status(201).json({ success: true, order_id: numericRzpId, amount: razorpayOrder.amount, key_id: razorpay.key_id, rzp_real_id: razorpayOrder.id });
+        res.status(201).json({ 
+            success: true, 
+            order_id: numericId, 
+            rzp_order_id: razorpayOrder.id,
+            amount: razorpayOrder.amount, 
+            key_id: razorpay.key_id 
+        });
     } catch (error) {
+        console.error("Create Order Error:", error);
         res.status(500).json({ success: false, message: error.message || "Order creation failed" });
     }
 });
@@ -492,7 +480,7 @@ app.post('/api/verify-payment', async (req, res) => {
         const { orderId, paymentId } = req.body;
         const order = await Order.findOne({ orderId });
         if (order) {
-            order.status = 'Paid / Ready for Print';
+            order.status = 'Ready for Print';
             order.paymentId = paymentId; 
             await order.save();
 
