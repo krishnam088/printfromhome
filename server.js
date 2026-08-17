@@ -7,6 +7,7 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const app = express();
@@ -94,6 +95,15 @@ const Product = mongoose.model('Product', productSchema);
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_Sz27MnobxedYSU', 
     key_secret: process.env.RAZORPAY_KEY_SECRET || 'PcaWJEUMGjhn7Cfa04IlzYd9'
+});
+
+// Nodemailer Transporter Setup (Gmail Broadcast)
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER || '',
+        pass: process.env.EMAIL_PASS || ''
+    }
 });
 
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
@@ -185,6 +195,50 @@ app.post('/api/auth/login', async (req, res) => {
         res.json({ success: true, name: user.name, identity: user.identity });
     } catch (err) {
         res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+// --- BROADCAST EMAIL NOTIFICATION API ---
+app.post('/api/admin/send-notification', async (req, res) => {
+    try {
+        const { subject, message } = req.body;
+        if (!subject || !message) {
+            return res.status(400).json({ success: false, message: "Subject and Message are required!" });
+        }
+
+        const users = await User.find({});
+        const recipientEmails = users.map(u => u.identity).filter(id => id && id.includes('@'));
+
+        if (recipientEmails.length === 0) {
+            return res.status(400).json({ success: false, message: "No valid email addresses found in registered users!" });
+        }
+
+        const htmlTemplate = `
+            <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <div style="background: #0070f3; color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+                    <h2 style="margin: 0; font-size: 1.2rem;">📢 Print From Home - Special Update</h2>
+                </div>
+                <div style="background: #ffffff; padding: 24px; border-radius: 0 0 10px 10px; color: #1e293b;">
+                    <h3 style="color: #0f172a; margin-top: 0;">${subject}</h3>
+                    <p style="font-size: 0.95rem; line-height: 1.6; color: #475569; white-space: pre-line;">${message}</p>
+                    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                    <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 0;">You received this update because you are registered with Print From Home, Varanasi.</p>
+                </div>
+            </div>
+        `;
+
+        const mailOptions = {
+            from: '"Print From Home" <no-reply@printfromhome.com>',
+            bcc: recipientEmails,
+            subject: subject,
+            html: htmlTemplate
+        };
+
+        await transporter.sendMail(mailOptions);
+        res.json({ success: true, message: `✅ Notification successfully broadcasted to ${recipientEmails.length} users via Gmail!` });
+    } catch (err) {
+        console.error("Email Broadcast Error:", err);
+        res.status(500).json({ success: false, message: "Email send failed: " + err.message });
     }
 });
 

@@ -296,6 +296,7 @@
             <li class="sidebar-item active" id="nav_dashboard" onclick="switchAdminTab('dashboard')">📊 Dashboard</li>
             <li class="sidebar-item" id="nav_orders" onclick="switchAdminTab('orders')">📦 Orders Queue</li>
             <li class="sidebar-item" id="nav_inventory" onclick="switchAdminTab('inventory')">📦 Inventory</li>
+            <li class="sidebar-item" id="nav_marketing" onclick="switchAdminTab('marketing')">📢 Marketing & Alerts</li>
         </ul>
     </nav>
 
@@ -424,6 +425,30 @@
             </div>
         </div>
 
+        <!-- TAB 4: MARKETING & NOTIFICATION SECTION -->
+        <div id="section_marketing" class="admin-section">
+            <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; max-width: 700px;">
+                <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 8px;">📢 Broadcast Gmail Notifications</h3>
+                <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 20px;">Send festival offers, sales discounts, or stock alerts directly to all registered users' Gmail inboxes.</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div>
+                        <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-sub); display: block; margin-bottom: 6px;">Notification Subject / Title:</label>
+                        <input type="text" id="broadcastSubjectInput" placeholder="e.g. 🎉 Festive Offer: Flat 20% Off on Color Prints!" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.85rem; outline: none;">
+                    </div>
+
+                    <div>
+                        <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-sub); display: block; margin-bottom: 6px;">Message Body:</label>
+                        <textarea id="broadcastMessageInput" rows="6" placeholder="Write your festive offer or stock update details here..." style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.85rem; outline: none; resize: vertical;"></textarea>
+                    </div>
+
+                    <button type="button" onclick="sendBroadcastNotification()" style="background: var(--accent-blue); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 800; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        🚀 Send Broadcast Email to All Users
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -456,6 +481,47 @@
                 document.getElementById('nav_inventory').classList.add('active');
                 document.getElementById('section_inventory').classList.add('active');
                 fetchInventoryReport();
+            } else if (tabName === 'marketing') {
+                document.getElementById('nav_marketing').classList.add('active');
+                document.getElementById('section_marketing').classList.add('active');
+            }
+        }
+
+        async function sendBroadcastNotification() {
+            const subject = document.getElementById('broadcastSubjectInput').value.trim();
+            const message = document.getElementById('broadcastMessageInput').value.trim();
+
+            if (!subject || !message) {
+                alert("⚠️ Please fill in both Subject and Message!");
+                return;
+            }
+
+            if (!confirm("⚠️ Are you sure you want to broadcast this email to all registered users?")) return;
+
+            try {
+                const btn = event.target;
+                btn.disabled = true;
+                btn.textContent = "Sending Broadcast...";
+
+                const res = await fetch('/api/admin/send-notification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subject, message })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    document.getElementById('broadcastSubjectInput').value = '';
+                    document.getElementById('broadcastMessageInput').value = '';
+                } else {
+                    alert(`⚠️ ${data.message}`);
+                }
+            } catch (err) {
+                alert("❌ Failed to broadcast notification.");
+            } finally {
+                event.target.disabled = false;
+                event.target.textContent = "🚀 Send Broadcast Email to All Users";
             }
         }
 
