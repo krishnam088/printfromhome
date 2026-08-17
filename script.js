@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');    
     window.savedUserAddresses = JSON.parse(localStorage.getItem('saved_addresses') || '[]');  
     let selectedActiveAddress = localStorage.getItem('selected_active_address') || "";  
-    window.storeInventoryProducts = []; // Live Admin Store Inventory Products Cache
+    window.storeInventoryProducts = []; 
 
     // 🔥 LIVE RE-ROUTE CONFIGS
     const LIVE_SERVER_URL = window.location.origin;
@@ -47,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (data.success) {
                 if (!data.isOpen) {
-                    // Store is CLOSED
                     if (storeClosedNotice) storeClosedNotice.classList.remove('hidden');
                     if (storeClosedModal && sessionStorage.getItem('storeModalDismissed') !== 'true') {
                         storeClosedModal.style.display = 'flex';
@@ -62,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         submitOrderBtn.textContent = 'Store is Closed 🚫';
                     }
                 } else {
-                    // Store is OPEN
                     if (storeClosedNotice) storeClosedNotice.classList.add('hidden');
                     if (storeClosedModal) storeClosedModal.style.display = 'none';
                     sessionStorage.removeItem('storeModalDismissed');
@@ -82,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Har 3 seconds mein status check karega taaki admin ke toggle karte hi turant user app pe reflect ho
     setInterval(checkStoreStatusRealtime, 3000);
 
     window.dismissStoreClosedNotice = function() {
@@ -409,7 +406,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userInstallBanner) userInstallBanner.style.display = 'none';
     });
 
-    // Background engine to update global orders array cache every 4 seconds for instant real-time sync
     async function silentlySyncOrdersArrayCache() {
         try {
             const res = await fetch(`${LIVE_SERVER_URL}/api/admin/orders`);
@@ -441,9 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-        } catch (err) {
-            console.error("Cache system pooling delay: ", err.message);
-        }
+        } catch (err) {}
     }
     setInterval(silentlySyncOrdersArrayCache, 4000);
     setTimeout(silentlySyncOrdersArrayCache, 500);
@@ -467,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             if(!data.success) return;
             const options = {
-                "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Wallet Topup", "order_id": data.order_id,
+                "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Wallet Topup", "order_id": data.rzp_order_id || data.order_id,
                 "handler": async function (response){
                     let oldCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
                     localStorage.setItem(`wallet_cash_${sessionActiveUser}`, (oldCash + depositAmount).toFixed(2));
@@ -540,53 +534,6 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
 
             const isSignUpModeActive = !signupOnlyFields[0].classList.contains('hidden');
-            const otpGroup = document.getElementById('otpGroup');
-            const authOtpInput = document.getElementById('authOtpInput');
-
-            if (isSignUpModeActive && otpGroup && otpGroup.classList.contains('app-hidden')) {
-                const email = authIdentity.value.trim();
-                if (!email.includes('@')) {
-                    alert('⚠️ Please enter a valid Gmail address to receive the OTP.');
-                    return;
-                }
-                
-                try {
-                    authBtn.innerText = "Sending OTP...";
-                    authBtn.disabled = true;
-
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-                    const res = await fetch(`${LIVE_SERVER_URL}/api/auth/send-otp`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email }),
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeoutId);
-
-                    const data = await res.json();
-                    if (res.ok && data.success) {
-                        alert('📩 OTP sent to your Gmail inbox! Please check.');
-                        otpGroup.classList.remove('app-hidden');
-                        authBtn.innerText = "Verify & Complete Signup";
-                    } else {
-                        alert(`❌ Error: ${data.message || 'Failed to send OTP'}`);
-                        authBtn.innerText = "Get OTP & Sign Up";
-                    }
-                } catch (err) {
-                    if (err.name === 'AbortError') {
-                        alert('⏳ Request timed out!');
-                    } else {
-                        alert('❌ Network error while sending OTP.');
-                    }
-                    authBtn.innerText = "Get OTP & Sign Up";
-                } finally {
-                    authBtn.disabled = false;
-                }
-                return;
-            }
-
             const targetApiUrl = isSignUpModeActive ? '/api/auth/signup' : '/api/auth/login';
             const payloadData = {
                 identity: authIdentity.value.trim(),
@@ -595,7 +542,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (isSignUpModeActive) {
                 payloadData.name = authName.value.trim();
-                payloadData.otp = authOtpInput ? authOtpInput.value.trim() : '';
             }
 
             try {
@@ -625,12 +571,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     synchronizeWalletInterfaceBalance();
                     checkStoreStatusRealtime();
                 } else {
-                    alert(`⚠️ Oye Bhai: ${data.message}`);
+                    alert(`⚠️ Error: ${data.message}`);
                 }
             } catch (err) {
                 alert("❌ Connection Breakdown!");
             } finally {
-                authBtn.innerText = isSignUpModeActive ? "Log In" : "Register & Sign Up";
+                authBtn.innerText = isSignUpModeActive ? "Register & Sign Up" : "Log In";
                 authBtn.disabled = false;
             }
         });
@@ -817,28 +763,6 @@ document.addEventListener('DOMContentLoaded', () => {
         summaryTotal.textContent = `₹${(finalDocumentCost + accurateDeliveryCharge).toFixed(2)}`;
     }
 
-    // ==========================================
-    // 🛵 LIVE STATUS & DELIVERY EXECUTIVE STEPPER
-    // ==========================================
-    window.executeLiveTimelineStateStepper = function(statusText) {
-        const statusBadge = document.getElementById('liveOrderStatusBadge');
-        const execName = document.getElementById('deliveryExecutiveName');
-        const execPhone = document.getElementById('deliveryExecutivePhone');
-        const callBtn = document.getElementById('callExecutiveBtn');
-
-        if (statusBadge) statusBadge.textContent = statusText || "Processing Order...";
-
-        if (statusText && (statusText.includes('Out for Delivery') || statusText.includes('Ready'))) {
-            if (execName) execName.textContent = "Rajesh Kumar (Delivery Partner)";
-            if (execPhone) execPhone.textContent = "+91 98765 43210";
-            if (callBtn) callBtn.href = "tel:9876543210";
-        } else {
-            if (execName) execName.textContent = "Assigning Delivery Executive...";
-            if (execPhone) execPhone.textContent = "Will be assigned shortly";
-            if (callBtn) callBtn.href = "tel:7007626731";
-        }
-    }
-
     window.openOrderDeepTrackingWorkspacePage = function(orderStringPayload) {
         const order = JSON.parse(decodeURIComponent(orderStringPayload));
         if(typeof navigateDrawerSection === 'function') navigateDrawerSection('order_tracking'); 
@@ -969,6 +893,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('totalAmount', grandTotal.toFixed(2));
         formData.append('configDetails', JSON.stringify(finalMetaConfig));
         formData.append('address', selectedActiveAddress);
+        formData.append('paymentMode', paymentMode);
 
         try {
             const response = await fetch('/api/create-order', { method: 'POST', body: formData });
@@ -983,10 +908,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const activeUserToken = localStorage.getItem('printAppUser');
                 const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
                 const newOrderPayload = { 
-                    orderId: data.order_id || 'COD-' + Date.now(),
+                    orderId: data.order_id,
                     date: new Date().toLocaleString(), 
                     amount: grandTotal.toFixed(2), 
-                    status: "COD / Ready for Print & Packing", 
+                    status: "Ready for Print", 
                     details: finalMetaConfig,
                     address: selectedActiveAddress 
                 };
@@ -1003,7 +928,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const options = {
-                "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Print From Home", "order_id": data.order_id,
+                "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Print From Home", "order_id": data.rzp_order_id,
                 "handler": async function (response){
                     const verifyRes = await fetch('/api/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: data.order_id, paymentId: response.razorpay_payment_id }) });
                     const verifyData = await verifyRes.json();
@@ -1015,7 +940,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             orderId: data.order_id,
                             date: new Date().toLocaleString(), 
                             amount: grandTotal.toFixed(2), 
-                            status: "Paid / Ready for Print & Packing", 
+                            status: "Ready for Print", 
                             details: finalMetaConfig,
                             address: selectedActiveAddress 
                         };
