@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const nodemailer = require('nodemailer');
-const cron = require('node-cron'); // Added for auto festival scheduler
+const cron = require('node-cron');
 require('dotenv').config();
 
 const app = express();
@@ -103,7 +103,7 @@ const razorpay = new Razorpay({
 const transporter = nodemailer.createTransport({
     host: 'smtp-relay.brevo.com',
     port: 465,
-    secure: true, // Port 465 ke liye true hota hai (SSL)
+    secure: true,
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
@@ -115,7 +115,6 @@ const transporter = nodemailer.createTransport({
     greetingTimeout: 30000,
     socketTimeout: 60000
 });
-
 
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/admin-panel', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
@@ -391,6 +390,15 @@ const festivalCalendar = {
     "25-12": { subject: "Merry Christmas & Happy Holidays!", message: "Merry Christmas from Print From Home! Spread joy, warmth, and festive cheer. Enjoy special year-end discounts on all custom printing services." },
     "01-01": { subject: "Happy New Year: Exclusive Calendar Offers!", message: "Happy New Year! Start your year right with our brand new custom calendars and special discounts on all prints. Visit our store today!" }
 };
+
+// --- GET FESTIVAL TEMPLATES FOR ADMIN PANEL ---
+app.get('/api/admin/festival-templates', (req, res) => {
+    try {
+        res.json({ success: true, templates: festivalCalendar });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 cron.schedule('0 0 * * *', async () => {
     try {

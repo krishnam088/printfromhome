@@ -425,24 +425,38 @@
             </div>
         </div>
 
-        <!-- TAB 4: MARKETING & NOTIFICATION SECTION -->
+        <!-- TAB 4: MARKETING & NOTIFICATION SECTION (UPDATED WITH TEMPLATE LOADER) -->
         <div id="section_marketing" class="admin-section">
-            <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; max-width: 700px;">
+            <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; max-width: 750px;">
                 <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 8px;">📢 Broadcast Gmail Notifications</h3>
-                <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 20px;">Send festival offers, sales discounts, or stock alerts directly to all registered users' Gmail inboxes.</p>
+                <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 20px;">Send personalized 2026 festive offers, deals, or stock alerts directly to all registered users' Gmail inboxes.</p>
                 
                 <div style="display: flex; flex-direction: column; gap: 14px;">
+                    
+                    <!-- FESTIVAL CALENDAR QUICK SELECTOR -->
+                    <div style="background: rgba(0, 112, 243, 0.08); border: 1px solid rgba(0, 112, 243, 0.3); border-radius: 12px; padding: 14px;">
+                        <label style="font-size: 0.8rem; font-weight: 800; color: #38bdf8; display: block; margin-bottom: 6px;">⚡ Quick Festival / Holiday Template (2026):</label>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <select id="festivalTemplateDropdown" onchange="applySelectedFestivalTemplate(this.value)" style="flex: 1; min-width: 200px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.82rem; font-weight: 700; outline: none;">
+                                <option value="">-- Choose Festival Template to Auto-Fill --</option>
+                            </select>
+                            <button type="button" onclick="loadFestivalTemplatesFromServer()" style="background: #334155; color: white; border: none; padding: 10px 14px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">🔄 Refresh</button>
+                        </div>
+                    </div>
+
                     <div>
                         <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-sub); display: block; margin-bottom: 6px;">Notification Subject / Title:</label>
-                        <input type="text" id="broadcastSubjectInput" placeholder="e.g. 🎉 Festive Offer: Flat 20% Off on Color Prints!" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.85rem; outline: none;">
+                        <input type="text" id="broadcastSubjectInput" placeholder="e.g. Special Festive Offer: Exclusive Printing Deals for You!" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.85rem; outline: none;">
                     </div>
 
                     <div>
-                        <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-sub); display: block; margin-bottom: 6px;">Message Body:</label>
-                        <textarea id="broadcastMessageInput" rows="6" placeholder="Write your festive offer or stock update details here..." style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.85rem; outline: none; resize: vertical;"></textarea>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-sub);">Message Body (Personalized Greeting Added Automatically):</label>
+                            <button type="button" onclick="saveCurrentDraftAsPermanent()" style="background: transparent; border: none; color: #38bdf8; font-size: 0.72rem; font-weight: 700; cursor: pointer;">💾 Save as Default</button>
+                        </div>
+                        <textarea id="broadcastMessageInput" rows="6" placeholder="We are excited to share our latest festive calendar deals with you! As a valued member of Print From Home, we are offering you an exclusive discount on all your printing requirements. Visit our store to check out the new offers and place your order today." style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.85rem; outline: none; resize: vertical;"></textarea>
                     </div>
 
-                    <!-- 🔥 FIXED: event pass kiya gaya hai -->
                     <button type="button" onclick="sendBroadcastNotification(event)" style="background: var(--accent-blue); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 800; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                         🚀 Send Broadcast Email to All Users
                     </button>
@@ -460,6 +474,7 @@
         let temporaryFetchedImageUrl = '';
         let openDrawers = new Set();
         let profitChartInstance = null;
+        let globalFestivalTemplates = {};
 
         function switchAdminTab(tabName) {
             localStorage.setItem('admin_active_tab', tabName);
@@ -485,10 +500,63 @@
             } else if (tabName === 'marketing') {
                 document.getElementById('nav_marketing').classList.add('active');
                 document.getElementById('section_marketing').classList.add('active');
+                loadFestivalTemplatesFromServer();
+                loadPermanentDraft();
             }
         }
 
-        // 🔥 FIXED: event parameter safe handling
+        // --- FESTIVAL TEMPLATES LOADER FOR MARKETING TAB ---
+        async function loadFestivalTemplatesFromServer() {
+            const dropdown = document.getElementById('festivalTemplateDropdown');
+            if (!dropdown) return;
+            try {
+                const res = await fetch('/api/admin/festival-templates');
+                const data = await res.json();
+                if (data.success && data.templates) {
+                    globalFestivalTemplates = data.templates;
+                    dropdown.innerHTML = `<option value="">-- Choose Festival Template (2026) --</option>`;
+                    
+                    for (const [dateKey, item] of Object.entries(globalFestivalTemplates)) {
+                        const opt = document.createElement('option');
+                        opt.value = dateKey;
+                        opt.textContent = `📅 ${dateKey} - ${item.subject.split(':')[0].trim()}`;
+                        dropdown.appendChild(opt);
+                    }
+                }
+            } catch (err) {
+                console.warn("Could not fetch festival templates from server:", err);
+            }
+        }
+
+        function applySelectedFestivalTemplate(dateKey) {
+            if (!dateKey || !globalFestivalTemplates[dateKey]) return;
+            const tpl = globalFestivalTemplates[dateKey];
+            document.getElementById('broadcastSubjectInput').value = tpl.subject || '';
+            document.getElementById('broadcastMessageInput').value = tpl.message || '';
+        }
+
+        function saveCurrentDraftAsPermanent() {
+            const subject = document.getElementById('broadcastSubjectInput').value.trim();
+            const message = document.getElementById('broadcastMessageInput').value.trim();
+            localStorage.setItem('admin_broadcast_default_subject', subject);
+            localStorage.setItem('admin_broadcast_default_message', message);
+            alert("💾 Template saved as default permanent draft!");
+        }
+
+        function loadPermanentDraft() {
+            const savedSubject = localStorage.getItem('admin_broadcast_default_subject');
+            const savedMessage = localStorage.getItem('admin_broadcast_default_message');
+            
+            if (!document.getElementById('broadcastSubjectInput').value && savedSubject) {
+                document.getElementById('broadcastSubjectInput').value = savedSubject;
+            }
+            if (!document.getElementById('broadcastMessageInput').value && savedMessage) {
+                document.getElementById('broadcastMessageInput').value = savedMessage;
+            } else if (!document.getElementById('broadcastMessageInput').value) {
+                document.getElementById('broadcastMessageInput').value = "We are excited to share our latest festive calendar deals with you! As a valued member of Print From Home, we are offering you an exclusive discount on all your printing requirements. Visit our store to check out the new offers and place your order today.";
+            }
+        }
+
         async function sendBroadcastNotification(event) {
             const btn = event ? event.target : document.querySelector("button[onclick*='sendBroadcastNotification']");
             const subject = document.getElementById('broadcastSubjectInput').value.trim();
@@ -516,8 +584,6 @@
 
                 if (data.success) {
                     alert(data.message);
-                    document.getElementById('broadcastSubjectInput').value = '';
-                    document.getElementById('broadcastMessageInput').value = '';
                 } else {
                     alert(`⚠️ ${data.message}`);
                 }
