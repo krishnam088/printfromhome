@@ -52,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // App load hone ke thodi der baad popup permission trigger karein
     setTimeout(requestUserPushNotificationPermission, 4000);
 
     // ==========================================
@@ -179,20 +178,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const card = document.createElement('div');
                 card.className = 'blinkit-cat-card';
                 card.style.cssText = `
-                    min-width: 110px;
-                    width: 110px;
-                    background: #ffffff;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 14px;
-                    padding: 10px;
-                    position: relative; 
-                    opacity: ${isOutOfStock ? '0.7' : '1'}; 
-                    display: flex; 
-                    flex-direction: column; 
-                    align-items: center; 
-                    cursor: pointer;
-                    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-                    flex-shrink: 0;
+                    min-width: 110px; width: 110px; background: #ffffff; border: 1px solid #e2e8f0;
+                    border-radius: 14px; padding: 10px; position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; 
+                    display: flex; flex-direction: column; align-items: center; cursor: pointer;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.03); flex-shrink: 0;
                 `;
                 
                 card.onclick = (e) => {
@@ -225,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(`🔔 We have noted your request! You will be notified when "${prodName}" is back in stock.`);
     }
 
-    // 🔒 STRICT INVENTORY ADD TO CART LOGIC (Updated to check stock limit)
+    // 🔒 STRICT INVENTORY ADD TO CART LOGIC
     window.addDynamicProductToCart = function(sku, name, price, currentStock) {
         if (currentStock <= 0) {
             alert(`⚠️ Sorry! "${name}" is currently out of stock.`);
@@ -262,35 +251,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const configScreen = document.getElementById('configurationScreenState');
         const productModal = document.getElementById('productDetailModal');
         
-        if (productModal && productModal.style.display === 'flex') {
-            productModal.style.display = 'none';
-            return;
-        }
-        if (cartOverlay && cartOverlay.style.display === 'flex') {
-            cartOverlay.style.display = 'none';
-            return;
-        }
-        if (addressModal && addressModal.style.display === 'flex') {
-            addressModal.style.display = 'none';
-            return;
-        }
-        if (walletModal && walletModal.style.display === 'flex') {
-            walletModal.style.display = 'none';
-            return;
-        }
+        if (productModal && productModal.style.display === 'flex') { productModal.style.display = 'none'; return; }
+        if (cartOverlay && cartOverlay.style.display === 'flex') { cartOverlay.style.display = 'none'; return; }
+        if (addressModal && addressModal.style.display === 'flex') { addressModal.style.display = 'none'; return; }
+        if (walletModal && walletModal.style.display === 'flex') { walletModal.style.display = 'none'; return; }
         if (sideDrawer && sideDrawer.classList.contains('active')) {
             sideDrawer.classList.remove('active');
             document.getElementById('drawerOverlay').classList.remove('active');
             return;
         }
-        if (configScreen && !configScreen.classList.contains('hidden')) {
-            forceReturnToUploadView();
-            return;
-        }
-        
-        if (typeof navigateDrawerSection === 'function') {
-            navigateDrawerSection('store');
-        }
+        if (configScreen && !configScreen.classList.contains('hidden')) { forceReturnToUploadView(); return; }
+        if (typeof navigateDrawerSection === 'function') navigateDrawerSection('store');
     });
 
     window.persistCartStateData = function() {
@@ -304,9 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     window.loadUserAddressesFromStorage = function() {
         const raw = localStorage.getItem('saved_addresses');
-        if (raw) {
-            try { window.savedUserAddresses = JSON.parse(raw); } catch(e) { window.savedUserAddresses = []; }
-        }
+        if (raw) { try { window.savedUserAddresses = JSON.parse(raw); } catch(e) { window.savedUserAddresses = []; } }
         if (window.savedUserAddresses.length > 0 && !selectedActiveAddress) {
             selectedActiveAddress = localStorage.getItem('selected_active_address') || window.savedUserAddresses[0];
         }
@@ -321,25 +290,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const mobile = document.getElementById('addrContactMobile').value.trim();
         const fullGeo = document.getElementById('mapSelectedAddressInput').value.trim();
 
-        if (!flat || !name || !mobile) {
-            alert("⚠️ Please enter Building/Flat number, Contact Name, and Mobile Number!");
-            return;
-        }
+        if (!flat || !name || !mobile) { alert("⚠️ Please enter Building/Flat number, Contact Name, and Mobile Number!"); return; }
 
         const formattedAddress = `${flat}${floor ? ', Floor: ' + floor : ''}${landmark ? ', Landmark: ' + landmark : ''} | Area: ${fullGeo || 'Varanasi'} | Contact: ${name} (${mobile})`;
         
-        if (!window.savedUserAddresses.includes(formattedAddress)) {
-            window.savedUserAddresses.push(formattedAddress);
-        }
+        if (!window.savedUserAddresses.includes(formattedAddress)) window.savedUserAddresses.push(formattedAddress);
         selectedActiveAddress = formattedAddress;
         localStorage.setItem('saved_addresses', JSON.stringify(window.savedUserAddresses));
         localStorage.setItem('selected_active_address', selectedActiveAddress);
         
         closeAddressManagerModal();
         renderSavedAddressesUI();
-        if (document.getElementById('cartDrawerOverlay').style.display === 'flex') {
-            renderCartDrawerContents();
-        }
+        if (document.getElementById('cartDrawerOverlay').style.display === 'flex') renderCartDrawerContents();
         alert("✅ Address saved successfully!");
     }
 
@@ -389,23 +351,110 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modal) modal.style.display = 'none';
     }
 
-    // --- NEW: Profile Gmail Update Function for Existing Users ---
+    // --- NEW: PROFILE SETTINGS PARTIAL UPDATE LOGIC WITH DATABASE SYNC ---
+    const profileForm = document.getElementById('drawerProfileUpdateForm');
+    if (profileForm) {
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const identity = localStorage.getItem('printAppUserIdentity');
+            if (!identity) { alert("⚠️ Please log in again!"); return; }
+
+            const name = document.getElementById('drawerEditName').value.trim();
+            const currentPassword = document.getElementById('drawerEditPassword').value;
+            const newPassword = document.getElementById('drawerEditNewPassword') ? document.getElementById('drawerEditNewPassword').value : '';
+
+            const payload = { identity };
+            if (name) payload.name = name;
+            if (newPassword) {
+                if (!currentPassword) { alert("⚠️ Current password is required to change it!"); return; }
+                payload.currentPassword = currentPassword;
+                payload.newPassword = newPassword;
+            }
+
+            try {
+                const res = await fetch('/api/auth/update-profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("✅ Profile updated successfully in database!");
+                    if (name) {
+                        localStorage.setItem('printAppUser', name);
+                        document.getElementById('userGreeting').innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${name}</span>`;
+                    }
+                    const successMsg = document.getElementById('profileUpdateSuccessMsg');
+                    if (successMsg) { successMsg.style.display = 'block'; setTimeout(() => successMsg.style.display = 'none', 3000); }
+                } else {
+                    alert("❌ " + data.message);
+                }
+            } catch (err) {
+                alert("❌ Connection error while updating profile.");
+            }
+        });
+    }
+
+    // --- NEW: PROFILE GMAIL UPDATE FUNCTION ---
     window.updateUserGmailProfile = async function() {
         const emailInput = document.getElementById('userProfileEmailField');
         if (!emailInput || !emailInput.value.trim()) { alert("⚠️ Please enter a valid Gmail address!"); return; }
         
-        const activeUserToken = localStorage.getItem('printAppUser');
+        const identity = localStorage.getItem('printAppUserIdentity');
         try {
             const res = await fetch('/api/auth/update-email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ identity: activeUserToken, email: emailInput.value.trim() })
+                body: JSON.stringify({ identity, email: emailInput.value.trim() })
             });
             const data = await res.json();
             if (data.success) alert("✅ Gmail updated successfully!");
             else alert("❌ " + data.message);
         } catch (e) {
             alert("❌ Failed to update Gmail.");
+        }
+    }
+
+    // --- NEW: FORGET PASSWORD / RESET PASSWORD LOGIC (FOR LOGIN & PROFILE) ---
+    window.initiatePasswordReset = async function() {
+        const identityInput = document.getElementById('authIdentity');
+        const identity = identityInput ? identityInput.value.trim() : prompt("Enter your registered 10-digit mobile number:");
+        
+        if (!identity || identity.length !== 10) {
+            alert("⚠️ Please enter a valid 10-digit mobile number first!");
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/auth/verify-identity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ identity })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                const newPassword = prompt("✅ Mobile number verified! Enter your new password (min 6 characters):");
+                if (newPassword && newPassword.length >= 6) {
+                    const resetRes = await fetch('/api/auth/reset-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ identity, newPassword })
+                    });
+                    const resetData = await resetRes.json();
+                    if (resetData.success) {
+                        alert("🎉 Password reset successfully! You can now log in with your new password.");
+                    } else {
+                        alert("❌ " + resetData.message);
+                    }
+                } else if (newPassword) {
+                    alert("⚠️ Password must be at least 6 characters long.");
+                }
+            } else {
+                alert("❌ " + data.message);
+            }
+        } catch (err) {
+            alert("❌ Network error during password reset.");
         }
     }
 
@@ -578,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateFloatingCartBar();
     }, 2500);
 
-    // --- UPDATED AUTH FORM (Handles Signup with Mandatory Gmail) ---
+    // --- AUTH FORM (Login & Signup with mandatory Gmail) ---
     if (authForm) {
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -615,6 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.success) {
                     const activeUserName = data.name || authIdentity.value.trim();
                     localStorage.setItem('printAppUser', activeUserName);
+                    localStorage.setItem('printAppUserIdentity', data.identity || authIdentity.value.trim());
                     
                     if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${activeUserName}</span>`;
                     
@@ -659,6 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             localStorage.removeItem('printAppUser');
+            localStorage.removeItem('printAppUserIdentity');
             window.location.reload();
         });
     }

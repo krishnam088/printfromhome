@@ -43,7 +43,6 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage: storage });
 
-// --- UPDATED USER SCHEMA (Added email field) ---
 const userSchema = new mongoose.Schema({
     name: String,
     identity: { type: String, unique: true }, // Mobile Number
@@ -163,7 +162,6 @@ const handleStoreToggle = async (req, res) => {
 app.post('/api/store-status/toggle', handleStoreToggle);
 app.post('/api/admin/toggle-store', handleStoreToggle);
 
-// --- UPDATED SIGNUP API (Mandatory Gmail) ---
 app.post('/api/auth/signup', async (req, res) => {
     try {
         const { name, identity, email, password } = req.body;
@@ -229,10 +227,73 @@ app.post('/api/auth/update-email', async (req, res) => {
     }
 });
 
+// --- NEW API: PARTIAL PROFILE UPDATE (Name, Password Check) ---
+app.post('/api/auth/update-profile', async (req, res) => {
+    try {
+        const { identity, name, currentPassword, newPassword } = req.body;
+        if (!identity) return res.status(400).json({ success: false, message: "Identity is required!" });
+
+        const normalizedIdentity = identity.replace(/\D/g, '').slice(-10);
+        const user = await User.findOne({ identity: normalizedIdentity });
+        
+        if (!user) return res.status(404).json({ success: false, message: "User not found!" });
+
+        if (name) user.name = name.trim();
+
+        if (newPassword) {
+            if (!currentPassword || user.password !== currentPassword) {
+                return res.status(401).json({ success: false, message: "Incorrect current password!" });
+            }
+            user.password = newPassword;
+        }
+
+        await user.save();
+        res.json({ success: true, message: "Profile updated successfully in database!" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// --- NEW API: FORGET PASSWORD - VERIFY MOBILE IDENTITY ---
+app.post('/api/auth/verify-identity', async (req, res) => {
+    try {
+        const { identity } = req.body;
+        const normalizedIdentity = identity.replace(/\D/g, '').slice(-10);
+        const user = await User.findOne({ identity: normalizedIdentity });
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Mobile number not registered!" });
+        }
+        res.json({ success: true, message: "Mobile verified successfully." });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// --- NEW API: RESET PASSWORD ---
+app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+        const { identity, newPassword } = req.body;
+        if (!identity || !newPassword) {
+            return res.status(400).json({ success: false, message: "Missing data!" });
+        }
+        const normalizedIdentity = identity.replace(/\D/g, '').slice(-10);
+        const user = await User.findOne({ identity: normalizedIdentity });
+        
+        if (!user) return res.status(404).json({ success: false, message: "User not found!" });
+        
+        user.password = newPassword;
+        await user.save();
+        res.json({ success: true, message: "Password reset successfully!" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // --- BROADCAST EMAIL & WHATSAPP NOTIFICATION API ---
 app.post('/api/admin/send-notification', async (req, res) => {
     try {
-        const { subject, message, sendVia } = req.body; // sendVia: 'email', 'whatsapp', or 'both'
+        const { subject, message, sendVia } = req.body;
         if (!subject || !message) {
             return res.status(400).json({ success: false, message: "Subject and Message are required!" });
         }
@@ -244,7 +305,6 @@ app.post('/api/admin/send-notification', async (req, res) => {
         let emailSentCount = 0;
         let whatsappStatus = "Skipped";
 
-        // 1. Send Gmail Broadcast via Nodemailer
         if ((sendVia === 'email' || sendVia === 'both') && recipientEmails.length > 0) {
             const htmlTemplate = `
                 <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
@@ -268,10 +328,7 @@ app.post('/api/admin/send-notification', async (req, res) => {
             emailSentCount = recipientEmails.length;
         }
 
-        // 2. WhatsApp Integration Note (Using Wati / Interakt / Twilio or Click-to-Chat webhook)
         if (sendVia === 'whatsapp' || sendVia === 'both') {
-            // Yahan aap WhatsApp Business API gateway (jaise Interakt/Wati/Twilio) connect kar sakte hain
-            // Example webhook payload loop for recipientPhones
             whatsappStatus = `Queued for ${recipientPhones.length} WhatsApp numbers via API`;
         }
 
