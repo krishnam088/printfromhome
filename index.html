@@ -338,9 +338,12 @@
                         </marquee>
                     </div>
                     
-                    <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border-color:#ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%;">
-                        🚨 <b>Store is Closed!</b> We are not taking print orders currently.
-                    </div>
+                    <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border: 1px solid #ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        🚨 <b>Store is Closed!</b> We are not taking orders currently.
+    </div>
+    <button type="button" onclick="dismissStoreClosedNotice()" style="background: none; border: none; font-size: 1.3rem; font-weight: bold; color: #991b1b; cursor: pointer; padding: 0 5px;">&times;</button>
+</div>
 
                     <div class="store-header-box">
                         <h2>Print Store</h2>
