@@ -18,7 +18,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname)); 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Local uploads folder for temporary print documents (Privacy First)
+const localUploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(localUploadsDir)) {
+    fs.mkdirSync(localUploadsDir, { recursive: true });
+}
+app.use('/uploads', express.static(localUploadsDir));
 
 mongoose.connect(process.env.MONGO_URI, {
     serverSelectionTimeoutMS: 30000, 
@@ -35,14 +41,27 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET || '8sI8_nKannw61Ew8xbvvsvLn4ms'
 });
 
-const storage = new CloudinaryStorage({
+// Cloudinary Storage is STRICTLY for Store Inventory / Product Images
+const cloudinaryStorage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'print-from-home-products',
         allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
     },
 });
-const upload = multer({ storage: storage });
+const uploadCloudinary = multer({ storage: cloudinaryStorage });
+
+// Local Storage for User Print Documents (Ensures privacy, no personal documents go to Cloudinary)
+const localDiskStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, localUploadsDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + '-' + file.originalname);
+    }
+});
+const uploadLocal = multer({ storage: localDiskStorage });
 
 const userSchema = new mongoose.Schema({
     name: String,
@@ -99,7 +118,6 @@ const razorpay = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET || 'PcaWJEUMGjhn7Cfa04IlzYd9'
 });
 
-// Nodemailer Transporter Setup using Port 465 (SSL) to bypass Render port 587 restriction
 const transporter = nodemailer.createTransport({
     host: 'smtp-relay.brevo.com',
     port: 465,
@@ -295,7 +313,6 @@ app.post('/api/auth/reset-password', async (req, res) => {
     }
 });
 
-// --- HELPER FUNCTION FOR PERSONALIZED BROADCASTS ---
 async function sendBroadcastEmail(subject, message) {
     const users = await User.find({});
     const recipients = users.filter(u => u.email && u.email.includes('@'));
@@ -341,7 +358,6 @@ async function sendBroadcastEmail(subject, message) {
     }
 }
 
-// --- PERSONALIZED MANUAL BROADCAST API ---
 app.post('/api/admin/send-notification', async (req, res) => {
     try {
         const { subject, message } = req.body;
@@ -367,7 +383,6 @@ app.post('/api/admin/send-notification', async (req, res) => {
     }
 });
 
-// --- AUTOMATIC FESTIVAL SCHEDULER (2026 Calendar) ---
 const festivalCalendar = {
     "23-01": { subject: "Happy Vasant Panchami: Celebrate with Exclusive Prints!", message: "Wishing you a auspicious Vasant Panchami! May Goddess Saraswati bring wisdom and creativity into your life. Celebrate the season with special discounts on all your printing needs at Print From Home." },
     "15-02": { subject: "Happy Maha Shivaratri: Special Blessings & Offers!", message: "Wishing you a blessed Maha Shivaratri! May Lord Shiva fulfill all your wishes. Explore our special devotional prints and custom orders today." },
@@ -391,7 +406,6 @@ const festivalCalendar = {
     "01-01": { subject: "Happy New Year: Exclusive Calendar Offers!", message: "Happy New Year! Start your year right with our brand new custom calendars and special discounts on all prints. Visit our store today!" }
 };
 
-// --- GET FESTIVAL TEMPLATES FOR ADMIN PANEL ---
 app.get('/api/admin/festival-templates', (req, res) => {
     try {
         res.json({ success: true, templates: festivalCalendar });
@@ -416,7 +430,8 @@ cron.schedule('0 0 * * *', async () => {
     }
 });
 
-app.post('/api/admin/inventory/add', upload.single('productImage'), async (req, res) => {
+// Inventory Add uses Cloudinary (For Product Icons / Images ONLY)
+app.post('/api/admin/inventory/add', uploadCloudinary.single('productImage'), async (req, res) => {
     try {
         const { sku, name, purchasePrice, sellingPrice, quantity, barcode, externalImageUrl } = req.body;
         let product = await Product.findOne({ $or: [{ sku }, ...(barcode ? [{ barcode }] : [])] });
@@ -597,8 +612,8 @@ async function deductStockForOrder(parsedConfig) {
     }
 }
 
-// --- SAFE & CRASH-PROOF CREATE-ORDER ENDPOINT ---
-app.post('/api/create-order', upload.any(), async (req, res) => {
+// Order Creation uses local storage (Privacy First: Documents stay locally on server disk, never sent to Cloudinary)
+app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
         
@@ -624,7 +639,6 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
             parsedConfig = [];
         }
 
-        // Safe Inventory Check
         if (Array.isArray(parsedConfig)) {
             for (const item of parsedConfig) {
                 if (item.printType === 'snack' || (item.fileName && String(item.fileName).startsWith('Product:'))) {
@@ -648,8 +662,8 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
         const docFiles = req.files ? req.files.filter(f => f.fieldname === 'document') : [];
         const filesMappedList = docFiles.map(f => ({ 
             name: f.originalname || 'Document.pdf', 
-            filename: f.filename || f.originalname, 
-            url: f.path || f.url || '#' 
+            filename: f.filename, 
+            url: `${req.protocol}://${req.get('host')}/uploads/${f.filename}` 
         }));
 
         const primaryUrl = filesMappedList.length > 0 ? filesMappedList[0].url : '';
