@@ -360,7 +360,7 @@ app.post('/api/admin/send-notification', async (req, res) => {
 
         sendBroadcastEmail(subject, message);
     } catch (err) {
-        console.error("Email Broadcast Error:", err);
+        console.error("Email Broadcast Error:", err.message);
         if (!res.headersSent) {
             res.status(500).json({ success: false, message: "Email send failed: " + err.message });
         }
@@ -412,7 +412,7 @@ cron.schedule('0 0 * * *', async () => {
             console.log(`✅ Automatic festival broadcast completed for ${dateKey}`);
         }
     } catch (cronErr) {
-        console.error("Automatic Cron Scheduler Error:", cronErr);
+        console.error("Automatic Cron Scheduler Error:", cronErr.message);
     }
 });
 
@@ -691,7 +691,7 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
                 receipt: `rcpt_${numericId}` 
             });
         } catch (rzpErr) {
-            console.error("Razorpay Error:", rzpErr);
+            console.error("Razorpay Error:", rzpErr.message);
             return res.status(500).json({ success: false, message: "Payment gateway error: " + rzpErr.message });
         }
         
@@ -724,7 +724,8 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
             key_id: razorpay.key_id 
         });
     } catch (error) {
-        console.error("Create Order Error:", error);
+        console.error("Create Order Critical Error Message:", error.message);
+        console.error("Create Order Full Error Stack:", error.stack);
         res.status(500).json({ success: false, message: error.message || "Order creation failed" });
     }
 });
