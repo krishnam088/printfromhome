@@ -76,7 +76,7 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* 🌧️ RAINY SEASON THEME OVERRIDES */
+/* 🌧️ RAINY SEASON THEME & REAL ANIMATED RAIN OVERRIDES */
 body.theme-rainy-season {
     background: linear-gradient(to bottom, #cbd5e1 0%, #94a3b8 100%) !important;
 }
@@ -84,6 +84,54 @@ body.theme-rainy-season {
 body.theme-rainy-season .brand-premium-header {
     background: linear-gradient(to bottom, #64748b 0%, #94a3b8 100%) !important;
     border-bottom: 1px solid #475569;
+}
+
+/* Real Falling Raindrops & Lightning Engine Styles */
+#rainAnimationContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 999;
+    overflow: hidden;
+    display: none;
+}
+
+body.theme-rainy-season #rainAnimationContainer {
+    display: block;
+}
+
+.raindrop {
+    position: absolute;
+    background: linear-gradient(transparent, rgba(255, 255, 255, 0.75));
+    width: 1.5px;
+    height: 30px;
+    opacity: 0.8;
+    animation: fall linear infinite;
+}
+
+@keyframes fall {
+    0% { transform: translateY(-40px); }
+    100% { transform: translateY(105vh); }
+}
+
+@keyframes lightningFlash {
+    0%, 88%, 92%, 96%, 100% { opacity: 0; }
+    90%, 94% { opacity: 0.4; background-color: #ffffff; }
+}
+
+body.theme-rainy-season::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1000;
+    animation: lightningFlash 6s infinite;
 }
 
 /* Highlighted Rainy / Cravings Card Badge */
@@ -496,7 +544,8 @@ body.theme-festive-diwali .wallet-modal-card {
     .side-drawer, 
     .drawer-overlay,
     .admin-sidebar,
-    #appToastContainer {
+    #appToastContainer,
+    #rainAnimationContainer {
         display: none !important;
     }
 

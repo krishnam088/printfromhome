@@ -92,6 +92,54 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* --- 🌧️ REAL ANIMATED RAIN & LIGHTNING STYLES --- */
+        #rainAnimationContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 999;
+            overflow: hidden;
+            display: none;
+        }
+
+        body.theme-rainy-season #rainAnimationContainer {
+            display: block;
+        }
+
+        .raindrop {
+            position: absolute;
+            background: linear-gradient(transparent, rgba(255, 255, 255, 0.75));
+            width: 1.5px;
+            height: 30px;
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-40px); }
+            100% { transform: translateY(105vh); }
+        }
+
+        @keyframes lightningFlash {
+            0%, 88%, 92%, 96%, 100% { opacity: 0; }
+            90%, 94% { opacity: 0.4; background-color: #ffffff; }
+        }
+
+        body.theme-rainy-season::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1000;
+            animation: lightningFlash 6s infinite;
+        }
+
         /* --- 🖨️ UNIVERSAL A4 STUDIO SHEET STYLES --- */
         .a4-page-wrapper {
             width: 210mm;
@@ -154,7 +202,7 @@
                 overflow: visible !important;
             }
 
-            .studio-toolbar, .page-badge-toolbar, #floatingCartFooterBar, #userInstallBanner, .side-drawer, .drawer-overlay, #appToastContainer {
+            .studio-toolbar, .page-badge-toolbar, #floatingCartFooterBar, #userInstallBanner, .side-drawer, .drawer-overlay, #appToastContainer, #rainAnimationContainer {
                 display: none !important;
             }
 
@@ -184,6 +232,9 @@
     </style>
 </head>
 <body>
+
+    <!-- 🌧️ Real Falling Raindrops & Lightning Container -->
+    <div id="rainAnimationContainer"></div>
 
     <!-- Global Toast Notifications Container -->
     <div id="appToastContainer"></div>
@@ -557,7 +608,7 @@
 
         <!-- 🌧️ Rain Surge Active Alert Banner -->
         <div id="rainSurgeBanner" class="hidden" style="background: #0284c7; color: white; padding: 8px 15px; text-align: center; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <span>🌧️ Heavy Rain Detected in Varanasi! Rain Surge Charge of ₹15 applies to ensure 15-min safe delivery.</span>
+            <span>🌧️ Heavy Rain Detected / Rain Surge Active! A ₹15 fee applies to ensure 15-min safe delivery.</span>
         </div>
 
         <div class="container" id="mainLayoutAppContainer">
@@ -743,41 +794,68 @@
         window.storeInventoryProducts = [];
         let lastRenderedData = "";
 
-        // 🌧️ Automatic Weather & Rain Detector for Varanasi (Open-Meteo API)
+        // 🌧️ Generate Real Falling Raindrops Dynamically
+        function initRealRainAnimation() {
+            const container = document.getElementById('rainAnimationContainer');
+            if (!container) return;
+            
+            if (container.children.length === 0) {
+                const dropCount = 90;
+                for (let i = 0; i < dropCount; i++) {
+                    const drop = document.createElement('div');
+                    drop.className = 'raindrop';
+                    drop.style.left = `${Math.random() * 100}vw`;
+                    drop.style.top = `${Math.random() * -50}vh`;
+                    drop.style.animationDuration = `${0.4 + Math.random() * 0.5}s`;
+                    drop.style.animationDelay = `${Math.random() * 2}s`;
+                    container.appendChild(drop);
+                }
+            }
+        }
+
+        // 🌧️ Automatic & Admin Manual Rain Surge Detector
         async function checkLocalWeatherAndApplyRainSurge() {
             try {
-                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.3176&longitude=82.9739&current=precipitation,weather_code');
-                const data = await res.json();
+                const statusRes = await fetch('/api/store-status');
+                const statusData = await statusRes.json();
                 
-                if (data && data.current) {
-                    const precipitation = data.current.precipitation || 0; 
-                    const weatherCode = data.current.weather_code || 0;
+                let adminRainForced = statusData.success && statusData.rainSurgeActive === true;
+
+                let isRaining = adminRainForced;
+                if (!adminRainForced) {
+                    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.3176&longitude=82.9739&current=precipitation,weather_code');
+                    const data = await res.json();
                     
-                    const isRaining = precipitation > 0 || (weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 99);
-
-                    const bodyEl = document.body;
-                    const rainBanner = document.getElementById('rainSurgeBanner');
-                    const rainSurgeRow = document.getElementById('rainSurgeRow');
-
-                    if (isRaining) {
-                        bodyEl.classList.add('theme-rainy-season');
-                        if (rainBanner) rainBanner.classList.remove('hidden');
-                        if (rainSurgeRow) rainSurgeRow.style.display = 'flex';
-
-                        window.isRainSurgeActive = true;
-                        window.rainSurgeFee = 15; // ₹15 rain surge fee
-                        highlightRainAndCravingProducts();
-                    } else {
-                        bodyEl.classList.remove('theme-rainy-season');
-                        if (rainBanner) rainBanner.classList.add('hidden');
-                        if (rainSurgeRow) rainSurgeRow.style.display = 'none';
-
-                        window.isRainSurgeActive = false;
-                        window.rainSurgeFee = 0;
+                    if (data && data.current) {
+                        const precipitation = data.current.precipitation || 0; 
+                        const weatherCode = data.current.weather_code || 0;
+                        isRaining = precipitation > 0 || (weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 99);
                     }
-                    
-                    if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
                 }
+
+                const bodyEl = document.body;
+                const rainBanner = document.getElementById('rainSurgeBanner');
+                const rainSurgeRow = document.getElementById('rainSurgeRow');
+
+                if (isRaining) {
+                    bodyEl.classList.add('theme-rainy-season');
+                    if (rainBanner) rainBanner.classList.remove('hidden');
+                    if (rainSurgeRow) rainSurgeRow.style.display = 'flex';
+
+                    window.isRainSurgeActive = true;
+                    window.rainSurgeFee = 15; // ₹15 rain surge fee
+                    initRealRainAnimation();
+                    highlightRainAndCravingProducts();
+                } else {
+                    bodyEl.classList.remove('theme-rainy-season');
+                    if (rainBanner) rainBanner.classList.add('hidden');
+                    if (rainSurgeRow) rainSurgeRow.style.display = 'none';
+
+                    window.isRainSurgeActive = false;
+                    window.rainSurgeFee = 0;
+                }
+                
+                if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
             } catch (e) {
                 console.error("Weather detection error:", e);
             }
@@ -808,7 +886,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             checkLocalWeatherAndApplyRainSurge();
-            setInterval(checkLocalWeatherAndApplyRainSurge, 10 * 60 * 1000);
+            setInterval(checkLocalWeatherAndApplyRainSurge, 5 * 60 * 1000);
         });
 
         // ==========================================
