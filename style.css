@@ -76,6 +76,31 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* 🌧️ RAINY SEASON THEME OVERRIDES */
+body.theme-rainy-season {
+    background: linear-gradient(to bottom, #cbd5e1 0%, #94a3b8 100%) !important;
+}
+
+body.theme-rainy-season .brand-premium-header {
+    background: linear-gradient(to bottom, #64748b 0%, #94a3b8 100%) !important;
+    border-bottom: 1px solid #475569;
+}
+
+/* Highlighted Rainy / Cravings Card Badge */
+.rain-craving-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: #0284c7;
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 6px;
+    z-index: 5;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
 /* 🎨 FESTIVE THEME FULL BACKGROUND & CARD OVERRIDES */
 body.theme-festive-republic { background-color: #fffaf5 !important; }
 body.theme-festive-holi { background-color: #fffbeb !important; }
