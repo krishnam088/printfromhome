@@ -33,6 +33,118 @@ document.addEventListener('DOMContentLoaded', () => {
     window.globalRawOrdersCache = [];
 
     // ==========================================
+    // 🖨️ UNIVERSAL A4 PRINT STUDIO ENGINE (ANDROID, iOS & WINDOWS)
+    // ==========================================
+    let renderedPagesList = [];
+    let isLandscapeMode = false;
+
+    window.openDocumentInA4Studio = async function(fileBlobOrUrl, originalFileName = 'Document') {
+        const container = document.getElementById('a4PagesContainer');
+        const modal = document.getElementById('printStudioModal');
+        if (!container || !modal) return;
+
+        container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Generating pixel-perfect A4 Sheets...</div>';
+        modal.style.display = 'flex';
+        renderedPagesList = [];
+
+        try {
+            const isPdf = (typeof fileBlobOrUrl === 'string' && fileBlobOrUrl.toLowerCase().includes('.pdf')) || 
+                          (fileBlobOrUrl.type === 'application/pdf') || 
+                          (fileBlobOrUrl.name && fileBlobOrUrl.name.toLowerCase().endsWith('.pdf'));
+
+            if (isPdf) {
+                const fileSource = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
+                const loadingTask = pdfjsLib.getDocument(fileSource);
+                const pdf = await loadingTask.promise;
+                container.innerHTML = '';
+
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: 2.0 }); // 2x Scale for razor-sharp A4 rendering
+
+                    const pageWrapper = document.createElement('div');
+                    pageWrapper.className = `a4-page-wrapper ${isLandscapeMode ? 'landscape' : ''}`;
+                    pageWrapper.id = `a4_sheet_element_${pageNum}`;
+
+                    const badgeBar = document.createElement('div');
+                    badgeBar.className = 'page-badge-toolbar';
+                    badgeBar.innerHTML = `
+                        <span style="color: #38bdf8; font-size: 0.75rem; font-weight: 800;">Page ${pageNum} of ${pdf.numPages}</span>
+                        <button type="button" onclick="removeA4StudioPage(${pageNum})" style="background: #ef4444; color: white; border: none; border-radius: 6px; padding: 2px 8px; font-size: 0.7rem; font-weight: 800; cursor: pointer;">Delete</button>
+                    `;
+
+                    const canvas = document.createElement('canvas');
+                    canvas.className = 'a4-page-canvas';
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                    pageWrapper.appendChild(badgeBar);
+                    pageWrapper.appendChild(canvas);
+                    container.appendChild(pageWrapper);
+
+                    renderedPagesList.push({ pageNum, elementId: `a4_sheet_element_${pageNum}` });
+                }
+            } else {
+                const imgSourceUrl = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
+                container.innerHTML = '';
+
+                const pageWrapper = document.createElement('div');
+                pageWrapper.className = `a4-page-wrapper ${isLandscapeMode ? 'landscape' : ''}`;
+                pageWrapper.id = `a4_sheet_element_1`;
+
+                pageWrapper.innerHTML = `
+                    <div class="page-badge-toolbar">
+                        <span style="color: #38bdf8; font-size: 0.75rem; font-weight: 800;">Page 1 of 1</span>
+                    </div>
+                    <img src="${imgSourceUrl}" class="a4-page-canvas" style="width: 100%; height: 100%; object-fit: contain;" />
+                `;
+                container.appendChild(pageWrapper);
+                renderedPagesList.push({ pageNum: 1, elementId: `a4_sheet_element_1` });
+            }
+
+            window.updateStudioPageCountBadge();
+        } catch (err) {
+            console.error("A4 Studio Error:", err);
+            container.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 30px; text-align: center;">❌ Failed to render document: ${err.message}</div>`;
+        }
+    };
+
+    window.updateStudioPageCountBadge = function() {
+        const badge = document.getElementById('totalActivePagesCount');
+        if (badge) badge.textContent = renderedPagesList.length;
+    };
+
+    window.removeA4StudioPage = function(pageNum) {
+        const index = renderedPagesList.findIndex(p => p.pageNum === pageNum);
+        if (index !== -1) {
+            const item = renderedPagesList[index];
+            const el = document.getElementById(item.elementId);
+            if (el) el.remove();
+            renderedPagesList.splice(index, 1);
+            window.updateStudioPageCountBadge();
+        }
+    };
+
+    window.toggleGlobalOrientation = function() {
+        isLandscapeMode = !isLandscapeMode;
+        document.querySelectorAll('.a4-page-wrapper').forEach(sheet => {
+            sheet.classList.toggle('landscape', isLandscapeMode);
+        });
+    };
+
+    window.closePrintStudio = function() {
+        const modal = document.getElementById('printStudioModal');
+        if (modal) modal.style.display = 'none';
+    };
+
+    window.executeNativeA4Print = function() {
+        window.print();
+    };
+
+    // ==========================================
     // 🔔 PUSH NOTIFICATION PERMISSION REQUEST
     // ==========================================
     async function requestUserPushNotificationPermission() {
@@ -244,6 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 🔙 PHONE BACK BUTTON / HISTORY HANDLER
     // ==========================================
     window.addEventListener('popstate', (event) => {
+        const studioModal = document.getElementById('printStudioModal');
         const cartOverlay = document.getElementById('cartDrawerOverlay');
         const walletModal = document.getElementById('walletDepositModal');
         const sideDrawer = document.getElementById('userSideDrawer');
@@ -251,6 +364,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const configScreen = document.getElementById('configurationScreenState');
         const productModal = document.getElementById('productDetailModal');
         
+        if (studioModal && studioModal.style.display === 'flex') {
+            studioModal.style.display = 'none';
+            return;
+        }
         if (productModal && productModal.style.display === 'flex') {
             productModal.style.display = 'none';
             return;
@@ -378,7 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modal) modal.style.display = 'none';
     }
 
-    // --- NEW: PROFILE SETTINGS PARTIAL UPDATE LOGIC WITH DATABASE SYNC ---
+    // --- PROFILE SETTINGS PARTIAL UPDATE LOGIC WITH DATABASE SYNC ---
     const profileForm = document.getElementById('drawerProfileUpdateForm');
     if (profileForm) {
         profileForm.addEventListener('submit', async (e) => {
@@ -422,7 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- NEW: PROFILE GMAIL UPDATE FUNCTION ---
+    // --- PROFILE GMAIL UPDATE FUNCTION ---
     window.updateUserGmailProfile = async function() {
         const emailInput = document.getElementById('userProfileEmailField');
         if (!emailInput || !emailInput.value.trim()) { alert("⚠️ Please enter a valid Gmail address!"); return; }
@@ -442,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- NEW: FORGET PASSWORD / RESET PASSWORD LOGIC ---
+    // --- FORGOT PASSWORD / RESET PASSWORD LOGIC ---
     window.initiatePasswordReset = async function() {
         const identityInput = document.getElementById('authIdentity');
         const identity = identityInput ? identityInput.value.trim() : prompt("Enter your registered 10-digit mobile number:");
@@ -512,6 +629,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (userInstallTriggerBtn) {
         userInstallTriggerBtn.addEventListener('click', async () => {
+            if (typeof window.triggerUniversalPWAInstall === 'function') {
+                window.triggerUniversalPWAInstall();
+                return;
+            }
             if (!deferredUserPrompt) {
                 alert("💡 To install, tap your browser's menu (3 dots at top right) and select 'Install app' or 'Add to Home screen'.");
                 return;
@@ -742,13 +863,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if(fileUpload) {
-        fileUpload.addEventListener('change', () => {
+        fileUpload.addEventListener('change', async () => {
             if (fileUpload.files.length === 0) return;
-            Array.from(fileUpload.files).forEach(file => {
+            
+            for (const file of Array.from(fileUpload.files)) {
                 if (!masterFilesArray.some(f => f.name === file.name && f.size === file.size)) {
-                    masterFilesArray.push({ name: file.name, size: file.size, type: file.type, fileData: file, config: { pages: 1, printType: 'bw', orientation: 'portrait', binding: 'none', copies: 1 } });
+                    let pageCount = 1;
+                    
+                    // Auto-calculate exact PDF page count using PDF.js
+                    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                        try {
+                            const arrayBuffer = await file.arrayBuffer();
+                            const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                            pageCount = pdfDoc.numPages || 1;
+                        } catch (e) {
+                            pageCount = 1;
+                        }
+                    }
+
+                    masterFilesArray.push({ 
+                        name: file.name, 
+                        size: file.size, 
+                        type: file.type, 
+                        fileData: file, 
+                        config: { 
+                            pages: pageCount, 
+                            printType: 'bw', 
+                            orientation: 'portrait', 
+                            binding: 'none', 
+                            copies: 1 
+                        } 
+                    });
                 }
-            });
+            }
             fileUpload.value = ''; 
             saveCurrentFilesToSession(); 
             renderFilesUI();
@@ -789,9 +936,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             fileRow.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; padding-bottom: 8px; margin-bottom: 10px;">
-                    <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                    <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; cursor:pointer;" onclick="previewFileInA4Studio(${index})">
                         <span style="font-size: 1.1rem;">📄</span>
-                        <h4 style="font-weight: 700; font-size: 0.85rem; color: #1a202c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;" title="${item.name}">${item.name}</h4>
+                        <div>
+                            <h4 style="font-weight: 700; font-size: 0.85rem; color: #1a202c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;" title="${item.name}">${item.name}</h4>
+                            <span style="font-size:0.68rem; color:var(--blinkit-green); font-weight:700;">👁️ Tap to View A4 Preview</span>
+                        </div>
                     </div>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <button type="button" class="add-more-inline-card-btn" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 3px 8px; font-size: 0.7rem; font-weight: 700; border-radius: 6px; cursor: pointer;" onclick="triggerInlineFileUploadClick()">+ Add More</button>
@@ -866,6 +1016,14 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
         updateFloatingCartBar();
     }
+
+    window.previewFileInA4Studio = function(index) {
+        if (masterFilesArray[index] && masterFilesArray[index].fileData) {
+            window.openDocumentInA4Studio(masterFilesArray[index].fileData, masterFilesArray[index].name);
+        } else {
+            alert("⚠️ Please re-upload the document to open A4 interactive studio.");
+        }
+    };
 
     function calculateTotal() {
         let totalPrintCost = 0; let totalBindingCost = 0;
@@ -1099,7 +1257,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     date: new Date().toLocaleString(), 
                     amount: grandTotal.toFixed(2), 
                     status: "Ready for Print", 
-                    details: finalMetaConfig,
+                    details: finalMetaConfig, 
                     address: selectedActiveAddress 
                 };
                 currentHistoryArray.push(newOrderPayload);
@@ -1128,7 +1286,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             date: new Date().toLocaleString(), 
                             amount: grandTotal.toFixed(2), 
                             status: "Ready for Print", 
-                            details: finalMetaConfig,
+                            details: finalMetaConfig, 
                             address: selectedActiveAddress 
                         };
                         currentHistoryArray.push(newOrderPayload);
