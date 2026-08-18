@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentStudioActiveFile = null;
     let currentStudioFileName = 'Document.pdf';
 
-   window.openDocumentInA4Studio = async function(fileBlobOrUrl, originalFileName = 'Document') {
+    window.openDocumentInA4Studio = async function(fileBlobOrUrl, originalFileName = 'Document') {
     const container = document.getElementById('a4PagesContainer');
     const modal = document.getElementById('printStudioModal');
     const passwordBox = document.getElementById('studioPasswordValidationBox');
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     // 🛵 LIVE STATUS & DELIVERY EXECUTIVE STEPPER
     // ==========================================
-    window.executeLiveTimelineStateStepper = function(statusText) {
+    window.executeLiveTimelineStateStepper = function(statusText, assignedDeliveryBoyPhone) {
         const statusBadge = document.getElementById('liveOrderStatusBadge');
         const execName = document.getElementById('deliveryExecutiveName');
         const execPhone = document.getElementById('deliveryExecutivePhone');
@@ -317,10 +317,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (statusBadge) statusBadge.textContent = statusText || "Processing Order...";
 
-        if (statusText && (statusText.includes('Out for Delivery') || statusText.includes('Ready'))) {
-            if (execName) execName.textContent = "Rajesh Kumar (Delivery Partner)";
-            if (execPhone) execPhone.textContent = "+91 98765 43210";
-            if (callBtn) callBtn.href = "tel:9876543210";
+        if (assignedDeliveryBoyPhone && assignedDeliveryBoyPhone.trim() !== '') {
+            if (execName) execName.textContent = `Delivery Partner (${assignedDeliveryBoyPhone})`;
+            if (execPhone) execPhone.textContent = `📞 ${assignedDeliveryBoyPhone}`;
+            if (callBtn) callBtn.href = `tel:${assignedDeliveryBoyPhone}`;
         } else {
             if (execName) execName.textContent = "Assigning Delivery Executive...";
             if (execPhone) execPhone.textContent = "Will be assigned shortly";
@@ -334,6 +334,11 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadDynamicStoreProducts() {
         try {
             const res = await fetch('/api/store/products');
+            const contentType = res.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                console.warn("Server returned non-JSON response (Server restarting or down)");
+                return;
+            }
             const data = await res.json();
             if (data.success && Array.isArray(data.products)) {
                 window.storeInventoryProducts = data.products;
@@ -746,7 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (currentActiveTrackingId && typeof window.executeLiveTimelineStateStepper === 'function') {
                     const match = data.find(o => o.orderId === currentActiveTrackingId);
                     if (match) {
-                        window.executeLiveTimelineStateStepper(match.status);
+                        window.executeLiveTimelineStateStepper(match.status, match.assignedDeliveryBoy);
                         
                         const activeUserToken = localStorage.getItem('printAppUser');
                         const localHistory = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
@@ -1157,7 +1162,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 listContainer.appendChild(row);
             });
         }
-        window.executeLiveTimelineStateStepper(order.status);
+        window.executeLiveTimelineStateStepper(order.status, order.assignedDeliveryBoy);
 
         let cancelSectionNode = document.getElementById('dynamicCancelOrderSection');
         if (!cancelSectionNode) {
