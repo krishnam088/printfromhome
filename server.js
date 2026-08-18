@@ -597,6 +597,7 @@ async function deductStockForOrder(parsedConfig) {
     }
 }
 
+// --- SAFE & CRASH-PROOF CREATE-ORDER ENDPOINT ---
 app.post('/api/create-order', upload.any(), async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
@@ -606,7 +607,7 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
         const utcMinutes = now.getUTCMinutes();
         const istTotalMinutes = (utcHours * 60 + utcMinutes) + (5 * 60 + 30);
         const istHours = Math.floor(istTotalMinutes / 60) % 24;
-        const isTimeWithinOperatingHours = istHours >= 7 && istHours < 22;
+        const isTimeWithinOperatingHours = istHours >= 7 && istHours < 24;
         
         const isOpen = config ? (isTimeWithinOperatingHours && config.isOpen) : isTimeWithinOperatingHours;
         if (!isOpen) return res.status(403).json({ success: false, message: "Store is closed" });
@@ -614,22 +615,29 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
         const { totalAmount, configDetails, address, customerName, phone, paymentMode } = req.body;
         
         let finalAmountNumeric = parseFloat(String(totalAmount || '42').replace(/[₹,]/g, ''));
-        if (isNaN(finalAmountNumeric)) finalAmountNumeric = 42;
+        if (isNaN(finalAmountNumeric) || finalAmountNumeric <= 0) finalAmountNumeric = 42;
 
         let parsedConfig = [];
-        try { parsedConfig = configDetails ? JSON.parse(configDetails) : []; } catch(e){}
+        try { 
+            parsedConfig = typeof configDetails === 'string' ? JSON.parse(configDetails) : (configDetails || []); 
+        } catch(e) {
+            parsedConfig = [];
+        }
 
-        // STRICT INVENTORY CHECK (Server Guard)
-        for (const item of parsedConfig) {
-            if (item.printType === 'snack' || (item.fileName && item.fileName.startsWith('Product:'))) {
-                let prodName = item.fileName.replace('Product: ', '').split(' (Qty:')[0].trim();
-                let qtyRequested = item.copies || item.qty || 1;
-                let product = await Product.findOne({ name: { $regex: new RegExp(prodName, 'i') } });
-                if (!product || product.stockQuantity < qtyRequested) {
-                    return res.status(400).json({ 
-                        success: false, 
-                        message: `⚠️ Sorry! "${prodName}" has only ${product ? product.stockQuantity : 0} units left in stock.` 
-                    });
+        // Safe Inventory Check
+        if (Array.isArray(parsedConfig)) {
+            for (const item of parsedConfig) {
+                if (item.printType === 'snack' || (item.fileName && String(item.fileName).startsWith('Product:'))) {
+                    let prodName = String(item.fileName).replace('Product: ', '').split(' (Qty:')[0].trim();
+                    let qtyRequested = Number(item.copies || item.qty || 1);
+                    
+                    let product = await Product.findOne({ name: { $regex: new RegExp(prodName, 'i') } });
+                    if (product && product.stockQuantity < qtyRequested) {
+                        return res.status(400).json({ 
+                            success: false, 
+                            message: `⚠️ Sorry! "${prodName}" has only ${product.stockQuantity} units left in stock.` 
+                        });
+                    }
                 }
             }
         }
@@ -638,7 +646,14 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
         const numericId = String(Math.floor(100000 + Math.random() * 900000));
 
         const docFiles = req.files ? req.files.filter(f => f.fieldname === 'document') : [];
-        const filesMappedList = docFiles.map(f => ({ name: f.originalname, filename: f.filename, url: f.path || f.url }));
+        const filesMappedList = docFiles.map(f => ({ 
+            name: f.originalname || 'Document.pdf', 
+            filename: f.filename || f.originalname, 
+            url: f.path || f.url || '#' 
+        }));
+
+        const primaryUrl = filesMappedList.length > 0 ? filesMappedList[0].url : '';
+        const primaryName = filesMappedList.length > 0 ? filesMappedList[0].name : (parsedConfig[0]?.fileName || 'Document.pdf');
 
         if (selectedPaymentMode === 'cod') {
             await deductStockForOrder(parsedConfig);
@@ -648,8 +663,8 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
                 customerName: customerName || 'Customer',
                 phone: phone || 'N/A',
                 files: filesMappedList,
-                fileUrl: filesMappedList.length > 0 ? filesMappedList[0].url : '',
-                fileName: filesMappedList.length > 0 ? filesMappedList[0].name : 'Document.pdf',
+                fileUrl: primaryUrl,
+                fileName: primaryName,
                 configDetails: parsedConfig,
                 pages: parsedConfig.length > 0 ? (parsedConfig[0].pages || 1) : 1,
                 copies: parsedConfig.length > 0 ? (parsedConfig[0].copies || 1) : 1,
@@ -685,8 +700,8 @@ app.post('/api/create-order', upload.any(), async (req, res) => {
             customerName: customerName || 'Customer',
             phone: phone || 'N/A',
             files: filesMappedList,
-            fileUrl: filesMappedList.length > 0 ? filesMappedList[0].url : '',
-            fileName: filesMappedList.length > 0 ? filesMappedList[0].name : 'Document.pdf',
+            fileUrl: primaryUrl,
+            fileName: primaryName,
             configDetails: parsedConfig,
             pages: parsedConfig.length > 0 ? (parsedConfig[0].pages || 1) : 1,
             copies: parsedConfig.length > 0 ? (parsedConfig[0].copies || 1) : 1,
