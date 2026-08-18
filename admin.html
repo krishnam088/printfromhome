@@ -425,7 +425,7 @@
             </div>
         </div>
 
-        <!-- TAB 4: MARKETING & NOTIFICATION SECTION (UPDATED WITH TEMPLATE LOADER) -->
+        <!-- TAB 4: MARKETING & NOTIFICATION SECTION -->
         <div id="section_marketing" class="admin-section">
             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; max-width: 750px;">
                 <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 8px;">📢 Broadcast Gmail Notifications</h3>
@@ -433,7 +433,6 @@
                 
                 <div style="display: flex; flex-direction: column; gap: 14px;">
                     
-                    <!-- FESTIVAL CALENDAR QUICK SELECTOR -->
                     <div style="background: rgba(0, 112, 243, 0.08); border: 1px solid rgba(0, 112, 243, 0.3); border-radius: 12px; padding: 14px;">
                         <label style="font-size: 0.8rem; font-weight: 800; color: #38bdf8; display: block; margin-bottom: 6px;">⚡ Quick Festival / Holiday Template (2026):</label>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -505,7 +504,6 @@
             }
         }
 
-        // --- FESTIVAL TEMPLATES LOADER FOR MARKETING TAB ---
         async function loadFestivalTemplatesFromServer() {
             const dropdown = document.getElementById('festivalTemplateDropdown');
             if (!dropdown) return;
@@ -1006,12 +1004,21 @@
         }
         updateAutoPrintButtonUI();
 
+        // 🔥 Auto-Print or Manual Print Dispatcher
         function triggerPrintJob(fileUrl, orderId) {
-            if (!fileUrl || fileUrl === '#') return;
+            if (!fileUrl || fileUrl === '#') {
+                alert("⚠️ Document file URL is not available for this print job.");
+                return;
+            }
             const frame = document.getElementById('silentPrintFrame');
             frame.src = fileUrl;
             frame.onload = function () {
-                try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch (e) { window.open(fileUrl, '_blank'); }
+                try { 
+                    frame.contentWindow.focus(); 
+                    frame.contentWindow.print(); 
+                } catch (e) { 
+                    window.open(fileUrl, '_blank'); 
+                }
             };
             if (orderId) {
                 processedAutoPrintOrderIds.add(orderId);
@@ -1089,8 +1096,22 @@
 
                 globalLiveOrdersCache = orders;
 
-                if (previousOrderCount !== -1 && orders.length > previousOrderCount) { playLoudOrderChime(); }
+                if (previousOrderCount !== -1 && orders.length > previousOrderCount) { 
+                    playLoudOrderChime(); 
+                }
                 previousOrderCount = orders.length;
+
+                // 🔥 Auto-Print Dispatch for New Orders
+                orders.forEach(order => {
+                    if (autoPrintEnabled && order.status === 'Ready for Print' && !processedAutoPrintOrderIds.has(order.orderId)) {
+                        const hasPrintJob = Array.isArray(order.configDetails) && order.configDetails.some(item => item.printType !== 'snack');
+                        const fileUrl = order.fileUrl || (Array.isArray(order.files) && order.files[0]?.url);
+                        if (hasPrintJob && fileUrl && fileUrl !== '#') {
+                            console.log(`🖨️ Auto-printing order #${order.orderId}`);
+                            triggerPrintJob(fileUrl, order.orderId);
+                        }
+                    }
+                });
 
                 renderOrdersList(orders);
                 if (document.getElementById('oldOrdersArchiveModal').style.display === 'flex') {
