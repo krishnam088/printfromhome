@@ -181,6 +181,7 @@
         <div id="studioPasswordValidationBox" class="hidden" style="background: rgba(239, 68, 68, 0.15); border-bottom: 1px solid #ef4444; padding: 10px 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
             <span style="font-size: 0.8rem; font-weight: 800; color: #f87171;">🔐 Locked PDF Detected! Enter Password:</span>
             <input type="password" id="studioRequiredPdfPassword" placeholder="Enter password to unlock..." style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ef4444; background: #0f172a; color: white; font-size: 0.8rem; outline: none; flex: 1; min-width: 200px;">
+            <button type="button" onclick="tryUnlockAndRenderLockedPdf()" style="background: #ef4444; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; cursor: pointer;">Unlock</button>
         </div>
 
         <div id="a4PagesContainer" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 25px 12px; background: #0f172a; -webkit-overflow-scrolling: touch;">
@@ -535,7 +536,6 @@
                 </div>
             </div>
 
-            <!-- HISTORY & TRACKING SECTION (CANCEL BUTTON REMOVED TO PROTECT AUTO-PRINT) -->
             <div id="user_section_history" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
@@ -693,13 +693,12 @@
                     const fileSource = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
                     
                     try {
-                        // First attempt without password
                         await loadPdfIntoStudio(fileSource, undefined);
                     } catch (passErr) {
                         if (passErr.name === 'PasswordException' || passErr.message.includes('password')) {
                             isCurrentFileLocked = true;
                             if (passwordBox) passwordBox.classList.remove('hidden');
-                            container.innerHTML = `<div style="color: #f87171; font-weight: 700; padding: 30px; text-align: center;">🔒 This PDF is password protected!<br><span style="font-size:0.75rem; color:#94a3b8;">Please enter the password in the top red bar to preview and print.</span></div>`;
+                            container.innerHTML = `<div style="color: #f87171; font-weight: 700; padding: 30px; text-align: center;">🔒 This PDF is password protected!<br><span style="font-size:0.75rem; color:#94a3b8;">Please enter the password in the top red bar to unlock and preview.</span></div>`;
                             return;
                         } else {
                             throw passErr;
@@ -767,7 +766,6 @@
             updateStudioPageCountBadge();
         }
 
-        // Triggered when user types password for locked PDF
         window.tryUnlockAndRenderLockedPdf = async function() {
             const passwordInput = document.getElementById('studioRequiredPdfPassword');
             const pwd = passwordInput ? passwordInput.value.trim() : '';
@@ -814,14 +812,13 @@
             if (modal) modal.style.display = 'none';
         };
 
-        // 🛒 ADD TO CART WITH MANDATORY PASSWORD VALIDATION & DECLINE CHECK
         window.addStudioDocumentToCartAndRedirect = function() {
             const passwordInput = document.getElementById('studioRequiredPdfPassword');
             const enteredPassword = passwordInput ? passwordInput.value.trim() : '';
 
             if (isCurrentFileLocked && !enteredPassword) {
                 alert("🚫 Order Declined: This PDF file is locked! You must enter the correct password to add it to cart and print.");
-                return; // Stops execution and declines adding to cart
+                return;
             }
 
             const totalPages = renderedPagesList.length > 0 ? renderedPagesList.length : 1;
@@ -835,7 +832,7 @@
                 copies: 1,
                 orientation: isLandscapeMode ? 'landscape' : 'portrait',
                 fileData: currentStudioActiveFile,
-                pdfPassword: enteredPassword // Securely attached to print job metadata
+                pdfPassword: enteredPassword
             });
 
             if (typeof persistCartStateData === 'function') persistCartStateData();
@@ -882,7 +879,6 @@
                 });
             }
 
-            // Hook password input enter key event for convenience
             const pwdField = document.getElementById('studioRequiredPdfPassword');
             if (pwdField) {
                 pwdField.addEventListener('keypress', function(e) {
