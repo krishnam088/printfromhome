@@ -1057,6 +1057,32 @@
         updateRainSurgeButtonUI();
         fetchAdminRainSurgeStatus();
 
+        // 🛵 Assign Order to Delivery Boy
+        async function assignOrderToDeliveryBoy(orderId) {
+            const boyPhone = prompt("Enter Delivery Executive Mobile Number (10 digits):");
+            if (!boyPhone || boyPhone.trim().length !== 10) {
+                if (boyPhone !== null) alert("Please enter a valid 10-digit mobile number.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'Out for Delivery', assignedDeliveryBoy: boyPhone.trim() })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(`✅ Order assigned to delivery executive (${boyPhone}) successfully! Status updated to Out for Delivery.`);
+                    fetchLiveOrdersStream();
+                } else {
+                    alert("⚠️ Failed to assign order.");
+                }
+            } catch (err) {
+                alert("❌ Connection error while assigning order.");
+            }
+        }
+
         // 🔥 ROBUST FAIL-SAFE PRINT DISPATCHER
         function triggerPrintJob(fileUrl, orderId) {
             let resolvedUrl = fileUrl;
@@ -1228,8 +1254,10 @@
             const currentStatus = order.status || 'Pending';
             
             const isDelivered = currentStatus.includes('Delivered');
-            const isCancelled = currentStatus.includes('Cancelled') || isDelivered;
+            const isCancelled = currentStatus.includes('Cancelled');
             const { cleanId, istString } = formatOrderDisplay(order);
+
+            const assignedBoy = order.assignedDeliveryBoy;
 
             return `
                 <div class="order-card ${isCancelled ? 'cancelled' : ''}" id="card_${order.orderId}">
@@ -1242,6 +1270,16 @@
                             <div style="font-size: 1.25rem; font-weight: 800; color: ${isCancelled ? 'var(--accent-red)' : 'var(--accent-green)'};">₹${order.totalAmount || order.amount || 0}</div>
                             <button type="button" onclick="toggleOrderDetailsDrawer('${order.orderId}')" style="background: var(--surface-card-hover); color: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">📋 View Details</button>
                         </div>
+                    </div>
+
+                    <!-- 🛵 Delivery Assignment Banner -->
+                    <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid ${assignedBoy ? 'var(--accent-green)' : 'var(--border-color)'}; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <div style="font-size: 0.8rem; font-weight: 700;">
+                            🛵 Delivery Executive: <span style="color: ${assignedBoy ? 'var(--accent-green)' : 'var(--accent-yellow)'};">${assignedBoy ? 'Assigned (' + assignedBoy + ')' : 'Not Assigned Yet'}</span>
+                        </div>
+                        <button type="button" onclick="assignOrderToDeliveryBoy('${order.orderId}')" style="background: #3b82f6; color: white; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">
+                            ${assignedBoy ? '🔄 Reassign' : '👉 Assign Boy'}
+                        </button>
                     </div>
 
                     ${isCancelled ? `
@@ -1294,7 +1332,7 @@
                             <button type="button" class="btn-step ${currentStatus.includes('Ready') ? 'current-phase' : ''}" ${isCancelled ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Ready for Print')">1. Ready</button>
                             <button type="button" class="btn-step ${currentStatus === 'Printing' ? 'current-phase' : ''}" ${isCancelled ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Printing')">2. Processing</button>
                             <button type="button" class="btn-step ${currentStatus === 'Out for Delivery' ? 'current-phase' : ''}" ${isCancelled || !allProductsVerified ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Out for Delivery')">3. Out for Delivery</button>
-                            <button type="button" class="btn-step ${currentStatus === 'Delivered' ? 'active' : ''}" ${isCancelled && !currentStatus.includes('Delivered') ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Delivered')">4. Delivered</button>
+                            <button type="button" class="btn-step ${currentStatus.includes('Delivered') ? 'active' : ''}" ${isCancelled && !currentStatus.includes('Delivered') ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Delivered 🟢')">4. Delivered</button>
                         </div>
                         ${!isCancelled ? `
                             <button type="button" onclick="adminCancelOrder('${order.orderId}')" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; padding: 8px 12px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
