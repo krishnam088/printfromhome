@@ -153,7 +153,7 @@
             </div>
             
             <div id="modalProductImgContainer" style="width:100%; height:220px; background:#f8fafc; border-radius:16px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; overflow:hidden; border:1px solid #e2e8f0;">
-                </div>
+            </div>
             
             <h3 id="modalProductName" style="font-size:1.3rem; font-weight:800; color:#0f172a; margin-bottom:6px;">Product Name</h3>
             <p id="modalProductPrice" style="font-size:1.2rem; font-weight:900; color:var(--blinkit-green, #10b981); margin-bottom:10px;">₹0.00</p>
@@ -166,18 +166,18 @@
     <div id="printStudioModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); z-index: 100000; flex-direction: column; overflow: hidden; font-family: 'Poppins', sans-serif;">
         <div class="studio-toolbar" style="background: #1e293b; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; flex-wrap: wrap; gap: 10px;">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <button type="button" onclick="closePrintStudio()" style="background: #334155; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem;">&larr; Back to Store</button>
-                <h3 style="font-size: 1rem; color: #f8fafc; margin: 0; font-weight: 800;">📑 A4 Print Studio (<span id="totalActivePagesCount" style="color: var(--blinkit-green, #10b981);">0</span> Pages)</h3>
+                <button type="button" onclick="closePrintStudio()" style="background: #334155; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem;">&larr; Cancel</button>
+                <h3 style="font-size: 1rem; color: #f8fafc; margin: 0; font-weight: 800;">📑 A4 Preview (<span id="totalActivePagesCount" style="color: var(--blinkit-green, #10b981);">0</span> Pages)</h3>
             </div>
             
             <div style="display: flex; gap: 10px; align-items: center;">
-                <button type="button" onclick="toggleGlobalOrientation()" style="background: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">🔄 Rotate Layout</button>
-                <button type="button" onclick="executeNativeA4Print()" style="background: var(--blinkit-green, #10b981); color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: 800; font-size: 0.88rem; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">🖨️ Print Document</button>
+                <button type="button" onclick="toggleGlobalOrientation()" style="background: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">🔄 Rotate</button>
+                <button type="button" onclick="addStudioDocumentToCartAndRedirect()" style="background: var(--blinkit-green, #10b981); color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: 800; font-size: 0.88rem; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">🛒 Add to Cart & Proceed &rarr;</button>
             </div>
         </div>
 
         <div id="a4PagesContainer" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 25px 12px; background: #0f172a; -webkit-overflow-scrolling: touch;">
-            </div>
+        </div>
     </div>
 
     <div id="iosInstallModal" onclick="closeIosInstallModal(event)" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(5px); z-index: 100000; justify-content: center; align-items: flex-end; padding: 0;">
@@ -609,7 +609,7 @@
     <div id="floatingCartFooterBar" class="floating-cart-footer hidden" style="display:flex; justify-content:space-between; align-items:center;">
         <div class="floating-cart-left" style="display:flex; align-items:center; gap:12px; cursor:pointer; flex:1;" onclick="toggleCartDrawer(true)">
             <div id="floatingCartImagesStack" style="display:flex; align-items:center; position:relative; min-width:40px; height:36px; margin-left:4px;">
-                </div>
+            </div>
             <div class="cart-title-info" style="display:flex; flex-direction:column; text-align:left;">
                 <span class="cart-items-count" id="floatingCartCountText" style="font-size:0.75rem; font-weight:700; color:#ffffff; opacity:0.9;">3 items</span>
                 <span class="cart-total-price" id="floatingCartTotalPriceText" style="font-size:0.95rem; font-weight:900; color:#ffffff;">View cart</span>
@@ -654,11 +654,16 @@
         // ==========================================
         let renderedPagesList = [];
         let isLandscapeMode = false;
+        let currentStudioActiveFile = null;
+        let currentStudioFileName = 'Document.pdf';
 
         window.openDocumentInA4Studio = async function(fileBlobOrUrl, originalFileName = 'Document') {
             const container = document.getElementById('a4PagesContainer');
             const modal = document.getElementById('printStudioModal');
             if (!container || !modal) return;
+
+            currentStudioActiveFile = fileBlobOrUrl;
+            currentStudioFileName = originalFileName || 'Document.pdf';
 
             container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Generating pixel-perfect A4 Sheets...</div>';
             modal.style.display = 'flex';
@@ -755,6 +760,28 @@
         window.closePrintStudio = function() {
             const modal = document.getElementById('printStudioModal');
             if (modal) modal.style.display = 'none';
+        };
+
+        // 🔥 Preview se Cart mein add karke direct cart open karna
+        window.addStudioDocumentToCartAndRedirect = function() {
+            const totalPages = renderedPagesList.length > 0 ? renderedPagesList.length : 1;
+
+            window.cartPrintJobsArray.push({
+                fileName: currentStudioFileName,
+                pages: totalPages,
+                printType: 'bw',
+                sides: isLandscapeMode ? 'landscape' : 'single',
+                binding: 'none',
+                copies: 1,
+                orientation: isLandscapeMode ? 'landscape' : 'portrait',
+                fileData: currentStudioActiveFile
+            });
+
+            if (typeof persistCartStateData === 'function') persistCartStateData();
+            if (typeof calculateTotal === 'function') calculateTotal();
+            
+            closePrintStudio();
+            toggleCartDrawer(true);
         };
 
         window.executeNativeA4Print = function() {
