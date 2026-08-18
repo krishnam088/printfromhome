@@ -37,11 +37,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     let renderedPagesList = [];
     let isLandscapeMode = false;
+    let currentStudioActiveFile = null;
+    let currentStudioFileName = 'Document.pdf';
 
     window.openDocumentInA4Studio = async function(fileBlobOrUrl, originalFileName = 'Document') {
         const container = document.getElementById('a4PagesContainer');
         const modal = document.getElementById('printStudioModal');
         if (!container || !modal) return;
+
+        currentStudioActiveFile = fileBlobOrUrl;
+        currentStudioFileName = originalFileName || 'Document.pdf';
 
         container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Generating pixel-perfect A4 Sheets...</div>';
         modal.style.display = 'flex';
@@ -138,6 +143,28 @@ document.addEventListener('DOMContentLoaded', () => {
     window.closePrintStudio = function() {
         const modal = document.getElementById('printStudioModal');
         if (modal) modal.style.display = 'none';
+    };
+
+    // 🔥 Preview se Cart mein add karke direct Checkout Cart Drawer open karna
+    window.addStudioDocumentToCartAndRedirect = function() {
+        const totalPages = renderedPagesList.length > 0 ? renderedPagesList.length : 1;
+
+        window.cartPrintJobsArray.push({
+            fileName: currentStudioFileName,
+            pages: totalPages,
+            printType: 'bw',
+            sides: isLandscapeMode ? 'landscape' : 'single',
+            binding: 'none',
+            copies: 1,
+            orientation: isLandscapeMode ? 'landscape' : 'portrait',
+            fileData: currentStudioActiveFile
+        });
+
+        if (typeof persistCartStateData === 'function') persistCartStateData();
+        if (typeof calculateTotal === 'function') calculateTotal();
+        
+        closePrintStudio();
+        toggleCartDrawer(true);
     };
 
     window.executeNativeA4Print = function() {
