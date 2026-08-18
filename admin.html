@@ -931,7 +931,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ orderId: targetOrderId, barcode: val, skuOrName: matchedProd.name })
                 });
-                const data = await res.json();
+                const data = res.ok ? await res.json() : { success: false, message: "Server error during verification." };
                 if (data.success) {
                     alert(data.message);
                     closeBarcodeScannerModal();
@@ -1004,20 +1004,30 @@
         }
         updateAutoPrintButtonUI();
 
-        // 🔥 Auto-Print or Manual Print Dispatcher
+        // 🔥 ROBUST FAIL-SAFE PRINT DISPATCHER
         function triggerPrintJob(fileUrl, orderId) {
-            if (!fileUrl || fileUrl === '#') {
+            let resolvedUrl = fileUrl;
+            
+            if (!resolvedUrl || resolvedUrl === '#') {
+                const matchOrder = globalLiveOrdersCache.find(o => o.orderId === orderId);
+                if (matchOrder) {
+                    resolvedUrl = matchOrder.fileUrl || (matchOrder.files && matchOrder.files[0]?.url) || (matchOrder.file ? `${window.location.origin}/uploads/${matchOrder.file}` : null);
+                }
+            }
+
+            if (!resolvedUrl || resolvedUrl === '#') {
                 alert("⚠️ Document file URL is not available for this print job.");
                 return;
             }
+
             const frame = document.getElementById('silentPrintFrame');
-            frame.src = fileUrl;
+            frame.src = resolvedUrl;
             frame.onload = function () {
                 try { 
                     frame.contentWindow.focus(); 
                     frame.contentWindow.print(); 
                 } catch (e) { 
-                    window.open(fileUrl, '_blank'); 
+                    window.open(resolvedUrl, '_blank'); 
                 }
             };
             if (orderId) {
@@ -1101,7 +1111,6 @@
                 }
                 previousOrderCount = orders.length;
 
-                // 🔥 Auto-Print Dispatch for New Orders
                 orders.forEach(order => {
                     if (autoPrintEnabled && order.status === 'Ready for Print' && !processedAutoPrintOrderIds.has(order.orderId)) {
                         const hasPrintJob = Array.isArray(order.configDetails) && order.configDetails.some(item => item.printType !== 'snack');
@@ -1161,7 +1170,7 @@
             let verifiedItemsList = Array.isArray(order.verifiedItems) ? order.verifiedItems : [];
             let allProductsVerified = totalPackingItems === 0 || verifiedItemsList.length >= totalPackingItems;
 
-            const primaryFileUrl = order.fileUrl || (order.files && order.files[0]?.url) || '#';
+            const primaryFileUrl = order.fileUrl || (order.files && order.files[0]?.url) || (order.file ? `/uploads/${order.file}` : '#');
             const isDrawerOpen = openDrawers.has(order.orderId);
             const currentStatus = order.status || 'Pending';
             
