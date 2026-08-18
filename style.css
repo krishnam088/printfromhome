@@ -321,6 +321,146 @@ body.theme-festive-diwali .wallet-modal-card {
 }
 
 /* ========================================
+   🖨️ UNIVERSAL A4 PRINT STUDIO & CANVAS ENGINE
+   ======================================== */
+.print-studio-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(8px);
+    z-index: 100000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.studio-toolbar {
+    background: #1e293b;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #334155;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.studio-workspace {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+    padding: 30px 10px;
+    background: #0f172a;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* --- Virtual A4 Sheet Canvas --- */
+.a4-page-wrapper {
+    width: 210mm;
+    min-height: 297mm;
+    max-width: 95vw;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    position: relative;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+.a4-page-wrapper.landscape {
+    width: 297mm;
+    min-height: 210mm;
+}
+
+.a4-page-canvas {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.page-badge-toolbar {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.85);
+    padding: 4px 10px;
+    border-radius: 8px;
+    z-index: 10;
+}
+
+/* ========================================
+   HARDWARE A4 PRINT ENFORCER (MEDIA PRINT)
+   ======================================== */
+@media print {
+    body * {
+        visibility: hidden !important;
+    }
+    
+    #printStudioModal, 
+    #printStudioModal *,
+    .print-studio-overlay,
+    .print-studio-overlay * {
+        visibility: visible !important;
+    }
+
+    #printStudioModal,
+    .print-studio-overlay {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        background: #ffffff !important;
+        overflow: visible !important;
+    }
+
+    .studio-toolbar, 
+    .page-badge-toolbar, 
+    #floatingCartFooterBar, 
+    #userInstallBanner, 
+    .side-drawer, 
+    .drawer-overlay,
+    .admin-sidebar {
+        display: none !important;
+    }
+
+    #a4PagesContainer,
+    .studio-workspace {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: none !important;
+        display: block !important;
+    }
+
+    .a4-page-wrapper {
+        width: 100% !important;
+        min-height: 100vh !important;
+        height: 100% !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        page-break-after: always !important;
+        break-after: page !important;
+    }
+
+    @page {
+        size: A4 portrait;
+        margin: 0;
+    }
+}
+
+/* ========================================
    MOBILE VIEW & CART DRAWER OPTIMIZATIONS
    ======================================== */
 .cart-drawer-card {
