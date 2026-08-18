@@ -97,6 +97,7 @@ const Order = mongoose.model('Order', orderSchema);
 
 const storeConfigSchema = new mongoose.Schema({
     isOpen: { type: Boolean, default: true },
+    rainSurgeActive: { type: Boolean, default: false },
     updatedAt: String
 });
 const StoreConfig = mongoose.model('StoreConfig', storeConfigSchema);
@@ -154,7 +155,7 @@ app.get('/api/store-status', async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
         if (!config) {
-            config = await StoreConfig.create({ isOpen: true, updatedAt: new Date().toISOString() });
+            config = await StoreConfig.create({ isOpen: true, rainSurgeActive: false, updatedAt: new Date().toISOString() });
         }
 
         const now = new Date();
@@ -166,7 +167,7 @@ app.get('/api/store-status', async (req, res) => {
         const isTimeWithinOperatingHours = istHours >= 7 && istHours < 22;
         const finalIsOpen = isTimeWithinOperatingHours && config.isOpen;
 
-        res.json({ success: true, isOpen: finalIsOpen, manualOverride: config.isOpen, currentIstHour: istHours });
+        res.json({ success: true, isOpen: finalIsOpen, manualOverride: config.isOpen, rainSurgeActive: config.rainSurgeActive, currentIstHour: istHours });
     } catch (err) {
         res.status(500).json({ success: false, isOpen: true });
     }
@@ -188,6 +189,30 @@ const handleStoreToggle = async (req, res) => {
 
 app.post('/api/store-status/toggle', handleStoreToggle);
 app.post('/api/admin/toggle-store', handleStoreToggle);
+
+// 🌧️ Admin Rain Surge Status & Toggle Endpoints
+app.get('/api/admin/rain-status', async (req, res) => {
+    try {
+        let config = await StoreConfig.findOne();
+        res.json({ success: true, isRainActive: config ? config.rainSurgeActive : false });
+    } catch (err) {
+        res.status(500).json({ success: false, isRainActive: false });
+    }
+});
+
+app.post('/api/admin/toggle-rain', async (req, res) => {
+    try {
+        const { isRainActive } = req.body;
+        let config = await StoreConfig.findOne();
+        if (!config) config = new StoreConfig();
+        config.rainSurgeActive = Boolean(isRainActive);
+        config.updatedAt = new Date().toISOString();
+        await config.save();
+        res.json({ success: true, isRainActive: config.rainSurgeActive });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 app.post('/api/auth/signup', async (req, res) => {
     try {
@@ -668,7 +693,6 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
         const primaryUrl = filesMappedList.length > 0 ? filesMappedList[0].url : '';
         const primaryName = filesMappedList.length > 0 ? filesMappedList[0].name : (parsedConfig[0]?.fileName || 'Document.pdf');
 
-        // Dynamic Status: If order contains actual print files, mark as "Ready for Print", otherwise "Processing"
         const hasPrintJobs = parsedConfig.some(item => item.printType !== 'snack' && item.printType !== 'product' && (!item.fileName || !item.fileName.startsWith('Product:')));
         const initialOrderStatus = hasPrintJobs ? 'Ready for Print' : 'Processing';
 
