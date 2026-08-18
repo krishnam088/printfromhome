@@ -167,8 +167,79 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleCartDrawer(true);
     };
 
+    // 🔥 FIXED: Direct Image open hone ke bajaye iframe ke zariye clean A4 print dialog trigger karega
     window.executeNativeA4Print = function() {
-        window.print();
+        const container = document.getElementById('a4PagesContainer');
+        if (!container) {
+            window.print();
+            return;
+        }
+
+        let printFrame = document.getElementById('printIframeHidden');
+        if (!printFrame) {
+            printFrame = document.createElement('iframe');
+            printFrame.id = 'printIframeHidden';
+            printFrame.style.position = 'fixed';
+            printFrame.style.right = '0';
+            printFrame.style.bottom = '0';
+            printFrame.style.width = '0';
+            printFrame.style.height = '0';
+            printFrame.style.border = '0';
+            document.body.appendChild(printFrame);
+        }
+
+        const canvasElements = container.querySelectorAll('canvas, img');
+        let printHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Print Document</title>
+                <style>
+                    @page { size: A4 portrait; margin: 0; }
+                    body { margin: 0; padding: 0; background: #ffffff; }
+                    .print-sheet {
+                        width: 210mm;
+                        height: 297mm;
+                        page-break-after: always;
+                        break-after: page;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        overflow: hidden;
+                    }
+                    .print-sheet img, .print-sheet canvas {
+                        width: 100% !important;
+                        height: 100% !important;
+                        object-fit: contain !important;
+                    }
+                </style>
+            </head>
+            <body>
+        `;
+
+        canvasElements.forEach(el => {
+            let imgSrc = '';
+            if (el.tagName === 'CANVAS') {
+                imgSrc = el.toDataURL('image/png');
+            } else if (el.tagName === 'IMG') {
+                imgSrc = el.src;
+            }
+            if (imgSrc) {
+                printHtml += `<div class="print-sheet"><img src="${imgSrc}" /></div>`;
+            }
+        });
+
+        printHtml += `</body></html>`;
+
+        const doc = printFrame.contentWindow.document;
+        doc.open();
+        doc.write(printHtml);
+        doc.close();
+
+        setTimeout(() => {
+            printFrame.contentWindow.focus();
+            printFrame.contentWindow.print();
+        }, 500);
     };
 
     // ==========================================
