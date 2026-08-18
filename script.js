@@ -177,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleCartDrawer(true);
     };
 
+    // 🔥 FIXED: Direct Image open hone ke bajaye iframe ke zariye clean A4 print dialog trigger karega (Auto & Manual Print support)
     window.executeNativeA4Print = function() {
         const container = document.getElementById('a4PagesContainer');
         if (!container) {
