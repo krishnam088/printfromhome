@@ -91,7 +91,8 @@ const orderSchema = new mongoose.Schema({
     date: String,
     timestamp: String,
     paymentId: String,
-    verifiedItems: { type: Array, default: [] }
+    verifiedItems: { type: Array, default: [] },
+    assignedDeliveryBoy: { type: String, default: '' } // Delivery Executive Mobile Number
 });
 const Order = mongoose.model('Order', orderSchema);
 
@@ -137,6 +138,7 @@ const transporter = nodemailer.createTransport({
 
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/admin-panel', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
+app.get('/delivery', (req, res) => { res.sendFile(path.join(__dirname, 'delivery.html')); });
 
 app.get('/manifest.json', (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
@@ -146,6 +148,11 @@ app.get('/manifest.json', (req, res) => {
 app.get('/manifest-festive.json', (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.sendFile(path.join(__dirname, 'manifest-festive.json'));
+});
+
+app.get('/manifest-delivery.json', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    res.sendFile(path.join(__dirname, 'manifest-delivery.json'));
 });
 
 app.get('/sw-admin.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw-admin.js')); });
@@ -833,15 +840,16 @@ app.get('/api/admin/orders', async (req, res) => {
 const handleStatusUpdate = async (req, res) => {
     try {
         const orderId = req.params.orderId || req.body.orderId;
-        const status = req.body.status;
+        const { status, assignedDeliveryBoy } = req.body;
         const order = await Order.findOne({ orderId });
         if (order) {
             if (order.status && order.status.includes('Delivered')) {
                 return res.status(400).json({ success: false, message: "Cannot modify delivered order." });
             }
-            order.status = status; 
+            if (status) order.status = status; 
+            if (assignedDeliveryBoy !== undefined) order.assignedDeliveryBoy = assignedDeliveryBoy;
             await order.save();
-            return res.json({ success: true });
+            return res.json({ success: true, order });
         }
         res.status(404).json({ success: false });
     } catch (err) {
