@@ -52,6 +52,46 @@
         }
         .payment-option-box { transition: all 0.2s ease; }
 
+        /* --- 🍞 MODERN TOAST NOTIFICATION CONTAINER --- */
+        #appToastContainer {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+            pointer-events: none;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .app-toast-item {
+            background: rgba(15, 23, 42, 0.95);
+            color: #ffffff;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            pointer-events: auto;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        @keyframes toastSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* --- 🖨️ UNIVERSAL A4 STUDIO SHEET STYLES --- */
         .a4-page-wrapper {
             width: 210mm;
@@ -114,7 +154,7 @@
                 overflow: visible !important;
             }
 
-            .studio-toolbar, .page-badge-toolbar, #floatingCartFooterBar, #userInstallBanner, .side-drawer, .drawer-overlay {
+            .studio-toolbar, .page-badge-toolbar, #floatingCartFooterBar, #userInstallBanner, .side-drawer, .drawer-overlay, #appToastContainer {
                 display: none !important;
             }
 
@@ -144,6 +184,43 @@
     </style>
 </head>
 <body>
+
+    <!-- Global Toast Notifications Container -->
+    <div id="appToastContainer"></div>
+
+    <script>
+        // 🔔 Global Toast Notification Function (Replaces intrusive alerts)
+        window.showAppToast = function(message, type = 'info') {
+            const container = document.getElementById('appToastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = 'app-toast-item';
+            
+            let icon = 'ℹ️';
+            if (type === 'success') icon = '✅';
+            if (type === 'error') icon = '⚠️';
+
+            toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        // Override standard browser alert globally with clean English toasts
+        window.alert = function(msg) {
+            let cleanMsg = msg;
+            if (typeof msg === 'string') {
+                if (msg.includes('password')) cleanMsg = "Please enter a valid password.";
+            }
+            showAppToast(cleanMsg, 'error');
+        };
+    </script>
 
     <div id="productDetailModal" onclick="closeProductDetailModal(event)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:99999; display:none; justify-content:center; align-items:flex-end; padding:0;">
         <div style="background:#ffffff; border-radius:24px 24px 0 0; padding:24px; width:100%; max-width:500px; max-height:85vh; overflow-y:auto; box-shadow:0 -10px 30px rgba(0,0,0,0.2); text-align:left; animation:slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1); position:relative;">
@@ -770,23 +847,31 @@
             const passwordInput = document.getElementById('studioRequiredPdfPassword');
             const pwd = passwordInput ? passwordInput.value.trim() : '';
             if (!pwd) {
-                alert("⚠️ Please enter the password to unlock this PDF.");
+                showAppToast("Please enter the password to unlock this PDF.", "error");
                 return;
             }
             const container = document.getElementById('a4PagesContainer');
             container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Unlocking and rendering PDF...</div>';
 
-            const fileSource = typeof currentStudioActiveFile === 'string' ? currentStudioActiveFile : URL.createObjectURL(currentStudioActiveFile);
             try {
+                let fileSource;
+                if (typeof currentStudioActiveFile === 'string') {
+                    fileSource = currentStudioActiveFile;
+                } else if (currentStudioActiveFile instanceof Blob || currentStudioActiveFile instanceof File) {
+                    fileSource = URL.createObjectURL(currentStudioActiveFile);
+                } else {
+                    throw new Error("Invalid file reference.");
+                }
+
                 renderedPagesList = [];
                 await loadPdfIntoStudio(fileSource, pwd);
                 isCurrentFileLocked = false;
                 document.getElementById('studioPasswordValidationBox').classList.add('hidden');
-                alert("🔓 PDF Unlocked Successfully! Now you can preview and add to cart.");
+                showAppToast("PDF Unlocked Successfully!", "success");
             } catch (err) {
                 console.error("Unlock Error:", err);
                 container.innerHTML = `<div style="color: #f87171; font-weight: 700; padding: 30px; text-align: center;">🔒 This PDF is password protected!<br><span style="font-size:0.75rem; color:#94a3b8;">Please enter the correct password below to unlock.</span></div>`;
-                alert("❌ Incorrect Password! Please enter the correct password and try again.");
+                showAppToast("Incorrect Password! Please try again.", "error");
             }
         };
 
@@ -823,7 +908,7 @@
             const enteredPassword = passwordInput ? passwordInput.value.trim() : '';
 
             if (isCurrentFileLocked && !enteredPassword) {
-                alert("🚫 Order Declined: This PDF file is locked! You must enter the correct password to add it to cart and print.");
+                showAppToast("This PDF file is locked! You must enter the correct password.", "error");
                 return;
             }
 
@@ -908,7 +993,7 @@
                 }
                 deferredPwaPrompt = null;
             } else {
-                alert("To install, tap your browser's menu (⋮) and select 'Install app' or 'Add to Home screen'.");
+                showAppToast("To install, tap your browser's menu (⋮) and select 'Install app'.", "info");
             }
         };
 
@@ -1053,7 +1138,7 @@
         };
 
         window.notifyWhenAvailable = function(prodName) {
-            alert(`🔔 We have noted your request! You will be notified when "${prodName}" is back in stock.`);
+            showAppToast(`We have noted your request! You will be notified when "${prodName}" is back in stock.`, "success");
         };
 
         window.addDynamicProductToCart = function(sku, name, price, currentStock) {
@@ -1061,7 +1146,7 @@
             const currentCartQty = existing ? existing.qty : 0;
 
             if (currentCartQty + 1 > currentStock) {
-                alert(`⚠️ Sorry! Only ${currentStock} units of "${name}" available in store stock.`);
+                showAppToast(`Sorry! Only ${currentStock} units of "${name}" available in store stock.`, "error");
                 return;
             }
 
@@ -1073,7 +1158,7 @@
             if (typeof persistCartStateData === 'function') persistCartStateData();
             updateFloatingCartBar();
             if (typeof calculateTotal === 'function') calculateTotal();
-            alert(`✅ Added "${name}" to cart!`);
+            showAppToast(`Added "${name}" to cart!`, "success");
         };
 
         loadDynamicStoreProducts();
@@ -1275,14 +1360,13 @@
         };
 
         window.clearEntireCartData = function() {
-            if (confirm("🗑️ Are you sure you want to clean/clear your entire cart?")) {
-                window.cartPrintJobsArray = [];
-                window.cartSnacksArray = [];
-                if (typeof persistCartStateData === 'function') persistCartStateData();
-                renderCartDrawerContents();
-                updateFloatingCartBar();
-                if (typeof calculateTotal === 'function') calculateTotal();
-            }
+            window.cartPrintJobsArray = [];
+            window.cartSnacksArray = [];
+            if (typeof persistCartStateData === 'function') persistCartStateData();
+            renderCartDrawerContents();
+            updateFloatingCartBar();
+            if (typeof calculateTotal === 'function') calculateTotal();
+            showAppToast("Cart cleared successfully.", "success");
         };
 
         let deliveryMap = null;

@@ -37,6 +37,45 @@ body {
 .hidden { display: none !important; }
 .app-hidden { display: none !important; }
 
+/* 🍞 MODERN TOAST NOTIFICATION CONTAINER */
+#appToastContainer {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    pointer-events: none;
+    width: 90%;
+    max-width: 400px;
+}
+
+.app-toast-item {
+    background: rgba(15, 23, 42, 0.95);
+    color: #ffffff;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    pointer-events: auto;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+@keyframes toastSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 /* 🎨 FESTIVE THEME FULL BACKGROUND & CARD OVERRIDES */
 body.theme-festive-republic { background-color: #fffaf5 !important; }
 body.theme-festive-holi { background-color: #fffbeb !important; }
@@ -431,7 +470,8 @@ body.theme-festive-diwali .wallet-modal-card {
     #userInstallBanner, 
     .side-drawer, 
     .drawer-overlay,
-    .admin-sidebar {
+    .admin-sidebar,
+    #appToastContainer {
         display: none !important;
     }
 
