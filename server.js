@@ -430,7 +430,6 @@ cron.schedule('0 0 * * *', async () => {
     }
 });
 
-// Inventory Add uses Cloudinary (For Product Icons / Images ONLY)
 app.post('/api/admin/inventory/add', uploadCloudinary.single('productImage'), async (req, res) => {
     try {
         const { sku, name, purchasePrice, sellingPrice, quantity, barcode, externalImageUrl } = req.body;
@@ -612,7 +611,7 @@ async function deductStockForOrder(parsedConfig) {
     }
 }
 
-// Order Creation uses local storage (Privacy First: Documents stay locally on server disk, never sent to Cloudinary)
+// 🔥 FIXED: Forced HTTPS protocol generation to avoid Mixed Content error on Render
 app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
@@ -659,11 +658,15 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
         const selectedPaymentMode = paymentMode || "online";
         const numericId = String(Math.floor(100000 + Math.random() * 900000));
 
+        // 🔥 Force HTTPS protocol for secure file links
+        const protocol = req.headers['x-forwarded-proto'] || 'https';
+        const host = req.get('host');
+
         const docFiles = req.files ? req.files.filter(f => f.fieldname === 'document') : [];
         const filesMappedList = docFiles.map(f => ({ 
             name: f.originalname || 'Document.pdf', 
             filename: f.filename, 
-            url: `${req.protocol}://${req.get('host')}/uploads/${f.filename}` 
+            url: `https://${host}/uploads/${f.filename}` 
         }));
 
         const primaryUrl = filesMappedList.length > 0 ? filesMappedList[0].url : '';
