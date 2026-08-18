@@ -56,7 +56,7 @@ async function directHardwareSpoolPrint(filePath, options = {}) {
         orientation: options.orientation === 'landscape' ? 'landscape' : 'portrait'
     };
 
-    // 🔒 Add password support if the PDF is locked/encrypted
+    // 🔥 Added password support for locked/encrypted PDFs directly into printer spooled command
     if (options.password) {
         printOptions.password = options.password;
         console.log(`🔑 Secured PDF Password applied to print spooled buffer.`);
@@ -112,7 +112,7 @@ async function fetchAndPrintLiveJobs() {
                                 orientation: fileMeta.orientation || 'portrait',
                                 printType: fileMeta.printType || 'color',
                                 colorMode: fileMeta.colorMode || 'color',
-                                password: order.pdfPassword || fileMeta.pdfPassword || null // Auto-handled password pass
+                                password: fileMeta.pdfPassword || order.pdfPassword || null
                             });
                             
                             console.log(`✓ Print signal released for file node.`);
