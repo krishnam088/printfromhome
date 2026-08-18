@@ -56,6 +56,12 @@ async function directHardwareSpoolPrint(filePath, options = {}) {
         orientation: options.orientation === 'landscape' ? 'landscape' : 'portrait'
     };
 
+    // 🔒 Add password support if the PDF is locked/encrypted
+    if (options.password) {
+        printOptions.password = options.password;
+        console.log(`🔑 Secured PDF Password applied to print spooled buffer.`);
+    }
+
     if (options.printType === 'bw' || options.colorMode === 'bw') {
         printOptions.monochrome = true;
         console.log(`⚙️ Driver Configuration Map: MONOCHROME (B&W) MODE LOCKED 🎯`);
@@ -74,7 +80,6 @@ async function fetchAndPrintLiveJobs() {
 
         if (!orders || !Array.isArray(orders)) return;
 
-        // 🔥 FIXED: Match server status 'Ready for Print' properly
         const paidOrders = orders.filter(o => o.status === 'Ready for Print' || o.status === 'Paid / Ready for Print');
         const printedHistory = getPrintedHistory();
 
@@ -92,7 +97,6 @@ async function fetchAndPrintLiveJobs() {
                     const targetFile = order.files.find(f => f.name === fileMeta.fileName || f.originalName === fileMeta.fileName) || order.files[i];
                     
                     if (targetFile) {
-                        // 🔥 FIXED: Secure direct Cloudinary URL fallback mapping
                         const fileUrl = targetFile.url || `${BASE_URL}/uploads/${targetFile.filename || targetFile.savedName}`;
                         const localPath = path.join(__dirname, 'temp_print_job.pdf');
 
@@ -107,7 +111,8 @@ async function fetchAndPrintLiveJobs() {
                                 sides: fileMeta.sides || 'single',
                                 orientation: fileMeta.orientation || 'portrait',
                                 printType: fileMeta.printType || 'color',
-                                colorMode: fileMeta.colorMode || 'color'
+                                colorMode: fileMeta.colorMode || 'color',
+                                password: order.pdfPassword || fileMeta.pdfPassword || null // Auto-handled password pass
                             });
                             
                             console.log(`✓ Print signal released for file node.`);
@@ -121,7 +126,6 @@ async function fetchAndPrintLiveJobs() {
                     }
                 }
             } else {
-                // Fallback architecture for single legacy files rows
                 const fileUrl = order.fileUrl || `${BASE_URL}/uploads/${order.file}`;
                 const localPath = path.join(__dirname, 'temp_print_job.pdf');
                 try {
@@ -130,7 +134,8 @@ async function fetchAndPrintLiveJobs() {
                     
                     await directHardwareSpoolPrint(localPath, { 
                         copies: 1, 
-                        printType: order.printType || 'color' 
+                        printType: order.printType || 'color',
+                        password: order.pdfPassword || null
                     });
                     totalFilesPrintedSuccessfully++;
                 } catch (err) {

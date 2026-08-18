@@ -393,7 +393,7 @@ const festivalCalendar = {
     "28-08": { subject: "Happy Raksha Bandhan: Celebrate Sibling Bonds!", message: "Happy Raksha Bandhan! Make this bond special by gifting customized photo prints and personalized gifts crafted with love at Print From Home." },
     "04-09": { subject: "Happy Janmashtami: Divine Blessings & Offers!", message: "Wishing you a joyous Janmashtami! Celebrate Lord Krishna's birth with our special devotional prints and festive offers." },
     "14-09": { subject: "Happy Ganesh Chaturthi: Welcome Bappa with Joy!", message: "Happy Ganesh Chaturthi! May Lord Ganesha bring prosperity and success to your home and business. Explore our festive printing collection today." },
-    "02-10": { subject: "Gandhi Jayanti Greetings from Print From Home", message: "Remembering Mahatma Gandhi on his birth anniversary. Wishing you a peaceful and productive day ahead from Print From Home, Varanasi." },
+    "02-10": { subject: "Gandhi Jayanti Greetings from Print From Home", message: "Remembering Mahatma Gandhi on his birth anniversary.Wishing you a peaceful and productive day ahead from Print From Home, Varanasi." },
     "11-10": { subject: "Happy Sharad Navratri: Nine Nights of Devotion & Deals!", message: "Wishing you a joyous Sharad Navratri! May Goddess Durga bring energy and happiness. Enjoy special discounts on all your printing requirements throughout Navratri." },
     "20-10": { subject: "Happy Dussehra: Victory of Good Over Evil!", message: "Wishing you a very Happy Dussehra (Vijayadashami)! May this auspicious day bring triumph in all your endeavors. Check out our store for exclusive festive offers." },
     "29-10": { subject: "Happy Karva Chauth: Special Greetings!", message: "Happy Karva Chauth! Wishing all celebrating couples a blessed and long-lasting bond. Explore our personalized photo printing gifts for your loved ones." },
@@ -611,7 +611,6 @@ async function deductStockForOrder(parsedConfig) {
     }
 }
 
-// 🔥 FIXED: Forced HTTPS protocol generation to avoid Mixed Content error on Render
 app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
@@ -658,10 +657,7 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
         const selectedPaymentMode = paymentMode || "online";
         const numericId = String(Math.floor(100000 + Math.random() * 900000));
 
-        // 🔥 Force HTTPS protocol for secure file links
-        const protocol = req.headers['x-forwarded-proto'] || 'https';
         const host = req.get('host');
-
         const docFiles = req.files ? req.files.filter(f => f.fieldname === 'document') : [];
         const filesMappedList = docFiles.map(f => ({ 
             name: f.originalname || 'Document.pdf', 

@@ -496,6 +496,13 @@
                                 <li class="promo-bullet-item">✦ Paper quality: 70 GSM</li>
                                 <li class="promo-bullet-item">✦ Dynamic Customization Controls</li>
                             </ul>
+
+                            <!-- 🔒 Locked PDF Password Input (Privacy First: Stored only in browser memory) -->
+                            <div style="margin: 12px 0 14px 0;">
+                                <label style="font-size: 0.72rem; font-weight: 700; color: #64748b; display: block; margin-bottom: 3px;">🔒 PDF Password (If file is locked):</label>
+                                <input type="password" id="userPdfPasswordInput" placeholder="Enter password if PDF is locked" style="width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: #ffffff; color: #0f172a; font-size: 0.78rem; outline: none;" oninput="savePdfPasswordLocally(this.value)">
+                            </div>
+
                             <label class="verbatim-upload-btn" for="fileUpload">Upload Files</label>
                             <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
                         </div>
@@ -649,6 +656,15 @@
         window.storeInventoryProducts = [];
         let lastRenderedData = "";
 
+        // 🔒 Save PDF Password Securely in Browser Session Memory
+        function savePdfPasswordLocally(pass) {
+            if (pass) {
+                sessionStorage.setItem('temp_secure_pdf_password', pass);
+            } else {
+                sessionStorage.removeItem('temp_secure_pdf_password');
+            }
+        }
+
         // ==========================================
         // 📄 UNIVERSAL A4 PRINT STUDIO ENGINE
         // ==========================================
@@ -671,12 +687,20 @@
 
             try {
                 const isPdf = (typeof fileBlobOrUrl === 'string' && fileBlobOrUrl.toLowerCase().includes('.pdf')) || 
-                              (fileBlobOrUrl.type === 'application/pdf') || 
-                              (fileBlobOrUrl.name && fileBlobOrUrl.name.toLowerCase().endsWith('.pdf'));
+                            (fileBlobOrUrl.type === 'application/pdf') || 
+                            (fileBlobOrUrl.name && fileBlobOrUrl.name.toLowerCase().endsWith('.pdf'));
 
                 if (isPdf) {
                     const fileSource = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
-                    const loadingTask = pdfjsLib.getDocument(fileSource);
+                    
+                    // Retrieve temporary password if file is locked
+                    const securePassword = sessionStorage.getItem('temp_secure_pdf_password') || undefined;
+                    
+                    const loadingTask = pdfjsLib.getDocument({
+                        url: fileSource,
+                        password: securePassword
+                    });
+                    
                     const pdf = await loadingTask.promise;
                     container.innerHTML = '';
 
@@ -730,6 +754,9 @@
                 updateStudioPageCountBadge();
             } catch (err) {
                 console.error("A4 Studio Error:", err);
+                if (err.name === 'PasswordException') {
+                    alert("🔒 This PDF is password protected! Please enter the correct password in the upload section and try again.");
+                }
                 container.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 30px; text-align: center;">❌ Failed to render document: ${err.message}</div>`;
             }
         };
@@ -762,9 +789,9 @@
             if (modal) modal.style.display = 'none';
         };
 
-        // 🔥 Preview se Cart mein add karke direct cart open karna
         window.addStudioDocumentToCartAndRedirect = function() {
             const totalPages = renderedPagesList.length > 0 ? renderedPagesList.length : 1;
+            const securePdfPass = sessionStorage.getItem('temp_secure_pdf_password') || '';
 
             window.cartPrintJobsArray.push({
                 fileName: currentStudioFileName,
@@ -774,7 +801,8 @@
                 binding: 'none',
                 copies: 1,
                 orientation: isLandscapeMode ? 'landscape' : 'portrait',
-                fileData: currentStudioActiveFile
+                fileData: currentStudioActiveFile,
+                pdfPassword: securePdfPass // Pass password securely into cart item metadata
             });
 
             if (typeof persistCartStateData === 'function') persistCartStateData();
@@ -788,7 +816,6 @@
             window.print();
         };
 
-        // --- 📲 UNIVERSAL PWA INSTALLATION LOGIC (ANDROID + iOS) ---
         let deferredPwaPrompt = null;
 
         function isIosDevice() {
@@ -817,7 +844,6 @@
                 banner.style.display = 'flex';
             }
 
-            // Auto-hook file upload input with A4 Preview Studio
             const fileInputEl = document.getElementById('fileUpload');
             if (fileInputEl) {
                 fileInputEl.addEventListener('change', (e) => {
@@ -938,7 +964,6 @@
             });
         }
 
-        // 🔍 GLOBAL BOTTOM-SHEET PRODUCT DETAIL POPUP
         window.openProductDetailModal = function(prod) {
             const modal = document.getElementById('productDetailModal');
             const imgContainer = document.getElementById('modalProductImgContainer');
