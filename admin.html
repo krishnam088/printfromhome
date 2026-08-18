@@ -322,7 +322,7 @@
                 <button type="button" class="toggle-badge-btn btn-scanner" onclick="openBarcodeScannerModal()">
                     📷 Scan Barcode
                 </button>
-                <!-- 🌧️ Manual Rain Surge Admin Toggle Button -->
+                <!-- 🌧️ Manual Rain Surge Admin Toggle Button (Strict Override) -->
                 <button type="button" id="rainSurgeToggleBtn" class="toggle-badge-btn btn-rain-off" onclick="toggleAdminRainSurge()">
                     🌧️ Rain Surge: <span id="rainSurgeStateText">OFF</span>
                 </button>
@@ -1015,7 +1015,7 @@
         }
         updateAutoPrintButtonUI();
 
-        // 🌧️ Admin Rain Surge Toggle Control
+        // 🌧️ Admin Rain Surge Toggle Control (Strict Manual Override)
         let adminRainSurgeActive = localStorage.getItem('admin_manual_rain') === 'true';
 
         async function fetchAdminRainSurgeStatus() {
@@ -1040,10 +1040,12 @@
                 const data = await res.json();
                 if (data.success) {
                     adminRainSurgeActive = data.isRainActive;
+                    localStorage.setItem('admin_manual_rain', adminRainSurgeActive);
                     updateRainSurgeButtonUI();
                 }
             } catch (e) {
                 adminRainSurgeActive = nextState;
+                localStorage.setItem('admin_manual_rain', adminRainSurgeActive);
                 updateRainSurgeButtonUI();
             }
         }
@@ -1053,10 +1055,10 @@
             const txt = document.getElementById('rainSurgeStateText');
             if (adminRainSurgeActive) {
                 btn.className = "toggle-badge-btn btn-rain-on";
-                txt.textContent = "ON (Manual)";
+                txt.textContent = "ON (Forced)";
             } else {
                 btn.className = "toggle-badge-btn btn-rain-off";
-                txt.textContent = "OFF";
+                txt.textContent = "OFF (Forced)";
             }
         }
         updateRainSurgeButtonUI();

@@ -165,7 +165,6 @@ app.post('/api/delivery/scan-store-qr', async (req, res) => {
             return res.status(400).json({ success: false, message: "Phone and QR token are required!" });
         }
 
-        // Verify QR Token freshness (within 20 seconds buffer)
         if (scannedToken !== currentStoreQrToken || Date.now() > qrTokenExpiry) {
             return res.status(400).json({ success: false, message: "⚠️ Invalid or Expired Store QR Code! Please scan the live counter screen." });
         }
@@ -183,7 +182,6 @@ app.post('/api/delivery/scan-store-qr', async (req, res) => {
         boy.lastActiveTimestamp = Date.now();
         await boy.save();
 
-        // Automatically assign the next free "Ready for Print" order to this active & free delivery boy
         const nextOrder = await Order.findOne({ 
             status: 'Ready for Print', 
             $or: [{ assignedDeliveryBoy: { $exists: false } }, { assignedDeliveryBoy: null }, { assignedDeliveryBoy: "" }] 
@@ -245,7 +243,14 @@ app.get('/api/store-status', async (req, res) => {
         const isTimeWithinOperatingHours = istHours >= 7 && istHours < 22;
         const finalIsOpen = isTimeWithinOperatingHours && config.isOpen;
 
-        res.json({ success: true, isOpen: finalIsOpen, manualOverride: config.isOpen, rainSurgeActive: config.rainSurgeActive, currentIstHour: istHours });
+        // Admin override is now honored directly from database config.rainSurgeActive
+        res.json({ 
+            success: true, 
+            isOpen: finalIsOpen, 
+            manualOverride: config.isOpen, 
+            rainSurgeActive: config.rainSurgeActive, 
+            currentIstHour: istHours 
+        });
     } catch (err) {
         res.status(500).json({ success: false, isOpen: true });
     }
@@ -268,7 +273,7 @@ const handleStoreToggle = async (req, res) => {
 app.post('/api/store-status/toggle', handleStoreToggle);
 app.post('/api/admin/toggle-store', handleStoreToggle);
 
-// 🌧️ Admin Rain Surge Status & Toggle Endpoints
+// 🌧️ Admin Rain Surge Status & Toggle Endpoints (Strict Manual Control Override)
 app.get('/api/admin/rain-status', async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
