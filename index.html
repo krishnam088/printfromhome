@@ -691,19 +691,19 @@
         </div>
     </div>
 
-    <div id="floatingCartFooterBar" class="floating-cart-footer hidden" style="display:flex; justify-content:space-between; align-items:center;">
-        <div class="floating-cart-left" style="display:flex; align-items:center; gap:12px; cursor:pointer; flex:1;" onclick="toggleCartDrawer(true)">
-            <div id="floatingCartImagesStack" style="display:flex; align-items:center; position:relative; min-width:40px; height:36px; margin-left:4px;">
-            </div>
-            <div class="cart-title-info" style="display:flex; flex-direction:column; text-align:left;">
-                <span class="cart-items-count" id="floatingCartCountText" style="font-size:0.75rem; font-weight:700; color:#ffffff; opacity:0.9;">3 items</span>
-                <span class="cart-total-price" id="floatingCartTotalPriceText" style="font-size:0.95rem; font-weight:900; color:#ffffff;">View cart</span>
+    <!-- 📱 Compact & Attractive Floating Cart Footer Bar -->
+    <div id="floatingCartFooterBar" class="floating-cart-footer hidden" style="display:flex; justify-content:space-between; align-items:center; padding: 10px 15px !important; border-radius: 22px !important; max-width: 380px !important;">
+        <div class="floating-cart-left" style="display:flex; align-items:center; gap:10px; cursor:pointer; flex:1;" onclick="toggleCartDrawer(true)">
+            <div id="floatingCartImagesStack" style="position:relative; width: 38px; height: 38px; margin-left:4px;"></div>
+            <div style="display:flex; flex-direction:column; text-align:left;">
+                <span id="floatingCartCountText" style="font-size:0.68rem; font-weight:700; color:#ffffff; opacity:0.85; text-transform:uppercase; letter-spacing:0.3px;">1 item</span>
+                <span id="floatingCartTotalPriceText" style="font-size:0.95rem; font-weight:900; color:#ffffff;">₹45.00</span>
             </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
-            <button type="button" onclick="clearEntireCartData()" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:8px; font-size:0.72rem; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px;" title="Clear Cart">Clear</button>
-            <div class="floating-cart-right" style="display:flex; align-items:center; gap:6px; font-size:0.9rem; font-weight:800; background:rgba(0,0,0,0.15); padding:8px 14px; border-radius:12px; cursor:pointer;" onclick="toggleCartDrawer(true)">
-                <span>View cart</span> &rarr;
+            <button type="button" onclick="clearEntireCartData()" style="background: rgba(255,255,255,0.18); color: white; border: none; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem;" title="Clear Cart">🗑️</button>
+            <div style="background: #ffffff; color: var(--blinkit-green); padding: 8px 14px; border-radius: 18px; font-weight: 800; font-size: 0.82rem; display: flex; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onclick="toggleCartDrawer(true)">
+                <span>View</span> <span>&rarr;</span>
             </div>
         </div>
     </div>
@@ -1206,7 +1206,7 @@
 
                     let displayImgs = collectedImages.slice(0, 3);
                     if (displayImgs.length === 0) {
-                        imagesStack.innerHTML = `<div style="width:34px; height:34px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--blinkit-green); font-size:0.85rem; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🛒</div>`;
+                        imagesStack.innerHTML = `<div style="width:36px; height:36px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--blinkit-green); font-size:0.8rem; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🛒</div>`;
                     } else {
                         displayImgs.forEach((imgUrl, idx) => {
                             const imgThumb = document.createElement('img');
@@ -1218,7 +1218,7 @@
                                 border-radius: 50%;
                                 border: 2px solid #ffffff;
                                 position: absolute;
-                                left: ${idx * 16}px;
+                                left: ${idx * 14}px;
                                 top: 0;
                                 box-shadow: 0 2px 5px rgba(0,0,0,0.2);
                                 background: #fff;
