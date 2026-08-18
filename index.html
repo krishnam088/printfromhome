@@ -695,10 +695,10 @@
                     try {
                         await loadPdfIntoStudio(fileSource, undefined);
                     } catch (passErr) {
-                        if (passErr.name === 'PasswordException' || passErr.message.includes('password')) {
+                        if (passErr.name === 'PasswordException' || passErr.message.includes('password') || passErr.message.includes('No password given')) {
                             isCurrentFileLocked = true;
                             if (passwordBox) passwordBox.classList.remove('hidden');
-                            container.innerHTML = `<div style="color: #f87171; font-weight: 700; padding: 30px; text-align: center;">🔒 This PDF is password protected!<br><span style="font-size:0.75rem; color:#94a3b8;">Please enter the password in the top red bar to unlock and preview.</span></div>`;
+                            container.innerHTML = `<div style="color: #f87171; font-weight: 700; padding: 30px; text-align: center;">🔒 This PDF is password protected!<br><span style="font-size:0.75rem; color:#94a3b8;">Please enter the password in the top red bar above to unlock and preview.</span></div>`;
                             return;
                         } else {
                             throw passErr;
