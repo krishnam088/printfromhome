@@ -40,91 +40,64 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentStudioActiveFile = null;
     let currentStudioFileName = 'Document.pdf';
 
-    window.openDocumentInA4Studio = async function(fileBlobOrUrl, originalFileName = 'Document') {
-        const container = document.getElementById('a4PagesContainer');
-        const modal = document.getElementById('printStudioModal');
-        if (!container || !modal) return;
+   window.openDocumentInA4Studio = async function(fileBlobOrUrl, originalFileName = 'Document') {
+    const container = document.getElementById('a4PagesContainer');
+    const modal = document.getElementById('printStudioModal');
+    const passwordBox = document.getElementById('studioPasswordValidationBox');
+    const passwordInput = document.getElementById('studioRequiredPdfPassword');
+    
+    if (!container || !modal) return;
 
-        currentStudioActiveFile = fileBlobOrUrl;
-        currentStudioFileName = originalFileName || 'Document.pdf';
+    currentStudioActiveFile = fileBlobOrUrl;
+    currentStudioFileName = originalFileName || 'Document.pdf';
+    if (passwordInput) passwordInput.value = '';
+    if (passwordBox) passwordBox.classList.add('hidden');
+    isCurrentFileLocked = false;
 
-        container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Loading original PDF pages...</div>';
-        modal.style.display = 'flex';
-        renderedPagesList = [];
+    container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Generating pixel-perfect A4 Sheets...</div>';
+    modal.style.display = 'flex';
+    renderedPagesList = [];
 
-        try {
-            const isPdf = (typeof fileBlobOrUrl === 'string' && fileBlobOrUrl.toLowerCase().includes('.pdf')) || 
-                          (fileBlobOrUrl.type === 'application/pdf') || 
-                          (fileBlobOrUrl.name && fileBlobOrUrl.name.toLowerCase().endsWith('.pdf'));
+    try {
+        const isPdf = (typeof fileBlobOrUrl === 'string' && fileBlobOrUrl.toLowerCase().includes('.pdf')) || 
+                    (fileBlobOrUrl.type === 'application/pdf') || 
+                    (fileBlobOrUrl.name && fileBlobOrUrl.name.toLowerCase().endsWith('.pdf'));
 
-            if (isPdf) {
-                const fileSource = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
-                const loadingTask = pdfjsLib.getDocument(fileSource);
-                const pdf = await loadingTask.promise;
-                container.innerHTML = '';
-
-                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    const page = await pdf.getPage(pageNum);
-                    const viewport = page.getViewport({ scale: 1.5 }); // Original aspect ratio fit scale
-
-                    const pageWrapper = document.createElement('div');
-                    pageWrapper.className = `a4-page-wrapper ${isLandscapeMode ? 'landscape' : ''}`;
-                    pageWrapper.id = `a4_sheet_element_${pageNum}`;
-
-                    const badgeBar = document.createElement('div');
-                    badgeBar.className = 'page-badge-toolbar';
-                    badgeBar.innerHTML = `
-                        <span style="color: #38bdf8; font-size: 0.75rem; font-weight: 800;">Page ${pageNum} of ${pdf.numPages}</span>
-                        <button type="button" onclick="removeA4StudioPage(${pageNum})" style="background: #ef4444; color: white; border: none; border-radius: 6px; padding: 2px 8px; font-size: 0.7rem; font-weight: 800; cursor: pointer;">Delete</button>
-                    `;
-
-                    const canvas = document.createElement('canvas');
-                    canvas.className = 'a4-page-canvas';
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-
-                    await page.render({ canvasContext: context, viewport: viewport }).promise;
-
-                    pageWrapper.appendChild(badgeBar);
-                    pageWrapper.appendChild(canvas);
-                    container.appendChild(pageWrapper);
-
-                    renderedPagesList.push({ pageNum, elementId: `a4_sheet_element_${pageNum}` });
-                }
-
-                if (masterFilesArray.length > 0) {
-                    const lastFile = masterFilesArray[masterFilesArray.length - 1];
-                    if (lastFile) {
-                        lastFile.config.pages = pdf.numPages;
-                        saveCurrentFilesToSession();
-                    }
-                }
-            } else {
-                const imgSourceUrl = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
-                container.innerHTML = '';
-
-                const pageWrapper = document.createElement('div');
-                pageWrapper.className = `a4-page-wrapper ${isLandscapeMode ? 'landscape' : ''}`;
-                pageWrapper.id = `a4_sheet_element_1`;
-
-                pageWrapper.innerHTML = `
-                    <div class="page-badge-toolbar">
-                        <span style="color: #38bdf8; font-size: 0.75rem; font-weight: 800;">Page 1 of 1</span>
-                    </div>
-                    <img src="${imgSourceUrl}" class="a4-page-canvas" style="width: 100%; height: 100%; object-fit: contain;" />
-                `;
-                container.appendChild(pageWrapper);
-                renderedPagesList.push({ pageNum: 1, elementId: `a4_sheet_element_1` });
+        if (isPdf) {
+            const fileSource = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
+            
+            try {
+                // Pehle bina password ke load karne ki koshish karein
+                await loadPdfIntoStudio(fileSource, undefined);
+            } catch (passErr) {
+                // Agar password required hoga, toh error catch karke password box dikhayenge
+                isCurrentFileLocked = true;
+                if (passwordBox) passwordBox.classList.remove('hidden');
+                container.innerHTML = `<div style="color: #f87171; font-weight: 700; padding: 30px; text-align: center;">🔒 This PDF is password protected!<br><span style="font-size:0.75rem; color:#94a3b8;">Please enter the password in the top red bar above to unlock and preview.</span></div>`;
             }
+        } else {
+            const imgSourceUrl = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
+            container.innerHTML = '';
 
-            window.updateStudioPageCountBadge();
-            calculateTotal();
-        } catch (err) {
-            console.error("A4 Studio Error:", err);
-            container.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 30px; text-align: center;">❌ Failed to render PDF: ${err.message}</div>`;
+            const pageWrapper = document.createElement('div');
+            pageWrapper.className = `a4-page-wrapper ${isLandscapeMode ? 'landscape' : ''}`;
+            pageWrapper.id = `a4_sheet_element_1`;
+
+            pageWrapper.innerHTML = `
+                <div class="page-badge-toolbar">
+                    <span style="color: #38bdf8; font-size: 0.75rem; font-weight: 800;">Page 1 of 1</span>
+                </div>
+                <img src="${imgSourceUrl}" class="a4-page-canvas" style="width: 100%; height: 100%; object-fit: contain;" />
+            `;
+            container.appendChild(pageWrapper);
+            renderedPagesList.push({ pageNum: 1, elementId: `a4_sheet_element_1` });
+            updateStudioPageCountBadge();
         }
-    };
+    } catch (err) {
+        console.error("A4 Studio Error:", err);
+        container.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 30px; text-align: center;">❌ Failed to render document: ${err.message}</div>`;
+    }
+};
 
     window.updateStudioPageCountBadge = function() {
         const badge = document.getElementById('totalActivePagesCount');
