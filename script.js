@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentStudioActiveFile = fileBlobOrUrl;
         currentStudioFileName = originalFileName || 'Document.pdf';
 
-        container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Generating pixel-perfect A4 Sheets...</div>';
+        container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Loading original PDF pages...</div>';
         modal.style.display = 'flex';
         renderedPagesList = [];
 
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                     const page = await pdf.getPage(pageNum);
-                    const viewport = page.getViewport({ scale: 2.0 }); // 2x Scale for razor-sharp A4 rendering
+                    const viewport = page.getViewport({ scale: 1.5 }); // Original aspect ratio fit scale
 
                     const pageWrapper = document.createElement('div');
                     pageWrapper.className = `a4-page-wrapper ${isLandscapeMode ? 'landscape' : ''}`;
@@ -92,6 +92,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     renderedPagesList.push({ pageNum, elementId: `a4_sheet_element_${pageNum}` });
                 }
+
+                if (masterFilesArray.length > 0) {
+                    const lastFile = masterFilesArray[masterFilesArray.length - 1];
+                    if (lastFile) {
+                        lastFile.config.pages = pdf.numPages;
+                        saveCurrentFilesToSession();
+                    }
+                }
             } else {
                 const imgSourceUrl = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
                 container.innerHTML = '';
@@ -111,9 +119,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             window.updateStudioPageCountBadge();
+            calculateTotal();
         } catch (err) {
             console.error("A4 Studio Error:", err);
-            container.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 30px; text-align: center;">❌ Failed to render document: ${err.message}</div>`;
+            container.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 30px; text-align: center;">❌ Failed to render PDF: ${err.message}</div>`;
         }
     };
 
@@ -130,6 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (el) el.remove();
             renderedPagesList.splice(index, 1);
             window.updateStudioPageCountBadge();
+            calculateTotal();
         }
     };
 
@@ -145,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modal) modal.style.display = 'none';
     };
 
-    // 🔥 Preview se Cart mein add karke direct Checkout Cart Drawer open karna
+    // 🔥 Preview se exact count ke sath Cart mein add karke direct Checkout Cart Drawer open karna
     window.addStudioDocumentToCartAndRedirect = function() {
         const totalPages = renderedPagesList.length > 0 ? renderedPagesList.length : 1;
 
@@ -167,7 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleCartDrawer(true);
     };
 
-    // 🔥 FIXED: Direct Image open hone ke bajaye iframe ke zariye clean A4 print dialog trigger karega
     window.executeNativeA4Print = function() {
         const container = document.getElementById('a4PagesContainer');
         if (!container) {
@@ -968,7 +977,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!masterFilesArray.some(f => f.name === file.name && f.size === file.size)) {
                     let pageCount = 1;
                     
-                    // Auto-calculate exact PDF page count using PDF.js
                     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
                         try {
                             const arrayBuffer = await file.arrayBuffer();
