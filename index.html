@@ -773,14 +773,20 @@
                 alert("⚠️ Please enter the password to unlock this PDF.");
                 return;
             }
+            const container = document.getElementById('a4PagesContainer');
+            container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Unlocking and rendering PDF...</div>';
+
             const fileSource = typeof currentStudioActiveFile === 'string' ? currentStudioActiveFile : URL.createObjectURL(currentStudioActiveFile);
             try {
                 renderedPagesList = [];
                 await loadPdfIntoStudio(fileSource, pwd);
+                isCurrentFileLocked = false;
                 document.getElementById('studioPasswordValidationBox').classList.add('hidden');
-                alert("🔓 PDF Unlocked Successfully!");
+                alert("🔓 PDF Unlocked Successfully! Now you can preview and add to cart.");
             } catch (err) {
-                alert("❌ Incorrect Password! Please try again.");
+                console.error("Unlock Error:", err);
+                container.innerHTML = `<div style="color: #f87171; font-weight: 700; padding: 30px; text-align: center;">🔒 This PDF is password protected!<br><span style="font-size:0.75rem; color:#94a3b8;">Please enter the correct password below to unlock.</span></div>`;
+                alert("❌ Incorrect Password! Please enter the correct password and try again.");
             }
         };
 
