@@ -209,6 +209,7 @@ app.post('/api/delivery/scan-store-qr', async (req, res) => {
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.get('/admin-panel', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
 app.get('/delivery', (req, res) => { res.sendFile(path.join(__dirname, 'delivery.html')); });
+app.get('/store-qr', (req, res) => { res.sendFile(path.join(__dirname, 'store-qr.html')); });
 
 app.get('/manifest.json', (req, res) => {
     res.setHeader('Cache-Control', 'no-store');

@@ -110,6 +110,7 @@
         .btn-rain-off { background: #334155; color: #94a3b8; border: 1px solid #475569; }
         .btn-scanner { background: #8b5cf6; color: white; }
         .btn-history { background: #3b82f6; color: white; }
+        .btn-storeqr { background: #f59e0b; color: #000000; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; }
 
         .admin-section { display: none; }
         .admin-section.active { display: block; }
@@ -311,6 +312,10 @@
             </div>
 
             <div class="header-action-group">
+                <!-- 🏪 Store QR Screen Link -->
+                <a href="/store-qr" target="_blank" class="toggle-badge-btn btn-storeqr">
+                    📱 Store QR Screen
+                </a>
                 <button type="button" class="toggle-badge-btn btn-history" onclick="toggleOldOrdersArchiveModal(true)">
                     📁 Order History
                 </button>
