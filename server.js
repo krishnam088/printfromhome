@@ -668,6 +668,10 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
         const primaryUrl = filesMappedList.length > 0 ? filesMappedList[0].url : '';
         const primaryName = filesMappedList.length > 0 ? filesMappedList[0].name : (parsedConfig[0]?.fileName || 'Document.pdf');
 
+        // Dynamic Status: If order contains actual print files, mark as "Ready for Print", otherwise "Processing"
+        const hasPrintJobs = parsedConfig.some(item => item.printType !== 'snack' && item.printType !== 'product' && (!item.fileName || !item.fileName.startsWith('Product:')));
+        const initialOrderStatus = hasPrintJobs ? 'Ready for Print' : 'Processing';
+
         if (selectedPaymentMode === 'cod') {
             await deductStockForOrder(parsedConfig);
 
@@ -686,7 +690,7 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
                 address: address || 'N/A',
                 amount: finalAmountNumeric.toFixed(2),
                 totalAmount: finalAmountNumeric.toFixed(2),
-                status: 'Ready for Print',
+                status: initialOrderStatus,
                 date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
                 timestamp: new Date().toISOString(),
                 paymentId: 'CASH ON DELIVERY'
@@ -748,14 +752,16 @@ app.post('/api/verify-payment', async (req, res) => {
         const { orderId, paymentId } = req.body;
         const order = await Order.findOne({ orderId });
         if (order) {
-            order.status = 'Ready for Print';
-            order.paymentId = paymentId; 
-            await order.save();
-
             let parsedConfig = order.configDetails || [];
             if (typeof parsedConfig === 'string') {
                 try { parsedConfig = JSON.parse(parsedConfig); } catch(e){}
             }
+
+            const hasPrintJobs = parsedConfig.some(item => item.printType !== 'snack' && item.printType !== 'product' && (!item.fileName || !item.fileName.startsWith('Product:')));
+            order.status = hasPrintJobs ? 'Ready for Print' : 'Processing';
+            order.paymentId = paymentId; 
+            await order.save();
+
             await deductStockForOrder(parsedConfig);
 
             return res.json({ success: true });
