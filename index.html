@@ -9,11 +9,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     
-    <!-- 🗺️ LEAFLET MAP ENGINE DEPENDENCIES -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-    <!-- 📱 DYNAMIC SMART MANIFEST SWITCHER -->
     <script>
         const nowCheck = new Date();
         const manifestTag = document.createElement('link');
@@ -29,7 +32,6 @@
     <meta name="theme-color" content="#F4C430">
     <meta name="mobile-web-app-capable" content="yes">
     
-    <!-- 🍏 iOS PWA Meta Tags & Icons -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PrintFromHome">
@@ -49,11 +51,100 @@
             box-shadow: 0 0 0 2px var(--blinkit-green);
         }
         .payment-option-box { transition: all 0.2s ease; }
+
+        /* --- 🖨️ UNIVERSAL A4 STUDIO SHEET STYLES --- */
+        .a4-page-wrapper {
+            width: 210mm;
+            min-height: 297mm;
+            max-width: 95vw;
+            background: #ffffff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        .a4-page-wrapper.landscape {
+            width: 297mm;
+            min-height: 210mm;
+        }
+
+        .a4-page-canvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .page-badge-toolbar {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.85);
+            padding: 4px 10px;
+            border-radius: 8px;
+            z-index: 10;
+        }
+
+        /* --- STRICT A4 HARDWARE PRINT MEDIA RULES --- */
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
+            
+            #printStudioModal, #printStudioModal * {
+                visibility: visible !important;
+            }
+
+            #printStudioModal {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                background: #ffffff !important;
+                overflow: visible !important;
+            }
+
+            .studio-toolbar, .page-badge-toolbar, #floatingCartFooterBar, #userInstallBanner, .side-drawer, .drawer-overlay {
+                display: none !important;
+            }
+
+            #a4PagesContainer {
+                padding: 0 !important;
+                margin: 0 !important;
+                background: none !important;
+                display: block !important;
+            }
+
+            .a4-page-wrapper {
+                width: 100% !important;
+                min-height: 100vh !important;
+                height: 100% !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                page-break-after: always !important;
+                break-after: page !important;
+            }
+
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <!-- 🔍 MODERN BOTTOM-SHEET PRODUCT DETAIL & HD IMAGE VIEWER MODAL -->
     <div id="productDetailModal" onclick="closeProductDetailModal(event)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:99999; display:none; justify-content:center; align-items:flex-end; padding:0;">
         <div style="background:#ffffff; border-radius:24px 24px 0 0; padding:24px; width:100%; max-width:500px; max-height:85vh; overflow-y:auto; box-shadow:0 -10px 30px rgba(0,0,0,0.2); text-align:left; animation:slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1); position:relative;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
@@ -62,8 +153,7 @@
             </div>
             
             <div id="modalProductImgContainer" style="width:100%; height:220px; background:#f8fafc; border-radius:16px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; overflow:hidden; border:1px solid #e2e8f0;">
-                <!-- Product Image -->
-            </div>
+                </div>
             
             <h3 id="modalProductName" style="font-size:1.3rem; font-weight:800; color:#0f172a; margin-bottom:6px;">Product Name</h3>
             <p id="modalProductPrice" style="font-size:1.2rem; font-weight:900; color:var(--blinkit-green, #10b981); margin-bottom:10px;">₹0.00</p>
@@ -73,7 +163,23 @@
         </div>
     </div>
 
-    <!-- 🍏 iOS PWA INSTALL INSTRUCTION BOTTOM-SHEET MODAL -->
+    <div id="printStudioModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); z-index: 100000; flex-direction: column; overflow: hidden; font-family: 'Poppins', sans-serif;">
+        <div class="studio-toolbar" style="background: #1e293b; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button type="button" onclick="closePrintStudio()" style="background: #334155; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem;">&larr; Back to Store</button>
+                <h3 style="font-size: 1rem; color: #f8fafc; margin: 0; font-weight: 800;">📑 A4 Print Studio (<span id="totalActivePagesCount" style="color: var(--blinkit-green, #10b981);">0</span> Pages)</h3>
+            </div>
+            
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button type="button" onclick="toggleGlobalOrientation()" style="background: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">🔄 Rotate Layout</button>
+                <button type="button" onclick="executeNativeA4Print()" style="background: var(--blinkit-green, #10b981); color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: 800; font-size: 0.88rem; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">🖨️ Print Document</button>
+            </div>
+        </div>
+
+        <div id="a4PagesContainer" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 25px 12px; background: #0f172a; -webkit-overflow-scrolling: touch;">
+            </div>
+    </div>
+
     <div id="iosInstallModal" onclick="closeIosInstallModal(event)" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(5px); z-index: 100000; justify-content: center; align-items: flex-end; padding: 0;">
         <div onclick="event.stopPropagation()" style="background: #1e293b; color: #f8fafc; width: 100%; max-width: 460px; border-radius: 24px 24px 0 0; padding: 24px; border-top: 1px solid #334155; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); text-align: center; animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1); position: relative;">
             
@@ -102,7 +208,6 @@
         </div>
     </div>
 
-    <!-- 🔒 SPLASH SCREEN -->
     <div id="splashScreen" class="splash-container">
         <div class="splash-content">
             <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
@@ -110,7 +215,6 @@
         </div>
     </div>
 
-    <!-- 🔒 AUTHENTICATION SCREEN -->
     <div id="authScreen" class="auth-container app-hidden">
         <div class="auth-card">
             <div class="auth-brand">print<span class="brand-green">from</span>home</div>
@@ -121,7 +225,6 @@
                 <div class="form-group signup-only hidden"><label>Gmail Address (For Order & Offer Updates)</label><input type="email" id="authEmailInput" placeholder="Enter your Gmail address"></div>
                 <div class="form-group" id="passwordGroup"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters" required></div>
                 
-                <!-- 🔥 FORGOT PASSWORD BUTTON ON LOGIN SCREEN -->
                 <div style="text-align: right; margin-bottom: 12px;">
                     <button type="button" onclick="initiatePasswordReset()" style="background: none; border: none; color: #2563eb; font-size: 0.78rem; font-weight: 700; cursor: pointer; padding: 0;">Forgot Password?</button>
                 </div>
@@ -132,10 +235,8 @@
         </div>
     </div>
 
-    <!-- 🔒 SIDEBAR DRAWER OVERLAY -->
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
-    <!-- 👤 USER ACCOUNT SIDE DRAWER -->
     <nav id="userSideDrawer" class="side-drawer">
         <div class="drawer-header">
             <h2 style="font-size:1.1rem; font-weight:800;">Account Menu</h2>
@@ -159,7 +260,6 @@
                 <button type="submit" class="btn-drawer-action">Update Account Info</button>
             </form>
             
-            <!-- 🔥 PROFILE GMAIL UPDATE WIDGET -->
             <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px;">
                 <label style="font-size: 0.78rem; font-weight: 700; display: block; margin-bottom: 4px; color: var(--text-main);">Update Notification Gmail:</label>
                 <input type="email" id="userProfileEmailField" placeholder="Enter new Gmail address" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 6px; font-size: 0.8rem; background: #ffffff; color: #000000; outline: none;" required>
@@ -187,7 +287,6 @@
         </div>
     </nav>
 
-    <!-- 💰 RECHARGE WALLET MODAL -->
     <div id="walletDepositModal" class="wallet-modal-overlay" onclick="toggleWalletPopupGrid(false, event)">
         <div class="wallet-modal-card">
             <h3 style="font-size:1.3rem; font-weight:800; margin-bottom:6px;">💰 Recharge Print Wallet</h3>
@@ -205,7 +304,6 @@
         </div>
     </div>
 
-    <!-- 📍 ADDRESS MANAGER MODAL -->
     <div id="addressManagerModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:18000; display:none; justify-content:center; align-items:center; padding:15px; overflow-y:auto;">
         <div style="background:#ffffff; border-radius:24px; padding:20px; max-width:480px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.3); text-align:left; max-height:90vh; overflow-y:auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -249,11 +347,9 @@
         </div>
     </div>
 
-    <!-- 🛒 UNIFIED CHECKOUT CART DRAWER -->
     <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:16000; display:none; justify-content:flex-end;">
         <div class="cart-drawer-card" onclick="event.stopPropagation()" style="background:#f8fafc; width:100%; max-width:440px; height:100vh; display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.15); overflow:hidden;">
             
-            <!-- Header -->
             <div style="flex-shrink:0; background:#ffffff; padding:15px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <span style="cursor:pointer; font-size:1.2rem; font-weight:bold;" onclick="toggleCartDrawer(false)">&larr;</span>
@@ -265,10 +361,8 @@
                 </div>
             </div>
 
-            <!-- Scrollable Content Container -->
             <div style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:15px;">
                 
-                <!-- Free Delivery Progress Bar -->
                 <div id="freeDeliveryProgressBarBox" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 10px 14px; margin-bottom: 15px;">
                     <p id="freeDeliveryMessageText" style="font-size: 0.78rem; font-weight: 700; color: #16a34a; margin: 0 0 6px 0;">🎉 Add items worth ₹99 more for FREE delivery!</p>
                     <div style="width: 100%; background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
@@ -276,7 +370,6 @@
                     </div>
                 </div>
 
-                <!-- Permanent Saved Addresses Selection Section -->
                 <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <span style="font-size:0.75rem; font-weight:800; color:#64748b; text-transform:uppercase;">📍 Delivery Address</span>
@@ -293,10 +386,8 @@
                     </div>
                 </div>
 
-                <!-- Row-wise Cart Items Container -->
                 <div id="cartDrawerItemsList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
 
-                <!-- Bill Invoice Summary Box -->
                 <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:16px; margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                     <h4 style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:6px;">📄 Bill Invoice Summary</h4>
                     <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#4a5568; margin-bottom:5px;">
@@ -317,7 +408,6 @@
                     </div>
                 </div>
 
-                <!-- Interactive Blinkit Style Payment Mode Selection Grid -->
                 <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:16px; margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                     <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:12px;">💳 Select Payment Method</h4>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -340,7 +430,6 @@
 
             </div>
 
-            <!-- Footer (Fixed at Bottom with integrated Grand Total) -->
             <div style="flex-shrink:0; background:#ffffff; border-top:1px solid #e2e8f0; padding:15px; box-shadow:0 -4px 15px rgba(0,0,0,0.03);">
                 <button type="button" onclick="executeFinalCartOrderPlacement()" style="width:100%; padding:14px 18px; background:var(--blinkit-green); color:white; border:none; border-radius:14px; font-weight:900; font-size:1rem; display:flex; justify-content:space-between; align-items:center; cursor:pointer; box-shadow:0 4px 12px rgba(12,131,70,0.3);">
                     <span style="font-size:0.95rem; font-weight:800;">Place Order & Pay</span>
@@ -351,7 +440,6 @@
         </div>
     </div>
 
-    <!-- 📱 MAIN APP -->
     <div id="mainApp" class="app-hidden">
         <header class="brand-premium-header">
             <div class="header-container">
@@ -416,7 +504,6 @@
                         </div>
                     </div>
 
-                    <!-- 📦 STORE PRODUCTS HORIZONTAL SLIDER GRID -->
                     <div class="category-section-title">
                         <span>⚡ Store Products & Snacks (Slide &rarr;)</span>
                     </div>
@@ -450,7 +537,6 @@
                 </div>
             </div>
 
-            <!-- 🚚 LIVE ORDER STATUS & DELIVERY SUPPORT TRACKING SECTION -->
             <div id="user_section_order_tracking" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%; text-align:left;">
                     <button type="button" class="back-to-upload-link" onclick="navigateDrawerSection('history')">&larr; Back to All Orders</button>
@@ -463,7 +549,6 @@
                         <div id="trackGrandTotalBadge" style="font-size:1.4rem; font-weight:900; color:var(--blinkit-green);">₹0.00</div>
                     </div>
 
-                    <!-- Live Order Status Box -->
                     <div style="margin-top:20px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 16px; padding: 18px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                             <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase;">Live Status</span>
@@ -474,7 +559,6 @@
                         <h3 id="liveOrderStatusBadge" style="font-size: 1.2rem; font-weight: 900; color: var(--blinkit-green);">Processing Order...</h3>
                     </div>
 
-                    <!-- Delivery Executive Info Box -->
                     <div style="margin-top: 15px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; display: flex; align-items: center; justify-content: space-between;">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <div style="width: 44px; height: 44px; background: #0f172a; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
@@ -490,7 +574,6 @@
                         </div>
                     </div>
 
-                    <!-- Help & Support Actions -->
                     <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <a href="https://wa.me/917007626731?text=Hello%20Print%20From%20Home%20Support,%20I%20need%20help%20regarding%20my%20order." target="_blank" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; padding: 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 800; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
                             💬 WhatsApp Support
@@ -523,12 +606,10 @@
         </div>
     </div>
 
-    <!-- 🛒 FLOATING VIEW CART FOOTER BAR WITH STACKED PRODUCT IMAGES -->
     <div id="floatingCartFooterBar" class="floating-cart-footer hidden" style="display:flex; justify-content:space-between; align-items:center;">
         <div class="floating-cart-left" style="display:flex; align-items:center; gap:12px; cursor:pointer; flex:1;" onclick="toggleCartDrawer(true)">
             <div id="floatingCartImagesStack" style="display:flex; align-items:center; position:relative; min-width:40px; height:36px; margin-left:4px;">
-                <!-- Stacked product images injected dynamically via JS -->
-            </div>
+                </div>
             <div class="cart-title-info" style="display:flex; flex-direction:column; text-align:left;">
                 <span class="cart-items-count" id="floatingCartCountText" style="font-size:0.75rem; font-weight:700; color:#ffffff; opacity:0.9;">3 items</span>
                 <span class="cart-total-price" id="floatingCartTotalPriceText" style="font-size:0.95rem; font-weight:900; color:#ffffff;">View cart</span>
@@ -542,7 +623,6 @@
         </div>
     </div>
 
-    <!-- 📱 PERMANENT UNIVERSAL PWA INSTALL BANNER (ANDROID + iOS) -->
     <div id="userInstallBanner" class="hidden" style="background: #0f172a; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: fixed; bottom: 0; left: 0; width: 100%; z-index: 99999; box-shadow: 0 -4px 12px rgba(0,0,0,0.2);">
         <div style="display: flex; align-items: center; gap: 10px;">
             <span style="font-size: 1.5rem;">📥</span>
@@ -554,7 +634,6 @@
         <button type="button" id="userInstallTriggerBtn" onclick="triggerUniversalPWAInstall()" style="background: var(--blinkit-green); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">Install App</button>
     </div>
 
-    <!-- STORE CLOSED MODAL -->
     <div id="storeClosedPopupModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 99999; display: none; justify-content: center; align-items: center; padding: 20px;">
         <div style="background: #ffffff; border-radius: 24px; padding: 30px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 3px solid #ef4444;">
             <div style="font-size: 3.5rem; margin-bottom: 10px;">🏪🚨</div>
@@ -569,6 +648,118 @@
         window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
         window.storeInventoryProducts = [];
         let lastRenderedData = "";
+
+        // ==========================================
+        // 📄 UNIVERSAL A4 PRINT STUDIO ENGINE
+        // ==========================================
+        let renderedPagesList = [];
+        let isLandscapeMode = false;
+
+        window.openDocumentInA4Studio = async function(fileBlobOrUrl, originalFileName = 'Document') {
+            const container = document.getElementById('a4PagesContainer');
+            const modal = document.getElementById('printStudioModal');
+            if (!container || !modal) return;
+
+            container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Generating pixel-perfect A4 Sheets...</div>';
+            modal.style.display = 'flex';
+            renderedPagesList = [];
+
+            try {
+                const isPdf = (typeof fileBlobOrUrl === 'string' && fileBlobOrUrl.toLowerCase().includes('.pdf')) || 
+                              (fileBlobOrUrl.type === 'application/pdf') || 
+                              (fileBlobOrUrl.name && fileBlobOrUrl.name.toLowerCase().endsWith('.pdf'));
+
+                if (isPdf) {
+                    const fileSource = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
+                    const loadingTask = pdfjsLib.getDocument(fileSource);
+                    const pdf = await loadingTask.promise;
+                    container.innerHTML = '';
+
+                    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                        const page = await pdf.getPage(pageNum);
+                        const viewport = page.getViewport({ scale: 2.0 }); // 2x Scale for crisp A4 rendering
+
+                        const pageWrapper = document.createElement('div');
+                        pageWrapper.className = `a4-page-wrapper ${isLandscapeMode ? 'landscape' : ''}`;
+                        pageWrapper.id = `a4_sheet_element_${pageNum}`;
+
+                        const badgeBar = document.createElement('div');
+                        badgeBar.className = 'page-badge-toolbar';
+                        badgeBar.innerHTML = `
+                            <span style="color: #38bdf8; font-size: 0.75rem; font-weight: 800;">Page ${pageNum} of ${pdf.numPages}</span>
+                            <button type="button" onclick="removeA4StudioPage(${pageNum})" style="background: #ef4444; color: white; border: none; border-radius: 6px; padding: 2px 8px; font-size: 0.7rem; font-weight: 800; cursor: pointer;">Delete</button>
+                        `;
+
+                        const canvas = document.createElement('canvas');
+                        canvas.className = 'a4-page-canvas';
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+
+                        await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                        pageWrapper.appendChild(badgeBar);
+                        pageWrapper.appendChild(canvas);
+                        container.appendChild(pageWrapper);
+
+                        renderedPagesList.push({ pageNum, elementId: `a4_sheet_element_${pageNum}` });
+                    }
+                } else {
+                    const imgSourceUrl = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
+                    container.innerHTML = '';
+
+                    const pageWrapper = document.createElement('div');
+                    pageWrapper.className = `a4-page-wrapper ${isLandscapeMode ? 'landscape' : ''}`;
+                    pageWrapper.id = `a4_sheet_element_1`;
+
+                    pageWrapper.innerHTML = `
+                        <div class="page-badge-toolbar">
+                            <span style="color: #38bdf8; font-size: 0.75rem; font-weight: 800;">Page 1 of 1</span>
+                        </div>
+                        <img src="${imgSourceUrl}" class="a4-page-canvas" style="width: 100%; height: 100%; object-fit: contain;" />
+                    `;
+                    container.appendChild(pageWrapper);
+                    renderedPagesList.push({ pageNum: 1, elementId: `a4_sheet_element_1` });
+                }
+
+                updateStudioPageCountBadge();
+            } catch (err) {
+                console.error("A4 Studio Error:", err);
+                container.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 30px; text-align: center;">❌ Failed to render document: ${err.message}</div>`;
+            }
+        };
+
+        window.updateStudioPageCountBadge = function() {
+            const badge = document.getElementById('totalActivePagesCount');
+            if (badge) badge.textContent = renderedPagesList.length;
+        };
+
+        window.removeA4StudioPage = function(pageNum) {
+            const index = renderedPagesList.findIndex(p => p.pageNum === pageNum);
+            if (index !== -1) {
+                const item = renderedPagesList[index];
+                const el = document.getElementById(item.elementId);
+                if (el) el.remove();
+                renderedPagesList.splice(index, 1);
+                updateStudioPageCountBadge();
+            }
+        };
+
+        window.toggleGlobalOrientation = function() {
+            isLandscapeMode = !isLandscapeMode;
+            document.querySelectorAll('.a4-page-wrapper').forEach(sheet => {
+                sheet.classList.toggle('landscape', isLandscapeMode);
+            });
+        };
+
+        window.closePrintStudio = function() {
+            const modal = document.getElementById('printStudioModal');
+            if (modal) modal.style.display = 'none';
+        };
+
+        window.executeNativeA4Print = function() {
+            window.print();
+        };
 
         // --- 📲 UNIVERSAL PWA INSTALLATION LOGIC (ANDROID + iOS) ---
         let deferredPwaPrompt = null;
@@ -594,10 +785,19 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             const banner = document.getElementById('userInstallBanner');
-            // If it's iOS and not standalone, proactively show the install bar
             if (isIosDevice() && !isAppAlreadyInstalled() && banner) {
                 banner.classList.remove('hidden');
                 banner.style.display = 'flex';
+            }
+
+            // Auto-hook file upload input with A4 Preview Studio
+            const fileInputEl = document.getElementById('fileUpload');
+            if (fileInputEl) {
+                fileInputEl.addEventListener('change', (e) => {
+                    if (e.target.files && e.target.files[0]) {
+                        openDocumentInA4Studio(e.target.files[0], e.target.files[0].name);
+                    }
+                });
             }
         });
 
@@ -749,7 +949,7 @@
             }
 
             modal.style.display = 'flex';
-        }
+        };
 
         window.closeProductDetailModal = function(event) {
             const modal = document.getElementById('productDetailModal');
@@ -757,11 +957,11 @@
             if (!event || event.target === modal || event.target.tagName === 'SPAN') {
                 modal.style.display = 'none';
             }
-        }
+        };
 
         window.notifyWhenAvailable = function(prodName) {
             alert(`🔔 We have noted your request! You will be notified when "${prodName}" is back in stock.`);
-        }
+        };
 
         window.addDynamicProductToCart = function(sku, name, price, currentStock) {
             const existing = window.cartSnacksArray.find(item => item.name === name);
@@ -781,7 +981,7 @@
             updateFloatingCartBar();
             if (typeof calculateTotal === 'function') calculateTotal();
             alert(`✅ Added "${name}" to cart!`);
-        }
+        };
 
         loadDynamicStoreProducts();
         setInterval(loadDynamicStoreProducts, 5000);
@@ -854,7 +1054,7 @@
                 bar.classList.add('hidden');
                 bar.style.display = 'none';
             }
-        }
+        };
 
         window.toggleCartDrawer = function(open) {
             const overlay = document.getElementById('cartDrawerOverlay');
@@ -867,7 +1067,7 @@
             } else {
                 overlay.style.display = 'none';
             }
-        }
+        };
 
         window.renderCartDrawerContents = function() {
             const container = document.getElementById('cartDrawerItemsList');
@@ -961,7 +1161,7 @@
             if (summaryGrandNode) summaryGrandNode.textContent = `₹${grandTotal.toFixed(2)}`;
             if (grandTotalNode) grandTotalNode.textContent = `₹${grandTotal.toFixed(2)}`;
             updateFloatingCartBar();
-        }
+        };
 
         window.adjustPrintJobCopies = function(index, delta) {
             window.cartPrintJobsArray[index].copies += delta;
@@ -970,7 +1170,7 @@
             renderCartDrawerContents();
             updateFloatingCartBar();
             if (typeof calculateTotal === 'function') calculateTotal();
-        }
+        };
 
         window.adjustSnackQty = function(index, delta) {
             window.cartSnacksArray[index].qty += delta;
@@ -979,7 +1179,7 @@
             renderCartDrawerContents();
             updateFloatingCartBar();
             if (typeof calculateTotal === 'function') calculateTotal();
-        }
+        };
 
         window.clearEntireCartData = function() {
             if (confirm("🗑️ Are you sure you want to clean/clear your entire cart?")) {
@@ -990,7 +1190,7 @@
                 updateFloatingCartBar();
                 if (typeof calculateTotal === 'function') calculateTotal();
             }
-        }
+        };
 
         let deliveryMap = null;
         let deliveryMarker = null;
