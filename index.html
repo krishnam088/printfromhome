@@ -483,6 +483,10 @@
                         <span>Delivery Partner Fee</span>
                         <span id="cartDeliveryFee">₹25.00</span>
                     </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#b45309; font-weight:700; margin-bottom:5px; display:none;" id="rainSurgeRow">
+                        <span>🌧️ Rain Surge Fee</span>
+                        <span id="cartRainFee">₹15.00</span>
+                    </div>
                     <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#16a34a; font-weight:700; margin-bottom:8px;">
                         <span>Taxes & Platform Charges</span>
                         <span>FREE</span>
@@ -550,6 +554,11 @@
                 </div>
             </div>
         </header>
+
+        <!-- 🌧️ Rain Surge Active Alert Banner -->
+        <div id="rainSurgeBanner" class="hidden" style="background: #0284c7; color: white; padding: 8px 15px; text-align: center; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>🌧️ Heavy Rain Detected in Varanasi! Rain Surge Charge of ₹15 applies to ensure 15-min safe delivery.</span>
+        </div>
 
         <div class="container" id="mainLayoutAppContainer">
             <div id="user_section_store" class="view-section active">
@@ -733,6 +742,74 @@
         window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
         window.storeInventoryProducts = [];
         let lastRenderedData = "";
+
+        // 🌧️ Automatic Weather & Rain Detector for Varanasi (Open-Meteo API)
+        async function checkLocalWeatherAndApplyRainSurge() {
+            try {
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.3176&longitude=82.9739&current=precipitation,weather_code');
+                const data = await res.json();
+                
+                if (data && data.current) {
+                    const precipitation = data.current.precipitation || 0; 
+                    const weatherCode = data.current.weather_code || 0;
+                    
+                    const isRaining = precipitation > 0 || (weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 99);
+
+                    const bodyEl = document.body;
+                    const rainBanner = document.getElementById('rainSurgeBanner');
+                    const rainSurgeRow = document.getElementById('rainSurgeRow');
+
+                    if (isRaining) {
+                        bodyEl.classList.add('theme-rainy-season');
+                        if (rainBanner) rainBanner.classList.remove('hidden');
+                        if (rainSurgeRow) rainSurgeRow.style.display = 'flex';
+
+                        window.isRainSurgeActive = true;
+                        window.rainSurgeFee = 15; // ₹15 rain surge fee
+                        highlightRainAndCravingProducts();
+                    } else {
+                        bodyEl.classList.remove('theme-rainy-season');
+                        if (rainBanner) rainBanner.classList.add('hidden');
+                        if (rainSurgeRow) rainSurgeRow.style.display = 'none';
+
+                        window.isRainSurgeActive = false;
+                        window.rainSurgeFee = 0;
+                    }
+                    
+                    if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
+                }
+            } catch (e) {
+                console.error("Weather detection error:", e);
+            }
+        }
+
+        // Highlight Rain & Craving items from store inventory
+        function highlightRainAndCravingProducts() {
+            if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) return;
+
+            const rainyKeywords = ['tea', 'chai', 'coffee', 'soup', 'maggi', 'pakoda', 'umbrella', 'raincoat'];
+            const cravingKeywords = ['chocolate', 'chips', 'lays', 'kurkure', 'ice cream', 'cold drink', 'coke', 'pepsi', 'oreo', 'bhujia'];
+
+            window.storeInventoryProducts.forEach(prod => {
+                const nameLower = prod.name.toLowerCase();
+                const isRainItem = rainyKeywords.some(keyword => nameLower.includes(keyword));
+                const isCravingItem = cravingKeywords.some(keyword => nameLower.includes(keyword));
+
+                if (isRainItem || isCravingItem) {
+                    prod.isHighlightedRainOrCraving = true;
+                    prod.badgeText = isRainItem ? '🌧️ Rainy Special' : '🔥 Craving Alert';
+                }
+            });
+
+            if (typeof renderStoreProductsUI === 'function') {
+                renderStoreProductsUI();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            checkLocalWeatherAndApplyRainSurge();
+            setInterval(checkLocalWeatherAndApplyRainSurge, 10 * 60 * 1000);
+        });
 
         // ==========================================
         // 📄 UNIVERSAL A4 PRINT STUDIO ENGINE (LOCKED PDF SUPPORT)
@@ -1014,6 +1091,7 @@
                     if (newProductsJson !== lastRenderedData) {
                         lastRenderedData = newProductsJson;
                         window.storeInventoryProducts = data.products;
+                        highlightRainAndCravingProducts();
                         renderStoreProductsUI();
                         updateFloatingCartBar();
                     }
@@ -1053,7 +1131,7 @@
                         min-width: 110px;
                         width: 110px;
                         background: #ffffff;
-                        border: 1px solid #e2e8f0;
+                        border: 1px solid ${prod.isHighlightedRainOrCraving ? '#0284c7' : '#e2e8f0'};
                         border-radius: 14px;
                         padding: 10px;
                         position: relative; 
@@ -1062,7 +1140,7 @@
                         flex-direction: column; 
                         align-items: center; 
                         cursor: pointer;
-                        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+                        box-shadow: ${prod.isHighlightedRainOrCraving ? '0 0 10px rgba(2,132,199,0.25)' : '0 2px 6px rgba(0,0,0,0.03)'};
                         flex-shrink: 0;
                     `;
                     
@@ -1075,7 +1153,10 @@
                         ? `<img src="${finalImgUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px; display:block;" />` 
                         : `<div style="font-size:2rem; margin-bottom:6px; height:65px; display:flex; align-items:center; justify-content:center;">📦</div>`;
 
+                    const badgeHtml = prod.isHighlightedRainOrCraving ? `<span class="rain-craving-badge">${prod.badgeText}</span>` : '';
+
                     card.innerHTML = `
+                        ${badgeHtml}
                         ${imageHtml}
                         <div title="${prod.name}" style="font-weight:700; font-size:0.78rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; color:#0f172a;">${prod.name}</div>
                         <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
@@ -1187,12 +1268,13 @@
             let grandTotalCombined = totalSnacksPrice + printTotalVal;
             let totalItemsCombined = totalSnacksCount + printFilesCount;
             let deliveryFee = (grandTotalCombined >= 99 || grandTotalCombined === 0) ? 0 : 25;
+            let rainFee = window.isRainSurgeActive ? (window.rainSurgeFee || 15) : 0;
 
             if (totalItemsCombined > 0) {
                 bar.classList.remove('hidden');
                 bar.style.display = 'flex';
                 if (countText) countText.textContent = `${totalItemsCombined} item${totalItemsCombined > 1 ? 's' : ''}`;
-                if (priceText) priceText.textContent = `₹${(grandTotalCombined + deliveryFee).toFixed(2)}`;
+                if (priceText) priceText.textContent = `₹${(grandTotalCombined + deliveryFee + rainFee).toFixed(2)}`;
 
                 if (imagesStack) {
                     imagesStack.innerHTML = '';
@@ -1320,7 +1402,8 @@
             }
 
             let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
-            let grandTotal = subtotal + delivery;
+            let rainFee = window.isRainSurgeActive ? (window.rainSurgeFee || 15) : 0;
+            let grandTotal = subtotal + delivery + rainFee;
 
             let freeDeliveryRemaining = Math.max(0, 99 - subtotal);
             const msgText = document.getElementById('freeDeliveryMessageText');
