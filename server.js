@@ -96,6 +96,15 @@ const orderSchema = new mongoose.Schema({
 });
 const Order = mongoose.model('Order', orderSchema);
 
+const deliveryBoySchema = new mongoose.Schema({
+    phone: { type: String, unique: true },
+    name: String,
+    isOnline: { type: Boolean, default: false },
+    currentOrderId: { type: String, default: null },
+    lastActiveTimestamp: { type: Number, default: 0 }
+});
+const DeliveryBoy = mongoose.model('DeliveryBoy', deliveryBoySchema);
+
 const storeConfigSchema = new mongoose.Schema({
     isOpen: { type: Boolean, default: true },
     rainSurgeActive: { type: Boolean, default: false },
@@ -134,6 +143,67 @@ const transporter = nodemailer.createTransport({
     connectionTimeout: 60000,
     greetingTimeout: 30000,
     socketTimeout: 60000
+});
+
+// 🏪 10-Second Rolling Store QR Token Engine
+let currentStoreQrToken = "PFH-STORE-INIT-2026";
+let qrTokenExpiry = Date.now() + 30000;
+
+setInterval(() => {
+    currentStoreQrToken = "PFH-STORE-QR-" + Math.random().toString(36).substring(2, 8).toUpperCase() + "-" + Date.now();
+    qrTokenExpiry = Date.now() + 20000; // 20 seconds buffer for scanning
+}, 10000);
+
+app.get('/api/admin/live-store-qr', (req, res) => {
+    res.json({ success: true, qrToken: currentStoreQrToken, validTill: qrTokenExpiry });
+});
+
+app.post('/api/delivery/scan-store-qr', async (req, res) => {
+    try {
+        const { phone, scannedToken } = req.body;
+        if (!phone || !scannedToken) {
+            return res.status(400).json({ success: false, message: "Phone and QR token are required!" });
+        }
+
+        // Verify QR Token freshness (within 20 seconds buffer)
+        if (scannedToken !== currentStoreQrToken || Date.now() > qrTokenExpiry) {
+            return res.status(400).json({ success: false, message: "⚠️ Invalid or Expired Store QR Code! Please scan the live counter screen." });
+        }
+
+        let boy = await DeliveryBoy.findOne({ phone });
+        if (!boy) {
+            boy = new DeliveryBoy({ phone, name: "Partner " + phone.slice(-4) });
+        }
+
+        if (boy.currentOrderId) {
+            return res.status(400).json({ success: false, message: "⚠️ You already have an active order assigned! Deliver it first." });
+        }
+
+        boy.isOnline = true;
+        boy.lastActiveTimestamp = Date.now();
+        await boy.save();
+
+        // Automatically assign the next free "Ready for Print" order to this active & free delivery boy
+        const nextOrder = await Order.findOne({ 
+            status: 'Ready for Print', 
+            $or: [{ assignedDeliveryBoy: { $exists: false } }, { assignedDeliveryBoy: null }, { assignedDeliveryBoy: "" }] 
+        });
+
+        if (nextOrder) {
+            nextOrder.assignedDeliveryBoy = phone;
+            nextOrder.status = 'Out for Delivery';
+            await nextOrder.save();
+
+            boy.currentOrderId = nextOrder.orderId;
+            await boy.save();
+
+            return res.json({ success: true, message: `✅ Verified! You are checked in & Order #${nextOrder.orderId} is assigned to you.` });
+        }
+
+        res.json({ success: true, message: "✅ Checked in successfully! Waiting for next ready order..." });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
@@ -846,7 +916,16 @@ const handleStatusUpdate = async (req, res) => {
             if (order.status && order.status.includes('Delivered')) {
                 return res.status(400).json({ success: false, message: "Cannot modify delivered order." });
             }
-            if (status) order.status = status; 
+            if (status) {
+                order.status = status; 
+                // If delivery boy marks order as delivered, clear their active order assignment
+                if (status.includes('Delivered') && order.assignedDeliveryBoy) {
+                    await DeliveryBoy.findOneAndUpdate(
+                        { phone: order.assignedDeliveryBoy }, 
+                        { currentOrderId: null, isOnline: false }
+                    );
+                }
+            }
             if (assignedDeliveryBoy !== undefined) order.assignedDeliveryBoy = assignedDeliveryBoy;
             await order.save();
             return res.json({ success: true, order });
