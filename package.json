@@ -19,7 +19,8 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.13",
     "pdf-to-printer": "^5.8.0",
-    "razorpay": "^2.9.2"
+    "razorpay": "^2.9.2",
+    "web-push": "^3.6.7"
   },
   "engines": {
     "node": ">=18.0.0"
