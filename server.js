@@ -313,8 +313,22 @@ app.post('/api/admin/toggle-rain', async (req, res) => {
     }
 });
 
-// 🔔 Push Notification Subscription Endpoint
+// 🔔 Push Notification Subscription Endpoints
 app.post('/api/notifications/subscribe', async (req, res) => {
+    try {
+        const { identity, productName, subscription, type } = req.body;
+        await PushSubscription.findOneAndUpdate(
+            { identity, productName: productName || '' },
+            { subscription, type: type || 'stock_alert' },
+            { upsert: true, new: true }
+        );
+        res.json({ success: true, message: "Subscribed successfully!" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/notifications/subscribe-stock', async (req, res) => {
     try {
         const { identity, productName, subscription, type } = req.body;
         await PushSubscription.findOneAndUpdate(
@@ -1014,7 +1028,7 @@ const handleStatusUpdate = async (req, res) => {
         const order = await Order.findOne({ orderId });
         if (order) {
             if (order.status && order.status.includes('Delivered')) {
-                return res.status(400).json({ success: false, message: "Cannot modify delivered order." });
+                return res.status(400).json({ success: false, message: "Cannot modify delivered order. " });
             }
             if (status) {
                 order.status = status; 
