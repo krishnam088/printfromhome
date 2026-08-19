@@ -277,7 +277,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     identity: sessionUser,
                     productName: productName,
-                    subscription: pushSubscription
+                    subscription: pushSubscription,
+                    type: 'stock_alert'
                 })
             });
 
@@ -285,6 +286,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.error("Push subscription failed:", err);
             alert("⚠️ Failed to enable notifications.");
+        }
+    };
+
+    window.autoSubscribeForStockAlert = async function(productName) {
+        if (typeof window.subscribeUserToPushNotifications === 'function') {
+            await window.subscribeUserToPushNotifications(productName);
         }
     };
 
@@ -439,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div title="${prod.name}" style="font-weight:700; font-size:0.78rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; color:#0f172a;">${prod.name}</div>
                     <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
                     ${isOutOfStock 
-                        ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); subscribeUserToPushNotifications('${prod.name}')">Notify Me</button>`
+                        ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); notifyWhenAvailable('${prod.name}')">Notify Me</button>`
                         : `<button type="button" style="background:var(--blinkit-green, #10b981); color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
                     }
                     ${isOutOfStock ? `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.55rem; padding:2px 4px; border-radius:4px; font-weight:800;">OUT</span>` : ''}
