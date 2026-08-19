@@ -613,6 +613,41 @@
 
         <div class="container" id="mainLayoutAppContainer">
             <div id="user_section_store" class="view-section active">
+                
+                <!-- 🪔 DIWALI 2026 COMING SOON LAUNCH BANNER -->
+                <div id="diwaliLaunchBanner" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border: 1px solid #334155; border-radius: 20px; padding: 22px 18px; margin-bottom: 20px; text-align: center; color: #f8fafc; font-family: 'Poppins', sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.3); position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(245, 158, 11, 0.15); border-radius: 50%; filter: blur(20px); pointer-events: none;"></div>
+                    <div style="font-size: 2rem; margin-bottom: 4px;">🪔✨</div>
+                    <span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 4px 10px; border-radius: 16px; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px;">Official Launch • Diwali 2026</span>
+                    <h2 style="font-size: 1.35rem; font-weight: 900; color: #38bdf8; margin: 10px 0 4px 0;">Print From Home - Varanasi</h2>
+                    <p style="font-size: 0.78rem; color: #94a3b8; line-height: 1.4; margin-bottom: 14px;">Varanasi's ultimate 15-minute instant printing & doorstep delivery app is launching this festive season.</p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px;">
+                        <div style="background: #0f172a; padding: 8px 4px; border-radius: 8px; border: 1px solid #334155;">
+                            <span id="bannerDays" style="font-size: 1rem; font-weight: 900; color: #10b981; display: block;">--</span>
+                            <span style="font-size: 0.52rem; color: #64748b; text-transform: uppercase; font-weight: 700;">Days</span>
+                        </div>
+                        <div style="background: #0f172a; padding: 8px 4px; border-radius: 8px; border: 1px solid #334155;">
+                            <span id="bannerHours" style="font-size: 1rem; font-weight: 900; color: #38bdf8; display: block;">--</span>
+                            <span style="font-size: 0.52rem; color: #64748b; text-transform: uppercase; font-weight: 700;">Hours</span>
+                        </div>
+                        <div style="background: #0f172a; padding: 8px 4px; border-radius: 8px; border: 1px solid #334155;">
+                            <span id="bannerMins" style="font-size: 1rem; font-weight: 900; color: #f59e0b; display: block;">--</span>
+                            <span style="font-size: 0.52rem; color: #64748b; text-transform: uppercase; font-weight: 700;">Mins</span>
+                        </div>
+                        <div style="background: #0f172a; padding: 8px 4px; border-radius: 8px; border: 1px solid #334155;">
+                            <span id="bannerSecs" style="font-size: 1rem; font-weight: 900; color: #ef4444; display: block;">--</span>
+                            <span style="font-size: 0.52rem; color: #64748b; text-transform: uppercase; font-weight: 700;">Secs</span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 6px; max-width: 360px; margin: 0 auto; flex-wrap: wrap;">
+                        <input type="email" id="bannerWaitlistEmail" placeholder="Enter Gmail for VIP Access..." style="flex: 1; min-width: 170px; padding: 8px 12px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; font-size: 0.75rem; font-weight: 600; outline: none;">
+                        <button type="button" onclick="submitBannerWaitlist()" style="padding: 8px 14px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 800; font-size: 0.75rem; cursor: pointer;">Notify Me</button>
+                    </div>
+                    <p style="font-size: 0.65rem; color: #64748b; margin-top: 8px;">🎁 Early subscribers get flat 50% OFF on their first 3 print orders!</p>
+                </div>
+
                 <div id="uploadScreenInitialState" style="width:100%;">
                     <div class="compact-offers-bar" id="storeOffersTopBanner" style="margin-top:10px;">
                         <span>📢 <b>Offers:</b></span>
@@ -789,6 +824,48 @@
     </div>
 
     <script>
+        // 🪔 Diwali 2026 Target Date Countdown Engine (Diwali 2026: November 8, 2026)
+        const targetDiwaliDate = new Date("November 8, 2026 00:00:00").getTime();
+
+        function updateBannerCountdown() {
+            const now = new Date().getTime();
+            const timeLeft = targetDiwaliDate - now;
+
+            if (timeLeft <= 0) {
+                const bannerEl = document.getElementById('diwaliLaunchBanner');
+                if (bannerEl) bannerEl.innerHTML = `<h2 style="color:#10b981; font-weight:900;">🎉 We are LIVE! Happy Diwali 2026!</h2>`;
+                return;
+            }
+
+            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+            const dElem = document.getElementById('bannerDays');
+            const hElem = document.getElementById('bannerHours');
+            const mElem = document.getElementById('bannerMins');
+            const sElem = document.getElementById('bannerSecs');
+
+            if (dElem) dElem.textContent = days;
+            if (hElem) hElem.textContent = String(hours).padStart(2, '0');
+            if (mElem) mElem.textContent = String(minutes).padStart(2, '0');
+            if (sElem) sElem.textContent = String(seconds).padStart(2, '0');
+        }
+
+        updateBannerCountdown();
+        setInterval(updateBannerCountdown, 1000);
+
+        window.submitBannerWaitlist = function() {
+            const emailInput = document.getElementById('bannerWaitlistEmail');
+            if (!emailInput || !emailInput.value.trim() || !emailInput.value.includes('@')) {
+                alert("⚠️ Please enter a valid Gmail address for VIP early access!");
+                return;
+            }
+            alert("🎉 Thank you! You have been successfully added to the Print From Home Diwali 2026 VIP Launch Waitlist.");
+            emailInput.value = '';
+        }
+
         window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
         window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
         window.storeInventoryProducts = [];
