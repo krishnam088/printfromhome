@@ -9,6 +9,7 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const nodemailer = require('nodemailer');
 const cron = require('node-cron');
+const webpush = require('web-push');
 require('dotenv').config();
 
 const app = express();
@@ -123,6 +124,20 @@ const productSchema = new mongoose.Schema({
     imageUrl: { type: String, default: '' }
 });
 const Product = mongoose.model('Product', productSchema);
+
+// 🔔 Web Push Notification Configuration
+webpush.setVapidDetails(
+    'mailto:printfromhomesupport@gmail.com',
+    process.env.VAPID_PUBLIC_KEY || 'YOUR_PUBLIC_VAPID_KEY',
+    process.env.VAPID_PRIVATE_KEY || 'YOUR_PRIVATE_VAPID_KEY'
+);
+
+const pushSubscriptionSchema = new mongoose.Schema({
+    identity: String,
+    productName: String,
+    subscription: Object
+});
+const PushSubscription = mongoose.model('PushSubscription', pushSubscriptionSchema);
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_Sz27MnobxedYSU', 
@@ -295,6 +310,45 @@ app.post('/api/admin/toggle-rain', async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
+// 🔔 Push Notification Subscription Endpoint
+app.post('/api/notifications/subscribe', async (req, res) => {
+    try {
+        const { identity, productName, subscription } = req.body;
+        await PushSubscription.findOneAndUpdate(
+            { identity, productName },
+            { subscription },
+            { upsert: true, new: true }
+        );
+        res.json({ success: true, message: "Subscribed successfully!" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 🔥 Function to trigger when a product is restocked
+async function triggerStockAvailableNotifications(productName) {
+    try {
+        const subs = await PushSubscription.find({ productName: { $regex: new RegExp(productName, 'i') } });
+        
+        const payload = JSON.stringify({
+            title: "🔥 Good News! Product is Back in Stock!",
+            body: `Aapka pasandida item "${productName}" ab Print From Home par available hai. Jaldi order karein!`,
+            url: "https://printfromhome.onrender.com"
+        });
+
+        for (const sub of subs) {
+            try {
+                await webpush.sendNotification(sub.subscription, payload);
+                await PushSubscription.deleteOne({ _id: sub._id });
+            } catch (err) {
+                console.error("Error sending push notification to user:", err);
+            }
+        }
+    } catch (e) {
+        console.error("Stock notification broadcast error:", e);
+    }
+}
 
 app.post('/api/auth/signup', async (req, res) => {
     try {
@@ -549,8 +603,11 @@ app.post('/api/admin/inventory/add', uploadCloudinary.single('productImage'), as
             imageUrl = externalImageUrl;
         }
 
+        let wasOutOfStock = product ? product.stockQuantity <= 0 : false;
+        let addedQty = Number(quantity);
+
         if (product) {
-            product.stockQuantity += Number(quantity);
+            product.stockQuantity += addedQty;
             if (purchasePrice) product.purchasePrice = Number(purchasePrice);
             if (sellingPrice) product.sellingPrice = Number(sellingPrice);
             if (name) product.name = name;
@@ -563,12 +620,19 @@ app.post('/api/admin/inventory/add', uploadCloudinary.single('productImage'), as
                 name,
                 purchasePrice: Number(purchasePrice),
                 sellingPrice: Number(sellingPrice),
-                stockQuantity: Number(quantity),
+                stockQuantity: addedQty,
                 barcode: barcode || '',
                 imageUrl: imageUrl || ''
             });
             await product.save();
+            wasOutOfStock = true; // New product is considered a restock/availability event
         }
+
+        // Trigger push notification if item was out of stock and now has stock
+        if (wasOutOfStock && product.stockQuantity > 0) {
+            triggerStockAvailableNotifications(product.name);
+        }
+
         res.json({ success: true, product });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });

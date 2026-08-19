@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================
-    // 🔔 PUSH NOTIFICATION PERMISSION REQUEST
+    // 🔔 PUSH NOTIFICATION PERMISSION REQUEST & SUBSCRIPTION
     // ==========================================
     async function requestUserPushNotificationPermission() {
         try {
@@ -246,6 +246,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     setTimeout(requestUserPushNotificationPermission, 4000);
+
+    // 🔔 Subscribe User for Out of Stock Product Push Notifications
+    window.subscribeUserToPushNotifications = async function(productName) {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            alert("⚠️ Push notifications are not supported on this browser.");
+            return;
+        }
+
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            
+            const permissionResult = await Notification.requestPermission();
+            if (permissionResult !== 'granted') {
+                alert("⚠️ Please allow notifications to get stock alerts.");
+                return;
+            }
+
+            const subscribeOptions = {
+                userVisibleOnly: true,
+                applicationServerKey: 'YOUR_PUBLIC_VAPID_KEY_HERE'
+            };
+
+            const pushSubscription = await registration.pushManager.subscribe(subscribeOptions);
+            
+            const sessionUser = localStorage.getItem('printAppUserIdentity') || 'guest';
+            await fetch('/api/notifications/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    identity: sessionUser,
+                    productName: productName,
+                    subscription: pushSubscription
+                })
+            });
+
+            alert(`✅ Success! We will notify you on this device when "${productName}" is back in stock.`);
+        } catch (err) {
+            console.error("Push subscription failed:", err);
+            alert("⚠️ Failed to enable notifications.");
+        }
+    };
 
     // ==========================================
     // 🕒 REAL-TIME STORE STATUS AUTO-CHECKER & DISMISS HANDLER
@@ -398,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div title="${prod.name}" style="font-weight:700; font-size:0.78rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; color:#0f172a;">${prod.name}</div>
                     <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
                     ${isOutOfStock 
-                        ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); notifyWhenAvailable('${prod.name}')">Out of Stock</button>`
+                        ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); subscribeUserToPushNotifications('${prod.name}')">Notify Me</button>`
                         : `<button type="button" style="background:var(--blinkit-green, #10b981); color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
                     }
                     ${isOutOfStock ? `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.55rem; padding:2px 4px; border-radius:4px; font-weight:800;">OUT</span>` : ''}
@@ -409,7 +450,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.notifyWhenAvailable = function(prodName) {
-        alert(`🔔 We have noted your request! You will be notified when "${prodName}" is back in stock.`);
+        if (typeof subscribeUserToPushNotifications === 'function') {
+            subscribeUserToPushNotifications(prodName);
+        } else {
+            alert(`🔔 We have noted your request! You will be notified when "${prodName}" is back in stock.`);
+        }
     }
 
     // 🔒 STRICT INVENTORY ADD TO CART LOGIC
@@ -1226,7 +1271,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function renderOrderHistoryUI(userId, renderHistoryContainerClean = true) {
+    function renderOrderHistoryUI(userId) {
         if(!ordersHistoryContainer) return;
         const rawHistory = localStorage.getItem(`history_${userId}`);
         if (!rawHistory || JSON.parse(rawHistory).length === 0) {
