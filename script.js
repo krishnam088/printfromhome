@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const subscribeOptions = {
                 userVisibleOnly: true,
-                applicationServerKey: 'YOUR_PUBLIC_VAPID_KEY_HERE'
+                applicationServerKey: 'BGjNyVdaWFa5xpUhvhCObYnuDWwqEVwcgL_yVKnQH75lF80qNPf-WK5Wa8NM7XV8bRNlN5Vu8Darx98-AkGZ9uA'
             };
 
             const pushSubscription = await registration.pushManager.subscribe(subscribeOptions);

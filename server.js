@@ -125,16 +125,24 @@ const productSchema = new mongoose.Schema({
 });
 const Product = mongoose.model('Product', productSchema);
 
-// 🔔 Web Push Notification Configuration
-webpush.setVapidDetails(
-    'mailto:printfromhomesupport@gmail.com',
-    process.env.VAPID_PUBLIC_KEY || 'YOUR_PUBLIC_VAPID_KEY',
-    process.env.VAPID_PRIVATE_KEY || 'YOUR_PRIVATE_VAPID_KEY'
-);
+// 🔔 Safe Web Push Notification Configuration (Prevents startup crashes if keys are not set)
+try {
+    if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+        webpush.setVapidDetails(
+            'mailto:printfromhomesupport@gmail.com',
+            process.env.VAPID_PUBLIC_KEY,
+            process.env.VAPID_PRIVATE_KEY
+        );
+    } else {
+        console.warn('⚠️ VAPID keys not configured in environment variables. Push notifications are running in safe fallback mode.');
+    }
+} catch (vapidErr) {
+    console.error('⚠️ VAPID Setup Warning:', vapidErr.message);
+}
 
 const pushSubscriptionSchema = new mongoose.Schema({
     identity: String,
-    type: { type: String, default: 'stock_alert' }, // 'stock_alert', 'abandoned_cart', 'weather_surge'
+    type: { type: String, default: 'stock_alert' },
     productName: { type: String, default: '' },
     subscription: Object,
     createdAt: { type: Date, default: Date.now }
@@ -168,7 +176,7 @@ let qrTokenExpiry = Date.now() + 30000;
 
 setInterval(() => {
     currentStoreQrToken = "PFH-STORE-QR-" + Math.random().toString(36).substring(2, 8).toUpperCase() + "-" + Date.now();
-    qrTokenExpiry = Date.now() + 20000; // 20 seconds buffer for scanning
+    qrTokenExpiry = Date.now() + 20000;
 }, 10000);
 
 app.get('/api/admin/live-store-qr', (req, res) => {
@@ -313,7 +321,7 @@ app.post('/api/admin/toggle-rain', async (req, res) => {
     }
 });
 
-// 🔔 Push Notification Subscription Endpoints
+// 🔔 Push Notification Subscription Endpoint
 app.post('/api/notifications/subscribe', async (req, res) => {
     try {
         const { identity, productName, subscription, type } = req.body;
@@ -360,7 +368,9 @@ async function autoTriggerStockNotification(productName) {
 
         for (const sub of subs) {
             try {
-                await webpush.sendNotification(sub.subscription, payload);
+                if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+                    await webpush.sendNotification(sub.subscription, payload);
+                }
                 await PushSubscription.deleteOne({ _id: sub._id });
             } catch (err) {
                 console.error("Push send error:", err);
@@ -386,7 +396,9 @@ async function autoTriggerRainSurgeNotification() {
 
         for (const sub of subs) {
             try {
-                await webpush.sendNotification(sub.subscription, payload);
+                if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+                    await webpush.sendNotification(sub.subscription, payload);
+                }
             } catch (err) {}
         }
     } catch (e) {}
@@ -1028,7 +1040,7 @@ const handleStatusUpdate = async (req, res) => {
         const order = await Order.findOne({ orderId });
         if (order) {
             if (order.status && order.status.includes('Delivered')) {
-                return res.status(400).json({ success: false, message: "Cannot modify delivered order. " });
+                return res.status(400).json({ success: false, message: "Cannot modify delivered order." });
             }
             if (status) {
                 order.status = status; 
