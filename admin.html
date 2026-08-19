@@ -1063,6 +1063,7 @@
         }
         updateRainSurgeButtonUI();
         fetchAdminRainSurgeStatus();
+        setInterval(fetchAdminRainSurgeStatus, 4000); // Poll status periodically
 
         // 🛵 Assign Order to Delivery Boy
         async function assignOrderToDeliveryBoy(orderId) {
