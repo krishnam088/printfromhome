@@ -243,7 +243,6 @@ app.get('/api/store-status', async (req, res) => {
         const isTimeWithinOperatingHours = istHours >= 7 && istHours < 22;
         const finalIsOpen = isTimeWithinOperatingHours && config.isOpen;
 
-        // Admin override is now honored directly from database config.rainSurgeActive
         res.json({ 
             success: true, 
             isOpen: finalIsOpen, 
@@ -273,7 +272,7 @@ const handleStoreToggle = async (req, res) => {
 app.post('/api/store-status/toggle', handleStoreToggle);
 app.post('/api/admin/toggle-store', handleStoreToggle);
 
-// 🌧️ Admin Rain Surge Status & Toggle Endpoints (Strict Manual Control Override)
+// 🌧️ Admin Rain Surge Status & Toggle Endpoints
 app.get('/api/admin/rain-status', async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
