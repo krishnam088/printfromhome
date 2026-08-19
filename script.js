@@ -777,11 +777,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function synchronizeWalletInterfaceBalance() {
         const sessionActiveUser = localStorage.getItem('printAppUser');
         const balanceDisplayNode = document.getElementById('headerWalletDisplayBalance');
+        const drawerWalletText = document.getElementById('walletDrawerBalanceText');
         if(!balanceDisplayNode) return;
-        if(!sessionActiveUser) { balanceDisplayNode.textContent = "₹0.00"; return; }
+        if(!sessionActiveUser) { 
+            balanceDisplayNode.textContent = "₹0.00"; 
+            if(drawerWalletText) drawerWalletText.textContent = "₹0";
+            return; 
+        }
         let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
         balanceDisplayNode.textContent = `₹${currentWalletCash.toFixed(2)}`;
+        if(drawerWalletText) drawerWalletText.textContent = `₹${currentWalletCash.toFixed(2)}`;
     }
+    window.synchronizeWalletInterfaceBalance = synchronizeWalletInterfaceBalance;
 
     window.executeWalletRazorpayDeposit = async function() {
         const sessionActiveUser = localStorage.getItem('printAppUser');
@@ -799,6 +806,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.setItem(`wallet_cash_${sessionActiveUser}`, (oldCash + depositAmount).toFixed(2));
                     synchronizeWalletInterfaceBalance();
                     document.getElementById('walletDepositModal').style.display = 'none';
+                    alert(`🎉 Successfully added ₹${depositAmount} to your Print From Home Wallet!`);
                 }, "theme": { "color": "#0C8346" }
             };
             const rzpWallet = new Razorpay(options); rzpWallet.open();
@@ -1281,6 +1289,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ==========================================
+    // 💳 FINAL CART ORDER PLACEMENT (WITH WALLET SUPPORT)
+    // ==========================================
     window.executeFinalCartOrderPlacement = async function() {
         if (!selectedActiveAddress || selectedActiveAddress.trim() === "") {
             alert("⚠️ Please add and select a delivery address first!");
@@ -1310,10 +1321,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let subtotal = totalPrintVal + totalSnacksVal;
         let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
-        let grandTotal = subtotal + delivery;
+        let rainFee = window.isRainSurgeActive ? 15 : 0;
+        let grandTotal = subtotal + delivery + rainFee;
 
         const selectedPaymentRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
         const paymentMode = selectedPaymentRadio ? selectedPaymentRadio.value : 'online';
+        const sessionActiveUser = localStorage.getItem('printAppUser');
 
         const formData = new FormData();
         window.cartPrintJobsArray.forEach(job => {
@@ -1323,72 +1336,116 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('totalAmount', grandTotal.toFixed(2));
         formData.append('configDetails', JSON.stringify(finalMetaConfig));
         formData.append('address', selectedActiveAddress);
-        formData.append('paymentMode', paymentMode);
+        formData.append('customerName', sessionActiveUser || 'Customer');
+        formData.append('phone', localStorage.getItem('printAppUserIdentity') || 'N/A');
 
-        try {
-            const response = await fetch('/api/create-order', { method: 'POST', body: formData });
-            const data = await response.json();
-            if (!data.success) {
-                alert(`⚠️ Error: ${data.message || 'Failed to create order'}`);
+        if (paymentMode === 'wallet') {
+            let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
+            if (currentWalletCash < grandTotal) {
+                alert(`❌ Insufficient wallet balance! You have ₹${currentWalletCash.toFixed(2)}, but grand total is ₹${grandTotal.toFixed(2)}. Please recharge your wallet.`);
+                toggleWalletPopupGrid(true, event);
                 return;
             }
 
-            if (paymentMode === 'cod') {
-                alert('🎉 Order Placed Successfully via Cash on Delivery!');
-                const activeUserToken = localStorage.getItem('printAppUser');
-                const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
-                const newOrderPayload = { 
-                    orderId: data.order_id,
-                    date: new Date().toLocaleString(), 
-                    amount: grandTotal.toFixed(2), 
-                    status: "Ready for Print", 
-                    details: finalMetaConfig, 
-                    address: selectedActiveAddress 
+            let newBalance = currentWalletCash - grandTotal;
+            localStorage.setItem(`wallet_cash_${sessionActiveUser}`, newBalance.toFixed(2));
+            synchronizeWalletInterfaceBalance();
+            formData.append('paymentMode', 'wallet');
+
+            try {
+                const response = await fetch('/api/create-order', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.success) {
+                    alert('🎉 Order Placed Successfully using Print From Home Wallet!');
+                    const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
+                    const newOrderPayload = { 
+                        orderId: data.order_id,
+                        date: new Date().toLocaleString(), 
+                        amount: grandTotal.toFixed(2), 
+                        status: "Ready for Print", 
+                        details: finalMetaConfig, 
+                        address: selectedActiveAddress 
+                    };
+                    currentHistoryArray.push(newOrderPayload);
+                    localStorage.setItem(`history_${sessionActiveUser}`, JSON.stringify(currentHistoryArray));
+
+                    window.cartPrintJobsArray = [];
+                    window.cartSnacksArray = [];
+                    persistCartStateData();
+                    toggleCartDrawer(false);
+                    renderOrderHistoryUI(sessionActiveUser);
+                    openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
+                    return;
+                }
+            } catch (err) {
+                alert("❌ Wallet order placement error.");
+                return;
+            }
+        } else {
+            formData.append('paymentMode', paymentMode);
+            try {
+                const response = await fetch('/api/create-order', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (!data.success) {
+                    alert(`⚠️ Error: ${data.message || 'Failed to create order'}`);
+                    return;
+                }
+
+                if (paymentMode === 'cod') {
+                    alert('🎉 Order Placed Successfully via Cash on Delivery!');
+                    const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
+                    const newOrderPayload = { 
+                        orderId: data.order_id,
+                        date: new Date().toLocaleString(), 
+                        amount: grandTotal.toFixed(2), 
+                        status: "Ready for Print", 
+                        details: finalMetaConfig, 
+                        address: selectedActiveAddress 
+                    };
+                    currentHistoryArray.push(newOrderPayload);
+                    localStorage.setItem(`history_${sessionActiveUser}`, JSON.stringify(currentHistoryArray));
+                    
+                    window.cartPrintJobsArray = [];
+                    window.cartSnacksArray = [];
+                    persistCartStateData();
+                    toggleCartDrawer(false);
+                    renderOrderHistoryUI(sessionActiveUser);
+                    openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
+                    return;
+                }
+
+                const options = {
+                    "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Print From Home", "order_id": data.rzp_order_id,
+                    "handler": async function (response){
+                        const verifyRes = await fetch('/api/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: data.order_id, paymentId: response.razorpay_payment_id }) });
+                        const verifyData = await verifyRes.json();
+                        if(verifyData.success) {
+                            alert('🎉 Payment Successful!');
+                            const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
+                            const newOrderPayload = { 
+                                orderId: data.order_id,
+                                date: new Date().toLocaleString(), 
+                                amount: grandTotal.toFixed(2), 
+                                status: "Ready for Print", 
+                                details: finalMetaConfig, 
+                                address: selectedActiveAddress 
+                            };
+                            currentHistoryArray.push(newOrderPayload);
+                            localStorage.setItem(`history_${sessionActiveUser}`, JSON.stringify(currentHistoryArray));
+                            
+                            window.cartPrintJobsArray = [];
+                            window.cartSnacksArray = [];
+                            persistCartStateData();
+                            toggleCartDrawer(false);
+                            renderOrderHistoryUI(sessionActiveUser);
+                            openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
+                        }
+                    }, "theme": { "color": "#F4C430" }
                 };
-                currentHistoryArray.push(newOrderPayload);
-                localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
-                
-                window.cartPrintJobsArray = [];
-                window.cartSnacksArray = [];
-                persistCartStateData();
-                toggleCartDrawer(false);
-                renderOrderHistoryUI(activeUserToken);
-                openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
-                return;
+                const rzp1 = new Razorpay(options); rzp1.open();
+            } catch (error) {
+                alert("❌ Connection Breakdown during order placement.");
             }
-
-            const options = {
-                "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Print From Home", "order_id": data.rzp_order_id,
-                "handler": async function (response){
-                    const verifyRes = await fetch('/api/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: data.order_id, paymentId: response.razorpay_payment_id }) });
-                    const verifyData = await verifyRes.json();
-                    if(verifyData.success) {
-                        alert('🎉 Payment Successful!');
-                        const activeUserToken = localStorage.getItem('printAppUser');
-                        const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
-                        const newOrderPayload = { 
-                            orderId: data.order_id,
-                            date: new Date().toLocaleString(), 
-                            amount: grandTotal.toFixed(2), 
-                            status: "Ready for Print", 
-                            details: finalMetaConfig, 
-                            address: selectedActiveAddress 
-                        };
-                        currentHistoryArray.push(newOrderPayload);
-                        localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(currentHistoryArray));
-                        
-                        window.cartPrintJobsArray = [];
-                        window.cartSnacksArray = [];
-                        persistCartStateData();
-                        toggleCartDrawer(false);
-                        renderOrderHistoryUI(activeUserToken);
-                        openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
-                    }
-                }, "theme": { "color": "#F4C430" }
-            };
-            const rzp1 = new Razorpay(options); rzp1.open();
-        } catch (error) {
-            alert("❌ Connection Breakdown during order placement.");
         }
     };
 });

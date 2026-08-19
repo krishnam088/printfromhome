@@ -778,7 +778,7 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
         const hasPrintJobs = parsedConfig.some(item => item.printType !== 'snack' && item.printType !== 'product' && (!item.fileName || !item.fileName.startsWith('Product:')));
         const initialOrderStatus = hasPrintJobs ? 'Ready for Print' : 'Processing';
 
-        if (selectedPaymentMode === 'cod') {
+        if (selectedPaymentMode === 'cod' || selectedPaymentMode === 'wallet') {
             await deductStockForOrder(parsedConfig);
 
             const newOrder = new Order({
@@ -799,11 +799,11 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
                 status: initialOrderStatus,
                 date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
                 timestamp: new Date().toISOString(),
-                paymentId: 'CASH ON DELIVERY'
+                paymentId: selectedPaymentMode === 'wallet' ? 'PAID VIA WALLET' : 'CASH ON DELIVERY'
             });
 
             await newOrder.save();
-            return res.status(201).json({ success: true, isCod: true, order_id: numericId });
+            return res.status(201).json({ success: true, isWallet: selectedPaymentMode === 'wallet', isCod: selectedPaymentMode === 'cod', order_id: numericId });
         }
 
         let razorpayOrder;

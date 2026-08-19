@@ -548,21 +548,29 @@
                     </div>
                 </div>
 
+                <!-- 💳 SELECT PAYMENT METHOD (INCLUDING WALLET) -->
                 <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:16px; margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                     <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:12px;">💳 Select Payment Method</h4>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
                         <label style="cursor:pointer; position:relative;">
                             <input type="radio" name="cartPaymentMode" value="online" checked style="position:absolute; opacity:0; top:0; left:0;">
-                            <div class="payment-option-box" style="padding:12px; border:2px solid var(--blinkit-green); border-radius:12px; background:#f0fdf4; text-align:center;">
-                                <div style="font-size:1.2rem;">⚡</div>
-                                <div style="font-size:0.75rem; font-weight:800; margin-top:4px; color:#0f172a;">Online Payment</div>
+                            <div class="payment-option-box" style="padding:10px 6px; border:2px solid var(--blinkit-green); border-radius:12px; background:#f0fdf4; text-align:center;">
+                                <div style="font-size:1.1rem;">⚡</div>
+                                <div style="font-size:0.7rem; font-weight:800; margin-top:4px; color:#0f172a;">Online</div>
+                            </div>
+                        </label>
+                        <label style="cursor:pointer; position:relative;">
+                            <input type="radio" name="cartPaymentMode" value="wallet" style="position:absolute; opacity:0; top:0; left:0;">
+                            <div class="payment-option-box" style="padding:10px 6px; border:2px solid #e2e8f0; border-radius:12px; background:#f8fafc; text-align:center;">
+                                <div style="font-size:1.1rem;">💰</div>
+                                <div style="font-size:0.7rem; font-weight:800; margin-top:4px; color:#0f172a;">Wallet (<span id="walletDrawerBalanceText">₹0</span>)</div>
                             </div>
                         </label>
                         <label style="cursor:pointer; position:relative;">
                             <input type="radio" name="cartPaymentMode" value="cod" style="position:absolute; opacity:0; top:0; left:0;">
-                            <div class="payment-option-box" style="padding:12px; border:2px solid #e2e8f0; border-radius:12px; background:#f8fafc; text-align:center;">
-                                <div style="font-size:1.2rem;">💵</div>
-                                <div style="font-size:0.75rem; font-weight:800; margin-top:4px; color:#0f172a;">Cash on Delivery</div>
+                            <div class="payment-option-box" style="padding:10px 6px; border:2px solid #e2e8f0; border-radius:12px; background:#f8fafc; text-align:center;">
+                                <div style="font-size:1.1rem;">💵</div>
+                                <div style="font-size:0.7rem; font-weight:800; margin-top:4px; color:#0f172a;">COD</div>
                             </div>
                         </label>
                     </div>
@@ -1527,6 +1535,12 @@
             if (summaryGrandNode) summaryGrandNode.textContent = `₹${grandTotal.toFixed(2)}`;
             if (grandTotalNode) grandTotalNode.textContent = `₹${grandTotal.toFixed(2)}`;
             updateFloatingCartBar();
+            
+            // Sync wallet balance display in checkout modal
+            const sessionUser = localStorage.getItem('printAppUser');
+            const cashVal = parseFloat(localStorage.getItem(`wallet_cash_${sessionUser}`)) || 0.00;
+            const drawerWalletText = document.getElementById('walletDrawerBalanceText');
+            if (drawerWalletText) drawerWalletText.textContent = `₹${cashVal.toFixed(2)}`;
         };
 
         window.adjustPrintJobCopies = function(index, delta) {
