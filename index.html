@@ -834,7 +834,7 @@
             }
         }
 
-        // 🌧️ Automatic & Admin Manual Rain Surge Detector
+        // 🌧️ Automatic & Admin Manual Rain Surge Detector (Fast 5s Polling for Real-Time Sync)
         async function checkLocalWeatherAndApplyRainSurge() {
             try {
                 const statusRes = await fetch('/api/store-status');
@@ -858,13 +858,15 @@
                 const rainBanner = document.getElementById('rainSurgeBanner');
                 const rainSurgeRow = document.getElementById('rainSurgeRow');
 
+                const wasRaining = window.isRainSurgeActive || false;
+
                 if (isRaining) {
                     bodyEl.classList.add('theme-rainy-season');
                     if (rainBanner) rainBanner.classList.remove('hidden');
                     if (rainSurgeRow) rainSurgeRow.style.display = 'flex';
 
                     window.isRainSurgeActive = true;
-                    window.rainSurgeFee = 15; // ₹15 rain surge fee
+                    window.rainSurgeFee = 15; 
                     initRealRainAnimation();
                     highlightRainAndCravingProducts();
                 } else {
@@ -876,7 +878,11 @@
                     window.rainSurgeFee = 0;
                 }
                 
-                if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
+                // Agar state change hui hai toh cart drawer aur invoice ko turant auto-refresh karo
+                if (wasRaining !== window.isRainSurgeActive) {
+                    if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
+                    if (typeof calculateTotal === 'function') calculateTotal();
+                }
             } catch (e) {
                 console.error("Weather detection error:", e);
             }
@@ -907,7 +913,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             checkLocalWeatherAndApplyRainSurge();
-            setInterval(checkLocalWeatherAndApplyRainSurge, 5 * 60 * 1000);
+            setInterval(checkLocalWeatherAndApplyRainSurge, 5000); // 5 seconds interval for instant sync
         });
 
         // ==========================================
