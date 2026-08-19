@@ -134,8 +134,10 @@ webpush.setVapidDetails(
 
 const pushSubscriptionSchema = new mongoose.Schema({
     identity: String,
-    productName: String,
-    subscription: Object
+    type: { type: String, default: 'stock_alert' }, // 'stock_alert', 'abandoned_cart', 'weather_surge'
+    productName: { type: String, default: '' },
+    subscription: Object,
+    createdAt: { type: Date, default: Date.now }
 });
 const PushSubscription = mongoose.model('PushSubscription', pushSubscriptionSchema);
 
@@ -314,10 +316,10 @@ app.post('/api/admin/toggle-rain', async (req, res) => {
 // 🔔 Push Notification Subscription Endpoint
 app.post('/api/notifications/subscribe', async (req, res) => {
     try {
-        const { identity, productName, subscription } = req.body;
+        const { identity, productName, subscription, type } = req.body;
         await PushSubscription.findOneAndUpdate(
-            { identity, productName },
-            { subscription },
+            { identity, productName: productName || '' },
+            { subscription, type: type || 'stock_alert' },
             { upsert: true, new: true }
         );
         res.json({ success: true, message: "Subscribed successfully!" });
@@ -326,14 +328,19 @@ app.post('/api/notifications/subscribe', async (req, res) => {
     }
 });
 
-// 🔥 Function to trigger when a product is restocked
-async function triggerStockAvailableNotifications(productName) {
+// 🔥 1️⃣ Auto-Trigger: Stock Alert Notification
+async function autoTriggerStockNotification(productName) {
     try {
-        const subs = await PushSubscription.find({ productName: { $regex: new RegExp(productName, 'i') } });
+        const subs = await PushSubscription.find({ 
+            type: 'stock_alert', 
+            productName: { $regex: new RegExp(productName, 'i') } 
+        });
         
+        if (subs.length === 0) return;
+
         const payload = JSON.stringify({
-            title: "🔥 Good News! Product is Back in Stock!",
-            body: `Aapka pasandida item "${productName}" ab Print From Home par available hai. Jaldi order karein!`,
+            title: "🔥 Back in Stock Alert!",
+            body: `Great news! "${productName}" is back in stock at Print From Home. Order now!`,
             url: "https://printfromhome.onrender.com"
         });
 
@@ -342,13 +349,38 @@ async function triggerStockAvailableNotifications(productName) {
                 await webpush.sendNotification(sub.subscription, payload);
                 await PushSubscription.deleteOne({ _id: sub._id });
             } catch (err) {
-                console.error("Error sending push notification to user:", err);
+                console.error("Push send error:", err);
             }
         }
     } catch (e) {
-        console.error("Stock notification broadcast error:", e);
+        console.error("Auto stock notification error:", e);
     }
 }
+
+// 🔥 2️⃣ Auto-Trigger: Weather & Rain Surge Notification
+async function autoTriggerRainSurgeNotification() {
+    try {
+        let config = await StoreConfig.findOne();
+        if (!config || !config.rainSurgeActive) return;
+
+        const subs = await PushSubscription.find({ type: 'weather_alert' });
+        const payload = JSON.stringify({
+            title: "🌧️ Rainy Day Essentials in 15 Mins!",
+            body: "Heavy rain in Varanasi? Stay dry and get your urgent prints & snacks delivered to your doorstep instantly!",
+            url: "https://printfromhome.onrender.com"
+        });
+
+        for (const sub of subs) {
+            try {
+                await webpush.sendNotification(sub.subscription, payload);
+            } catch (err) {}
+        }
+    } catch (e) {}
+}
+
+cron.schedule('*/30 * * * *', () => {
+    autoTriggerRainSurgeNotification();
+});
 
 app.post('/api/auth/signup', async (req, res) => {
     try {
@@ -625,12 +657,11 @@ app.post('/api/admin/inventory/add', uploadCloudinary.single('productImage'), as
                 imageUrl: imageUrl || ''
             });
             await product.save();
-            wasOutOfStock = true; // New product is considered a restock/availability event
+            wasOutOfStock = true;
         }
 
-        // Trigger push notification if item was out of stock and now has stock
         if (wasOutOfStock && product.stockQuantity > 0) {
-            triggerStockAvailableNotifications(product.name);
+            autoTriggerStockNotification(product.name);
         }
 
         res.json({ success: true, product });
