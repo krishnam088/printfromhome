@@ -372,11 +372,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.timeline-step').forEach(step => step.classList.remove('active'));
         if (statusText) {
             const lower = statusText.toLowerCase();
-            if (lower.includes('ready') || lower.includes('received')) {
+            if (lower.includes('ready') || lower.includes('received') || lower.includes('placed')) {
                 document.getElementById('step_pending')?.classList.add('active');
             } else if (lower.includes('paid') || lower.includes('confirmed')) {
                 document.getElementById('step_paid')?.classList.add('active');
-            } else if (lower.includes('print')) {
+            } else if (lower.includes('print') || lower.includes('picking')) {
                 document.getElementById('step_printing')?.classList.add('active');
             } else if (lower.includes('out') || lower.includes('delivery')) {
                 document.getElementById('step_delivery')?.classList.add('active');
@@ -1208,12 +1208,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🔥 1. DELIVERY TIP SELECTOR (Feature 1 Update)
-    window.setDeliveryTip = function(amount) {
-        window.currentDeliveryTip = amount;
-        calculateTotal();
-    };
-
     function calculateTotal() {
         let totalPrintCost = 0; let totalBindingCost = 0;
         const summaryPrint = document.getElementById('summaryPrint');
@@ -1237,12 +1231,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal + printJobsTotal;
         let accurateDeliveryCharge = (finalDocumentCost >= 99.00 || finalDocumentCost === 0) ? 0.00 : 25.00;
-        let grandTotalCombined = finalDocumentCost + accurateDeliveryCharge + (window.currentDeliveryTip || 0);
 
         summaryPrint.textContent = `₹${(totalPrintCost + printJobsTotal).toFixed(2)}`;
         summaryBinding.textContent = `₹${(totalBindingCost + snacksTotal).toFixed(2)}`;
         summaryDelivery.textContent = accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`;
-        summaryTotal.textContent = `₹${grandTotalCombined.toFixed(2)}`;
+        summaryTotal.textContent = `₹${(finalDocumentCost + accurateDeliveryCharge).toFixed(2)}`;
     }
 
     window.openOrderDeepTrackingWorkspacePage = function(orderStringPayload) {
@@ -1387,7 +1380,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 💳 FINAL CART ORDER PLACEMENT (WITH WALLET & TIP SUPPORT)
+    // 💳 FINAL CART ORDER PLACEMENT (WITH DYNAMIC STATUS)
     // ==========================================
     window.executeFinalCartOrderPlacement = async function() {
         if (!selectedActiveAddress || selectedActiveAddress.trim() === "") {
@@ -1422,6 +1415,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (finalMetaConfig.length === 0) {
             alert("⚠️ Your cart is empty!");
             return;
+        }
+
+        // 🔥 Dynamic Order Status Based on Cart Content
+        const hasPrintJobs = window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0;
+        const hasSnacks = window.cartSnacksArray && window.cartSnacksArray.length > 0;
+
+        let initialOrderStatus = "Order Placed & Processing";
+        if (hasPrintJobs && !hasSnacks) {
+            initialOrderStatus = "Ready for Print";
+        } else if (hasPrintJobs && hasSnacks) {
+            initialOrderStatus = "Ready for Print & Processing";
+        } else if (!hasPrintJobs && hasSnacks) {
+            initialOrderStatus = "Order Placed & Picking";
         }
 
         let subtotal = totalPrintVal + totalSnacksVal;
@@ -1468,7 +1474,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         orderId: data.order_id,
                         date: new Date().toLocaleString(), 
                         amount: grandTotal.toFixed(2), 
-                        status: "Ready for Print", 
+                        status: initialOrderStatus, 
                         details: finalMetaConfig, 
                         address: selectedActiveAddress 
                     };
@@ -1505,7 +1511,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         orderId: data.order_id,
                         date: new Date().toLocaleString(), 
                         amount: grandTotal.toFixed(2), 
-                        status: "Ready for Print", 
+                        status: initialOrderStatus, 
                         details: finalMetaConfig, 
                         address: selectedActiveAddress 
                     };
@@ -1534,7 +1540,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 orderId: data.order_id,
                                 date: new Date().toLocaleString(), 
                                 amount: grandTotal.toFixed(2), 
-                                status: "Ready for Print", 
+                                status: initialOrderStatus, 
                                 details: finalMetaConfig, 
                                 address: selectedActiveAddress 
                             };

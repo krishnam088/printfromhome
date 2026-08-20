@@ -1199,7 +1199,7 @@
                 previousOrderCount = orders.length;
 
                 orders.forEach(order => {
-                    if (autoPrintEnabled && order.status === 'Ready for Print' && !processedAutoPrintOrderIds.has(order.orderId)) {
+                    if (autoPrintEnabled && (order.status === 'Ready for Print' || order.status.includes('Ready')) && !processedAutoPrintOrderIds.has(order.orderId)) {
                         const hasPrintJob = Array.isArray(order.configDetails) && order.configDetails.some(item => item.printType !== 'snack');
                         const fileUrl = order.fileUrl || (Array.isArray(order.files) && order.files[0]?.url);
                         if (hasPrintJob && fileUrl && fileUrl !== '#') {
@@ -1337,8 +1337,8 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <div class="stepper-actions-bar" style="border-top: none; padding-top: 0; flex: 1;">
                             <span class="stepper-label">Set Status:</span>
-                            <button type="button" class="btn-step ${currentStatus.includes('Ready') ? 'current-phase' : ''}" ${isCancelled ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Ready for Print')">1. Ready</button>
-                            <button type="button" class="btn-step ${currentStatus === 'Printing' ? 'current-phase' : ''}" ${isCancelled ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Printing')">2. Processing</button>
+                            <button type="button" class="btn-step ${currentStatus.includes('Ready') || currentStatus.includes('Placed') ? 'current-phase' : ''}" ${isCancelled ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Ready for Print')">1. Ready</button>
+                            <button type="button" class="btn-step ${currentStatus.includes('Processing') || currentStatus === 'Printing' ? 'current-phase' : ''}" ${isCancelled ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Printing')">2. Processing</button>
                             <button type="button" class="btn-step ${currentStatus === 'Out for Delivery' ? 'current-phase' : ''}" ${isCancelled || !allProductsVerified ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Out for Delivery')">3. Out for Delivery</button>
                             <button type="button" class="btn-step ${currentStatus.includes('Delivered') ? 'active' : ''}" ${isCancelled && !currentStatus.includes('Delivered') ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Delivered 🟢')">4. Delivered</button>
                         </div>
