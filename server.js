@@ -824,15 +824,19 @@ app.post('/api/admin/verify-item', async (req, res) => {
 async function deductStockForOrder(parsedConfig) {
     if (parsedConfig && parsedConfig.length > 0) {
         for (const item of parsedConfig) {
-            if (item.printType === 'snack' || (item.fileName && item.fileName.startsWith('Product:'))) {
-                let prodName = item.fileName.replace('Product: ', '').split(' (Qty:')[0].trim();
-                let qty = item.copies || item.qty || 1;
+            // Flexible check for store products / snacks
+            if (item.printType === 'snack' || item.printType === 'product' || (item.fileName && String(item.fileName).startsWith('Product:'))) {
+                let prodName = String(item.fileName).replace('Product: ', '').split(' (Qty:')[0].trim();
+                let qty = Number(item.copies || item.qty || 1);
                 
                 let matchedProd = await Product.findOne({ name: { $regex: new RegExp(prodName, 'i') } });
                 if (matchedProd) {
                     matchedProd.stockQuantity = Math.max(0, matchedProd.stockQuantity - qty);
                     matchedProd.totalSold += qty;
                     await matchedProd.save();
+                    console.log(`✅ Stock deducted for "${matchedProd.name}": -${qty} units`);
+                } else {
+                    console.warn(`⚠️ Warning: Product "${prodName}" not found in inventory for stock deduction.`);
                 }
             }
         }
@@ -867,7 +871,7 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
 
         if (Array.isArray(parsedConfig)) {
             for (const item of parsedConfig) {
-                if (item.printType === 'snack' || (item.fileName && String(item.fileName).startsWith('Product:'))) {
+                if (item.printType === 'snack' || item.printType === 'product' || (item.fileName && String(item.fileName).startsWith('Product:'))) {
                     let prodName = String(item.fileName).replace('Product: ', '').split(' (Qty:')[0].trim();
                     let qtyRequested = Number(item.copies || item.qty || 1);
                     
