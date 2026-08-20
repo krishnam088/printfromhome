@@ -437,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             window.storeInventoryProducts.forEach((prod, index) => {
                 const isOutOfStock = (prod.stockQuantity <= 0);
-                const isLowStock = !isOutOfStock && prod.stockQuantity <= 5; // 🔥 Low Stock threshold
+                const isLowStock = !isOutOfStock && prod.stockQuantity <= 5;
                 const finalImgUrl = prod.imageUrl || prod.image || '';
 
                 const card = document.createElement('div');
@@ -460,7 +460,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? `<img src="${finalImgUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px; display:block;" />` 
                     : `<div style="font-size:2rem; margin-bottom:6px; height:65px; display:flex; align-items:center; justify-content:center;">📦</div>`;
 
-                // 🔥 Low Stock or Out of Stock Badge HTML
                 let badgeHtml = '';
                 if (isOutOfStock) {
                     badgeHtml = `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.55rem; padding:2px 4px; border-radius:4px; font-weight:800; z-index:5;">OUT</span>`;
@@ -491,9 +490,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔒 STRICT INVENTORY ADD TO CART LOGIC WITH LIVE STOCK VALIDATION (Fixes Unlimited Cart)
+    // 🔒 STRICT INVENTORY ADD TO CART LOGIC WITH LIVE STOCK VALIDATION
     window.addDynamicProductToCart = function(sku, name, price, currentStock) {
-        // Find latest stock from window.storeInventoryProducts
         const matchedProd = window.storeInventoryProducts.find(p => (p.sku === sku || p.barcode === sku || p.name === name));
         const availableStock = matchedProd ? matchedProd.stockQuantity : currentStock;
 
@@ -526,7 +524,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateFloatingCartBar();
         calculateTotal();
 
-        // Visual click feedback animation
         const clickedBtn = event ? event.target : null;
         if (clickedBtn) {
             const originalText = clickedBtn.textContent;
@@ -540,6 +537,29 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(`✅ Added "${name}" to cart!`);
         }
     }
+
+    // 🔥 LOCKED CART DRAWER QUANTITY ADJUSTMENT (+ / -) WITH STOCK VALIDATION
+    window.adjustSnackQty = function(index, delta) {
+        const snack = window.cartSnacksArray[index];
+        const matchedProd = window.storeInventoryProducts.find(p => p.sku === snack.sku || p.barcode === snack.sku || p.name === snack.name);
+        const availableStock = matchedProd ? matchedProd.stockQuantity : 999;
+
+        if (delta > 0 && (snack.qty + 1 > availableStock)) {
+            alert(`⚠️ Max stock limit reached! Only ${availableStock} units of "${snack.name}" are available in stock.`);
+            return;
+        }
+
+        snack.qty += delta;
+
+        if (snack.qty <= 0) {
+            window.cartSnacksArray.splice(index, 1);
+        }
+        
+        persistCartStateData();
+        if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
+        updateFloatingCartBar();
+        calculateTotal();
+    };
 
     // ==========================================
     // 🔙 PHONE BACK BUTTON / HISTORY HANDLER
@@ -1221,7 +1241,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🔥 1. DELIVERY TIP SELECTOR (Feature 1 Update)
     window.setDeliveryTip = function(amount) {
         window.currentDeliveryTip = amount;
         calculateTotal();
@@ -1437,7 +1456,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 🔥 Dynamic Order Status Based on Cart Content
         const hasPrintJobs = window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0;
         const hasSnacks = window.cartSnacksArray && window.cartSnacksArray.length > 0;
 
@@ -1471,7 +1489,6 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('phone', localStorage.getItem('printAppUserIdentity') || 'N/A');
         formData.append('deliveryTip', window.currentDeliveryTip || 0);
 
-        // Helper function to finalize order on success and decrement stock
         const finalizeOrderSuccess = async (orderId) => {
             const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
             const newOrderPayload = { 
@@ -1485,7 +1502,6 @@ document.addEventListener('DOMContentLoaded', () => {
             currentHistoryArray.push(newOrderPayload);
             localStorage.setItem(`history_${sessionActiveUser}`, JSON.stringify(currentHistoryArray));
 
-            // 🔥 Decrement Inventory on Backend
             try {
                 await fetch('/api/admin/inventory/decrement', {
                     method: 'POST',
