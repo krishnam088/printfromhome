@@ -93,7 +93,10 @@ const orderSchema = new mongoose.Schema({
     timestamp: String,
     paymentId: String,
     verifiedItems: { type: Array, default: [] },
-    assignedDeliveryBoy: { type: String, default: '' } // Delivery Executive Mobile Number
+    assignedDeliveryBoy: { type: String, default: '' }, // Delivery Executive Mobile Number
+    needsStockRestockScan: { type: Boolean, default: false }, // 🔥 Picker cancellation restock flag
+    netProfitRecorded: { type: Number, default: 0 },
+    deliveryFeeCharged: { type: Number, default: 0 }
 });
 const Order = mongoose.model('Order', orderSchema);
 
@@ -321,7 +324,6 @@ app.post('/api/admin/toggle-rain', async (req, res) => {
     }
 });
 
-// 🔔 Push Notification Subscription Endpoints
 app.post('/api/notifications/subscribe', async (req, res) => {
     try {
         const { identity, productName, subscription, type } = req.body;
@@ -350,7 +352,6 @@ app.post('/api/notifications/subscribe-stock', async (req, res) => {
     }
 });
 
-// 🔥 1️⃣ Auto-Trigger: Stock Alert Notification
 async function autoTriggerStockNotification(productName) {
     try {
         const subs = await PushSubscription.find({ 
@@ -372,16 +373,11 @@ async function autoTriggerStockNotification(productName) {
                     await webpush.sendNotification(sub.subscription, payload);
                 }
                 await PushSubscription.deleteOne({ _id: sub._id });
-            } catch (err) {
-                console.error("Push send error:", err);
-            }
+            } catch (err) {}
         }
-    } catch (e) {
-        console.error("Auto stock notification error:", e);
-    }
+    } catch (e) {}
 }
 
-// 🔥 2️⃣ Auto-Trigger: Weather & Rain Surge Notification
 async function autoTriggerRainSurgeNotification() {
     try {
         let config = await StoreConfig.findOne();
@@ -390,7 +386,7 @@ async function autoTriggerRainSurgeNotification() {
         const subs = await PushSubscription.find({ type: 'weather_alert' });
         const payload = JSON.stringify({
             title: "🌧️ Rainy Day Essentials in 15 Mins!",
-            body: "Heavy rain in Varanasi? Stay dry and get your urgent prints & snacks delivered to your doorstep instantly!",
+            body: "Heavy rain in Varanasi? Stay dry and get your urgent prints & snacks delivered instantly!",
             url: "https://printfromhome.onrender.com"
         });
 
@@ -571,9 +567,7 @@ async function sendBroadcastEmail(subject, message) {
                     htmlContent: personalizedHTML
                 })
             });
-        } catch (innerErr) {
-            console.error(`Failed to send via API to ${user.email}:`, innerErr);
-        }
+        } catch (innerErr) {}
     }
 }
 
@@ -592,10 +586,8 @@ app.post('/api/admin/send-notification', async (req, res) => {
         }
 
         res.json({ success: true, message: `✅ Personalized broadcasting to ${recipients.length} users started in background!` });
-
         sendBroadcastEmail(subject, message);
     } catch (err) {
-        console.error("Email Broadcast Error:", err.message);
         if (!res.headersSent) {
             res.status(500).json({ success: false, message: "Email send failed: " + err.message });
         }
@@ -603,26 +595,14 @@ app.post('/api/admin/send-notification', async (req, res) => {
 });
 
 const festivalCalendar = {
-    "23-01": { subject: "Happy Vasant Panchami: Celebrate with Exclusive Prints!", message: "Wishing you a auspicious Vasant Panchami! May Goddess Saraswati bring wisdom and creativity into your life. Celebrate the season with special discounts on all your printing needs at Print From Home." },
-    "15-02": { subject: "Happy Maha Shivaratri: Special Blessings & Offers!", message: "Wishing you a blessed Maha Shivaratri! May Lord Shiva fulfill all your wishes. Explore our special devotional prints and custom orders today." },
-    "04-03": { subject: "Happy Holi: Add Vibrant Colors to Your Prints!", message: "Wishing you and your family a very Happy and Colorful Holi! Celebrate the festival of joy with exclusive discounts on custom prints and vibrant posters at Print From Home." },
-    "26-03": { subject: "Happy Ram Navami: Auspicious Greetings from Print From Home!", message: "Happy Ram Navami! May Lord Rama shower his divine blessings upon you and your family. Avail our special festival printing offers today." },
-    "02-04": { subject: "Happy Hanuman Jayanti: Blessings & Special Deals!", message: "Happy Hanuman Jayanti! May Bajrangbali give you strength and success. Check out our latest store offers and place your print orders today." },
-    "15-08": { subject: "Happy Independence Day: Special Printing Deals!", message: "Happy Independence Day! Celebrate the spirit of freedom with special patriotic prints and exclusive discounts available today at Print From Home." },
-    "28-08": { subject: "Happy Raksha Bandhan: Celebrate Sibling Bonds!", message: "Happy Raksha Bandhan! Make this bond special by gifting customized photo prints and personalized gifts crafted with love at Print From Home." },
-    "04-09": { subject: "Happy Janmashtami: Divine Blessings & Offers!", message: "Wishing you a joyous Janmashtami! Celebrate Lord Krishna's birth with our special devotional prints and festive offers." },
-    "14-09": { subject: "Happy Ganesh Chaturthi: Welcome Bappa with Joy!", message: "Happy Ganesh Chaturthi! May Lord Ganesha bring prosperity and success to your home and business. Explore our festive printing collection today." },
-    "02-10": { subject: "Gandhi Jayanti Greetings from Print From Home", message: "Remembering Mahatma Gandhi on his birth anniversary. Wishing you a peaceful and productive day ahead from Print From Home, Varanasi." },
-    "11-10": { subject: "Happy Sharad Navratri: Nine Nights of Devotion & Deals!", message: "Wishing you a joyous Sharad Navratri! May Goddess Durga bring energy and happiness. Enjoy special discounts on all your printing requirements throughout Navratri." },
-    "20-10": { subject: "Happy Dussehra: Victory of Good Over Evil!", message: "Wishing you a very Happy Dussehra (Vijayadashami)! May this auspicious day bring triumph in all your endeavors. Check out our store for exclusive festive offers." },
-    "29-10": { subject: "Happy Karva Chauth: Special Greetings!", message: "Happy Karva Chauth! Wishing all celebrating couples a blessed and long-lasting bond. Explore our personalized photo printing gifts for your loved ones." },
-    "08-11": { subject: "Happy Diwali: Exclusive Festive Printing Deals for You!", message: "We are excited to share our latest festive calendar deals with you! As a valued member of Print From Home, we are offering you an exclusive flat discount on all your printing and gifting requirements this Diwali. Visit our store to place your order today!" },
-    "10-11": { subject: "Happy Govardhan Puja: Greetings & Blessings!", message: "Wishing you and your family a Happy Govardhan Puja! May Lord Krishna protect and bless your home with prosperity." },
-    "11-11": { subject: "Happy Bhai Dooj: Celebrate the Sibling Bond!", message: "Happy Bhai Dooj! Share love and sweet memories with customized prints and gifts from Print From Home." },
-    "15-11": { subject: "Happy Chhath Puja: Devotion & Surya Worship!", message: "Wishing you a pious and blessed Chhath Puja! May the Sun God fulfill all your wishes and bring good health and prosperity." },
-    "24-11": { subject: "Happy Guru Nanak Jayanti: Warm Greetings!", message: "Wishing you a peaceful and blessed Guru Nanak Jayanti. May teachings of Guru Nanak Dev Ji guide you on the path of truth and kindness." },
-    "25-12": { subject: "Merry Christmas & Happy Holidays!", message: "Merry Christmas from Print From Home! Spread joy, warmth, and festive cheer. Enjoy special year-end discounts on all custom printing services." },
-    "01-01": { subject: "Happy New Year: Exclusive Calendar Offers!", message: "Happy New Year! Start your year right with our brand new custom calendars and special discounts on all prints. Visit our store today!" }
+    "23-01": { subject: "Happy Vasant Panchami: Celebrate with Exclusive Prints!", message: "Wishing you a auspicious Vasant Panchami! May Goddess Saraswati bring wisdom and creativity into your life." },
+    "15-02": { subject: "Happy Maha Shivaratri: Special Blessings & Offers!", message: "Wishing you a blessed Maha Shivaratri! May Lord Shiva fulfill all your wishes." },
+    "04-03": { subject: "Happy Holi: Add Vibrant Colors to Your Prints!", message: "Wishing you and your family a very Happy and Colorful Holi!" },
+    "26-03": { subject: "Happy Ram Navami: Auspicious Greetings from Print From Home!", message: "Happy Ram Navami! May Lord Rama shower his divine blessings upon you." },
+    "15-08": { subject: "Happy Independence Day: Special Printing Deals!", message: "Happy Independence Day! Celebrate the spirit of freedom with special patriotic prints." },
+    "08-11": { subject: "Happy Diwali: Exclusive Festive Printing Deals for You!", message: "We are excited to share our latest festive calendar deals with you! Enjoy exclusive discounts this Diwali." },
+    "25-12": { subject: "Merry Christmas & Happy Holidays!", message: "Merry Christmas from Print From Home! Enjoy special year-end discounts on all custom printing services." },
+    "01-01": { subject: "Happy New Year: Exclusive Calendar Offers!", message: "Happy New Year! Start your year right with our brand new custom calendars." }
 };
 
 app.get('/api/admin/festival-templates', (req, res) => {
@@ -630,22 +610,6 @@ app.get('/api/admin/festival-templates', (req, res) => {
         res.json({ success: true, templates: festivalCalendar });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
-    }
-});
-
-cron.schedule('0 0 * * *', async () => {
-    try {
-        const today = new Date();
-        const dateKey = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-        
-        if (festivalCalendar[dateKey]) {
-            console.log(`🎉 Festival match found for date: ${dateKey}. Initiating automatic broadcast...`);
-            const festival = festivalCalendar[dateKey];
-            await sendBroadcastEmail(festival.subject, festival.message);
-            console.log(`✅ Automatic festival broadcast completed for ${dateKey}`);
-        }
-    } catch (cronErr) {
-        console.error("Automatic Cron Scheduler Error:", cronErr.message);
     }
 });
 
@@ -736,6 +700,36 @@ app.get('/api/store/products', async (req, res) => {
     }
 });
 
+// 🔥 RESTOCK SCANNED ITEM AFTER CANCELLATION ENDPOINT
+app.post('/api/admin/inventory/restock-scanned', async (req, res) => {
+    try {
+        const { orderId, barcodeOrName } = req.body;
+        const order = await Order.findOne({ orderId });
+        if (!order) return.json({ success: false, message: "Order not found." });
+
+        const product = await Product.findOne({ 
+            $or: [{ sku: barcodeOrName }, { barcode: barcodeOrName }, { name: new RegExp(barcodeOrName, 'i') }] 
+        });
+
+        if (!product) {
+            return res.json({ success: false, message: "Product not registered in store inventory!" });
+        }
+
+        product.stockQuantity += 1;
+        product.totalSold = Math.max(0, product.totalSold - 1);
+        await product.save();
+
+        order.needsStockRestockScan = false;
+        order.status = "Cancelled & Shelved";
+        await order.save();
+
+        res.json({ success: true, message: `✅ Success! "${product.name}" returned to shelf and inventory recovered (+1).` });
+    } catch (e) {
+        res.json({ success: false, message: "Restock scan failed." });
+    }
+});
+
+// 🔥 UPDATED DASHBOARD STATS: Net Profit vs Delivery Fee Pool Segregation
 app.get('/api/admin/stats', async (req, res) => {
     try {
         const requestedDate = req.query.date;
@@ -751,15 +745,26 @@ app.get('/api/admin/stats', async (req, res) => {
             });
         }
 
-        let totalProfit = 0;
+        let netItemProfit = 0;
+        let deliveryPayoutPool = 0;
+
         filteredOrders.forEach(o => {
-            totalProfit += parseFloat(o.totalAmount || o.amount || 0); 
+            if (!o.status.includes('Cancelled')) {
+                let deliveryFee = parseFloat(o.deliveryFeeCharged || 25);
+                let orderTotal = parseFloat(o.totalAmount || o.amount || 0);
+                let itemRevenue = Math.max(0, orderTotal - deliveryFee);
+                
+                // Store net profit (approx 15% item margin or recorded profit, excluding delivery fee)
+                netItemProfit += (o.netProfitRecorded || (itemRevenue * 0.15)); 
+                deliveryPayoutPool += deliveryFee; // Delivery boy earning separate
+            }
         });
 
         res.json({
             success: true,
             totalOrders: filteredOrders.length,
-            totalProfit: totalProfit,
+            totalProfit: netItemProfit, // 🟢 Net Profit (Delivery fee excluded)
+            deliveryPayoutPool: deliveryPayoutPool, // 🛵 Delivery Fund (Separate count)
             variety: products.length
         });
     } catch (err) {
@@ -830,20 +835,13 @@ async function deductStockForOrder(parsedConfig) {
                 let qty = Number(item.copies || item.qty || 1);
                 
                 let matchedProd = null;
-                if (prodSku) {
-                    matchedProd = await Product.findOne({ sku: prodSku });
-                }
-                if (!matchedProd && prodName) {
-                    matchedProd = await Product.findOne({ name: { $regex: new RegExp(prodName, 'i') } });
-                }
+                if (prodSku) matchedProd = await Product.findOne({ sku: prodSku });
+                if (!matchedProd && prodName) matchedProd = await Product.findOne({ name: { $regex: new RegExp(prodName, 'i') } });
 
                 if (matchedProd) {
                     matchedProd.stockQuantity = Math.max(0, matchedProd.stockQuantity - qty);
                     matchedProd.totalSold += qty;
                     await matchedProd.save();
-                    console.log(`✅ Stock successfully deducted for "${matchedProd.name}": -${qty} units. Remaining: ${matchedProd.stockQuantity}`);
-                } else {
-                    console.warn(`⚠️ Warning: Product "${prodName || prodSku}" not found in inventory for stock deduction.`);
                 }
             }
         }
@@ -914,6 +912,9 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
         const hasPrintJobs = parsedConfig.some(item => item.printType !== 'snack' && item.printType !== 'product' && (!item.fileName || !item.fileName.startsWith('Product:')));
         const initialOrderStatus = hasPrintJobs ? 'Ready for Print' : 'Processing';
 
+        // Segregate delivery fee from item amount for profit calculation
+        let calculatedDeliveryFee = finalAmountNumeric >= 99 ? 0 : 25;
+
         if (selectedPaymentMode === 'cod' || selectedPaymentMode === 'wallet') {
             await deductStockForOrder(parsedConfig);
 
@@ -935,7 +936,8 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
                 status: initialOrderStatus,
                 date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
                 timestamp: new Date().toISOString(),
-                paymentId: selectedPaymentMode === 'wallet' ? 'PAID VIA WALLET' : 'CASH ON DELIVERY'
+                paymentId: selectedPaymentMode === 'wallet' ? 'PAID VIA WALLET' : 'CASH ON DELIVERY',
+                deliveryFeeCharged: calculatedDeliveryFee
             });
 
             await newOrder.save();
@@ -950,7 +952,6 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
                 receipt: `rcpt_${numericId}` 
             });
         } catch (rzpErr) {
-            console.error("Razorpay Error:", rzpErr.message);
             return res.status(500).json({ success: false, message: "Payment gateway error: " + rzpErr.message });
         }
         
@@ -971,7 +972,8 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             totalAmount: finalAmountNumeric.toFixed(2),
             status: 'Pending Payment',
             date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            deliveryFeeCharged: calculatedDeliveryFee
         });
 
         await newOrder.save();
@@ -983,8 +985,6 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             key_id: razorpay.key_id 
         });
     } catch (error) {
-        console.error("Create Order Critical Error Message:", error.message);
-        console.error("Create Order Full Error Stack:", error.stack);
         res.status(500).json({ success: false, message: error.message || "Order creation failed" });
     }
 });
@@ -1014,6 +1014,7 @@ app.post('/api/verify-payment', async (req, res) => {
     }
 });
 
+// 🔥 ADVANCED ORDER CANCELLATION & AUTOMATIC/MANUAL RESTOCK LOGIC
 app.post('/api/orders/cancel', async (req, res) => {
     try {
         const { orderId } = req.body;
@@ -1030,10 +1031,52 @@ app.post('/api/orders/cancel', async (req, res) => {
             });
         }
 
-        order.status = 'Cancelled by Customer';
+        const pickerAlreadyPicked = order.status.includes('Processing') || order.status.includes('Printing') || order.verifiedItems?.length > 0;
+
+        if (pickerAlreadyPicked) {
+            // 🚨 Picker ne pick kar liya tha -> Admin/Picker restock scan alert required
+            order.status = "Cancelled (Needs Restock Scan)";
+            order.needsStockRestockScan = true;
+        } else {
+            // 🟢 Automatic Inventory Recovery (Pre-pickup cancellation)
+            let configItems = order.configDetails || [];
+            if (typeof configItems === 'string') {
+                try { configItems = JSON.parse(configItems); } catch(e){ configItems = []; }
+            }
+
+            for (const item of configItems) {
+                if (item.printType === 'snack' || item.printType === 'product' || (item.fileName && String(item.fileName).startsWith('Product:'))) {
+                    let prodName = String(item.fileName || item.name || '').replace('Product: ', '').split(' (Qty:')[0].trim();
+                    let prodSku = item.sku;
+                    let qty = Number(item.copies || item.qty || 1);
+
+                    let matchedProd = null;
+                    if (prodSku) matchedProd = await Product.findOne({ sku: prodSku });
+                    if (!matchedProd && prodName) matchedProd = await Product.findOne({ name: { $regex: new RegExp(prodName, 'i') } });
+
+                    if (matchedProd) {
+                        matchedProd.stockQuantity += qty;
+                        matchedProd.totalSold = Math.max(0, matchedProd.totalSold - qty);
+                        await matchedProd.save();
+                    }
+                }
+            }
+            order.status = 'Cancelled by Customer';
+        }
+
+        // Refundable calculation: Deduct delivery fee from refund amount
+        let orderTotal = parseFloat(order.totalAmount || order.amount || 0);
+        let deliveryFee = parseFloat(order.deliveryFeeCharged || 25);
+        order.isRefundableAmount = Math.max(0, orderTotal - deliveryFee);
+
         await order.save();
 
-        res.json({ success: true, message: "Order cancelled successfully!" });
+        res.json({ 
+            success: true, 
+            message: pickerAlreadyPicked 
+                ? "Order cancelled! Picker/Admin must scan picked items to restore shelf stock." 
+                : "Order cancelled successfully and inventory recovered automatically!" 
+        });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

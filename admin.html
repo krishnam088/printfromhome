@@ -918,6 +918,28 @@
                 return;
             }
 
+            // 🔥 Check if this scan is for Restocking a Cancelled Order
+            const targetOrder = globalLiveOrdersCache.find(o => o.orderId === activeTargetOrderIdForScan);
+            if (targetOrder && targetOrder.status && targetOrder.status.includes('Cancelled')) {
+                try {
+                    const res = await fetch('/api/admin/inventory/restock-scanned', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId: targetOrder.orderId, barcodeOrName: val })
+                    });
+                    const data = await res.json();
+                    alert(data.message);
+                    if (data.success) {
+                        closeBarcodeScannerModal();
+                        fetchLiveOrdersStream();
+                        fetchInventoryReport();
+                    }
+                } catch (e) {
+                    alert("❌ Failed to restock scanned item.");
+                }
+                return;
+            }
+
             const matchedProd = cachedInventoryList.find(p => p.barcode === val || p.sku === val || p.name.toLowerCase().includes(val.toLowerCase()));
             if (!matchedProd) {
                 alert(`❌ Invalid UPC: "${val}" is not registered in your inventory!`);
@@ -1173,8 +1195,9 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert("✅ Order cancelled successfully!");
+                    alert("✅ " + data.message);
                     fetchLiveOrdersStream();
+                    fetchInventoryReport();
                 } else {
                     alert(`⚠️ ${data.message}`);
                 }
@@ -1199,7 +1222,6 @@
                 previousOrderCount = orders.length;
 
                 orders.forEach(order => {
-                    // 🔥 Updated check for dynamic status matching
                     if (autoPrintEnabled && (order.status === 'Ready for Print' || order.status.includes('Ready')) && !processedAutoPrintOrderIds.has(order.orderId)) {
                         const hasPrintJob = Array.isArray(order.configDetails) && order.configDetails.some(item => item.printType !== 'snack');
                         const fileUrl = order.fileUrl || (Array.isArray(order.files) && order.files[0]?.url);
@@ -1263,7 +1285,7 @@
             const currentStatus = order.status || 'Pending';
             
             const isDelivered = currentStatus.includes('Delivered');
-            const isCancelled = currentStatus.includes('Cancelled');
+            const isCancelled = currentStatus.includes('Cancelled') || currentStatus.includes('Restock');
             const { cleanId, istString } = formatOrderDisplay(order);
 
             const assignedBoy = order.assignedDeliveryBoy;
@@ -1293,8 +1315,15 @@
 
                     ${isCancelled ? `
                         <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid var(--accent-red); padding: 10px 14px; border-radius: 10px; font-size: 0.8rem; font-weight: 800; color: #f87171; text-align: center;">
-                            🚫 THIS ORDER HAS BEEN ${currentStatus.toUpperCase()}. No further work required.
+                            🚫 THIS ORDER HAS BEEN CANCELLED. ${order.needsStockRestockScan ? '<br><b>⚠️ ACTION REQUIRED:</b> Scan picked items using barcode scanner to restock inventory shelves.' : 'Inventory automatically recovered.'}
                         </div>
+                        ${order.needsStockRestockScan ? `
+                            <div style="text-align: right;">
+                                <button type="button" onclick="openBarcodeScannerModal('${order.orderId}')" style="background: var(--accent-yellow); color: #000; border: none; padding: 6px 14px; border-radius: 8px; font-weight: 800; font-size: 0.78rem; cursor: pointer;">
+                                    📷 Scan Cancelled Items to Restock
+                                </button>
+                            </div>
+                        ` : ''}
                     ` : ''}
 
                     <div id="orderDetailsPanel_${order.orderId}" style="display: ${isDrawerOpen ? 'block' : 'none'}; background: rgba(15,23,42,0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
