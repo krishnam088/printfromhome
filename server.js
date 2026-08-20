@@ -731,7 +731,7 @@ app.post('/api/admin/inventory/restock-scanned', async (req, res) => {
     }
 });
 
-// 🔥 UPDATED DASHBOARD STATS: Net Profit vs Delivery Fee Pool Segregation
+// 🔥 PRECISE TOTAL SALES, NET PROFIT (Sales - Delivery - Purchase Cost) & DELIVERY FEES CALCULATOR
 app.get('/api/admin/stats', async (req, res) => {
     try {
         const requestedDate = req.query.date;
@@ -747,26 +747,57 @@ app.get('/api/admin/stats', async (req, res) => {
             });
         }
 
-        let netItemProfit = 0;
+        let totalSales = 0;
         let totalDeliveryFeesCollected = 0;
+        let totalPurchaseCost = 0;
 
-        filteredOrders.forEach(o => {
+        for (let o of filteredOrders) {
             if (!o.status.includes('Cancelled')) {
-                let deliveryFee = parseFloat(o.deliveryFeeCharged || 0);
                 let orderTotal = parseFloat(o.totalAmount || o.amount || 0);
-                let itemRevenue = Math.max(0, orderTotal - deliveryFee);
+                let deliveryFee = parseFloat(o.deliveryFeeCharged || 0);
                 
-                // Net Profit = Item Revenue margin (approx 15% or recorded netProfitRecorded)
-                netItemProfit += (o.netProfitRecorded || (itemRevenue * 0.15)); 
-                totalDeliveryFeesCollected += deliveryFee; 
+                totalSales += orderTotal;
+                totalDeliveryFeesCollected += deliveryFee;
+
+                let configDetails = [];
+                try { 
+                    configDetails = typeof o.configDetails === 'string' ? JSON.parse(o.configDetails) : o.configDetails; 
+                } catch(e) {}
+
+                if (Array.isArray(configDetails)) {
+                    for (let item of configDetails) {
+                        if (item.printType === 'snack' || item.printType === 'product' || (item.fileName && String(item.fileName).startsWith('Product:'))) {
+                            let prodName = String(item.fileName || item.name || '').replace('Product: ', '').split(' (Qty:')[0].trim();
+                            let prodSku = item.sku;
+                            let qty = Number(item.copies || item.qty || 1);
+
+                            let matchedProd = null;
+                            if (prodSku) matchedProd = products.find(p => p.sku === prodSku);
+                            if (!matchedProd && prodName) matchedProd = products.find(p => p.name.toLowerCase() === prodName.toLowerCase());
+
+                            if (matchedProd) {
+                                totalPurchaseCost += (matchedProd.purchasePrice || 0) * qty;
+                            }
+                        } else {
+                            // Print orders cost: ₹1 per page as requested
+                            let pages = Number(item.pages || 1);
+                            let copies = Number(item.copies || 1);
+                            totalPurchaseCost += pages * 1 * copies;
+                        }
+                    }
+                }
             }
-        });
+        }
+
+        // Net Profit = (Total Sales - Delivery Fees) - Purchase Cost
+        let netProfit = (totalSales - totalDeliveryFeesCollected) - totalPurchaseCost;
 
         res.json({
             success: true,
             totalOrders: filteredOrders.length,
-            totalProfit: netItemProfit, 
-            totalDeliveryFees: totalDeliveryFeesCollected, 
+            totalSales: totalSales.toFixed(2),
+            totalProfit: netProfit.toFixed(2),
+            totalDeliveryFees: totalDeliveryFeesCollected.toFixed(2),
             variety: products.length
         });
     } catch (err) {

@@ -351,6 +351,11 @@
                     <span class="stat-title">Total Orders (Selected Date)</span>
                     <span class="stat-num" id="statDashTotalOrders">0</span>
                 </div>
+                <!-- 🔥 Total Sales Card Added -->
+                <div class="stat-card">
+                    <span class="stat-title">Total Sales</span>
+                    <span class="stat-num" id="statDashTotalSales" style="color: #38bdf8;">₹0</span>
+                </div>
                 <div class="stat-card">
                     <span class="stat-title">Store Varieties</span>
                     <span class="stat-num" id="statDashVarieties" style="color: #38bdf8;">0</span>
@@ -782,9 +787,10 @@
                 const data = await res.json();
                 if (data.success) {
                     document.getElementById('statDashTotalOrders').textContent = data.totalOrders;
-                    document.getElementById('statDashNetProfit').textContent = `₹${data.totalProfit.toFixed(2)}`;
-                    document.getElementById('statDashDeliveryFees').textContent = `₹${data.totalDeliveryFees.toFixed(2)}`;
-                    renderProfitChart([data.totalProfit * 0.2, data.totalProfit * 0.4, data.totalProfit * 0.6, data.totalProfit * 0.8, data.totalProfit]);
+                    document.getElementById('statDashTotalSales').textContent = `₹${data.totalSales}`;
+                    document.getElementById('statDashNetProfit').textContent = `₹${data.totalProfit}`;
+                    document.getElementById('statDashDeliveryFees').textContent = `₹${data.totalDeliveryFees}`;
+                    renderProfitChart([0, 0, 0, 0, parseFloat(data.totalProfit)]);
                 }
             } catch (e) {}
         }
