@@ -239,7 +239,7 @@ app.get('/admin-panel', (req, res) => { res.sendFile(path.join(__dirname, 'admin
 app.get('/delivery', (req, res) => { res.sendFile(path.join(__dirname, 'delivery.html')); });
 app.get('/store-qr', (req, res) => { res.sendFile(path.join(__dirname, 'store-qr.html')); });
 
-// 🔥 Picker App Route Added Here
+// 🔥 Picker App Route Added
 app.get('/picker', (req, res) => { res.sendFile(path.join(__dirname, 'picker.html')); });
 
 app.get('/manifest.json', (req, res) => {
@@ -816,6 +816,23 @@ app.get('/api/admin/inventory/predictive-restock', async (req, res) => {
         res.json({ success: true, suggestions: products });
     } catch (e) { 
         res.status(500).json({ success: false, message: "Error fetching restock data" }); 
+    }
+});
+
+// 🔥 Picker ke liye sirf current active orders (No past delivered/cancelled orders)
+app.get('/api/picker/active-orders', async (req, res) => { 
+    try {
+        const activeOrders = await Order.find({ 
+            status: { $in: ['Ready for Print', 'Processing', 'Printing', 'Out for Delivery'] },
+            $or: [
+                { assignedDeliveryBoy: { $exists: false } }, 
+                { assignedDeliveryBoy: null }, 
+                { assignedDeliveryBoy: "" }
+            ]
+        }).sort({ timestamp: -1 });
+        res.json(activeOrders); 
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 

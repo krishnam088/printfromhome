@@ -24,6 +24,12 @@
             --border-color: #334155;
         }
 
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
@@ -35,7 +41,7 @@
 
         .picker-header {
             background: linear-gradient(135deg, #065f46 0%, #047857 100%);
-            padding: 18px 20px;
+            padding: 16px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -45,11 +51,11 @@
             top: 0;
             z-index: 100;
         }
-        .picker-header h1 { font-size: 1.15rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .picker-header h1 { font-size: 1.1rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
         .picker-header h1 span { color: var(--accent-yellow); }
-        .badge-live { background: var(--accent-yellow); color: #000; font-size: 0.72rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; }
+        .badge-live { background: var(--accent-yellow); color: #000; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; animation: pulseGlow 2s infinite; }
 
-        .picker-container { padding: 16px; max-width: 700px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 16px; }
+        .picker-container { padding: 16px; max-width: 650px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 16px; }
 
         /* Scanner Modal */
         #pickerScannerModal {
@@ -65,26 +71,21 @@
         /* Order Card Style */
         .order-pick-card {
             background: var(--surface-card);
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--accent-yellow);
             border-radius: 16px;
-            padding: 18px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 14px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .order-pick-card.active-focus {
-            border-color: var(--accent-yellow);
-            box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+            gap: 16px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
         }
 
-        .card-top-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; }
-        .order-id-badge { font-size: 1.1rem; font-weight: 800; color: var(--accent-yellow); }
+        .card-top-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-color); padding-bottom: 12px; }
+        .order-id-badge { font-size: 1.2rem; font-weight: 800; color: var(--accent-yellow); }
         .order-time-text { font-size: 0.75rem; color: var(--text-sub); }
 
-        /* Sliding / Progress bar */
-        .picking-progress-wrap { background: rgba(0,0,0,0.4); border-radius: 10px; padding: 10px 14px; border: 1px solid var(--border-color); }
-        .progress-title { font-size: 0.75rem; font-weight: 800; color: var(--accent-green); text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; }
+        .picking-progress-wrap { background: rgba(0,0,0,0.4); border-radius: 12px; padding: 12px 14px; border: 1px solid var(--border-color); }
+        .progress-title { font-size: 0.78rem; font-weight: 800; color: var(--accent-green); text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between; }
         
         .item-pick-row {
             display: flex;
@@ -93,14 +94,14 @@
             background: var(--bg-dark);
             padding: 10px 14px;
             border-radius: 10px;
-            margin-top: 6px;
+            margin-top: 8px;
             border: 1px solid var(--border-color);
         }
         .item-pick-row.verified {
             border-color: var(--accent-green);
             background: rgba(16, 185, 129, 0.08);
         }
-        .item-info b { display: block; font-size: 0.88rem; color: white; }
+        .item-info b { display: block; font-size: 0.9rem; color: white; }
         .item-info span { font-size: 0.75rem; color: var(--text-sub); }
 
         .btn-scan-item {
@@ -129,6 +130,28 @@
             padding: 12px 14px;
         }
         .print-job-title { font-size: 0.78rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; margin-bottom: 4px; }
+
+        .handover-section {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--accent-green);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn-handover {
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -148,119 +171,175 @@
     </div>
 
     <header class="picker-header">
-        <h1>📦 Print<span>Picker</span></h1>
-        <div class="badge-live">🟢 Live Station</div>
+        <h1>📦 Print From Home<span>Picker</span></h1>
+        <div class="badge-live">🟢 Scanning Orders...</div>
     </header>
 
     <div class="picker-container" id="pickerOrderQueue">
-        <div style="text-align: center; padding: 40px; color: var(--text-sub);">
-            ⏳ Connecting to live picking queue...
+        <div style="text-align: center; padding: 60px; background: var(--surface-card); border-radius: 16px; border: 1px dashed var(--border-color);">
+            <div style="font-size: 2.2rem; margin-bottom: 8px;">📡</div>
+            <h3 style="color: var(--text-main);">Scanning for New Orders...</h3>
+            <p style="font-size: 0.78rem; color: var(--text-sub); margin-top: 4px;">Waiting for live order trigger from admin counter.</p>
         </div>
     </div>
 
     <script>
-        let globalOrdersList = [];
-        let activePickingOrderId = null;
+        let activeOrder = null;
         let activeTargetItemName = null;
         let html5QrScanner = null;
+        let previousOrderIdCached = null;
 
-        async function fetchPickerOrders() {
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+            return audioCtx;
+        }
+
+        function playAlertChime() {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(950, now);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            } catch (e) {}
+        }
+
+        window.addEventListener('click', () => { getAudioContext(); }, { once: true });
+
+        async function fetchSingleActiveOrder() {
             try {
                 const res = await fetch('/api/admin/orders');
                 const orders = await res.json();
+                
                 if (Array.isArray(orders)) {
-                    // Filter orders that are ready for picking / print
-                    globalOrdersList = orders.filter(o => !o.status.includes('Delivered') && !o.status.includes('Cancelled'));
-                    renderPickerQueue();
+                    // Sirf wahi order uthao jo active hain aur delivered ya cancelled nahi hain
+                    const pendingOrders = orders.filter(o => 
+                        !o.status.includes('Delivered') && 
+                        !o.status.includes('Cancelled') && 
+                        !o.status.includes('Out for Delivery')
+                    );
+
+                    // Picker ko ek time pe sirf EK hi order dikhana hai (Sabse naya wala)
+                    const currentTopOrder = pendingOrders.length > 0 ? pendingOrders[0] : null;
+
+                    if (currentTopOrder) {
+                        // Agar naya order aaya hai jo pehle nahi tha, toh alert bajao
+                        if (previousOrderIdCached !== currentTopOrder.orderId) {
+                            playAlertChime();
+                            previousOrderIdCached = currentTopOrder.orderId;
+                        }
+                    } else {
+                        previousOrderIdCached = null;
+                    }
+
+                    activeOrder = currentTopOrder;
+                    renderSingleActiveOrder();
                 }
             } catch (e) {
-                console.error("Picker queue fetch error:", e);
+                console.error("Live order sync error:", e);
             }
         }
 
-        function renderPickerQueue() {
+        function renderSingleActiveOrder() {
             const container = document.getElementById('pickerOrderQueue');
             if (!container) return;
 
-            if (globalOrdersList.length === 0) {
+            if (!activeOrder) {
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 50px; background: var(--surface-card); border-radius: 16px; border: 1px solid var(--border-color);">
-                        <div style="font-size: 2.5rem; margin-bottom: 8px;">📭</div>
-                        <h3>No Active Orders for Picking</h3>
-                        <p style="font-size: 0.78rem; color: var(--text-sub); margin-top: 4px;">New orders will appear here automatically.</p>
+                    <div style="text-align: center; padding: 60px; background: var(--surface-card); border-radius: 16px; border: 1px dashed var(--border-color);">
+                        <div style="font-size: 2.2rem; margin-bottom: 8px;">📡</div>
+                        <h3 style="color: var(--text-main);">Scanning for New Orders...</h3>
+                        <p style="font-size: 0.78rem; color: var(--text-sub); margin-top: 4px;">No pending orders in queue. Auto-refreshing every 3s.</p>
                     </div>
                 `;
                 return;
             }
 
-            container.innerHTML = globalOrdersList.map(order => {
-                let configItems = order.configDetails || [];
-                if (typeof configItems === 'string') {
-                    try { configItems = JSON.parse(configItems); } catch(e) { configItems = []; }
-                }
+            let configItems = activeOrder.configDetails || [];
+            if (typeof configItems === 'string') {
+                try { configItems = JSON.parse(configItems); } catch(e) { configItems = []; }
+            }
 
-                let productItems = configItems.filter(item => item.printType === 'snack' || item.printType === 'product' || (item.fileName && item.fileName.startsWith('Product:')));
-                let printItems = configItems.filter(item => item.printType !== 'snack' && item.printType !== 'product' && (!item.fileName || !item.fileName.startsWith('Product:')));
-                
-                let verifiedList = Array.isArray(order.verifiedItems) ? order.verifiedItems : [];
-                let allProductsDone = productItems.length === 0 || verifiedList.length >= productItems.length;
+            let productItems = configItems.filter(item => item.printType === 'snack' || item.printType === 'product' || (item.fileName && item.fileName.startsWith('Product:')));
+            let printItems = configItems.filter(item => item.printType !== 'snack' && item.printType !== 'product' && (!item.fileName || !item.fileName.startsWith('Product:')));
+            
+            let verifiedList = Array.isArray(activeOrder.verifiedItems) ? activeOrder.verifiedItems : [];
+            let allProductsDone = productItems.length === 0 || verifiedList.length >= productItems.length;
+            let assignedRiderPhone = activeOrder.assignedDeliveryBoy;
 
-                return `
-                    <div class="order-pick-card ${activePickingOrderId === order.orderId ? 'active-focus' : ''}">
-                        <div class="card-top-row">
-                            <div>
-                                <div class="order-id-badge">Order #${order.orderId}</div>
-                                <div class="order-time-text">Customer: <b>${order.customerName || 'Customer'}</b> (${order.phone || 'N/A'})</div>
+            container.innerHTML = `
+                <div class="order-pick-card">
+                    <div class="card-top-row">
+                        <div>
+                            <div class="order-id-badge">🚨 New Order #${activeOrder.orderId}</div>
+                            <div class="order-time-text">Customer: <b>${activeOrder.customerName || 'Customer'}</b> (${activeOrder.phone || 'N/A'})</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="background: rgba(245, 158, 11, 0.15); color: var(--accent-yellow); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800;">${activeOrder.status}</span>
+                        </div>
+                    </div>
+
+                    <!-- Product Picking items list -->
+                    ${productItems.length > 0 ? `
+                        <div class="picking-progress-wrap">
+                            <div class="progress-title">
+                               <span>🛒 Items to Pick (${verifiedList.length}/${productItems.length})</span>
+                               <span>${allProductsDone ? '✅ ALL PICKED' : '⏳ PENDING'}</span>
                             </div>
-                            <div style="text-align: right;">
-                                <span style="background: rgba(245, 158, 11, 0.15); color: var(--accent-yellow); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800;">${order.status}</span>
+                            ${productItems.map(prod => {
+                                let prodName = prod.fileName ? prod.fileName.replace('Product: ', '').split(' (Qty:')[0].trim() : (prod.name || 'Item');
+                                let qty = Number(prod.copies || prod.qty || 1);
+                                let isDone = verifiedList.some(v => v.toLowerCase().includes(prodName.toLowerCase()));
+
+                                return `
+                                    <div class="item-pick-row ${isDone ? 'verified' : ''}">
+                                        <div class="item-info">
+                                            <b>📦 ${prodName}</b>
+                                            <span>Required Qty: <b>${qty}</b></span>
+                                        </div>
+                                        <button type="button" class="btn-scan-item ${isDone ? 'done' : ''}" onclick="openPickerScanner('${activeOrder.orderId}', '${prodName}')">
+                                            ${isDone ? '✅ Picked' : '📷 Scan UPC'}
+                                        </button>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    ` : ''}
+
+                    <!-- Print Job Details -->
+                    ${printItems.length > 0 ? `
+                        <div class="print-job-box">
+                            <div class="print-job-title">🖨️ Attached Print Documents</div>
+                            ${printItems.map(p => `<div style="font-size:0.8rem; font-weight:700; color:white;">📑 ${p.fileName || 'Document.pdf'} (${p.pages || 1} Pages | ✖️ ${p.copies || 1} Copies)</div>`).join('')}
+                            <div style="margin-top: 6px; font-size: 0.75rem; color: ${allProductsDone ? 'var(--accent-green)' : 'var(--accent-yellow)'};">
+                                ${allProductsDone ? '🔓 Admin QR Verified / Ready' : '🔒 Scan items first to unlock print job.'}
                             </div>
                         </div>
+                    ` : ''}
 
-                        <!-- Product Picking sliding list -->
-                        ${productItems.length > 0 ? `
-                            <div class="picking-progress-wrap">
-                                <div class="progress-title">
-                                    <span>🛒 Items to Pick (${verifiedList.length}/${productItems.length})</span>
-                                    <span>${allProductsDone ? '✅ ALL PICKED' : '⏳ PENDING'}</span>
-                                </div>
-                                ${productItems.map(prod => {
-                                    let prodName = prod.fileName ? prod.fileName.replace('Product: ', '').split(' (Qty:')[0].trim() : (prod.name || 'Item');
-                                    let qty = Number(prod.copies || prod.qty || 1);
-                                    let isDone = verifiedList.some(v => v.toLowerCase().includes(prodName.toLowerCase()));
-
-                                    return `
-                                        <div class="item-pick-row ${isDone ? 'verified' : ''}">
-                                            <div class="item-info">
-                                                <b>📦 ${prodName}</b>
-                                                <span>Required Qty: <b>${qty}</b></span>
-                                            </div>
-                                            <button type="button" class="btn-scan-item ${isDone ? 'done' : ''}" onclick="openPickerScanner('${order.orderId}', '${prodName}')">
-                                                ${isDone ? '✅ Picked' : '📷 Scan UPC'}
-                                            </button>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        ` : ''}
-
-                        <!-- Print Job & Admin QR Verification requirement -->
-                        ${printItems.length > 0 ? `
-                            <div class="print-job-box">
-                                <div class="print-job-title">🖨️ Attached Print Documents</div>
-                                ${printItems.map(p => `<div style="font-size:0.8rem; font-weight:700; color:white;">📑 ${p.fileName || 'Document.pdf'} (${p.pages || 1} Pages | ✖️ ${p.copies || 1} Copies)</div>`).join('')}
-                                <div style="margin-top: 8px; font-size: 0.75rem; color: ${allProductsDone ? 'var(--accent-green)' : 'var(--accent-yellow)'};">
-                                    ${allProductsDone ? '🔓 Admin QR Verified / Ready for Dispatch' : '🔒 Scan Admin QR Page to unlock print verification.'}
-                                </div>
-                            </div>
-                        ` : ''}
+                    <!-- Rider Handover Section -->
+                    <div class="handover-section">
+                        <div style="font-size: 0.8rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
+                            <span>🛵 Assigned Rider: <b style="color: ${assignedRiderPhone ? 'var(--accent-green)' : 'var(--accent-yellow)'};">${assignedRiderPhone ? assignedRiderPhone : 'Waiting for Rider Assignment...'}</b></span>
+                        </div>
+                        <button type="button" class="btn-handover" onclick="handoverOrderToRider('${activeOrder.orderId}')">
+                            🤝 Handover to Rider & Complete Picking
+                        </button>
                     </div>
-                `;
-            }).join('');
+                </div>
+            `;
         }
 
         function openPickerScanner(orderId, itemName) {
-            activePickingOrderId = orderId;
             activeTargetItemName = itemName;
             document.getElementById('pickerScannerModal').style.display = 'flex';
 
@@ -284,20 +363,19 @@
                 try { html5QrScanner.stop(); html5QrScanner.clear(); } catch(e){}
             }
             document.getElementById('pickerScannerModal').style.display = 'none';
-            activePickingOrderId = null;
             activeTargetItemName = null;
             document.getElementById('manualScanInput').value = '';
         }
 
         async function handleScannedCode(scannedVal) {
-            if (!activePickingOrderId || !activeTargetItemName) return;
+            if (!activeOrder || !activeTargetItemName) return;
 
             try {
                 const res = await fetch('/api/admin/verify-item', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        orderId: activePickingOrderId, 
+                        orderId: activeOrder.orderId, 
                         barcode: scannedVal, 
                         skuOrName: activeTargetItemName 
                     })
@@ -306,16 +384,38 @@
                 alert(data.message);
                 if (data.success) {
                     closePickerScanner();
-                    fetchPickerOrders();
+                    fetchSingleActiveOrder();
                 }
             } catch (e) {
                 alert("❌ Verification failed due to network error.");
             }
         }
 
-        // Auto Refresh every 4 seconds for live sync with Admin & User
-        setInterval(fetchPickerOrders, 4000);
-        fetchPickerOrders();
+        async function handoverOrderToRider(orderId) {
+            if (!confirm("⚠️ Confirm handover of this order to the assigned delivery rider?")) return;
+
+            try {
+                const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'Out for Delivery' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("✅ Order successfully handed over to rider! Loading next order...");
+                    activeOrder = null;
+                    fetchSingleActiveOrder();
+                } else {
+                    alert("⚠️ Failed to update handover status.");
+                }
+            } catch (err) {
+                alert("❌ Connection error during handover.");
+            }
+        }
+
+        // Real-time instantaneous auto-refresh every 3 seconds
+        setInterval(fetchSingleActiveOrder, 3000);
+        fetchSingleActiveOrder();
     </script>
 </body>
 </html>
