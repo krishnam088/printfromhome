@@ -805,6 +805,17 @@ app.get('/api/admin/stats', async (req, res) => {
     }
 });
 
+// 🔥 FIXED: PREDICTIVE RESTOCK LOGIC
+app.get('/api/admin/inventory/predictive-restock', async (req, res) => {
+    try {
+        // Sirf un products ko uthao jinka stock 5 ya usse kam hai
+        const products = await Product.find({ stockQuantity: { $lte: 5 } }).sort({ stockQuantity: 1 });
+        res.json({ success: true, suggestions: products });
+    } catch (e) { 
+        res.status(500).json({ success: false, message: "Error fetching restock data" }); 
+    }
+});
+
 app.post('/api/admin/verify-item', async (req, res) => {
     try {
         const { orderId, barcode, skuOrName } = req.body;

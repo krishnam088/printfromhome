@@ -27,6 +27,13 @@
             --border-color: #334155;
         }
 
+        /* 🔥 Blinking Animation for Low Stock Alert */
+        @keyframes blink { 
+            0% { opacity: 1; } 
+            50% { opacity: 0.2; } 
+            100% { opacity: 1; } 
+        }
+
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
@@ -864,14 +871,23 @@
                 const res = await fetch('/api/admin/inventory/predictive-restock');
                 const data = await res.json();
                 const list = document.getElementById('restockList');
-                if (list && data.success && data.suggestions) {
-                    if(data.suggestions.length > 0) {
-                        list.innerHTML = data.suggestions.map(p => `<div>${p.name}: ${p.stockQuantity} left</div>`).join('');
+                
+                if (list && data.success) {
+                    if(data.suggestions && data.suggestions.length > 0) {
+                        // BLINKING RED ALERT STYLE
+                        list.style.color = '#ef4444';
+                        list.style.fontWeight = 'bold';
+                        list.innerHTML = data.suggestions.map(p => 
+                            `<div style="margin-bottom:4px; padding:4px; border-bottom:1px solid #334155;">
+                                <span style="animation: blink 1s infinite;">⚠️</span> ${p.name}: <b>${p.stockQuantity} Left</b>
+                             </div>`
+                        ).join('');
                     } else {
+                        list.style.color = '#10b981';
                         list.innerHTML = "✅ Inventory Healthy";
                     }
                 }
-            } catch (e) {}
+            } catch (e) { console.error("Restock fetch error", e); }
         }
         setInterval(fetchRestockSuggestions, 60000);
         setTimeout(fetchRestockSuggestions, 1000);
