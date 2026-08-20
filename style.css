@@ -149,6 +149,21 @@ body.theme-rainy-season::after {
     box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
 
+/* 🔥 Low Stock Urgency Badge */
+.low-stock-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 2px 5px;
+    border-radius: 6px;
+    z-index: 5;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
 /* 🎨 FESTIVE THEME FULL BACKGROUND & CARD OVERRIDES */
 body.theme-festive-republic { background-color: #fffaf5 !important; }
 body.theme-festive-holi { background-color: #fffbeb !important; }

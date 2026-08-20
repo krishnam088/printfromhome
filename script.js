@@ -437,12 +437,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             window.storeInventoryProducts.forEach((prod, index) => {
                 const isOutOfStock = (prod.stockQuantity <= 0);
+                const isLowStock = !isOutOfStock && prod.stockQuantity <= 5; // 🔥 Low Stock threshold
                 const finalImgUrl = prod.imageUrl || prod.image || '';
 
                 const card = document.createElement('div');
                 card.className = 'blinkit-cat-card';
                 card.style.cssText = `
-                    min-width: 110px; width: 110px; background: #ffffff; border: 1px solid #e2e8f0;
+                    min-width: 110px; width: 110px; background: #ffffff; border: 1px solid ${isLowStock ? '#ef4444' : '#e2e8f0'};
                     border-radius: 14px; padding: 10px; position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; 
                     display: flex; flex-direction: column; align-items: center; cursor: pointer;
                     box-shadow: 0 2px 6px rgba(0,0,0,0.03); flex-shrink: 0;
@@ -459,15 +460,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? `<img src="${finalImgUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px; display:block;" />` 
                     : `<div style="font-size:2rem; margin-bottom:6px; height:65px; display:flex; align-items:center; justify-content:center;">📦</div>`;
 
+                // 🔥 Low Stock or Out of Stock Badge HTML
+                let badgeHtml = '';
+                if (isOutOfStock) {
+                    badgeHtml = `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.55rem; padding:2px 4px; border-radius:4px; font-weight:800; z-index:5;">OUT</span>`;
+                } else if (isLowStock) {
+                    badgeHtml = `<span class="low-stock-badge">Only ${prod.stockQuantity} left</span>`;
+                }
+
                 card.innerHTML = `
+                    ${badgeHtml}
                     ${imageHtml}
                     <div title="${prod.name}" style="font-weight:700; font-size:0.78rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; color:#0f172a;">${prod.name}</div>
                     <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
                     ${isOutOfStock 
                         ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); notifyWhenAvailable('${prod.name}')">Notify Me</button>`
-                        : `<button type="button" style="background:var(--blinkit-green, #10b981); color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
+                        : `<button type="button" style="background:var(--blinkit-green, #10b981); color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${prod.sku || prod.barcode || prod.name}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
                     }
-                    ${isOutOfStock ? `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.55rem; padding:2px 4px; border-radius:4px; font-weight:800;">OUT</span>` : ''}
                 `;
                 container.appendChild(card);
             });
@@ -482,9 +491,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔒 STRICT INVENTORY ADD TO CART LOGIC WITH ANIMATION FEEDBACK (Feature 2 Update)
+    // 🔒 STRICT INVENTORY ADD TO CART LOGIC WITH LIVE STOCK VALIDATION (Fixes Unlimited Cart)
     window.addDynamicProductToCart = function(sku, name, price, currentStock) {
-        if (currentStock <= 0) {
+        // Find latest stock from window.storeInventoryProducts
+        const matchedProd = window.storeInventoryProducts.find(p => (p.sku === sku || p.barcode === sku || p.name === name));
+        const availableStock = matchedProd ? matchedProd.stockQuantity : currentStock;
+
+        if (availableStock <= 0) {
             alert(`⚠️ Sorry! "${name}" is currently out of stock.`);
             return;
         }
@@ -492,8 +505,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const existing = window.cartSnacksArray.find(item => item.sku === sku || item.name === name);
         const currentCartQty = existing ? existing.qty : 0;
 
-        if (currentCartQty + 1 > currentStock) {
-            alert(`⚠️ Sorry! Only ${currentStock} units of "${name}" are available in stock.`);
+        if (currentCartQty + 1 > availableStock) {
+            alert(`⚠️ Max stock limit reached! Only ${availableStock} units of "${name}" are available in store stock.`);
             return;
         }
 
@@ -513,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateFloatingCartBar();
         calculateTotal();
 
-        // Feature 2: Visual click feedback animation
+        // Visual click feedback animation
         const clickedBtn = event ? event.target : null;
         if (clickedBtn) {
             const originalText = clickedBtn.textContent;
@@ -1387,7 +1400,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 💳 FINAL CART ORDER PLACEMENT (WITH DYNAMIC STATUS)
+    // 💳 FINAL CART ORDER PLACEMENT (WITH DYNAMIC STATUS & INVENTORY DECREMENT)
     // ==========================================
     window.executeFinalCartOrderPlacement = async function() {
         if (!selectedActiveAddress || selectedActiveAddress.trim() === "") {
@@ -1458,6 +1471,41 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('phone', localStorage.getItem('printAppUserIdentity') || 'N/A');
         formData.append('deliveryTip', window.currentDeliveryTip || 0);
 
+        // Helper function to finalize order on success and decrement stock
+        const finalizeOrderSuccess = async (orderId) => {
+            const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
+            const newOrderPayload = { 
+                orderId: orderId,
+                date: new Date().toLocaleString(), 
+                amount: grandTotal.toFixed(2), 
+                status: initialOrderStatus, 
+                details: finalMetaConfig, 
+                address: selectedActiveAddress 
+            };
+            currentHistoryArray.push(newOrderPayload);
+            localStorage.setItem(`history_${sessionActiveUser}`, JSON.stringify(currentHistoryArray));
+
+            // 🔥 Decrement Inventory on Backend
+            try {
+                await fetch('/api/admin/inventory/decrement', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: finalMetaConfig })
+                });
+            } catch (e) {
+                console.error("Inventory decrement sync error:", e);
+            }
+
+            window.cartPrintJobsArray = [];
+            window.cartSnacksArray = [];
+            window.currentDeliveryTip = 0;
+            persistCartStateData();
+            toggleCartDrawer(false);
+            renderOrderHistoryUI(sessionActiveUser);
+            openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
+            loadDynamicStoreProducts();
+        };
+
         if (paymentMode === 'wallet') {
             let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
             if (currentWalletCash < grandTotal) {
@@ -1476,25 +1524,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 if (data.success) {
                     alert('🎉 Order Placed Successfully using Print From Home Wallet!');
-                    const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
-                    const newOrderPayload = { 
-                        orderId: data.order_id,
-                        date: new Date().toLocaleString(), 
-                        amount: grandTotal.toFixed(2), 
-                        status: initialOrderStatus, 
-                        details: finalMetaConfig, 
-                        address: selectedActiveAddress 
-                    };
-                    currentHistoryArray.push(newOrderPayload);
-                    localStorage.setItem(`history_${sessionActiveUser}`, JSON.stringify(currentHistoryArray));
-
-                    window.cartPrintJobsArray = [];
-                    window.cartSnacksArray = [];
-                    window.currentDeliveryTip = 0;
-                    persistCartStateData();
-                    toggleCartDrawer(false);
-                    renderOrderHistoryUI(sessionActiveUser);
-                    openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
+                    await finalizeOrderSuccess(data.order_id);
                     return;
                 }
             } catch (err) {
@@ -1513,25 +1543,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (paymentMode === 'cod') {
                     alert('🎉 Order Placed Successfully via Cash on Delivery!');
-                    const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
-                    const newOrderPayload = { 
-                        orderId: data.order_id,
-                        date: new Date().toLocaleString(), 
-                        amount: grandTotal.toFixed(2), 
-                        status: initialOrderStatus, 
-                        details: finalMetaConfig, 
-                        address: selectedActiveAddress 
-                    };
-                    currentHistoryArray.push(newOrderPayload);
-                    localStorage.setItem(`history_${sessionActiveUser}`, JSON.stringify(currentHistoryArray));
-                    
-                    window.cartPrintJobsArray = [];
-                    window.cartSnacksArray = [];
-                    window.currentDeliveryTip = 0;
-                    persistCartStateData();
-                    toggleCartDrawer(false);
-                    renderOrderHistoryUI(sessionActiveUser);
-                    openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
+                    await finalizeOrderSuccess(data.order_id);
                     return;
                 }
 
@@ -1542,25 +1554,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const verifyData = await verifyRes.json();
                         if(verifyData.success) {
                             alert('🎉 Payment Successful!');
-                            const currentHistoryArray = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
-                            const newOrderPayload = { 
-                                orderId: data.order_id,
-                                date: new Date().toLocaleString(), 
-                                amount: grandTotal.toFixed(2), 
-                                status: initialOrderStatus, 
-                                details: finalMetaConfig, 
-                                address: selectedActiveAddress 
-                            };
-                            currentHistoryArray.push(newOrderPayload);
-                            localStorage.setItem(`history_${sessionActiveUser}`, JSON.stringify(currentHistoryArray));
-                            
-                            window.cartPrintJobsArray = [];
-                            window.cartSnacksArray = [];
-                            window.currentDeliveryTip = 0;
-                            persistCartStateData();
-                            toggleCartDrawer(false);
-                            renderOrderHistoryUI(sessionActiveUser);
-                            openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
+                            await finalizeOrderSuccess(data.order_id);
                         }
                     }, "theme": { "color": "#F4C430" }
                 };
