@@ -52,6 +52,18 @@
         }
         .payment-option-box { transition: all 0.2s ease; }
 
+        /* --- 🌙 GLOBAL THEME STYLES (LIGHT & DARK) --- */
+        body.theme-dark-mode {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+        }
+        body.theme-dark-mode .auth-card,
+        body.theme-dark-mode .side-drawer,
+        body.theme-dark-mode .wallet-modal-card {
+            background: #1e293b !important;
+            color: #f8fafc !important;
+        }
+
         /* --- 🍞 MODERN TOAST NOTIFICATION CONTAINER --- */
         #appToastContainer {
             position: fixed;
@@ -363,6 +375,50 @@
         </div>
     </div>
 
+    <!-- 💬 NEED HELP & CUSTOMER CARE MODAL -->
+    <div id="helpCenterModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 21000; display: none; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #ffffff; border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            <div style="font-size: 3rem; margin-bottom: 8px;">💬</div>
+            <h3 style="font-size: 1.2rem; font-weight: 900; color: #0f172a; margin-bottom: 6px;">Customer Support Hub</h3>
+            <p style="font-size: 0.78rem; color: #64748b; margin-bottom: 16px;">We are available 24/7 for print orders and delivery inquiries.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+                <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Print%20From%20Home" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #25D366; color: white; padding: 12px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.85rem;">
+                    <span>💬</span> Chat on WhatsApp (+91 7007626731)
+                </a>
+                <a href="tel:7007626731" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #0f172a; color: white; padding: 12px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.85rem;">
+                    <span>📞</span> Call Support Helpline
+                </a>
+            </div>
+            <button type="button" onclick="toggleHelpModal(false)" style="background: #e2e8f0; color: #334155; border: none; padding: 10px; border-radius: 10px; font-weight: 700; width: 100%; cursor: pointer;">Close</button>
+        </div>
+    </div>
+
+    <!-- ⚙️ FULLY FUNCTIONAL EDIT PROFILE & GMAIL MODAL -->
+    <div id="editProfileModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 22000; display: none; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #ffffff; border-radius: 20px; padding: 24px; max-width: 420px; width: 100%; text-align: left; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                <h3 style="font-size: 1.1rem; font-weight: 900; color: #0f172a;">⚙️ Edit Profile & Gmail</h3>
+                <span style="cursor: pointer; font-size: 1.4rem; color: #64748b;" onclick="closeEditProfileModal()">&times;</span>
+            </div>
+            <form id="activeProfileUpdateForm" onsubmit="submitProfileUpdates(event)">
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 0.75rem; font-weight: 800; color: #475569; display: block; margin-bottom: 4px;">Full Name</label>
+                    <input type="text" id="modalEditNameInput" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none;" required>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 0.75rem; font-weight: 800; color: #475569; display: block; margin-bottom: 4px;">Notification Gmail Address</label>
+                    <input type="email" id="modalEditEmailInput" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none;" placeholder="name@gmail.com" required>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="font-size: 0.75rem; font-weight: 800; color: #475569; display: block; margin-bottom: 4px;">New Password (Optional)</label>
+                    <input type="password" id="modalEditPasswordInput" placeholder="Leave blank to keep current" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none;">
+                </div>
+                <button type="submit" style="background: #065f46; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 800; width: 100%; cursor: pointer;">Save Profile Changes</button>
+            </form>
+        </div>
+    </div>
+
     <div id="iosInstallModal" onclick="closeIosInstallModal(event)" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(5px); z-index: 100000; justify-content: center; align-items: flex-end; padding: 0;">
         <div onclick="event.stopPropagation()" style="background: #1e293b; color: #f8fafc; width: 100%; max-width: 460px; border-radius: 24px 24px 0 0; padding: 24px; border-top: 1px solid #334155; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); text-align: center; animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1); position: relative;">
             <div style="width: 42px; height: 5px; background: #475569; border-radius: 4px; margin: 0 auto 16px auto;"></div>
@@ -414,42 +470,44 @@
 
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
-    <!-- 👤 REDESIGNED BLINKIT-STYLE USER PROFILE DRAWER -->
+    <!-- 👤 FULLY ACTIVATED BLINKIT-STYLE USER PROFILE DRAWER -->
     <nav id="userSideDrawer" class="side-drawer" style="background: #ffffff; color: #0f172a; width: 100%; max-width: 420px; height: 100vh; position: fixed; top: 0; right: -100%; z-index: 17000; transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.2);">
         
-        <!-- Header / Top Profile Card -->
         <div style="background: linear-gradient(135deg, #fef08a 0%, #fde047 100%); padding: 24px 20px; text-align: center; position: relative; border-bottom: 1px solid #e2e8f0;">
             <span style="position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 1.4rem; font-weight: bold; color: #1e293b;" onclick="toggleUserDrawer(false)">&larr;</span>
-            
-            <div style="width: 75px; height: 75px; background: #ffffff; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 2px solid #f59e0b;">
-                👤
-            </div>
+            <div style="width: 75px; height: 75px; background: #ffffff; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 2px solid #f59e0b;">👤</div>
             <h3 style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin-bottom: 2px;">Your account</h3>
             <p id="drawerUserMobileText" style="font-size: 0.82rem; font-weight: 700; color: #334155;">7398746551</p>
         </div>
 
         <div style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; background: #f8fafc;">
 
-            <!-- Birthday Banner -->
-            <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; border-radius: 14px; padding: 14px; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h4 style="font-size: 0.85rem; font-weight: 800; color: #92400e; margin-bottom: 2px;">Add your birthday</h4>
-                    <span style="font-size: 0.72rem; font-weight: 700; color: #d97706; cursor: pointer;" onclick="showAppToast('Birthday rewards coming soon!', 'success')">Enter details &rarr;</span>
+            <!-- Birthday Banner & Saver Box -->
+            <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; border-radius: 14px; padding: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;" id="birthdayDisplayBox">
+                    <div>
+                        <h4 style="font-size: 0.85rem; font-weight: 800; color: #92400e; margin-bottom: 2px;" id="birthdayTitleText">Add your birthday</h4>
+                        <span style="font-size: 0.72rem; font-weight: 700; color: #d97706; cursor: pointer;" onclick="toggleBirthdayInputBox()">Enter details &rarr;</span>
+                    </div>
+                    <div style="font-size: 2rem;">🎂</div>
                 </div>
-                <div style="font-size: 2rem;">🎂</div>
+                <div id="birthdayInputBox" style="display: none; margin-top: 8px;">
+                    <input type="date" id="userBirthdayInput" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #f59e0b; margin-bottom: 6px; font-size: 0.8rem; outline: none;">
+                    <button type="button" onclick="saveUserBirthday()" style="background: #d97706; color: white; border: none; padding: 6px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; width: 100%; cursor: pointer;">Save Birthday for Special Offers 🎁</button>
+                </div>
             </div>
 
             <!-- Quick Action 3 Cards Grid -->
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
                 <div onclick="navigateDrawerSection('history'); toggleUserDrawer(false);" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 10px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-                    <div style="font-size: 1.5rem; margin-bottom: 4px;">📦</div>
+                    <div style="font-size: 1.5rem; margin-bottom: 4px;">📋</div>
                     <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a;">Your orders</div>
                 </div>
                 <div onclick="toggleWalletPopupGrid(true, event); toggleUserDrawer(false);" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 10px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                     <div style="font-size: 1.5rem; margin-bottom: 4px;">💰</div>
                     <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a;">Print Wallet</div>
                 </div>
-                <div onclick="navigateDrawerSection('help'); toggleUserDrawer(false);" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 10px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                <div onclick="toggleHelpModal(true); toggleUserDrawer(false);" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 10px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                     <div style="font-size: 1.5rem; margin-bottom: 4px;">💬</div>
                     <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a;">Need help?</div>
                 </div>
@@ -467,12 +525,12 @@
                 <span style="background: #f1f5f9; color: #0f172a; font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 6px;">v18.19.0</span>
             </div>
 
-            <!-- Appearance Toggle Box -->
+            <!-- Appearance Toggle (Light / Dark Mode) -->
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 10px; font-size: 0.82rem; font-weight: 800; color: #0f172a;">
                     <span>☀️</span> Appearance
                 </div>
-                <select onchange="showAppToast('Theme preference saved!', 'success')" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; color: #0f172a; outline: none;">
+                <select id="themeAppearanceSelect" onchange="switchAppThemeMode(this.value)" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; color: #0f172a; outline: none;">
                     <option value="light">LIGHT ▾</option>
                     <option value="dark">DARK ▾</option>
                 </select>
@@ -484,10 +542,10 @@
                     <span style="font-size: 1.3rem;">🛡️</span>
                     <div>
                         <h4 style="font-size: 0.82rem; font-weight: 800; color: #0f172a; margin-bottom: 2px;">Hide sensitive items</h4>
-                        <p style="font-size: 0.68rem; color: #64748b; font-weight: 500; line-height: 1.3;">Adult novelty & confidential documents will be hidden.</p>
+                        <p style="font-size: 0.68rem; color: #64748b; font-weight: 500; line-height: 1.3;">Sexual wellness & confidential documents will be hidden.</p>
                     </div>
                 </div>
-                <input type="checkbox" id="sensitiveToggleCheck" onchange="showAppToast(this.checked ? 'Sensitive items hidden' : 'Sensitive items visible', 'success')" style="width: 40px; height: 22px; cursor: pointer; accent-color: #065f46;">
+                <input type="checkbox" id="sensitiveToggleCheck" onchange="toggleHideSensitiveItems(this.checked)" style="width: 40px; height: 22px; cursor: pointer; accent-color: #065f46;">
             </div>
 
             <!-- Your Information Group -->
@@ -498,29 +556,11 @@
                         <span>📍 Address book</span>
                         <span style="color: #94a3b8;">&rsaquo;</span>
                     </div>
-                    <div onclick="navigateDrawerSection('profile_edit')" style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 0.82rem; font-weight: 700; color: #0f172a;">
+                    <div onclick="openEditProfileModal(); toggleUserDrawer(false);" style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 0.82rem; font-weight: 700; color: #0f172a;">
                         <span>⚙️ Edit profile & Gmail</span>
                         <span style="color: #94a3b8;">&rsaquo;</span>
                     </div>
                 </div>
-            </div>
-
-            <!-- Subpanel for Profile Edit -->
-            <div id="drawer_panel_profile_edit" class="drawer-subpanel-content" style="background: #ffffff; padding: 14px; border-radius: 14px; border: 1px solid #e2e8f0; display: none;">
-                <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:10px; color:#0f172a;">Update Account Info</h4>
-                <form id="drawerProfileUpdateForm">
-                    <div class="drawer-input-group" style="margin-bottom:8px;"><label style="font-size:0.7rem; font-weight:700; color:#64748b;">Full Name</label><input type="text" id="drawerEditName" style="width:100%; padding:8px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem;" required></div>
-                    <div class="drawer-input-group" style="margin-bottom:8px;"><label style="font-size:0.7rem; font-weight:700; color:#64748b;">New Password</label><input type="password" id="drawerEditPassword" placeholder="Leave blank if unchanged" style="width:100%; padding:8px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem;"></div>
-                    <button type="submit" style="background:#065f46; color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:700; font-size:0.78rem; width:100%; cursor:pointer;">Save Changes</button>
-                </form>
-            </div>
-
-            <!-- Subpanel for Help -->
-            <div id="drawer_panel_help" class="drawer-subpanel-content" style="background: #ffffff; padding: 14px; border-radius: 14px; border: 1px solid #e2e8f0; display: none;">
-                <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:6px; color:#0f172a;">Help & Support</h4>
-                <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Print%20From%20Home" target="_blank" style="display:flex; align-items:center; justify-content:center; gap:8px; background:#25D366; color:white; padding:10px; border-radius:10px; font-weight:700; text-decoration:none; font-size:0.8rem;">
-                    💬 Chat on WhatsApp
-                </a>
             </div>
 
             <!-- Logout Button -->
@@ -1027,6 +1067,22 @@
         window.addEventListener('DOMContentLoaded', () => {
             checkLocalWeatherAndApplyRainSurge();
             setInterval(checkLocalWeatherAndApplyRainSurge, 5000);
+            
+            const savedTheme = localStorage.getItem('app_theme_mode') || 'light';
+            const themeSelect = document.getElementById('themeAppearanceSelect');
+            if(themeSelect) themeSelect.value = savedTheme;
+            switchAppThemeMode(savedTheme);
+
+            const sessionUser = localStorage.getItem('printAppUser');
+            const savedBday = localStorage.getItem(`user_bday_${sessionUser}`);
+            if(savedBday) {
+                const titleEl = document.getElementById('birthdayTitleText');
+                if(titleEl) titleEl.textContent = `Birthday: ${savedBday} 🎂`;
+            }
+
+            const hideSensitive = localStorage.getItem('hide_sensitive_items') === 'true';
+            const sensitiveCheck = document.getElementById('sensitiveToggleCheck');
+            if(sensitiveCheck) sensitiveCheck.checked = hideSensitive;
         });
 
         // ==========================================
@@ -1228,87 +1284,113 @@
             toggleCartDrawer(true);
         };
 
-        let deferredPwaPrompt = null;
-
-        function isIosDevice() {
-            const userAgent = window.navigator.userAgent.toLowerCase();
-            return /iphone|ipad|ipod/.test(userAgent);
+        // --- 🎂 BIRTHDAY SAVER SYSTEM ---
+        function toggleBirthdayInputBox() {
+            const box = document.getElementById('birthdayInputBox');
+            if(box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
         }
 
-        function isAppAlreadyInstalled() {
-            return window.matchMedia('(display-mode: standalone)').matches || (window.navigator.standalone === true);
+        function saveUserBirthday() {
+            const bday = document.getElementById('userBirthdayInput').value;
+            if(!bday) { showAppToast("Please select your birth date", "error"); return; }
+            const sessionUser = localStorage.getItem('printAppUser') || 'guest';
+            localStorage.setItem(`user_bday_${sessionUser}`, bday);
+            
+            const titleEl = document.getElementById('birthdayTitleText');
+            if(titleEl) titleEl.textContent = `Birthday: ${bday} 🎂`;
+            document.getElementById('birthdayInputBox').style.display = 'none';
+            showAppToast("Birthday saved! Company will send you wishes & special offers.", "success");
         }
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPwaPrompt = e;
-            const banner = document.getElementById('userInstallBanner');
-            if (banner && !isAppAlreadyInstalled()) {
-                banner.classList.remove('hidden');
-                banner.style.display = 'flex';
-            }
-        });
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const banner = document.getElementById('userInstallBanner');
-            if (isIosDevice() && !isAppAlreadyInstalled() && banner) {
-                banner.classList.remove('hidden');
-                banner.style.display = 'flex';
-            }
-
-            const fileInputEl = document.getElementById('fileUpload');
-            if (fileInputEl) {
-                fileInputEl.addEventListener('change', (e) => {
-                    if (e.target.files && e.target.files[0]) {
-                        openDocumentInA4Studio(e.target.files[0], e.target.files[0].name);
-                    }
-                });
-            }
-
-            const pwdField = document.getElementById('studioRequiredPdfPassword');
-            if (pwdField) {
-                pwdField.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        tryUnlockAndRenderLockedPdf();
-                    }
-                });
-            }
-        });
-
-        window.triggerUniversalPWAInstall = async function() {
-            if (isIosDevice()) {
-                const iosModal = document.getElementById('iosInstallModal');
-                if (iosModal) iosModal.style.display = 'flex';
-            } else if (deferredPwaPrompt) {
-                deferredPwaPrompt.prompt();
-                const { outcome } = await deferredPwaPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    const banner = document.getElementById('userInstallBanner');
-                    if (banner) banner.style.display = 'none';
-                }
-                deferredPwaPrompt = null;
+        // --- 🌙 LIGHT / DARK THEME SWITCHER ---
+        function switchAppThemeMode(mode) {
+            const body = document.body;
+            if (mode === 'dark') {
+                body.classList.add('theme-dark-mode');
+                localStorage.setItem('app_theme_mode', 'dark');
             } else {
-                showAppToast("To install, tap your browser's menu (⋮) and select 'Install app'.", "info");
+                body.classList.remove('theme-dark-mode');
+                localStorage.setItem('app_theme_mode', 'light');
             }
-        };
+            showAppToast(`Theme switched to ${mode.toUpperCase()}`, "success");
+        }
 
-        window.closeIosInstallModal = function(event) {
-            const modal = document.getElementById('iosInstallModal');
-            if (!modal) return;
-            if (!event || event.target === modal || event.target.tagName === 'BUTTON') {
-                modal.style.display = 'none';
+        // --- 🛡️ HIDE SENSITIVE ITEMS FILTER ---
+        function toggleHideSensitiveItems(hide) {
+            localStorage.setItem('hide_sensitive_items', hide ? 'true' : 'false');
+            if (typeof renderStoreProductsUI === 'function') renderStoreProductsUI();
+            showAppToast(hide ? "Sensitive items hidden from inventory" : "Sensitive items visible", "success");
+        }
+
+        // --- 💬 NEED HELP & SUPPORT HUB ---
+        function toggleHelpModal(open) {
+            const modal = document.getElementById('helpCenterModal');
+            if(modal) modal.style.display = open ? 'flex' : 'none';
+        }
+
+        // --- ⚙️ EDIT PROFILE & GMAIL MODAL ---
+        function openEditProfileModal() {
+            const modal = document.getElementById('editProfileModal');
+            const sessionUser = localStorage.getItem('printAppUser') || '';
+            const emailField = document.getElementById('modalEditEmailInput');
+            const nameField = document.getElementById('modalEditNameInput');
+            if(emailField) emailField.value = localStorage.getItem(`user_email_${sessionUser}`) || '';
+            if(nameField) nameField.value = localStorage.getItem(`user_name_${sessionUser}`) || 'Krishna';
+            if(modal) modal.style.display = 'flex';
+        }
+
+        function closeEditProfileModal() {
+            const modal = document.getElementById('editProfileModal');
+            if(modal) modal.style.display = 'none';
+        }
+
+        async function submitProfileUpdates(e) {
+            e.preventDefault();
+            const sessionUser = localStorage.getItem('printAppUser');
+            const newName = document.getElementById('modalEditNameInput').value;
+            const newEmail = document.getElementById('modalEditEmailInput').value;
+            const newPass = document.getElementById('modalEditPasswordInput').value;
+
+            try {
+                await fetch('/api/auth/update-profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identity: sessionUser, name: newName, newPassword: newPass || undefined })
+                });
+
+                await fetch('/api/auth/update-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identity: sessionUser, email: newEmail })
+                });
+
+                localStorage.setItem(`user_email_${sessionUser}`, newEmail);
+                localStorage.setItem(`user_name_${sessionUser}`, newName);
+                showAppToast("Profile & Gmail updated successfully in database!", "success");
+                closeEditProfileModal();
+            } catch(err) {
+                showAppToast("Failed to update profile", "error");
             }
-        };
+        }
 
         async function loadDynamicStoreProducts() {
             try {
                 const res = await fetch('/api/store/products');
                 const data = await res.json();
                 if (data.success && Array.isArray(data.products)) {
-                    const newProductsJson = JSON.stringify(data.products);
+                    let prods = data.products;
+                    const hideSensitive = localStorage.getItem('hide_sensitive_items') === 'true';
+                    if (hideSensitive) {
+                        prods = prods.filter(p => {
+                            const n = (p.name || '').toLowerCase();
+                            return !n.includes('sexual') && !n.includes('nashela') && !n.includes('adult') && !n.includes('cigar') && !n.includes('beer');
+                        });
+                    }
+
+                    const newProductsJson = JSON.stringify(prods);
                     if (newProductsJson !== lastRenderedData) {
                         lastRenderedData = newProductsJson;
-                        window.storeInventoryProducts = data.products;
+                        window.storeInventoryProducts = prods;
                         highlightRainAndCravingProducts();
                         renderStoreProductsUI();
                         updateFloatingCartBar();
@@ -1346,18 +1428,11 @@
                     const card = document.createElement('div');
                     card.className = 'blinkit-cat-card';
                     card.style.cssText = `
-                        min-width: 110px;
-                        width: 110px;
-                        background: #ffffff;
+                        min-width: 110px; width: 110px; background: #ffffff;
                         border: 1px solid ${prod.isHighlightedRainOrCraving ? '#0284c7' : '#e2e8f0'};
-                        border-radius: 14px;
-                        padding: 10px;
-                        position: relative; 
-                        opacity: ${isOutOfStock ? '0.7' : '1'}; 
-                        display: flex; 
-                        flex-direction: column; 
-                        align-items: center; 
-                        cursor: pointer;
+                        border-radius: 14px; padding: 10px; position: relative; 
+                        opacity: ${isOutOfStock ? '0.7' : '1'}; display: flex; 
+                        flex-direction: column; align-items: center; cursor: pointer;
                         box-shadow: ${prod.isHighlightedRainOrCraving ? '0 0 10px rgba(2,132,199,0.25)' : '0 2px 6px rgba(0,0,0,0.03)'};
                         flex-shrink: 0;
                     `;
@@ -1382,7 +1457,6 @@
                             ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); notifyWhenAvailable('${prod.name}')">Notify</button>`
                             : `<button type="button" class="btn-quick-add-item" style="background:#065f46; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
                         }
-                        ${isOutOfStock ? `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.55rem; padding:2px 4px; border-radius:4px; font-weight:800;">OUT</span>` : ''}
                     `;
                     container.appendChild(card);
                 });
@@ -1396,80 +1470,36 @@
             const priceEl = document.getElementById('modalProductPrice');
             const stockEl = document.getElementById('modalProductStock');
             const addBtn = document.getElementById('modalAddToCartBtn');
-
             if (!modal) return;
-
             const finalImgUrl = prod.imageUrl || prod.image || '';
             nameEl.textContent = prod.name;
             priceEl.textContent = `₹${prod.sellingPrice || 0}`;
             stockEl.textContent = prod.stockQuantity > 0 ? `Stock Left: ${prod.stockQuantity} units` : `Status: Out of Stock`;
-            stockEl.style.color = prod.stockQuantity > 0 ? '#16a34a' : '#ef4444';
-            stockEl.style.background = prod.stockQuantity > 0 ? '#f0fdf4' : '#fef2f2';
-
-            if (finalImgUrl) {
-                imgContainer.innerHTML = `<img src="${finalImgUrl}" style="width:100%; height:100%; object-fit:contain;" />`;
-            } else {
-                imgContainer.innerHTML = `<span style="font-size:3.5rem;">📦</span>`;
-            }
-
-            if (prod.stockQuantity <= 0) {
-                addBtn.style.background = '#ef4444';
-                addBtn.textContent = 'Out of Stock';
-                addBtn.onclick = () => notifyWhenAvailable(prod.name);
-            } else {
-                addBtn.style.background = '#065f46';
-                addBtn.textContent = '+ Add to Cart';
-                addBtn.onclick = () => {
-                    addDynamicProductToCart(prod.sku, prod.name, prod.sellingPrice || 0, prod.stockQuantity);
-                    closeProductDetailModal();
-                };
-            }
-
+            imgContainer.innerHTML = finalImgUrl ? `<img src="${finalImgUrl}" style="width:100%; height:100%; object-fit:contain;" />` : `<span style="font-size:3.5rem;">📦</span>`;
+            addBtn.onclick = () => {
+                addDynamicProductToCart(prod.sku, prod.name, prod.sellingPrice || 0, prod.stockQuantity);
+                closeProductDetailModal();
+            };
             modal.style.display = 'flex';
         };
 
         window.closeProductDetailModal = function(event) {
             const modal = document.getElementById('productDetailModal');
-            if (!modal) return;
-            if (!event || event.target === modal || event.target.tagName === 'SPAN') {
-                modal.style.display = 'none';
-            }
-        };
-
-        window.notifyWhenAvailable = function(prodName) {
-            showAppToast(`We have noted your request! You will be notified when "${prodName}" is back in stock.`, "success");
+            if (modal && (!event || event.target === modal || event.target.tagName === 'SPAN')) modal.style.display = 'none';
         };
 
         window.addDynamicProductToCart = function(sku, name, price, currentStock) {
             const existing = window.cartSnacksArray.find(item => item.name === name);
             const currentCartQty = existing ? existing.qty : 0;
-
             if (currentCartQty + 1 > currentStock) {
-                showAppToast(`Sorry! Only ${currentStock} units of "${name}" available in store stock.`, "error");
+                showAppToast(`Sorry! Only ${currentStock} units available.`, "error");
                 return;
             }
-
-            if (existing) {
-                existing.qty += 1;
-            } else {
-                window.cartSnacksArray.push({ name, price, qty: 1 });
-            }
+            if (existing) existing.qty += 1;
+            else window.cartSnacksArray.push({ name, price, qty: 1 });
             if (typeof persistCartStateData === 'function') persistCartStateData();
             updateFloatingCartBar();
-            if (typeof calculateTotal === 'function') calculateTotal();
-
-            const clickedBtn = event ? event.target : null;
-            if (clickedBtn) {
-                const originalText = clickedBtn.textContent;
-                clickedBtn.textContent = "Added ✓";
-                clickedBtn.style.background = "#047857";
-                setTimeout(() => {
-                    clickedBtn.textContent = originalText;
-                    clickedBtn.style.background = "#065f46";
-                }, 800);
-            } else {
-                showAppToast(`Added "${name}" to cart!`, "success");
-            }
+            showAppToast(`Added "${name}" to cart!`, "success");
         };
 
         loadDynamicStoreProducts();
@@ -1479,68 +1509,14 @@
             const bar = document.getElementById('floatingCartFooterBar');
             const countText = document.getElementById('floatingCartCountText');
             const priceText = document.getElementById('floatingCartTotalPriceText');
-            const imagesStack = document.getElementById('floatingCartImagesStack');
             if (!bar) return;
-            
             let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0);
             let totalSnacksPrice = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
-
-            let printTotalVal = 0;
-            let printFilesCount = 0;
-            if (window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0) {
-                window.cartPrintJobsArray.forEach((job) => {
-                    const cost = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
-                    printTotalVal += cost;
-                    printFilesCount += job.copies;
-                });
-            }
-
-            let grandTotalCombined = totalSnacksPrice + printTotalVal;
-            let totalItemsCombined = totalSnacksCount + printFilesCount;
-            let deliveryFee = (grandTotalCombined >= 99 || grandTotalCombined === 0) ? 0 : 25;
-            let rainFee = window.isRainSurgeActive ? (window.rainSurgeFee || 15) : 0;
-            let tipFee = window.currentDeliveryTip || 0;
-
-            if (totalItemsCombined > 0) {
+            if (totalSnacksCount > 0) {
                 bar.classList.remove('hidden');
                 bar.style.display = 'flex';
-                if (countText) countText.textContent = `${totalItemsCombined} item${totalItemsCombined > 1 ? 's' : ''}`;
-                if (priceText) priceText.textContent = `₹${(grandTotalCombined + deliveryFee + rainFee + tipFee).toFixed(2)}`;
-
-                if (imagesStack) {
-                    imagesStack.innerHTML = '';
-                    let collectedImages = [];
-
-                    window.cartSnacksArray.forEach(snack => {
-                        const matched = window.storeInventoryProducts.find(p => p.name === snack.name);
-                        const img = matched ? (matched.imageUrl || matched.image || '') : '';
-                        if (img) collectedImages.push(img);
-                    });
-
-                    let displayImgs = collectedImages.slice(0, 3);
-                    if (displayImgs.length === 0) {
-                        imagesStack.innerHTML = `<div style="width:36px; height:36px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid #065f46; font-size:0.8rem; box-shadow:0 2px 5px rgba(0,0,0,0.1);">🛒</div>`;
-                    } else {
-                        displayImgs.forEach((imgUrl, idx) => {
-                            const imgThumb = document.createElement('img');
-                            imgThumb.src = imgUrl;
-                            imgThumb.style.cssText = `
-                                width: 34px;
-                                height: 34px;
-                                object-fit: cover;
-                                border-radius: 50%;
-                                border: 2px solid #ffffff;
-                                position: absolute;
-                                left: ${idx * 14}px;
-                                top: 0;
-                                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-                                background: #fff;
-                                z-index: ${10 - idx};
-                            `;
-                            imagesStack.appendChild(imgThumb);
-                        });
-                    }
-                }
+                if (countText) countText.textContent = `${totalSnacksCount} item${totalSnacksCount > 1 ? 's' : ''}`;
+                if (priceText) priceText.textContent = `₹${totalSnacksPrice.toFixed(2)}`;
             } else {
                 bar.classList.add('hidden');
                 bar.style.display = 'none';
@@ -1549,215 +1525,34 @@
 
         window.toggleCartDrawer = function(open) {
             const overlay = document.getElementById('cartDrawerOverlay');
-            if (!overlay) return;
-            if (open) {
-                history.pushState({ cartOpen: true }, '', '');
-                overlay.style.display = 'flex';
-                if (typeof loadUserAddressesFromStorage === 'function') loadUserAddressesFromStorage();
-                renderCartDrawerContents();
-            } else {
-                overlay.style.display = 'none';
-            }
+            if (overlay) overlay.style.display = open ? 'flex' : 'none';
+            if (open && typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
         };
-
-        window.renderCartDrawerContents = function() {
-            const container = document.getElementById('cartDrawerItemsList');
-            const grandTotalNode = document.getElementById('cartDrawerGrandTotal');
-            const itemsCountNode = document.getElementById('shipmentItemsCountText');
-            const subtotalNode = document.getElementById('cartItemSubtotal');
-            const deliveryNode = document.getElementById('cartDeliveryFee');
-            const summaryGrandNode = document.getElementById('cartGrandTotalSummary');
-            
-            if (!container) return;
-
-            container.innerHTML = '';
-            let subtotal = 0;
-            let totalItemsCount = 0;
-
-            window.cartSnacksArray.forEach((snack, idx) => {
-                subtotal += snack.price * snack.qty;
-                totalItemsCount += snack.qty;
-                
-                const matchedProd = window.storeInventoryProducts.find(p => p.name === snack.name);
-                const finalImgUrl = matchedProd ? (matchedProd.imageUrl || matchedProd.image || '') : '';
-
-                const row = document.createElement('div');
-                row.className = 'cart-item-card';
-                row.innerHTML = `
-                    <div class="cart-item-thumb">
-                        ${finalImgUrl ? `<img src="${finalImgUrl}" />` : '📦'}
-                    </div>
-                    <div style="flex: 1; overflow: hidden;" onclick='openProductDetailModal(${JSON.stringify(matchedProd || {name: snack.name, sellingPrice: snack.price, stockQuantity: 99, imageUrl: finalImgUrl})})'>
-                        <h4 style="font-size:0.82rem; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${snack.name}">${snack.name}</h4>
-                        <p style="font-size:0.72rem; color:#64748b; font-weight:600;">₹${snack.price} each</p>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <span style="font-size:0.88rem; font-weight:900; color:#0f172a;">₹${snack.price * snack.qty}</span>
-                        <div style="display:flex; align-items:center; background:#065f46; border-radius:8px; padding:2px 6px; gap:8px;">
-                            <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; color:white; font-weight:bold; font-size:0.9rem; cursor:pointer;">-</button>
-                            <span style="color:white; font-weight:800; font-size:0.8rem;">${snack.qty}</span>
-                            <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; color:white; font-weight:bold; font-size:0.9rem; cursor:pointer;">+</button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(row);
-            });
-
-            if (window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0) {
-                window.cartPrintJobsArray.forEach((job, jobIdx) => {
-                    const cost = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
-                    subtotal += cost;
-                    totalItemsCount += job.copies;
-
-                    const row = document.createElement('div');
-                    row.className = 'cart-item-card';
-                    row.innerHTML = `
-                        <div class="cart-item-thumb" style="background: #f1f5f9;">📄</div>
-                        <div style="flex: 1; overflow: hidden;">
-                            <h4 style="font-size:0.82rem; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${job.fileName}">${job.fileName}</h4>
-                            <p style="font-size:0.72rem; color:#065f46; font-weight:700;">${job.printType.toUpperCase()} (${job.pages}p)</p>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <span style="font-size:0.88rem; font-weight:900; color:#0f172a;">₹${cost.toFixed(2)}</span>
-                            <div style="display:flex; align-items:center; background:#065f46; border-radius:8px; padding:2px 6px; gap:8px;">
-                                <button type="button" onclick="adjustPrintJobCopies(${jobIdx}, -1)" style="background:none; border:none; color:white; font-weight:bold; font-size:0.9rem; cursor:pointer;">-</button>
-                                <span style="color:white; font-weight:800; font-size:0.8rem;">${job.copies}</span>
-                                <button type="button" onclick="adjustPrintJobCopies(${jobIdx}, 1)" style="background:none; border:none; color:white; font-weight:bold; font-size:0.9rem; cursor:pointer;">+</button>
-                            </div>
-                        </div>
-                    `;
-                    container.appendChild(row);
-                });
-            }
-
-            let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
-            let rainFee = window.isRainSurgeActive ? (window.rainSurgeFee || 15) : 0;
-            let tipFee = window.currentDeliveryTip || 0;
-            let grandTotal = subtotal + delivery + rainFee + tipFee;
-
-            let freeDeliveryRemaining = Math.max(0, 99 - subtotal);
-            const msgText = document.getElementById('freeDeliveryMessageText');
-            const fillBar = document.getElementById('freeDeliveryFillBar');
-            if (subtotal >= 99) {
-                if (msgText) msgText.textContent = "🥳 Woohoo! You unlocked FREE Delivery!";
-                if (fillBar) fillBar.style.width = "100%";
-            } else {
-                if (msgText) msgText.textContent = `🎉 Add items worth ₹${freeDeliveryRemaining.toFixed(2)} more for FREE delivery!`;
-                if (fillBar) fillBar.style.width = `${Math.min(100, (subtotal / 99) * 100)}%`;
-            }
-
-            if (itemsCountNode) itemsCountNode.textContent = `Shipment of ${totalItemsCount} item${totalItemsCount > 1 ? 's' : ''}`;
-            if (subtotalNode) subtotalNode.textContent = `₹${subtotal.toFixed(2)}`;
-            if (deliveryNode) deliveryNode.textContent = delivery === 0 ? "FREE" : `₹${delivery.toFixed(2)}`;
-            if (summaryGrandNode) summaryGrandNode.textContent = `₹${grandTotal.toFixed(2)}`;
-            if (grandTotalNode) grandTotalNode.textContent = `₹${grandTotal.toFixed(2)}`;
-            updateFloatingCartBar();
-            
-            const sessionUser = localStorage.getItem('printAppUser');
-            const cashVal = parseFloat(localStorage.getItem(`wallet_cash_${sessionUser}`)) || 0.00;
-            const drawerWalletText = document.getElementById('walletDrawerBalanceText');
-            if (drawerWalletText) drawerWalletText.textContent = `₹${cashVal.toFixed(2)}`;
-            
-            const mobileText = document.getElementById('drawerUserMobileText');
-            if (mobileText) mobileText.textContent = sessionUser || '7398746551';
-        };
-
-        window.adjustPrintJobCopies = function(index, delta) {
-            window.cartPrintJobsArray[index].copies += delta;
-            if (window.cartPrintJobsArray[index].copies <= 0) window.cartPrintJobsArray.splice(index, 1);
-            if (typeof persistCartStateData === 'function') persistCartStateData();
-            renderCartDrawerContents();
-            updateFloatingCartBar();
-            if (typeof calculateTotal === 'function') calculateTotal();
-        };
-
-        window.adjustSnackQty = function(index, delta) {
-            window.cartSnacksArray[index].qty += delta;
-            if (window.cartSnacksArray[index].qty <= 0) window.cartSnacksArray.splice(index, 1);
-            if (typeof persistCartStateData === 'function') persistCartStateData();
-            renderCartDrawerContents();
-            updateFloatingCartBar();
-            if (typeof calculateTotal === 'function') calculateTotal();
-        };
-
-        window.clearEntireCartData = function() {
-            window.cartPrintJobsArray = [];
-            window.cartSnacksArray = [];
-            if (typeof persistCartStateData === 'function') persistCartStateData();
-            renderCartDrawerContents();
-            updateFloatingCartBar();
-            if (typeof calculateTotal === 'function') calculateTotal();
-            showAppToast("Cart cleared successfully.", "success");
-        };
-
-        let deliveryMap = null;
-        let deliveryMarker = null;
-
-        function initBlinkitStyleMap() {
-            if (deliveryMap) {
-                setTimeout(() => { deliveryMap.invalidateSize(); }, 300);
-                return;
-            }
-            let centerLat = 25.3176, centerLng = 82.9739;
-            deliveryMap = L.map('userDeliveryMap', { center: [centerLat, centerLng], zoom: 15 });
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(deliveryMap);
-            deliveryMarker = L.marker([centerLat, centerLng], { draggable: true }).addTo(deliveryMap);
-            updateAddressFromCoords(centerLat, centerLng);
-            deliveryMarker.on('dragend', () => { const pos = deliveryMarker.getLatLng(); updateAddressFromCoords(pos.lat, pos.lng); });
-            setTimeout(() => { deliveryMap.invalidateSize(); }, 400);
-        }
-
-        async function updateAddressFromCoords(lat, lng) {
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-                const data = await res.json();
-                if (data && data.display_name) document.getElementById('mapSelectedAddressInput').value = data.display_name;
-            } catch (e) { document.getElementById('mapSelectedAddressInput').value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`; }
-        }
 
         function toggleUserDrawer(open) {
             const drawer = document.getElementById('userSideDrawer');
             const overlay = document.getElementById('drawerOverlay');
-            if (!drawer || !overlay) return;
+            if (!drawer) return;
             if (open) {
                 drawer.style.right = '0';
-                overlay.classList.add('active');
-                overlay.style.display = 'block';
-                history.pushState({ drawerOpen: true }, '', '');
+                if(overlay) { overlay.classList.add('active'); overlay.style.display = 'block'; }
                 const sessionUser = localStorage.getItem('printAppUser');
-                const mobEl = document.getElementById('drawerUserMobileText');
-                if(mobEl) mobEl.textContent = sessionUser || '7398746551';
+                document.getElementById('drawerUserMobileText').textContent = sessionUser || '7398746551';
             } else {
                 drawer.style.right = '-100%';
-                overlay.classList.remove('active');
-                overlay.style.display = 'none';
+                if(overlay) { overlay.classList.remove('active'); overlay.style.display = 'none'; }
             }
         }
         function toggleWalletPopupGrid(show, event) {
             const modal = document.getElementById('walletDepositModal');
-            if (!modal) return;
-            if (show) {
-                modal.style.display = 'flex';
-                history.pushState({ walletOpen: true }, '', '');
-            } else if (event.target === modal) {
-                modal.style.display = 'none';
-            }
+            if (modal) modal.style.display = show ? 'flex' : 'none';
         }
-        function setWalletQuickAmount(amt) { document.getElementById('walletCustomAmountInput').value = amt; }
-
         function navigateDrawerSection(targetId) {
-            document.querySelectorAll('.drawer-item').forEach(el => el.classList.remove('active'));
-            if(document.getElementById(`menu_${targetId}`)) document.getElementById(`menu_${targetId}`).classList.add('active');
-            document.querySelectorAll('.drawer-subpanel-content').forEach(el => el.classList.remove('active'));
-
-            if (targetId === 'store' || targetId === 'history' || targetId === 'order_tracking') {
-                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            if(document.getElementById(`user_section_${targetId}`)) {
                 document.getElementById(`user_section_${targetId}`).classList.add('active');
-                toggleUserDrawer(false);
-            } else {
-                const activeSubPanel = document.getElementById(`drawer_panel_${targetId}`);
-                if(activeSubPanel) activeSubPanel.classList.add('active');
             }
+            toggleUserDrawer(false);
         }
     </script>
     <script src="script.js"></script>
