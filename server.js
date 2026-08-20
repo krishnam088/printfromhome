@@ -125,7 +125,7 @@ const productSchema = new mongoose.Schema({
 });
 const Product = mongoose.model('Product', productSchema);
 
-// 🔔 Safe Web Push Notification Configuration (Prevents startup crashes if keys are not set)
+// 🔔 Safe Web Push Notification Configuration
 try {
     if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
         webpush.setVapidDetails(
@@ -321,7 +321,7 @@ app.post('/api/admin/toggle-rain', async (req, res) => {
     }
 });
 
-// 🔔 Push Notification Subscription Endpoint
+// 🔔 Push Notification Subscription Endpoints
 app.post('/api/notifications/subscribe', async (req, res) => {
     try {
         const { identity, productName, subscription, type } = req.body;
@@ -824,19 +824,26 @@ app.post('/api/admin/verify-item', async (req, res) => {
 async function deductStockForOrder(parsedConfig) {
     if (parsedConfig && parsedConfig.length > 0) {
         for (const item of parsedConfig) {
-            // Flexible check for store products / snacks
             if (item.printType === 'snack' || item.printType === 'product' || (item.fileName && String(item.fileName).startsWith('Product:'))) {
-                let prodName = String(item.fileName).replace('Product: ', '').split(' (Qty:')[0].trim();
+                let prodName = String(item.fileName || item.name || '').replace('Product: ', '').split(' (Qty:')[0].trim();
+                let prodSku = item.sku;
                 let qty = Number(item.copies || item.qty || 1);
                 
-                let matchedProd = await Product.findOne({ name: { $regex: new RegExp(prodName, 'i') } });
+                let matchedProd = null;
+                if (prodSku) {
+                    matchedProd = await Product.findOne({ sku: prodSku });
+                }
+                if (!matchedProd && prodName) {
+                    matchedProd = await Product.findOne({ name: { $regex: new RegExp(prodName, 'i') } });
+                }
+
                 if (matchedProd) {
                     matchedProd.stockQuantity = Math.max(0, matchedProd.stockQuantity - qty);
                     matchedProd.totalSold += qty;
                     await matchedProd.save();
-                    console.log(`✅ Stock deducted for "${matchedProd.name}": -${qty} units`);
+                    console.log(`✅ Stock successfully deducted for "${matchedProd.name}": -${qty} units. Remaining: ${matchedProd.stockQuantity}`);
                 } else {
-                    console.warn(`⚠️ Warning: Product "${prodName}" not found in inventory for stock deduction.`);
+                    console.warn(`⚠️ Warning: Product "${prodName || prodSku}" not found in inventory for stock deduction.`);
                 }
             }
         }
@@ -872,14 +879,18 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
         if (Array.isArray(parsedConfig)) {
             for (const item of parsedConfig) {
                 if (item.printType === 'snack' || item.printType === 'product' || (item.fileName && String(item.fileName).startsWith('Product:'))) {
-                    let prodName = String(item.fileName).replace('Product: ', '').split(' (Qty:')[0].trim();
+                    let prodName = String(item.fileName || item.name || '').replace('Product: ', '').split(' (Qty:')[0].trim();
+                    let prodSku = item.sku;
                     let qtyRequested = Number(item.copies || item.qty || 1);
                     
-                    let product = await Product.findOne({ name: { $regex: new RegExp(prodName, 'i') } });
+                    let product = null;
+                    if (prodSku) product = await Product.findOne({ sku: prodSku });
+                    if (!product && prodName) product = await Product.findOne({ name: { $regex: new RegExp(prodName, 'i') } });
+
                     if (product && product.stockQuantity < qtyRequested) {
                         return res.status(400).json({ 
                             success: false, 
-                            message: `⚠️ Sorry! "${prodName}" has only ${product.stockQuantity} units left in stock.` 
+                            message: `⚠️ Sorry! "${prodName || product.name}" has only ${product.stockQuantity} units left in stock.` 
                         });
                     }
                 }
@@ -1048,7 +1059,6 @@ const handleStatusUpdate = async (req, res) => {
             }
             if (status) {
                 order.status = status; 
-                // If delivery boy marks order as delivered, clear their active order assignment
                 if (status.includes('Delivered') && order.assignedDeliveryBoy) {
                     await DeliveryBoy.findOneAndUpdate(
                         { phone: order.assignedDeliveryBoy }, 

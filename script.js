@@ -464,14 +464,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔒 STRICT INVENTORY ADD TO CART LOGIC
+    // 🔒 STRICT INVENTORY ADD TO CART LOGIC WITH SKU MAPPING
     window.addDynamicProductToCart = function(sku, name, price, currentStock) {
         if (currentStock <= 0) {
             alert(`⚠️ Sorry! "${name}" is currently out of stock.`);
             return;
         }
 
-        const existing = window.cartSnacksArray.find(item => item.name === name);
+        const existing = window.cartSnacksArray.find(item => item.sku === sku || item.name === name);
         const currentCartQty = existing ? existing.qty : 0;
 
         if (currentCartQty + 1 > currentStock) {
@@ -482,7 +482,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (existing) {
             existing.qty += 1;
         } else {
-            window.cartSnacksArray.push({ name, price, qty: 1 });
+            window.cartSnacksArray.push({ 
+                sku: sku, 
+                name: name, 
+                price: price, 
+                qty: 1, 
+                printType: 'snack',
+                fileName: `Product: ${name}` 
+            });
         }
         persistCartStateData();
         updateFloatingCartBar();
@@ -915,7 +922,7 @@ document.addEventListener('DOMContentLoaded', () => {
             synchronizeWalletInterfaceBalance();
             checkStoreStatusRealtime();
         } else {
-            if(authScreen) { authScreen.classList.remove('app-hidden'); authScreen.style.display = 'flex'; }
+            if(authScreen) { authScreen.classList.add('app-hidden'); authScreen.style.display = 'flex'; }
         }
         calculateTotal();
         updateFloatingCartBar();
@@ -1363,7 +1370,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         window.cartSnacksArray.forEach(snack => {
             totalSnacksVal += snack.price * snack.qty;
-            finalMetaConfig.push({ fileName: `Product: ${snack.name} (Qty: ${snack.qty}, Price: ₹${snack.price} each)`, copies: snack.qty, printType: 'snack', pages: 1 });
+            finalMetaConfig.push({ 
+                sku: snack.sku || '',
+                name: snack.name,
+                fileName: `Product: ${snack.name} (Qty: ${snack.qty}, Price: ₹${snack.price} each)`, 
+                copies: snack.qty, 
+                qty: snack.qty,
+                printType: 'snack', 
+                pages: 1 
+            });
         });
 
         if (finalMetaConfig.length === 0) {
