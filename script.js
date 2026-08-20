@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('step_pending')?.classList.add('active');
             } else if (lower.includes('paid') || lower.includes('confirmed')) {
                 document.getElementById('step_paid')?.classList.add('active');
-            } else if (lower.includes('print') || lower.includes('picking')) {
+            } else if (lower.includes('print') || lower.includes('picking') || lower.includes('processing')) {
                 document.getElementById('step_printing')?.classList.add('active');
             } else if (lower.includes('out') || lower.includes('delivery')) {
                 document.getElementById('step_delivery')?.classList.add('active');
@@ -1208,6 +1208,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // 🔥 1. DELIVERY TIP SELECTOR (Feature 1 Update)
+    window.setDeliveryTip = function(amount) {
+        window.currentDeliveryTip = amount;
+        calculateTotal();
+    };
+
     function calculateTotal() {
         let totalPrintCost = 0; let totalBindingCost = 0;
         const summaryPrint = document.getElementById('summaryPrint');
@@ -1231,11 +1237,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal + printJobsTotal;
         let accurateDeliveryCharge = (finalDocumentCost >= 99.00 || finalDocumentCost === 0) ? 0.00 : 25.00;
+        let grandTotalCombined = finalDocumentCost + accurateDeliveryCharge + (window.currentDeliveryTip || 0);
 
         summaryPrint.textContent = `₹${(totalPrintCost + printJobsTotal).toFixed(2)}`;
         summaryBinding.textContent = `₹${(totalBindingCost + snacksTotal).toFixed(2)}`;
         summaryDelivery.textContent = accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`;
-        summaryTotal.textContent = `₹${(finalDocumentCost + accurateDeliveryCharge).toFixed(2)}`;
+        summaryTotal.textContent = `₹${grandTotalCombined.toFixed(2)}`;
     }
 
     window.openOrderDeepTrackingWorkspacePage = function(orderStringPayload) {
