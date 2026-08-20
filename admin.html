@@ -363,7 +363,12 @@
                     <span class="stat-title">Net Profit (Selected Date)</span>
                     <span class="stat-num" id="statDashNetProfit" style="color: var(--accent-green);">₹0</span>
                 </div>
-                <!-- 🔥 Predictive Restock Card Added Here -->
+                <!-- 🔥 Delivery Fees Collected Card Added -->
+                <div class="stat-card">
+                    <span class="stat-title">Delivery Fees Coll.</span>
+                    <span class="stat-num" id="statDashDeliveryFees" style="color: var(--accent-blue);">₹0</span>
+                </div>
+                <!-- 🔥 Predictive Restock Card -->
                 <div class="stat-card" id="restockSuggestionCard">
                     <span class="stat-title">🚨 Predictive Restock</span>
                     <div id="restockList" style="font-size: 0.75rem; color: var(--accent-red);">Checking sales...</div>
@@ -778,6 +783,7 @@
                 if (data.success) {
                     document.getElementById('statDashTotalOrders').textContent = data.totalOrders;
                     document.getElementById('statDashNetProfit').textContent = `₹${data.totalProfit.toFixed(2)}`;
+                    document.getElementById('statDashDeliveryFees').textContent = `₹${data.totalDeliveryFees.toFixed(2)}`;
                     renderProfitChart([data.totalProfit * 0.2, data.totalProfit * 0.4, data.totalProfit * 0.6, data.totalProfit * 0.8, data.totalProfit]);
                 }
             } catch (e) {}

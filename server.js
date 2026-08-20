@@ -748,16 +748,17 @@ app.get('/api/admin/stats', async (req, res) => {
         }
 
         let netItemProfit = 0;
-        let deliveryPayoutPool = 0;
+        let totalDeliveryFeesCollected = 0;
 
         filteredOrders.forEach(o => {
             if (!o.status.includes('Cancelled')) {
-                let deliveryFee = parseFloat(o.deliveryFeeCharged || 25);
+                let deliveryFee = parseFloat(o.deliveryFeeCharged || 0);
                 let orderTotal = parseFloat(o.totalAmount || o.amount || 0);
                 let itemRevenue = Math.max(0, orderTotal - deliveryFee);
                 
+                // Net Profit = Item Revenue margin (approx 15% or recorded netProfitRecorded)
                 netItemProfit += (o.netProfitRecorded || (itemRevenue * 0.15)); 
-                deliveryPayoutPool += deliveryFee; 
+                totalDeliveryFeesCollected += deliveryFee; 
             }
         });
 
@@ -765,7 +766,7 @@ app.get('/api/admin/stats', async (req, res) => {
             success: true,
             totalOrders: filteredOrders.length,
             totalProfit: netItemProfit, 
-            deliveryPayoutPool: deliveryPayoutPool, 
+            totalDeliveryFees: totalDeliveryFeesCollected, 
             variety: products.length
         });
     } catch (err) {
@@ -1014,7 +1015,6 @@ app.post('/api/verify-payment', async (req, res) => {
     }
 });
 
-// 🔥 ADVANCED ORDER CANCELLATION & AUTOMATIC RAZORPAY REFUND (EXCLUDING DELIVERY FEE)
 app.post('/api/orders/cancel', async (req, res) => {
     try {
         const { orderId } = req.body;
@@ -1031,12 +1031,10 @@ app.post('/api/orders/cancel', async (req, res) => {
             });
         }
 
-        // 1. Calculate Refundable Amount (Deducting Delivery Fee)
         let orderTotal = parseFloat(order.totalAmount || order.amount || 0);
         let deliveryFee = parseFloat(order.deliveryFeeCharged || 25);
         let refundableAmount = Math.max(0, orderTotal - deliveryFee);
 
-        // 2. Trigger Razorpay Automatic Refund if paid online
         if (order.paymentId && order.paymentId !== 'CASH ON DELIVERY' && order.paymentId !== 'PAID VIA WALLET') {
             try {
                 if (refundableAmount > 0) {
@@ -1045,23 +1043,12 @@ app.post('/api/orders/cancel', async (req, res) => {
                         speed: 'optimum',
                         notes: { reason: 'Order cancelled', orderId: order.orderId }
                     });
-                    console.log(`✅ Automatic Razorpay Refund of ₹${refundableAmount} processed for Order #${order.orderId}`);
                 }
             } catch (rzpErr) {
-                console.error("Razorpay Refund Failed, setting manual NEFT flag:", rzpErr.message);
                 order.manualNeftRefundRequired = true;
             }
         } 
-        // 3. Refund to Wallet if paid via Wallet
-        else if (order.paymentId === 'PAID VIA WALLET' && order.phone) {
-            let normalizedPhone = order.phone.replace(/\D/g, '').slice(-10);
-            let user = await User.findOne({ identity: normalizedPhone });
-            if (user) {
-                // Wallet refund logic can be handled here if stored in DB
-            }
-        }
 
-        // 4. Inventory Recovery Logic
         const pickerAlreadyPicked = order.status.includes('Processing') || order.status.includes('Printing') || order.verifiedItems?.length > 0;
 
         if (pickerAlreadyPicked) {
