@@ -233,14 +233,10 @@
 </head>
 <body>
 
-    <!-- 🌧️ Real Falling Raindrops & Lightning Container -->
     <div id="rainAnimationContainer"></div>
-
-    <!-- Global Toast Notifications Container -->
     <div id="appToastContainer"></div>
 
     <script>
-        // 🔔 Global Toast Notification Function (Replaces intrusive alerts)
         window.showAppToast = function(message, type = 'info') {
             const container = document.getElementById('appToastContainer');
             if (!container) return;
@@ -263,7 +259,6 @@
             }, 3000);
         };
 
-        // Override standard browser alert globally with clean English toasts
         window.alert = function(msg) {
             let cleanMsg = msg;
             if (typeof msg === 'string') {
@@ -291,7 +286,7 @@
         </div>
     </div>
 
-    <!-- 📄 A4 STUDIO PREVIEW MODAL WITH MANDATORY LOCKED PDF PASSWORD FIELD -->
+    <!-- 📄 A4 STUDIO PREVIEW MODAL -->
     <div id="printStudioModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); z-index: 100000; flex-direction: column; overflow: hidden; font-family: 'Poppins', sans-serif;">
         <div class="studio-toolbar" style="background: #1e293b; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; flex-wrap: wrap; gap: 10px;">
             <div style="display: flex; align-items: center; gap: 12px;">
@@ -305,7 +300,6 @@
             </div>
         </div>
 
-        <!-- 🔒 Dynamic Locked PDF Password Input Box Inside Preview Bar -->
         <div id="studioPasswordValidationBox" class="hidden" style="background: rgba(239, 68, 68, 0.15); border-bottom: 1px solid #ef4444; padding: 10px 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
             <span style="font-size: 0.8rem; font-weight: 800; color: #f87171;">🔐 Locked PDF Detected! Enter Password:</span>
             <input type="password" id="studioRequiredPdfPassword" placeholder="Enter password to unlock..." style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ef4444; background: #0f172a; color: white; font-size: 0.8rem; outline: none; flex: 1; min-width: 200px;">
@@ -318,29 +312,23 @@
 
     <div id="iosInstallModal" onclick="closeIosInstallModal(event)" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(5px); z-index: 100000; justify-content: center; align-items: flex-end; padding: 0;">
         <div onclick="event.stopPropagation()" style="background: #1e293b; color: #f8fafc; width: 100%; max-width: 460px; border-radius: 24px 24px 0 0; padding: 24px; border-top: 1px solid #334155; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); text-align: center; animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1); position: relative;">
-            
             <div style="width: 42px; height: 5px; background: #475569; border-radius: 4px; margin: 0 auto 16px auto;"></div>
-            
             <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 6px;">
                 <span style="font-size: 1.6rem;">📲</span>
                 <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0;">Install Print From Home</h3>
             </div>
             <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 18px;">Install on your iPhone / iPad for instant full-screen access:</p>
-
             <div style="display: flex; flex-direction: column; gap: 12px; text-align: left; background: #0f172a; padding: 16px; border-radius: 14px; border: 1px solid #334155; margin-bottom: 20px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span style="background: var(--blinkit-green, #10b981); color: white; min-width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem;">1</span>
-                    <span style="font-size: 0.84rem; color: #e2e8f0;">Tap the <strong>Share</strong> button <span style="font-size: 1.1rem; color: #38bdf8;">⎋</span> in Safari (at bottom or top bar).</span>
+                    <span style="font-size: 0.84rem; color: #e2e8f0;">Tap the <strong>Share</strong> button <span style="font-size: 1.1rem; color: #38bdf8;">⎋</span> in Safari.</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span style="background: var(--blinkit-green, #10b981); color: white; min-width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem;">2</span>
                     <span style="font-size: 0.84rem; color: #e2e8f0;">Scroll down and tap <strong>'Add to Home Screen'</strong> ➕.</span>
                 </div>
             </div>
-
-            <button type="button" onclick="closeIosInstallModal()" style="width: 100%; background: #334155; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">
-                Got It, Thanks!
-            </button>
+            <button type="button" onclick="closeIosInstallModal()" style="width: 100%; background: #334155; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">Got It, Thanks!</button>
         </div>
     </div>
 
@@ -358,7 +346,7 @@
             <form id="authForm">
                 <div class="form-group signup-only hidden"><label>Full Name</label><input type="text" id="authName" placeholder="Enter your full name"></div>
                 <div class="form-group"><label>Mobile Number</label><input type="text" id="authIdentity" placeholder="Enter 10-digit mobile number" maxlength="10" required></div>
-                <div class="form-group signup-only hidden"><label>Gmail Address (For Order & Offer Updates)</label><input type="email" id="authEmailInput" placeholder="Enter your Gmail address"></div>
+                <div class="form-group signup-only hidden"><label>Gmail Address</label><input type="email" id="authEmailInput" placeholder="Enter your Gmail address"></div>
                 <div class="form-group" id="passwordGroup"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters" required></div>
                 
                 <div style="text-align: right; margin-bottom: 12px;">
@@ -483,6 +471,7 @@
         </div>
     </div>
 
+    <!-- 🛒 UNIFIED CHECKOUT CART DRAWER WITH DELIVERY TIP SECTION -->
     <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:16000; display:none; justify-content:flex-end;">
         <div class="cart-drawer-card" onclick="event.stopPropagation()" style="background:#f8fafc; width:100%; max-width:440px; height:100vh; display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.15); overflow:hidden;">
             
@@ -524,6 +513,16 @@
 
                 <div id="cartDrawerItemsList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
 
+                <!-- 🔥 FEATURE 1: DELIVERY PARTNER TIPPING SECTION -->
+                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:14px; margin-bottom:15px;">
+                    <span style="font-size:0.75rem; font-weight:800; color:#64748b; text-transform:uppercase; display:block; margin-bottom:8px;">🛵 Tip your delivery partner</span>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(10)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:8px; background:#f8fafc; font-weight:700; font-size:0.75rem; cursor:pointer;">+ ₹10</button>
+                        <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(20)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:8px; background:#f8fafc; font-weight:700; font-size:0.75rem; cursor:pointer;">+ ₹20</button>
+                        <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(50)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:8px; background:#f8fafc; font-weight:700; font-size:0.75rem; cursor:pointer;">+ ₹50</button>
+                    </div>
+                </div>
+
                 <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:16px; margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                     <h4 style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:10px; border-bottom:1px dashed #e2e8f0; padding-bottom:6px;">📄 Bill Invoice Summary</h4>
                     <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#4a5568; margin-bottom:5px;">
@@ -548,7 +547,6 @@
                     </div>
                 </div>
 
-                <!-- 💳 SELECT PAYMENT METHOD (INCLUDING WALLET) -->
                 <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:16px; margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                     <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:12px;">💳 Select Payment Method</h4>
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
@@ -614,7 +612,6 @@
             </div>
         </header>
 
-        <!-- 🌧️ Rain Surge Active Alert Banner -->
         <div id="rainSurgeBanner" class="hidden" style="background: #0284c7; color: white; padding: 8px 15px; text-align: center; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px;">
             <span>🌧️ Heavy Rain Detected / Rain Surge Active! A ₹15 fee applies to ensure 15-min safe delivery.</span>
         </div>
@@ -622,7 +619,6 @@
         <div class="container" id="mainLayoutAppContainer">
             <div id="user_section_store" class="view-section active">
                 
-                <!-- 🪔 COMPACT SLIDING COMING SOON BANNER (DIWALI 2026) -->
                 <div style="background: linear-gradient(90deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); border-bottom: 1px solid #334155; border-top: 1px solid #334155; padding: 10px 0; overflow: hidden; white-space: nowrap; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 14px; border-radius: 12px;">
                     <marquee scrollamount="6" style="width: 100%; display: flex; align-items: center; font-family: 'Poppins', sans-serif;">
                         <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #f8fafc;">
@@ -631,13 +627,6 @@
                         </span>
                         <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #10b981;">
                             <span>⚡</span> 15-Minute Instant Print & Delivery App
-                        </span>
-                        <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #f8fafc;">
-                            <span style="font-size: 1rem;">📄</span> 
-                            Prints starting at <strong style="color: #38bdf8;">₹3/page</strong> | Early access gets 50% OFF!
-                        </span>
-                        <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #f59e0b;">
-                            <span>🥤</span> Late Night Snacks & Stationery delivered instantly!
                         </span>
                     </marquee>
                 </div>
@@ -711,6 +700,7 @@
                 </div>
             </div>
 
+            <!-- 🔥 TRACKING SECTION WITH TIMELINE PULSE SUPPORT (FEATURE 3) -->
             <div id="user_section_order_tracking" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%; text-align:left;">
                     <button type="button" class="back-to-upload-link" onclick="navigateDrawerSection('history')">&larr; Back to All Orders</button>
@@ -733,11 +723,20 @@
                         <h3 id="liveOrderStatusBadge" style="font-size: 1.2rem; font-weight: 900; color: var(--blinkit-green);">Processing Order...</h3>
                     </div>
 
+                    <!-- Timeline Box for Pulse Effect -->
+                    <div id="liveTrackingTimelineContainer" style="margin-top: 20px;">
+                        <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); text-transform:uppercase; margin-bottom: 12px;">📦 Real-Time Package Journey</h4>
+                        <div class="tracking-timeline-box" style="display: flex; flex-direction: column; gap: 15px;">
+                            <div class="timeline-step" id="step_pending" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Order Received</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">Awaiting verification parameters sync</p></div></div>
+                            <div class="timeline-step" id="step_paid" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Payment Confirmed</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">Order routed successfully</p></div></div>
+                            <div class="timeline-step" id="step_printing" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Printing Document</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">HP Smart Tank running active logs</p></div></div>
+                            <div class="timeline-step" id="step_delivery" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Out For Delivery</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">Delivery Executive arriving</p></div></div>
+                        </div>
+                    </div>
+
                     <div style="margin-top: 15px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; display: flex; align-items: center; justify-content: space-between;">
                         <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="width: 44px; height: 44px; background: #0f172a; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                                🛵
-                            </div>
+                            <div style="width: 44px; height: 44px; background: #0f172a; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🛵</div>
                             <div>
                                 <h4 style="font-size: 0.88rem; font-weight: 800; color: var(--text-main);" id="deliveryExecutiveName">Assigning Delivery Partner...</h4>
                                 <p style="font-size: 0.72rem; font-weight: 600; color: var(--text-sub); margin-top: 2px;" id="deliveryExecutivePhone">Will be assigned shortly</p>
@@ -746,15 +745,6 @@
                         <div style="display: flex; gap: 8px;">
                             <a id="callExecutiveBtn" href="tel:" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1rem;" title="Call Delivery Executive">📞</a>
                         </div>
-                    </div>
-
-                    <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <a href="https://wa.me/917007626731?text=Hello%20Print%20From%20Home%20Support,%20I%20need%20help%20regarding%20my%20order." target="_blank" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; padding: 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 800; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                            💬 WhatsApp Support
-                        </a>
-                        <a href="tel:7007626731" style="background: #fffbeb; border: 1px solid #fed7aa; color: #b45309; padding: 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 800; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                            📞 Call Customer Care
-                        </a>
                     </div>
 
                     <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); margin-top:25px; text-transform:uppercase; border-bottom:1px dashed var(--border-color); padding-bottom:6px;">📄 Printable Items & Products Summary</h4>
@@ -823,7 +813,6 @@
         window.storeInventoryProducts = [];
         let lastRenderedData = "";
 
-        // 🌧️ Generate Real Falling Raindrops Dynamically
         function initRealRainAnimation() {
             const container = document.getElementById('rainAnimationContainer');
             if (!container) return;
@@ -842,7 +831,6 @@
             }
         }
 
-        // 🌧️ Automatic & Admin Manual Rain Surge Detector (Fast 5s Polling for Real-Time Sync)
         async function checkLocalWeatherAndApplyRainSurge() {
             try {
                 const statusRes = await fetch('/api/store-status');
@@ -886,7 +874,6 @@
                     window.rainSurgeFee = 0;
                 }
                 
-                // Agar state change hui hai toh cart drawer aur invoice ko turant auto-refresh karo
                 if (wasRaining !== window.isRainSurgeActive) {
                     if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
                     if (typeof calculateTotal === 'function') calculateTotal();
@@ -896,7 +883,6 @@
             }
         }
 
-        // Highlight Rain & Craving items from store inventory
         function highlightRainAndCravingProducts() {
             if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) return;
 
@@ -921,11 +907,11 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             checkLocalWeatherAndApplyRainSurge();
-            setInterval(checkLocalWeatherAndApplyRainSurge, 5000); // 5 seconds interval for instant sync
+            setInterval(checkLocalWeatherAndApplyRainSurge, 5000);
         });
 
         // ==========================================
-        // 📄 UNIVERSAL A4 PRINT STUDIO ENGINE (LOCKED PDF SUPPORT)
+        // 📄 UNIVERSAL A4 PRINT STUDIO ENGINE
         // ==========================================
         let renderedPagesList = [];
         let isLandscapeMode = false;
@@ -1275,7 +1261,7 @@
                         <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
                         ${isOutOfStock 
                             ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); notifyWhenAvailable('${prod.name}')">Notify</button>`
-                            : `<button type="button" style="background:var(--blinkit-green, #10b981); color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
+                            : `<button type="button" class="btn-quick-add-item" style="background:var(--blinkit-green, #10b981); color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
                         }
                         ${isOutOfStock ? `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.55rem; padding:2px 4px; border-radius:4px; font-weight:800;">OUT</span>` : ''}
                     `;
@@ -1335,6 +1321,7 @@
             showAppToast(`We have noted your request! You will be notified when "${prodName}" is back in stock.`, "success");
         };
 
+        // 🔥 FEATURE 2: ADD TO CART WITH ANIMATION FEEDBACK
         window.addDynamicProductToCart = function(sku, name, price, currentStock) {
             const existing = window.cartSnacksArray.find(item => item.name === name);
             const currentCartQty = existing ? existing.qty : 0;
@@ -1352,7 +1339,20 @@
             if (typeof persistCartStateData === 'function') persistCartStateData();
             updateFloatingCartBar();
             if (typeof calculateTotal === 'function') calculateTotal();
-            showAppToast(`Added "${name}" to cart!`, "success");
+
+            // Visual Feedback Animation
+            const clickedBtn = event ? event.target : null;
+            if (clickedBtn) {
+                const originalText = clickedBtn.textContent;
+                clickedBtn.textContent = "Added ✓";
+                clickedBtn.style.background = "#15803d";
+                setTimeout(() => {
+                    clickedBtn.textContent = originalText;
+                    clickedBtn.style.background = "var(--blinkit-green)";
+                }, 800);
+            } else {
+                showAppToast(`Added "${name}" to cart!`, "success");
+            }
         };
 
         loadDynamicStoreProducts();
@@ -1382,12 +1382,13 @@
             let totalItemsCombined = totalSnacksCount + printFilesCount;
             let deliveryFee = (grandTotalCombined >= 99 || grandTotalCombined === 0) ? 0 : 25;
             let rainFee = window.isRainSurgeActive ? (window.rainSurgeFee || 15) : 0;
+            let tipFee = window.currentDeliveryTip || 0;
 
             if (totalItemsCombined > 0) {
                 bar.classList.remove('hidden');
                 bar.style.display = 'flex';
                 if (countText) countText.textContent = `${totalItemsCombined} item${totalItemsCombined > 1 ? 's' : ''}`;
-                if (priceText) priceText.textContent = `₹${(grandTotalCombined + deliveryFee + rainFee).toFixed(2)}`;
+                if (priceText) priceText.textContent = `₹${(grandTotalCombined + deliveryFee + rainFee + tipFee).toFixed(2)}`;
 
                 if (imagesStack) {
                     imagesStack.innerHTML = '';
@@ -1516,7 +1517,8 @@
 
             let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
             let rainFee = window.isRainSurgeActive ? (window.rainSurgeFee || 15) : 0;
-            let grandTotal = subtotal + delivery + rainFee;
+            let tipFee = window.currentDeliveryTip || 0;
+            let grandTotal = subtotal + delivery + rainFee + tipFee;
 
             let freeDeliveryRemaining = Math.max(0, 99 - subtotal);
             const msgText = document.getElementById('freeDeliveryMessageText');
@@ -1536,7 +1538,6 @@
             if (grandTotalNode) grandTotalNode.textContent = `₹${grandTotal.toFixed(2)}`;
             updateFloatingCartBar();
             
-            // Sync wallet balance display in checkout modal
             const sessionUser = localStorage.getItem('printAppUser');
             const cashVal = parseFloat(localStorage.getItem(`wallet_cash_${sessionUser}`)) || 0.00;
             const drawerWalletText = document.getElementById('walletDrawerBalanceText');
