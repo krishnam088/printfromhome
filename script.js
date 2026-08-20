@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedActiveAddress = localStorage.getItem('selected_active_address') || "";  
     window.storeInventoryProducts = []; 
 
+    // 🔥 1. DELIVERY PARTNER TIP STATE (Feature 1 Update)
+    window.currentDeliveryTip = 0;
+
     // 🔥 LIVE RE-ROUTE CONFIGS
     const LIVE_SERVER_URL = window.location.origin;
 
@@ -355,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================
-    // 🛵 LIVE STATUS & DELIVERY EXECUTIVE STEPPER
+    // 🛵 LIVE STATUS & DELIVERY EXECUTIVE STEPPER (Feature 3 Update)
     // ==========================================
     window.executeLiveTimelineStateStepper = function(statusText, assignedDeliveryBoyPhone) {
         const statusBadge = document.getElementById('liveOrderStatusBadge');
@@ -364,6 +367,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const callBtn = document.getElementById('callExecutiveBtn');
 
         if (statusBadge) statusBadge.textContent = statusText || "Processing Order...";
+
+        // Feature 3: Pulse effect active toggle on timeline steps
+        document.querySelectorAll('.timeline-step').forEach(step => step.classList.remove('active'));
+        if (statusText) {
+            const lower = statusText.toLowerCase();
+            if (lower.includes('ready') || lower.includes('received')) {
+                document.getElementById('step_pending')?.classList.add('active');
+            } else if (lower.includes('paid') || lower.includes('confirmed')) {
+                document.getElementById('step_paid')?.classList.add('active');
+            } else if (lower.includes('print')) {
+                document.getElementById('step_printing')?.classList.add('active');
+            } else if (lower.includes('out') || lower.includes('delivery')) {
+                document.getElementById('step_delivery')?.classList.add('active');
+            }
+        }
 
         if (assignedDeliveryBoyPhone && assignedDeliveryBoyPhone.trim() !== '') {
             if (execName) execName.textContent = `Delivery Partner (${assignedDeliveryBoyPhone})`;
@@ -464,7 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔒 STRICT INVENTORY ADD TO CART LOGIC WITH SKU MAPPING
+    // 🔒 STRICT INVENTORY ADD TO CART LOGIC WITH ANIMATION FEEDBACK (Feature 2 Update)
     window.addDynamicProductToCart = function(sku, name, price, currentStock) {
         if (currentStock <= 0) {
             alert(`⚠️ Sorry! "${name}" is currently out of stock.`);
@@ -494,7 +512,20 @@ document.addEventListener('DOMContentLoaded', () => {
         persistCartStateData();
         updateFloatingCartBar();
         calculateTotal();
-        alert(`✅ Added "${name}" to cart!`);
+
+        // Feature 2: Visual click feedback animation
+        const clickedBtn = event ? event.target : null;
+        if (clickedBtn) {
+            const originalText = clickedBtn.textContent;
+            clickedBtn.textContent = "Added ✓";
+            clickedBtn.style.background = "#15803d";
+            setTimeout(() => {
+                clickedBtn.textContent = originalText;
+                clickedBtn.style.background = "var(--blinkit-green)";
+            }, 800);
+        } else {
+            alert(`✅ Added "${name}" to cart!`);
+        }
     }
 
     // ==========================================
@@ -1177,6 +1208,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // 🔥 1. DELIVERY TIP SELECTOR (Feature 1 Update)
+    window.setDeliveryTip = function(amount) {
+        window.currentDeliveryTip = amount;
+        calculateTotal();
+    };
+
     function calculateTotal() {
         let totalPrintCost = 0; let totalBindingCost = 0;
         const summaryPrint = document.getElementById('summaryPrint');
@@ -1200,11 +1237,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal + printJobsTotal;
         let accurateDeliveryCharge = (finalDocumentCost >= 99.00 || finalDocumentCost === 0) ? 0.00 : 25.00;
+        let grandTotalCombined = finalDocumentCost + accurateDeliveryCharge + (window.currentDeliveryTip || 0);
 
         summaryPrint.textContent = `₹${(totalPrintCost + printJobsTotal).toFixed(2)}`;
         summaryBinding.textContent = `₹${(totalBindingCost + snacksTotal).toFixed(2)}`;
         summaryDelivery.textContent = accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`;
-        summaryTotal.textContent = `₹${(finalDocumentCost + accurateDeliveryCharge).toFixed(2)}`;
+        summaryTotal.textContent = `₹${grandTotalCombined.toFixed(2)}`;
     }
 
     window.openOrderDeepTrackingWorkspacePage = function(orderStringPayload) {
@@ -1349,7 +1387,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 💳 FINAL CART ORDER PLACEMENT (WITH WALLET SUPPORT)
+    // 💳 FINAL CART ORDER PLACEMENT (WITH WALLET & TIP SUPPORT)
     // ==========================================
     window.executeFinalCartOrderPlacement = async function() {
         if (!selectedActiveAddress || selectedActiveAddress.trim() === "") {
@@ -1389,7 +1427,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let subtotal = totalPrintVal + totalSnacksVal;
         let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
         let rainFee = window.isRainSurgeActive ? 15 : 0;
-        let grandTotal = subtotal + delivery + rainFee;
+        let grandTotal = subtotal + delivery + rainFee + (window.currentDeliveryTip || 0);
 
         const selectedPaymentRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
         const paymentMode = selectedPaymentRadio ? selectedPaymentRadio.value : 'online';
@@ -1405,6 +1443,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('address', selectedActiveAddress);
         formData.append('customerName', sessionActiveUser || 'Customer');
         formData.append('phone', localStorage.getItem('printAppUserIdentity') || 'N/A');
+        formData.append('deliveryTip', window.currentDeliveryTip || 0);
 
         if (paymentMode === 'wallet') {
             let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
@@ -1438,6 +1477,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     window.cartPrintJobsArray = [];
                     window.cartSnacksArray = [];
+                    window.currentDeliveryTip = 0;
                     persistCartStateData();
                     toggleCartDrawer(false);
                     renderOrderHistoryUI(sessionActiveUser);
@@ -1474,6 +1514,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     window.cartPrintJobsArray = [];
                     window.cartSnacksArray = [];
+                    window.currentDeliveryTip = 0;
                     persistCartStateData();
                     toggleCartDrawer(false);
                     renderOrderHistoryUI(sessionActiveUser);
@@ -1502,6 +1543,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                             window.cartPrintJobsArray = [];
                             window.cartSnacksArray = [];
+                            window.currentDeliveryTip = 0;
                             persistCartStateData();
                             toggleCartDrawer(false);
                             renderOrderHistoryUI(sessionActiveUser);

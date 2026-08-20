@@ -602,3 +602,26 @@ input[name="cartPaymentMode"]:checked + .payment-option-box {
     box-shadow: 0 0 0 2px var(--blinkit-green);
 }
 .payment-option-box { transition: all 0.2s ease; }
+
+/* ========================================
+   🔥 ADDED ANIMATIONS & PULSE EFFECTS (NEW)
+   ======================================== */
+
+/* Active Timeline Step Glowing Pulse */
+.timeline-step.active .step-node-dot {
+    background: var(--blinkit-green);
+    box-shadow: 0 0 0 0 rgba(16, 163, 74, 0.7);
+    animation: timelinePulseAnimation 2s infinite;
+}
+
+@keyframes timelinePulseAnimation {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 163, 74, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 163, 74, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 163, 74, 0); }
+}
+
+/* Smooth Button Click Scale Feedback */
+button:active {
+    transform: scale(0.96);
+    transition: transform 0.1s ease;
+}
