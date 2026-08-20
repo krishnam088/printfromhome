@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Print From Home - Picker Station</title>
     
-    <link rel="manifest" href="/manifest-picker.json">
+    
     <meta name="theme-color" content="#22c55e">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
@@ -232,7 +232,8 @@
             if (typeof configItems === 'string') { try { configItems = JSON.parse(configItems); } catch(e){} }
             let varietiesCount = configItems.length;
 
-            document.getElementById('popupOrderSummaryText.textContent') = `Order #${order.orderId} with ${varietiesCount} items.`;
+            // 🔥 FIX: Corrected element property assignment
+            document.getElementById('popupOrderSummaryText').textContent = `Order #${order.orderId} with ${varietiesCount} items.`;
             document.getElementById('incomingOrderAlertModal').style.display = 'flex';
 
             // Start 2 min countdown timer
@@ -249,6 +250,7 @@
                 }
             }, 1000);
         }
+        
 
         function acceptAndOpenOrder() {
             if (alertTimerInterval) clearInterval(alertTimerInterval);
