@@ -705,7 +705,7 @@ app.post('/api/admin/inventory/restock-scanned', async (req, res) => {
     try {
         const { orderId, barcodeOrName } = req.body;
         const order = await Order.findOne({ orderId });
-        if (!order) return.json({ success: false, message: "Order not found." });
+        if (!order) return res.json({ success: false, message: "Order not found." });
 
         const product = await Product.findOne({ 
             $or: [{ sku: barcodeOrName }, { barcode: barcodeOrName }, { name: new RegExp(barcodeOrName, 'i') }] 
