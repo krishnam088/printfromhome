@@ -4,63 +4,74 @@
     <link rel="icon" href="data:,">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Print From Home - Picker App</title>
+    <title>Print From Home - Picker Station</title>
     
     <link rel="manifest" href="/manifest-picker.json">
-    <meta name="theme-color" content="#10b981">
+    <meta name="theme-color" content="#22c55e">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         :root {
-            --bg-dark: #0f172a;
-            --surface-card: #1e293b;
-            --surface-card-hover: #273549;
-            --accent-green: #10b981;
+            --bg-dark: #064e3b; /* User app jaisa deep rich green vibe */
+            --bg-gradient: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+            --surface-card: #065f46;
+            --surface-card-hover: #047857;
+            --light-green: #22c55e;
+            --light-green-bg: rgba(34, 197, 94, 0.15);
             --accent-yellow: #f59e0b;
             --accent-red: #ef4444;
-            --text-main: #f8fafc;
-            --text-sub: #94a3b8;
-            --border-color: #334155;
-        }
-
-        @keyframes pulseGlow {
-            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(245, 158, 11, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+            --text-main: #f0fdf4;
+            --text-sub: #a7f3d0;
+            --border-color: #047857;
         }
 
         body {
-            background-color: var(--bg-dark);
+            background: var(--bg-gradient);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-bottom: 40px;
+            overflow-x: hidden;
         }
 
         .picker-header {
-            background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+            background: rgba(4, 120, 87, 0.9);
+            backdrop-filter: blur(10px);
             padding: 16px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid var(--accent-yellow);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             position: sticky;
             top: 0;
             z-index: 100;
         }
-        .picker-header h1 { font-size: 1.1rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .picker-header h1 { font-size: 1.15rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
         .picker-header h1 span { color: var(--accent-yellow); }
-        .badge-live { background: var(--accent-yellow); color: #000; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; animation: pulseGlow 2s infinite; }
+        .badge-live { background: var(--accent-yellow); color: #000; font-size: 0.72rem; font-weight: 800; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; }
 
-        .picker-container { padding: 16px; max-width: 650px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 16px; }
+        .picker-container { padding: 16px; max-width: 600px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 16px; flex: 1; }
+
+        /* FLOATING CENTER ALERT MODAL */
+        #incomingOrderAlertModal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            z-index: 30000; display: none; justify-content: center; align-items: center; padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+        .alert-popup-box {
+            background: var(--surface-card); border: 2px solid var(--accent-yellow); border-radius: 20px;
+            padding: 24px; max-width: 380px; width: 100%; text-align: center; position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .alert-timer-badge {
+            position: absolute; top: 12px; right: 14px; background: var(--accent-red); color: white;
+            font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 12px;
+        }
 
         /* Scanner Modal */
         #pickerScannerModal {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); z-index: 20000;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); z-index: 20000;
             display: none; justify-content: center; align-items: center; padding: 20px;
         }
         .scanner-card {
@@ -68,126 +79,99 @@
             max-width: 400px; width: 100%; border: 2px solid var(--accent-yellow); text-align: center;
         }
 
-        /* Order Card Style */
-        .order-pick-card {
-            background: var(--surface-card);
-            border: 2px solid var(--accent-yellow);
-            border-radius: 16px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        /* Active Order Station Card */
+        .order-active-station {
+            background: rgba(6, 95, 70, 0.6); border: 1px solid var(--border-color); border-radius: 20px;
+            padding: 20px; display: flex; flex-direction: column; gap: 16px; backdrop-filter: blur(5px);
         }
 
-        .card-top-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-color); padding-bottom: 12px; }
-        .order-id-badge { font-size: 1.2rem; font-weight: 800; color: var(--accent-yellow); }
-        .order-time-text { font-size: 0.75rem; color: var(--text-sub); }
-
-        .picking-progress-wrap { background: rgba(0,0,0,0.4); border-radius: 12px; padding: 12px 14px; border: 1px solid var(--border-color); }
-        .progress-title { font-size: 0.78rem; font-weight: 800; color: var(--accent-green); text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        /* Vertical Sliding Products */
+        .vertical-slider-container { display: flex; flex-direction: column; gap: 12px; }
+        .product-pick-card {
+            background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 14px;
+            padding: 14px; display: flex; gap: 14px; align-items: center; cursor: pointer; transition: all 0.2s;
+        }
+        .product-pick-card.completed { border-color: var(--light-green); background: var(--light-green-bg); }
         
-        .item-pick-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--bg-dark);
-            padding: 10px 14px;
-            border-radius: 10px;
-            margin-top: 8px;
-            border: 1px solid var(--border-color);
-        }
-        .item-pick-row.verified {
-            border-color: var(--accent-green);
-            background: rgba(16, 185, 129, 0.08);
-        }
-        .item-info b { display: block; font-size: 0.9rem; color: white; }
-        .item-info span { font-size: 0.75rem; color: var(--text-sub); }
+        .prod-img-thumb { width: 55px; height: 55px; border-radius: 10px; background: #022c22; object-fit: cover; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+        
+        .prod-details-meta { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+        .prod-details-meta b { font-size: 0.95rem; color: var(--text-main); }
+        .prod-details-meta span { font-size: 0.75rem; color: var(--text-sub); }
 
-        .btn-scan-item {
-            background: var(--accent-yellow);
-            color: #000;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 0.78rem;
-            font-weight: 800;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+        /* Item Detail Expanded View Modal */
+        #itemDetailModal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            z-index: 25000; display: none; justify-content: center; align-items: flex-end;
         }
-        .btn-scan-item.done {
-            background: var(--accent-green);
-            color: white;
-            pointer-events: none;
+        .item-detail-sheet {
+            background: var(--surface-card); width: 100%; max-width: 600px; border-radius: 24px 24px 0 0;
+            padding: 24px; display: flex; flex-direction: column; gap: 16px; border-top: 3px solid var(--accent-yellow);
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); max-height: 90vh; overflow-y: auto;
         }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-        .print-job-box {
-            background: rgba(0, 112, 243, 0.1);
-            border: 1px solid var(--accent-blue);
-            border-radius: 12px;
-            padding: 12px 14px;
-        }
-        .print-job-title { font-size: 0.78rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; margin-bottom: 4px; }
-
-        .handover-section {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid var(--accent-green);
-            border-radius: 12px;
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .btn-handover {
-            background: var(--accent-green);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: 800;
-            font-size: 0.9rem;
-            cursor: pointer;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        .btn-action-main {
+            background: var(--light-green); color: #064e3b; border: none; padding: 12px; border-radius: 12px;
+            font-weight: 800; font-size: 0.95rem; cursor: pointer; width: 100%; text-align: center;
         }
     </style>
 </head>
 <body>
 
+    <!-- 🚨 FLOATING CENTER ALERT MODAL FOR NEW ORDER -->
+    <div id="incomingOrderAlertModal">
+        <div class="alert-popup-box">
+            <div class="alert-timer-badge" id="popupCountdownTimer">⏱️ 02:00</div>
+            <div style="font-size: 2.5rem; margin-bottom: 8px;">🔔</div>
+            <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--accent-yellow); margin-bottom: 4px;">New Order Received!</h3>
+            <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 14px;" id="popupOrderSummaryText">Order #123456 with 3 product varieties.</p>
+            <button type="button" class="btn-action-main" onclick="acceptAndOpenOrder()">Tap to Start Picking 🚀</button>
+        </div>
+    </div>
+
+    <!-- 🔍 ITEM DETAIL & SCAN SHEET MODAL -->
+    <div id="itemDetailModal">
+        <div class="item-detail-sheet" id="itemDetailSheetContent">
+            <!-- Dynamic content loaded via JS -->
+        </div>
+    </div>
+
     <!-- SCANNER MODAL -->
     <div id="pickerScannerModal">
         <div class="scanner-card">
-            <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; color: var(--accent-yellow);">📷 Scan Product Barcode / QR</h3>
-            <p style="font-size: 0.75rem; color: var(--text-sub); margin-bottom: 12px;">Align item barcode or admin QR page within the frame.</p>
+            <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; color: var(--accent-yellow);">📷 Scan Valid UPC Barcode</h3>
+            <p style="font-size: 0.75rem; color: var(--text-sub); margin-bottom: 12px;">Scan matching product UPC or admin verification QR.</p>
             
             <div id="pickerCameraFeed" style="width: 100%; height: 180px; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 12px; position: relative;"></div>
             
-            <input type="text" id="manualScanInput" placeholder="Type Barcode / UPC manually..." onchange="handleScannedCode(this.value)" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 700; text-align: center; margin-bottom: 12px; outline: none;">
+            <input type="text" id="manualScanInput" placeholder="Type Barcode / UPC manually..." onchange="verifyScannedCode(this.value)" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 700; text-align: center; margin-bottom: 12px; outline: none;">
 
-            <button type="button" onclick="closePickerScanner()" style="width: 100%; padding: 10px; background: var(--accent-red); color: white; border: none; border-radius: 8px; font-weight: 800; cursor: pointer;">Close Scanner</button>
+            <button type="button" onclick="closePickerScanner()" style="width: 100%; padding: 10px; background: var(--accent-red); color: white; border: none; border-radius: 8px; font-weight: 800; cursor: pointer;">Cancel</button>
         </div>
     </div>
 
     <header class="picker-header">
-        <h1>📦 Print From Home<span>Picker</span></h1>
-        <div class="badge-live">🟢 Scanning Orders...</div>
+        <h1>🌿 Print<span>Picker</span></h1>
+        <div class="badge-live">🟢 Live Station</div>
     </header>
 
-    <div class="picker-container" id="pickerOrderQueue">
+    <div class="picker-container" id="pickerMainStation">
         <div style="text-align: center; padding: 60px; background: var(--surface-card); border-radius: 16px; border: 1px dashed var(--border-color);">
             <div style="font-size: 2.2rem; margin-bottom: 8px;">📡</div>
-            <h3 style="color: var(--text-main);">Scanning for New Orders...</h3>
-            <p style="font-size: 0.78rem; color: var(--text-sub); margin-top: 4px;">Waiting for live order trigger from admin counter.</p>
+            <h3 style="color: var(--text-main);">Listening for Live Orders...</h3>
+            <p style="font-size: 0.78rem; color: var(--text-sub); margin-top: 4px;">Orders will auto-trigger instantly when placed.</p>
         </div>
     </div>
 
     <script>
-        let activeOrder = null;
-        let activeTargetItemName = null;
+        let currentActiveOrder = null;
+        let cachedOrdersList = [];
+        let activeSelectedItem = null;
+        let alertTimerInterval = null;
+        let alertSecondsLeft = 120;
         let html5QrScanner = null;
-        let previousOrderIdCached = null;
+        let lastNotifiedOrderId = null;
 
         let audioCtx = null;
         function getAudioContext() {
@@ -196,151 +180,186 @@
             return audioCtx;
         }
 
-        function playAlertChime() {
+        function playLoudAlert() {
             try {
                 const ctx = getAudioContext();
                 const now = ctx.currentTime;
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(950, now);
-                gain.gain.setValueAtTime(0.5, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(0.6, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
                 osc.start(now);
-                osc.stop(now + 0.5);
+                osc.stop(now + 0.4);
             } catch (e) {}
         }
 
         window.addEventListener('click', () => { getAudioContext(); }, { once: true });
 
-        async function fetchSingleActiveOrder() {
+        async function pollActiveOrders() {
             try {
-                const res = await fetch('/api/admin/orders');
+                const res = await fetch('/api/picker/active-orders');
                 const orders = await res.json();
                 
                 if (Array.isArray(orders)) {
-                    // Sirf wahi order uthao jo active hain aur delivered ya cancelled nahi hain
-                    const pendingOrders = orders.filter(o => 
-                        !o.status.includes('Delivered') && 
-                        !o.status.includes('Cancelled') && 
-                        !o.status.includes('Out for Delivery')
-                    );
+                    cachedOrdersList = orders;
+                    const topOrder = orders.length > 0 ? orders[0] : null;
 
-                    // Picker ko ek time pe sirf EK hi order dikhana hai (Sabse naya wala)
-                    const currentTopOrder = pendingOrders.length > 0 ? pendingOrders[0] : null;
-
-                    if (currentTopOrder) {
-                        // Agar naya order aaya hai jo pehle nahi tha, toh alert bajao
-                        if (previousOrderIdCached !== currentTopOrder.orderId) {
-                            playAlertChime();
-                            previousOrderIdCached = currentTopOrder.orderId;
+                    if (topOrder) {
+                        // Naya order aane par floating alert pop up karo
+                        if (lastNotifiedOrderId !== topOrder.orderId && (!currentActiveOrder || currentActiveOrder.orderId !== topOrder.orderId)) {
+                            lastNotifiedOrderId = topOrder.orderId;
+                            triggerFloatingAlert(topOrder);
                         }
                     } else {
-                        previousOrderIdCached = null;
+                        lastNotifiedOrderId = null;
+                        if (!currentActiveOrder) {
+                            renderActiveStation();
+                        }
                     }
-
-                    activeOrder = currentTopOrder;
-                    renderSingleActiveOrder();
                 }
             } catch (e) {
-                console.error("Live order sync error:", e);
+                console.error("Polling error:", e);
             }
         }
 
-        function renderSingleActiveOrder() {
-            const container = document.getElementById('pickerOrderQueue');
+        function triggerFloatingAlert(order) {
+            playLoudAlert();
+            let configItems = order.configDetails || [];
+            if (typeof configItems === 'string') { try { configItems = JSON.parse(configItems); } catch(e){} }
+            let varietiesCount = configItems.length;
+
+            document.getElementById('popupOrderSummaryText.textContent') = `Order #${order.orderId} with ${varietiesCount} items.`;
+            document.getElementById('incomingOrderAlertModal').style.display = 'flex';
+
+            // Start 2 min countdown timer
+            alertSecondsLeft = 120;
+            if (alertTimerInterval) clearInterval(alertTimerInterval);
+            alertTimerInterval = setInterval(() => {
+                alertSecondsLeft--;
+                let m = Math.floor(alertSecondsLeft / 60).toString().padStart(2, '0');
+                let s = (alertSecondsLeft % 60).toString().padStart(2, '0');
+                document.getElementById('popupCountdownTimer').textContent = `⏱️ ${m}:${s}`;
+                if (alertSecondsLeft <= 0) {
+                    clearInterval(alertTimerInterval);
+                    document.getElementById('incomingOrderAlertModal').style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        function acceptAndOpenOrder() {
+            if (alertTimerInterval) clearInterval(alertTimerInterval);
+            document.getElementById('incomingOrderAlertModal').style.display = 'none';
+            if (cachedOrdersList.length > 0) {
+                currentActiveOrder = cachedOrdersList[0];
+                renderActiveStation();
+            }
+        }
+
+        function renderActiveStation() {
+            const container = document.getElementById('pickerMainStation');
             if (!container) return;
 
-            if (!activeOrder) {
+            if (!currentActiveOrder) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 60px; background: var(--surface-card); border-radius: 16px; border: 1px dashed var(--border-color);">
-                        <div style="font-size: 2.2rem; margin-bottom: 8px;">📡</div>
-                        <h3 style="color: var(--text-main);">Scanning for New Orders...</h3>
-                        <p style="font-size: 0.78rem; color: var(--text-sub); margin-top: 4px;">No pending orders in queue. Auto-refreshing every 3s.</p>
+                        <div style="font-size: 2.2rem; margin-bottom: 8px;">🌿</div>
+                        <h3 style="color: var(--text-main);">All Orders Picked!</h3>
+                        <p style="font-size: 0.78rem; color: var(--text-sub); margin-top: 4px;">Waiting for new incoming orders...</p>
                     </div>
                 `;
                 return;
             }
 
-            let configItems = activeOrder.configDetails || [];
-            if (typeof configItems === 'string') {
-                try { configItems = JSON.parse(configItems); } catch(e) { configItems = []; }
-            }
+            let configItems = currentActiveOrder.configDetails || [];
+            if (typeof configItems === 'string') { try { configItems = JSON.parse(configItems); } catch(e){ configItems = []; } }
 
-            let productItems = configItems.filter(item => item.printType === 'snack' || item.printType === 'product' || (item.fileName && item.fileName.startsWith('Product:')));
-            let printItems = configItems.filter(item => item.printType !== 'snack' && item.printType !== 'product' && (!item.fileName || !item.fileName.startsWith('Product:')));
-            
-            let verifiedList = Array.isArray(activeOrder.verifiedItems) ? activeOrder.verifiedItems : [];
-            let allProductsDone = productItems.length === 0 || verifiedList.length >= productItems.length;
-            let assignedRiderPhone = activeOrder.assignedDeliveryBoy;
+            let verifiedList = Array.isArray(currentActiveOrder.verifiedItems) ? currentActiveOrder.verifiedItems : [];
 
             container.innerHTML = `
-                <div class="order-pick-card">
-                    <div class="card-top-row">
+                <div class="order-active-station">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;">
                         <div>
-                            <div class="order-id-badge">🚨 New Order #${activeOrder.orderId}</div>
-                            <div class="order-time-text">Customer: <b>${activeOrder.customerName || 'Customer'}</b> (${activeOrder.phone || 'N/A'})</div>
+                            <h2 style="font-size: 1.1rem; color: var(--accent-yellow);">Order #${currentActiveOrder.orderId}</h2>
+                            <span style="font-size: 0.75rem; color: var(--text-sub);">${currentActiveOrder.customerName || 'Customer'} (${currentActiveOrder.phone || 'N/A'})</span>
                         </div>
-                        <div style="text-align: right;">
-                            <span style="background: rgba(245, 158, 11, 0.15); color: var(--accent-yellow); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800;">${activeOrder.status}</span>
-                        </div>
+                        <span style="background: var(--light-green-bg); color: var(--light-green); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800;">${currentActiveOrder.status}</span>
                     </div>
 
-                    <!-- Product Picking items list -->
-                    ${productItems.length > 0 ? `
-                        <div class="picking-progress-wrap">
-                            <div class="progress-title">
-                               <span>🛒 Items to Pick (${verifiedList.length}/${productItems.length})</span>
-                               <span>${allProductsDone ? '✅ ALL PICKED' : '⏳ PENDING'}</span>
-                            </div>
-                            ${productItems.map(prod => {
-                                let prodName = prod.fileName ? prod.fileName.replace('Product: ', '').split(' (Qty:')[0].trim() : (prod.name || 'Item');
-                                let qty = Number(prod.copies || prod.qty || 1);
-                                let isDone = verifiedList.some(v => v.toLowerCase().includes(prodName.toLowerCase()));
+                    <h4 style="font-size: 0.82rem; color: var(--text-sub); text-transform: uppercase;">📦 Vertical Picking List:</h4>
+                    <div class="vertical-slider-container">
+                        ${configItems.map((item, idx) => {
+                            let itemName = item.fileName ? item.fileName.replace('Product: ', '').split(' (Qty:')[0].trim() : (item.name || 'Print Job / Item');
+                            let qty = Number(item.copies || item.qty || item.pages || 1);
+                            let isCompleted = verifiedList.some(v => v.toLowerCase().includes(itemName.toLowerCase()));
 
-                                return `
-                                    <div class="item-pick-row ${isDone ? 'verified' : ''}">
-                                        <div class="item-info">
-                                            <b>📦 ${prodName}</b>
-                                            <span>Required Qty: <b>${qty}</b></span>
-                                        </div>
-                                        <button type="button" class="btn-scan-item ${isDone ? 'done' : ''}" onclick="openPickerScanner('${activeOrder.orderId}', '${prodName}')">
-                                            ${isDone ? '✅ Picked' : '📷 Scan UPC'}
-                                        </button>
+                            return `
+                                <div class="product-pick-card ${isCompleted ? 'completed' : ''}" onclick="openItemDetailSheet(${idx})">
+                                    <div class="prod-img-thumb">${item.imageUrl ? `<img src="${item.imageUrl}" style="width:100%;height:100%;border-radius:10px;object-fit:cover;">` : '📦'}</div>
+                                    <div class="prod-details-meta">
+                                        <b>${itemName}</b>
+                                        <span>Target Qty: <b>${qty}</b></span>
+                                        <span style="color: ${isCompleted ? 'var(--light-green)' : 'var(--accent-yellow)'}; font-weight: 700;">${isCompleted ? '✅ Picked & Verified' : '⏳ Tap to Scan & Verify'}</span>
                                     </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    ` : ''}
-
-                    <!-- Print Job Details -->
-                    ${printItems.length > 0 ? `
-                        <div class="print-job-box">
-                            <div class="print-job-title">🖨️ Attached Print Documents</div>
-                            ${printItems.map(p => `<div style="font-size:0.8rem; font-weight:700; color:white;">📑 ${p.fileName || 'Document.pdf'} (${p.pages || 1} Pages | ✖️ ${p.copies || 1} Copies)</div>`).join('')}
-                            <div style="margin-top: 6px; font-size: 0.75rem; color: ${allProductsDone ? 'var(--accent-green)' : 'var(--accent-yellow)'};">
-                                ${allProductsDone ? '🔓 Admin QR Verified / Ready' : '🔒 Scan items first to unlock print job.'}
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    <!-- Rider Handover Section -->
-                    <div class="handover-section">
-                        <div style="font-size: 0.8rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
-                            <span>🛵 Assigned Rider: <b style="color: ${assignedRiderPhone ? 'var(--accent-green)' : 'var(--accent-yellow)'};">${assignedRiderPhone ? assignedRiderPhone : 'Waiting for Rider Assignment...'}</b></span>
-                        </div>
-                        <button type="button" class="btn-handover" onclick="handoverOrderToRider('${activeOrder.orderId}')">
-                            🤝 Handover to Rider & Complete Picking
-                        </button>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                 </div>
             `;
         }
 
-        function openPickerScanner(orderId, itemName) {
-            activeTargetItemName = itemName;
+        function openItemDetailSheet(itemIndex) {
+            let configItems = currentActiveOrder.configDetails || [];
+            if (typeof configItems === 'string') { try { configItems = JSON.parse(configItems); } catch(e){ configItems = []; } }
+            
+            activeSelectedItem = configItems[itemIndex];
+            if (!activeSelectedItem) return;
+
+            let itemName = activeSelectedItem.fileName ? activeSelectedItem.fileName.replace('Product: ', '').split(' (Qty:')[0].trim() : (activeSelectedItem.name || 'Item');
+            let qty = Number(activeSelectedItem.copies || activeSelectedItem.qty || activeSelectedItem.pages || 1);
+            
+            // Mocking UPC 4/4 partial digits and price for display
+            let mockPrice = activeSelectedItem.sellingPrice || 49;
+            let startUpc = "8901";
+            let endUpc = "4521";
+
+            const sheet = document.getElementById('itemDetailSheetContent');
+            sheet.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                    <h3 style="color: white; font-size: 1.05rem;">🔍 Item Verification</h3>
+                    <span style="cursor:pointer; font-size:1.4rem; color:var(--text-sub);" onclick="closeItemDetailSheet()">&times;</span>
+                </div>
+
+                <div style="text-align: center; padding: 10px;">
+                    <div style="width: 90px; height: 90px; background: #022c22; border-radius: 16px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; border: 1px solid var(--border-color);">
+                        ${activeSelectedItem.imageUrl ? `<img src="${activeSelectedItem.imageUrl}" style="width:100%;height:100%;border-radius:16px;object-fit:cover;">` : '📦'}
+                    </div>
+                    <h2 style="font-size: 1.15rem; color: white; margin-bottom: 4px;">${itemName}</h2>
+                    <p style="font-size: 0.8rem; color: var(--text-sub);">Price: <b>₹${mockPrice}</b> | Required Qty: <b style="color: var(--accent-yellow);">${qty}</b></p>
+                </div>
+
+                <div style="background: var(--bg-dark); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); font-size: 0.8rem; display: flex; justify-content: space-between;">
+                    <span>UPC Hint: <code>${startUpc}••••${endUpc}</code></span>
+                    <span style="color: var(--light-green);">Match Required</span>
+                </div>
+
+                <button type="button" class="btn-action-main" onclick="startBarcodeCameraScan('${itemName}')">📷 Scan UPC Barcode Now</button>
+            `;
+
+            document.getElementById('itemDetailModal').style.display = 'flex';
+        }
+
+        function closeItemDetailSheet() {
+            document.getElementById('itemDetailModal').style.display = 'none';
+            activeSelectedItem = null;
+        }
+
+        function startBarcodeCameraScan(itemName) {
+            document.getElementById('itemDetailModal').style.display = 'none';
             document.getElementById('pickerScannerModal').style.display = 'flex';
 
             if (!html5QrScanner) {
@@ -350,7 +369,7 @@
                 { facingMode: "environment" },
                 { fps: 10, qrbox: { width: 220, height: 140 } },
                 (decodedText) => {
-                    handleScannedCode(decodedText);
+                    verifyScannedCode(decodedText);
                 },
                 () => {}
             ).catch(err => {
@@ -363,59 +382,46 @@
                 try { html5QrScanner.stop(); html5QrScanner.clear(); } catch(e){}
             }
             document.getElementById('pickerScannerModal').style.display = 'none';
-            activeTargetItemName = null;
-            document.getElementById('manualScanInput').value = '';
         }
 
-        async function handleScannedCode(scannedVal) {
-            if (!activeOrder || !activeTargetItemName) return;
+        async function verifyScannedCode(scannedVal) {
+            if (!currentActiveOrder || !activeSelectedItem) return;
+            let itemName = activeSelectedItem.fileName ? activeSelectedItem.fileName.replace('Product: ', '').split(' (Qty:')[0].trim() : (activeSelectedItem.name || 'Item');
 
             try {
                 const res = await fetch('/api/admin/verify-item', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        orderId: activeOrder.orderId, 
+                        orderId: currentActiveOrder.orderId, 
                         barcode: scannedVal, 
-                        skuOrName: activeTargetItemName 
+                        skuOrName: itemName 
                     })
                 });
                 const data = await res.json();
                 alert(data.message);
                 if (data.success) {
                     closePickerScanner();
-                    fetchSingleActiveOrder();
+                    pollActiveOrders();
+                    // Check if all verified
+                    setTimeout(() => {
+                        fetch('/api/picker/active-orders')
+                            .then(r => r.json())
+                            .then(orders => {
+                                let updated = orders.find(o => o.orderId === currentActiveOrder.orderId);
+                                if (updated) currentActiveOrder = updated;
+                                renderActiveStation();
+                            });
+                    }, 500);
                 }
             } catch (e) {
-                alert("❌ Verification failed due to network error.");
+                alert("❌ Verification failed.");
             }
         }
 
-        async function handoverOrderToRider(orderId) {
-            if (!confirm("⚠️ Confirm handover of this order to the assigned delivery rider?")) return;
-
-            try {
-                const res = await fetch(`/api/admin/orders/${orderId}/status`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: 'Out for Delivery' })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert("✅ Order successfully handed over to rider! Loading next order...");
-                    activeOrder = null;
-                    fetchSingleActiveOrder();
-                } else {
-                    alert("⚠️ Failed to update handover status.");
-                }
-            } catch (err) {
-                alert("❌ Connection error during handover.");
-            }
-        }
-
-        // Real-time instantaneous auto-refresh every 3 seconds
-        setInterval(fetchSingleActiveOrder, 3000);
-        fetchSingleActiveOrder();
+        // Real-time background sync every 3 seconds
+        setInterval(pollActiveOrders, 3000);
+        pollActiveOrders();
     </script>
 </body>
 </html>

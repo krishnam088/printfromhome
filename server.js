@@ -239,7 +239,7 @@ app.get('/admin-panel', (req, res) => { res.sendFile(path.join(__dirname, 'admin
 app.get('/delivery', (req, res) => { res.sendFile(path.join(__dirname, 'delivery.html')); });
 app.get('/store-qr', (req, res) => { res.sendFile(path.join(__dirname, 'store-qr.html')); });
 
-// 🔥 Picker App Route Added
+// 🔥 Picker App Route Added Here
 app.get('/picker', (req, res) => { res.sendFile(path.join(__dirname, 'picker.html')); });
 
 app.get('/manifest.json', (req, res) => {
@@ -819,18 +819,26 @@ app.get('/api/admin/inventory/predictive-restock', async (req, res) => {
     }
 });
 
-// 🔥 Picker ke liye sirf current active orders (No past delivered/cancelled orders)
+// 🔥 Picker Active Orders API (Strictly Today's Active, Not Delivered/Out for Delivery)
 app.get('/api/picker/active-orders', async (req, res) => { 
     try {
-        const activeOrders = await Order.find({ 
-            status: { $in: ['Ready for Print', 'Processing', 'Printing', 'Out for Delivery'] },
-            $or: [
-                { assignedDeliveryBoy: { $exists: false } }, 
-                { assignedDeliveryBoy: null }, 
-                { assignedDeliveryBoy: "" }
-            ]
-        }).sort({ timestamp: -1 });
-        res.json(activeOrders); 
+        const todayIso = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        
+        const orders = await Order.find({ status: { $ne: 'Pending Payment' } }).sort({ timestamp: -1 });
+        
+        const activePickerOrders = orders.filter(o => {
+            let dObj = o.timestamp ? new Date(o.timestamp) : new Date();
+            let orderDateIso = dObj.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+            
+            // Sirf aaj ke orders, jo Delivered ya Out for Delivery ya Cancelled na hon
+            let isToday = (orderDateIso === todayIso);
+            let status = o.status || '';
+            let notFinished = !status.includes('Delivered') && !status.includes('Out for Delivery') && !status.includes('Cancelled');
+
+            return isToday && notFinished;
+        });
+
+        res.json(activePickerOrders); 
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
