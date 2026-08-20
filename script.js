@@ -36,6 +36,25 @@ document.addEventListener('DOMContentLoaded', () => {
     window.globalRawOrdersCache = [];
 
     // ==========================================
+    // 🌟 NEW: LOYALTY POINTS & DYNAMIC ETA CALCULATOR
+    // ==========================================
+    window.redeemPoints = async function() {
+        let currentPoints = parseInt(localStorage.getItem('user_loyalty_points') || 0);
+        if (currentPoints < 50) { alert("⚠️ Minimum 50 points needed to redeem!"); return; }
+        
+        // ₹20 Discount logic via delivery tip / discount offset
+        window.currentDeliveryTip -= 20; 
+        localStorage.setItem('user_loyalty_points', currentPoints - 50);
+        calculateTotal();
+        alert("✅ 50 points redeemed for ₹20 discount!");
+    };
+
+    window.calculateETA = function() {
+        const queueLength = window.globalRawOrdersCache.length;
+        return Math.max(15, queueLength * 5); // Minimum 15 mins
+    };
+
+    // ==========================================
     // 🖨️ UNIVERSAL A4 PRINT STUDIO ENGINE (ANDROID, iOS & WINDOWS)
     // ==========================================
     let renderedPagesList = [];
@@ -1329,7 +1348,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.executeUserCancelOrder = async function(orderId) {
-        if (!confirm("⚠️ Are you sure you want to cancel this order?")) return;
+        if (!confirm("⚠️ Are you sure you want to cancel this order? (Delivery fee of ₹25 is non-refundable, remaining amount will be refunded to your source)")) return;
         try {
             const res = await fetch('/api/orders/cancel', {
                 method: 'POST',
@@ -1338,7 +1357,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             if (data.success) {
-                alert("✅ Order cancelled successfully!");
+                alert("✅ " + data.message);
                 const activeUserToken = localStorage.getItem('printAppUser');
                 const localHistory = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
                 localHistory.forEach(item => {

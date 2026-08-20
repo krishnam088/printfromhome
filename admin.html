@@ -363,6 +363,11 @@
                     <span class="stat-title">Net Profit (Selected Date)</span>
                     <span class="stat-num" id="statDashNetProfit" style="color: var(--accent-green);">₹0</span>
                 </div>
+                <!-- 🔥 Predictive Restock Card Added Here -->
+                <div class="stat-card" id="restockSuggestionCard">
+                    <span class="stat-title">🚨 Predictive Restock</span>
+                    <div id="restockList" style="font-size: 0.75rem; color: var(--accent-red);">Checking sales...</div>
+                </div>
             </div>
 
             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px;">
@@ -842,6 +847,23 @@
             } catch (e) {}
         }
 
+        async function fetchRestockSuggestions() {
+            try {
+                const res = await fetch('/api/admin/inventory/predictive-restock');
+                const data = await res.json();
+                const list = document.getElementById('restockList');
+                if (list && data.success && data.suggestions) {
+                    if(data.suggestions.length > 0) {
+                        list.innerHTML = data.suggestions.map(p => `<div>${p.name}: ${p.stockQuantity} left</div>`).join('');
+                    } else {
+                        list.innerHTML = "✅ Inventory Healthy";
+                    }
+                }
+            } catch (e) {}
+        }
+        setInterval(fetchRestockSuggestions, 60000);
+        setTimeout(fetchRestockSuggestions, 1000);
+
         function openBarcodeScannerModal(orderId = null) {
             activeTargetOrderIdForScan = orderId;
             document.getElementById('barcodeScannerModal').style.display = 'flex';
@@ -918,7 +940,6 @@
                 return;
             }
 
-            // 🔥 Check if this scan is for Restocking a Cancelled Order
             const targetOrder = globalLiveOrdersCache.find(o => o.orderId === activeTargetOrderIdForScan);
             if (targetOrder && targetOrder.status && targetOrder.status.includes('Cancelled')) {
                 try {
