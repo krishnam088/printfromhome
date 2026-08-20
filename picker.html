@@ -6,14 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Print From Home - Picker Station</title>
     
-    
+    <link rel="manifest" href="/manifest-picker.json">
     <meta name="theme-color" content="#22c55e">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         :root {
-            --bg-dark: #064e3b; /* User app jaisa deep rich green vibe */
+            --bg-dark: #064e3b;
             --bg-gradient: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
             --surface-card: #065f46;
             --surface-card-hover: #047857;
@@ -93,7 +93,8 @@
         }
         .product-pick-card.completed { border-color: var(--light-green); background: var(--light-green-bg); }
         
-        .prod-img-thumb { width: 55px; height: 55px; border-radius: 10px; background: #022c22; object-fit: cover; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+        .prod-img-thumb { width: 55px; height: 55px; border-radius: 10px; background: #022c22; object-fit: cover; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; overflow: hidden; }
+        .prod-img-thumb img { width: 100%; height: 100%; object-fit: cover; }
         
         .prod-details-meta { flex: 1; display: flex; flex-direction: column; gap: 2px; }
         .prod-details-meta b { font-size: 0.95rem; color: var(--text-main); }
@@ -125,16 +126,14 @@
             <div class="alert-timer-badge" id="popupCountdownTimer">⏱️ 02:00</div>
             <div style="font-size: 2.5rem; margin-bottom: 8px;">🔔</div>
             <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--accent-yellow); margin-bottom: 4px;">New Order Received!</h3>
-            <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 14px;" id="popupOrderSummaryText">Order #123456 with 3 product varieties.</p>
+            <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 14px;" id="popupOrderSummaryText">New products waiting for verification.</p>
             <button type="button" class="btn-action-main" onclick="acceptAndOpenOrder()">Tap to Start Picking 🚀</button>
         </div>
     </div>
 
     <!-- 🔍 ITEM DETAIL & SCAN SHEET MODAL -->
     <div id="itemDetailModal">
-        <div class="item-detail-sheet" id="itemDetailSheetContent">
-            <!-- Dynamic content loaded via JS -->
-        </div>
+        <div class="item-detail-sheet" id="itemDetailSheetContent"></div>
     </div>
 
     <!-- SCANNER MODAL -->
@@ -167,6 +166,7 @@
     <script>
         let currentActiveOrder = null;
         let cachedOrdersList = [];
+        let storeInventoryCache = [];
         let activeSelectedItem = null;
         let alertTimerInterval = null;
         let alertSecondsLeft = 120;
@@ -199,6 +199,16 @@
 
         window.addEventListener('click', () => { getAudioContext(); }, { once: true });
 
+        async function fetchStoreInventory() {
+            try {
+                const res = await fetch('/api/store/products');
+                const data = await res.json();
+                if (data.success && data.products) {
+                    storeInventoryCache = data.products;
+                }
+            } catch (e) {}
+        }
+
         async function pollActiveOrders() {
             try {
                 const res = await fetch('/api/picker/active-orders');
@@ -209,7 +219,6 @@
                     const topOrder = orders.length > 0 ? orders[0] : null;
 
                     if (topOrder) {
-                        // Naya order aane par floating alert pop up karo
                         if (lastNotifiedOrderId !== topOrder.orderId && (!currentActiveOrder || currentActiveOrder.orderId !== topOrder.orderId)) {
                             lastNotifiedOrderId = topOrder.orderId;
                             triggerFloatingAlert(topOrder);
@@ -221,9 +230,7 @@
                         }
                     }
                 }
-            } catch (e) {
-                console.error("Polling error:", e);
-            }
+            } catch (e) {}
         }
 
         function triggerFloatingAlert(order) {
@@ -232,11 +239,9 @@
             if (typeof configItems === 'string') { try { configItems = JSON.parse(configItems); } catch(e){} }
             let varietiesCount = configItems.length;
 
-            // 🔥 FIX: Corrected element property assignment
             document.getElementById('popupOrderSummaryText').textContent = `Order #${order.orderId} with ${varietiesCount} items.`;
             document.getElementById('incomingOrderAlertModal').style.display = 'flex';
 
-            // Start 2 min countdown timer
             alertSecondsLeft = 120;
             if (alertTimerInterval) clearInterval(alertTimerInterval);
             alertTimerInterval = setInterval(() => {
@@ -250,7 +255,6 @@
                 }
             }, 1000);
         }
-        
 
         function acceptAndOpenOrder() {
             if (alertTimerInterval) clearInterval(alertTimerInterval);
@@ -296,14 +300,22 @@
                         ${configItems.map((item, idx) => {
                             let itemName = item.fileName ? item.fileName.replace('Product: ', '').split(' (Qty:')[0].trim() : (item.name || 'Print Job / Item');
                             let qty = Number(item.copies || item.qty || item.pages || 1);
+                            
+                            // Match with Store Inventory to get Image & Price if missing
+                            let matchedProd = storeInventoryCache.find(p => p.sku === item.sku || (p.name && p.name.toLowerCase() === itemName.toLowerCase()));
+                            let itemImg = item.imageUrl || (matchedProd ? matchedProd.imageUrl : '');
+                            let itemPrice = item.sellingPrice || (matchedProd ? matchedProd.sellingPrice : 49);
+
                             let isCompleted = verifiedList.some(v => v.toLowerCase().includes(itemName.toLowerCase()));
 
                             return `
                                 <div class="product-pick-card ${isCompleted ? 'completed' : ''}" onclick="openItemDetailSheet(${idx})">
-                                    <div class="prod-img-thumb">${item.imageUrl ? `<img src="${item.imageUrl}" style="width:100%;height:100%;border-radius:10px;object-fit:cover;">` : '📦'}</div>
+                                    <div class="prod-img-thumb">
+                                        ${itemImg ? `<img src="${itemImg}" alt="Product">` : '📦'}
+                                    </div>
                                     <div class="prod-details-meta">
                                         <b>${itemName}</b>
-                                        <span>Target Qty: <b>${qty}</b></span>
+                                        <span>Qty: <b>${qty}</b> | ₹${itemPrice}</span>
                                         <span style="color: ${isCompleted ? 'var(--light-green)' : 'var(--accent-yellow)'}; font-weight: 700;">${isCompleted ? '✅ Picked & Verified' : '⏳ Tap to Scan & Verify'}</span>
                                     </div>
                                 </div>
@@ -324,10 +336,13 @@
             let itemName = activeSelectedItem.fileName ? activeSelectedItem.fileName.replace('Product: ', '').split(' (Qty:')[0].trim() : (activeSelectedItem.name || 'Item');
             let qty = Number(activeSelectedItem.copies || activeSelectedItem.qty || activeSelectedItem.pages || 1);
             
-            // Mocking UPC 4/4 partial digits and price for display
-            let mockPrice = activeSelectedItem.sellingPrice || 49;
-            let startUpc = "8901";
-            let endUpc = "4521";
+            let matchedProd = storeInventoryCache.find(p => p.sku === activeSelectedItem.sku || (p.name && p.name.toLowerCase() === itemName.toLowerCase()));
+            let itemImg = activeSelectedItem.imageUrl || (matchedProd ? matchedProd.imageUrl : '');
+            let mockPrice = activeSelectedItem.sellingPrice || (matchedProd ? matchedProd.sellingPrice : 49);
+            
+            let rawBarcode = matchedProd ? (matchedProd.barcode || matchedProd.sku || "890123456789") : "890123456789";
+            let startUpc = rawBarcode.slice(0, 4);
+            let endUpc = rawBarcode.slice(-4);
 
             const sheet = document.getElementById('itemDetailSheetContent');
             sheet.innerHTML = `
@@ -337,8 +352,8 @@
                 </div>
 
                 <div style="text-align: center; padding: 10px;">
-                    <div style="width: 90px; height: 90px; background: #022c22; border-radius: 16px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; border: 1px solid var(--border-color);">
-                        ${activeSelectedItem.imageUrl ? `<img src="${activeSelectedItem.imageUrl}" style="width:100%;height:100%;border-radius:16px;object-fit:cover;">` : '📦'}
+                    <div style="width: 90px; height: 90px; background: #022c22; border-radius: 16px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; border: 1px solid var(--border-color); overflow: hidden;">
+                        ${itemImg ? `<img src="${itemImg}" style="width:100%;height:100%;border-radius:16px;object-fit:cover;">` : '📦'}
                     </div>
                     <h2 style="font-size: 1.15rem; color: white; margin-bottom: 4px;">${itemName}</h2>
                     <p style="font-size: 0.8rem; color: var(--text-sub);">Price: <b>₹${mockPrice}</b> | Required Qty: <b style="color: var(--accent-yellow);">${qty}</b></p>
@@ -405,7 +420,6 @@
                 if (data.success) {
                     closePickerScanner();
                     pollActiveOrders();
-                    // Check if all verified
                     setTimeout(() => {
                         fetch('/api/picker/active-orders')
                             .then(r => r.json())
@@ -421,7 +435,8 @@
             }
         }
 
-        // Real-time background sync every 3 seconds
+        // Initialize Inventory cache & Polling
+        fetchStoreInventory();
         setInterval(pollActiveOrders, 3000);
         pollActiveOrders();
     </script>
