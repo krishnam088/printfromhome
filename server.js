@@ -239,6 +239,9 @@ app.get('/admin-panel', (req, res) => { res.sendFile(path.join(__dirname, 'admin
 app.get('/delivery', (req, res) => { res.sendFile(path.join(__dirname, 'delivery.html')); });
 app.get('/store-qr', (req, res) => { res.sendFile(path.join(__dirname, 'store-qr.html')); });
 
+// 🔥 Picker App Route Added Here
+app.get('/picker', (req, res) => { res.sendFile(path.join(__dirname, 'picker.html')); });
+
 app.get('/manifest.json', (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.sendFile(path.join(__dirname, 'manifest.json'));
