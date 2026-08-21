@@ -555,9 +555,24 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
     };
 
-    // 🔥 Cart Drawer Contents Render Function
+    // 🔥 Cart Drawer Toggle & Render Sync
+    window.toggleCartDrawer = function(open = true) {
+        const drawerOverlay = document.getElementById('cartDrawerOverlay');
+        if (!drawerOverlay) return;
+
+        if (open) {
+            drawerOverlay.style.display = 'flex';
+            if (typeof renderCartDrawerContents === 'function') {
+                renderCartDrawerContents();
+            }
+        } else {
+            drawerOverlay.style.display = 'none';
+        }
+    };
+
+    // 🔥 Full Cart Drawer Render Engine
     window.renderCartDrawerContents = function() {
-        const container = document.getElementById('cartDrawerItemsContainer');
+        let container = document.getElementById('cartDrawerItemsContainer') || document.getElementById('cartItemsListContainer') || document.querySelector('.cart-drawer-items');
         if (!container) return;
 
         container.innerHTML = '';
@@ -569,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Snacks / Products Render
+        // Snacks / Store Products Render
         if (window.cartSnacksArray && window.cartSnacksArray.length > 0) {
             window.cartSnacksArray.forEach((snack, idx) => {
                 const itemRow = document.createElement('div');
@@ -612,6 +627,24 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCartDrawerContents();
         calculateTotal();
     };
+
+    // 🔥 Clear Entire Cart Function
+    window.clearEntireCart = function() {
+        if (!confirm("⚠️ Are you sure you want to clear your cart?")) return;
+        window.cartPrintJobsArray = [];
+        window.cartSnacksArray = [];
+        window.currentDeliveryTip = 0;
+        persistCartStateData();
+        renderCartDrawerContents();
+        calculateTotal();
+        alert("✅ Cart cleared successfully!");
+    };
+
+    // Bind Clear Cart Button on load
+    const clearBtn = document.querySelector('.clear-cart-btn') || document.getElementById('clearCartBtn');
+    if (clearBtn) {
+        clearBtn.onclick = window.clearEntireCart;
+    }
 
     // ==========================================
     // 🔙 PHONE BACK BUTTON / HISTORY HANDLER
@@ -735,7 +768,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modal) modal.style.display = 'none';
     }
 
-    // --- PROFILE SETTINGS PARTIAL UPDATE LOGIC WITH DATABASE SYNC ---
     const profileForm = document.getElementById('drawerProfileUpdateForm');
     if (profileForm) {
         profileForm.addEventListener('submit', async (e) => {
