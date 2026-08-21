@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔥 MODERN INTERACTIVE PRODUCT DETAIL MODAL WITH QUANTITY STEPPER
+    // 🔥 NEW INTERACTIVE PRODUCT DETAIL MODAL WITH QUANTITY STEPPER
     window.openProductDetailModal = function(prod) {
         const modal = document.getElementById('productDetailModal');
         const imgContainer = document.getElementById('modalProductImgContainer');
@@ -593,7 +593,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById('productDetailModal');
         if (modal && (!event || event.target === modal || event.target.tagName === 'SPAN')) {
             modal.style.display = 'none';
-            // Restore standard button placeholder if closed so modal re-renders cleanly next time
             const actionArea = document.getElementById('modalActionArea');
             if (actionArea) {
                 actionArea.outerHTML = `<button type="button" id="modalAddToCartBtn" style="width:100%; padding:14px; background:#065f46; color:white; border:none; border-radius:12px; font-weight:800; font-size:0.95rem; cursor:pointer; box-shadow:0 4px 12px rgba(6,95,70,0.3);">+ Add to Cart</button>`;
@@ -736,7 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Render Snacks & Products
+        // Render Snacks & Products with Icons, Details, and Steppers
         if (window.cartSnacksArray && window.cartSnacksArray.length > 0) {
             window.cartSnacksArray.forEach((snack, idx) => {
                 const itemRow = document.createElement('div');
@@ -783,7 +782,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // 🔥 Force calculation update immediately after rendering contents
         if (typeof calculateTotal === 'function') {
             calculateTotal();
         }
