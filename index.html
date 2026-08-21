@@ -634,14 +634,14 @@
         </div>
     </div>
 
-    <!-- 🛒 UNIFIED CHECKOUT CART DRAWER WITH DELIVERY TIP & GREEN/YELLOW GREEN THEME -->
-    <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:16000; display:none; justify-content:flex-end;">
-        <div class="cart-drawer-card" onclick="event.stopPropagation()" style="background:#064e3b; width:100%; max-width:440px; height:100vh; display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.3); overflow:hidden; border-left:2px solid #f59e0b;">
+    <!-- 🛒 UNIFIED CHECKOUT CART DRAWER WITH DELIVERY TIP & MATCHED THEME -->
+    <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:16000; display:none; justify-content:flex-end;">
+        <div class="cart-drawer-card" onclick="event.stopPropagation()" style="background:#090d16; color:#f8fafc; width:100%; max-width:440px; height:100vh; display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.4); overflow:hidden; border-left:1px solid #334155;">
             
-            <div style="flex-shrink:0; background:#065f46; padding:16px 20px; border-bottom:1px solid #047857; display:flex; justify-content:space-between; align-items:center;">
+            <div style="flex-shrink:0; background:#1e293b; padding:16px 20px; border-bottom:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="cursor:pointer; font-size:1.2rem; font-weight:bold; color:white;" onclick="toggleCartDrawer(false)">&larr;</span>
-                    <h3 style="font-size:1.1rem; font-weight:800; color:white;">Review Cart & Checkout</h3>
+                    <span style="cursor:pointer; font-size:1.2rem; font-weight:bold; color:#f8fafc;" onclick="toggleCartDrawer(false)">&larr;</span>
+                    <h3 style="font-size:1.1rem; font-weight:800; color:#f8fafc; margin:0;">Review Cart & Checkout</h3>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
                     <button type="button" onclick="clearEntireCartData()" style="background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid #ef4444; padding: 5px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer;">Clear</button>
@@ -653,46 +653,102 @@
                 
                 <div id="freeDeliveryProgressBarBox" style="background: rgba(16,185,129,0.1); border: 1px solid #10b981; border-radius: 12px; padding: 10px 14px;">
                     <p id="freeDeliveryMessageText" style="font-size: 0.78rem; font-weight: 700; color: #34d399; margin: 0 0 6px 0;">🎉 Add items worth ₹99 more for FREE delivery!</p>
-                    <div style="width: 100%; background: #022c22; height: 6px; border-radius: 3px; overflow: hidden;">
+                    <div style="width: 100%; background: #0f172a; height: 6px; border-radius: 3px; overflow: hidden;">
                         <div id="freeDeliveryFillBar" style="width: 0%; background: #22c55e; height: 100%; transition: width 0.3s ease;"></div>
                     </div>
                 </div>
 
-                <div style="background:#065f46; border:1px solid #047857; border-radius:16px; padding:14px;">
+                <div style="background:#1e293b; border:1px solid #334155; border-radius:16px; padding:14px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <span style="font-size:0.75rem; font-weight:800; color:#a7f3d0; text-transform:uppercase;">📍 Delivery Address</span>
+                        <span style="font-size:0.75rem; font-weight:800; color:#38bdf8; text-transform:uppercase;">📍 Delivery Address</span>
                         <span style="font-size:0.75rem; font-weight:700; color:#f59e0b; cursor:pointer;" onclick="openAddressManagerModal()">+ Add New Address</span>
                     </div>
-                    <div id="cartSavedAddressesList" style="max-height:120px; overflow-y:auto; margin-bottom:4px; color:white;"></div>
+                    <div id="cartSavedAddressesList" style="max-height:120px; overflow-y:auto; margin-bottom:4px; color:#f8fafc;"></div>
                 </div>
 
-                <div style="background:#065f46; border:1px solid #047857; border-radius:16px; padding:14px; display:flex; align-items:center; gap:12px;">
+                <div style="background:#1e293b; border:1px solid #334155; border-radius:16px; padding:14px; display:flex; align-items:center; gap:12px;">
                     <div style="font-size:1.8rem;">⏰</div>
                     <div>
-                        <h4 style="font-size:0.95rem; font-weight:800; color:white;">Delivery in 15 minutes</h4>
-                        <p style="font-size:0.75rem; color:#a7f3d0; font-weight:600;" id="shipmentItemsCountText">Shipment of items</p>
+                        <h4 style="font-size:0.95rem; font-weight:800; color:#f8fafc; margin:0 0 2px 0;">Delivery in 15 minutes</h4>
+                        <p style="font-size:0.75rem; color:#94a3b8; font-weight:600; margin:0;" id="shipmentItemsCountText">Shipment of items</p>
                     </div>
                 </div>
 
-                <!-- Redesigned Cart Items List -->
+                <!-- Redesigned Cart Items List Container -->
                 <div id="cartDrawerItemsList" style="display:flex; flex-direction:column; gap:10px;"></div>
 
                 <!-- Delivery Partner Tipping Section -->
-                <div style="background:#065f46; border:1px solid #047857; border-radius:16px; padding:14px;">
-                    <span style="font-size:0.75rem; font-weight:800; color:#a7f3d0; text-transform:uppercase; display:block; margin-bottom:8px;">🛵 Tip your delivery partner</span>
+                <div style="background:#1e293b; border:1px solid #334155; border-radius:16px; padding:14px;">
+                    <span style="font-size:0.75rem; font-weight:800; color:#38bdf8; text-transform:uppercase; display:block; margin-bottom:8px;">🛵 Tip your delivery partner</span>
                     <div style="display:flex; gap:8px;">
-                        <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(10)" style="flex:1; padding:8px; border:1px solid #047857; border-radius:8px; background:#022c22; color:white; font-weight:700; font-size:0.75rem; cursor:pointer;">+ ₹10</button>
-                        <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(20)" style="flex:1; padding:8px; border:1px solid #047857; border-radius:8px; background:#022c22; color:white; font-weight:700; font-size:0.75rem; cursor:pointer;">+ ₹20</button>
-                        <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(50)" style="flex:1; padding:8px; border:1px solid #047857; border-radius:8px; background:#022c22; color:white; font-weight:700; font-size:0.75rem; cursor:pointer;">+ ₹50</button>
+                        <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(10)" style="flex:1; padding:8px; border:1px solid #334155; border-radius:8px; background:#0f172a; color:white; font-weight:700; font-size:0.75rem; cursor:pointer;">+ ₹10</button>
+                        <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(20)" style="flex:1; padding:8px; border:1px solid #334155; border-radius:8px; background:#0f172a; color:white; font-weight:700; font-size:0.75rem; cursor:pointer;">+ ₹20</button>
+                        <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(50)" style="flex:1; padding:8px; border:1px solid #334155; border-radius:8px; background:#0f172a; color:white; font-weight:700; font-size:0.75rem; cursor:pointer;">+ ₹50</button>
                     </div>
                 </div>
 
-                <div style="background:#065f46; border:1px solid #047857; border-radius:16px; padding:16px;">
-                    <h4 style="font-size:0.9rem; font-weight:800; color:white; margin-bottom:10px; border-bottom:1px dashed #047857; padding-bottom:6px;">📄 Bill Invoice Summary</h4>
-                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#a7f3d0; margin-bottom:5px;">
+                <div style="background:#1e293b; border:1px solid #334155; border-radius:16px; padding:16px;">
+                    <h4 style="font-size:0.9rem; font-weight:800; color:#f8fafc; margin-bottom:10px; border-bottom:1px dashed #334155; padding-bottom:6px;">📄 Bill Invoice Summary</h4>
+                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#94a3b8; margin-bottom:5px;">
                         <span>Item Total (Prints & Products)</span>
                         <span id="cartItemSubtotal">₹0.00</span>
                     </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#94a3b8; margin-bottom:5px;">
+                        <span>Delivery Partner Fee</span>
+                        <span id="cartDeliveryFee">₹25.00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#f59e0b; font-weight:700; margin-bottom:5px; display:none;" id="rainSurgeRow">
+                        <span>🌧️ Rain Surge Fee</span>
+                        <span id="cartRainFee">₹15.00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#34d399; font-weight:700; margin-bottom:8px;">
+                        <span>Taxes & Platform Charges</span>
+                        <span>FREE</span>
+                    </div>
+                    <div style="border-top:1px solid #334155; margin-top:8px; padding-top:8px; display:flex; justify-content:space-between; font-size:0.95rem; font-weight:900; color:#f8fafc;">
+                        <span>Grand Total Payable</span>
+                        <span id="cartGrandTotalSummary" style="color:#f59e0b;">₹0.00</span>
+                    </div>
+                </div>
+
+                <div style="background:#1e293b; border:1px solid #334155; border-radius:16px; padding:16px;">
+                    <h4 style="font-size:0.85rem; font-weight:800; color:#f8fafc; margin-bottom:12px;">💳 Select Payment Method</h4>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                        <label style="cursor:pointer; position:relative;">
+                            <input type="radio" name="cartPaymentMode" value="online" checked style="position:absolute; opacity:0; top:0; left:0;">
+                            <div class="payment-option-box" style="padding:10px 6px; border:2px solid #f59e0b; border-radius:12px; background:#0f172a; text-align:center; color:white;">
+                                <div style="font-size:1.1rem;">⚡</div>
+                                <div style="font-size:0.7rem; font-weight:800; margin-top:4px;">Online</div>
+                            </div>
+                        </label>
+                        <label style="cursor:pointer; position:relative;">
+                            <input type="radio" name="cartPaymentMode" value="wallet" style="position:absolute; opacity:0; top:0; left:0;">
+                            <div class="payment-option-box" style="padding:10px 6px; border:2px solid #334155; border-radius:12px; background:#0f172a; text-align:center; color:white;">
+                                <div style="font-size:1.1rem;">💰</div>
+                                <div style="font-size:0.7rem; font-weight:800; margin-top:4px;">Wallet (<span id="walletDrawerBalanceText">₹0</span>)</div>
+                            </div>
+                        </label>
+                        <label style="cursor:pointer; position:relative;">
+                            <input type="radio" name="cartPaymentMode" value="cod" style="position:absolute; opacity:0; top:0; left:0;">
+                            <div class="payment-option-box" style="padding:10px 6px; border:2px solid #334155; border-radius:12px; background:#0f172a; text-align:center; color:white;">
+                                <div style="font-size:1.1rem;">💵</div>
+                                <div style="font-size:0.7rem; font-weight:800; margin-top:4px;">COD</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+
+            <div style="flex-shrink:0; background:#1e293b; border-top:1px solid #334155; padding:15px; box-shadow:0 -4px 15px rgba(0,0,0,0.3);">
+                <button type="button" onclick="executeFinalCartOrderPlacement()" style="width:100%; padding:14px 18px; background:#22c55e; color:#064e3b; border:none; border-radius:14px; font-weight:900; font-size:1rem; display:flex; justify-content:space-between; align-items:center; cursor:pointer; box-shadow:0 4px 12px rgba(34,197,94,0.3);">
+                    <span style="font-size:0.95rem; font-weight:800;">Place Order & Pay</span>
+                    <span id="cartDrawerGrandTotal" style="font-size:1.1rem; font-weight:900;">₹0.00</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
                     <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#a7f3d0; margin-bottom:5px;">
                         <span>Delivery Partner Fee</span>
                         <span id="cartDeliveryFee">₹25.00</span>
