@@ -502,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-   // 🔒 STRICT INVENTORY ADD TO CART LOGIC (Without forcing automatic redirect)
+    // 🔒 STRICT INVENTORY ADD TO CART LOGIC (Without forcing automatic redirect)
     window.addDynamicProductToCart = function(sku, name, price, currentStock) {
         const matchedProd = window.storeInventoryProducts ? window.storeInventoryProducts.find(p => (p.sku === sku || p.barcode === sku || p.name === name)) : null;
         const availableStock = matchedProd ? matchedProd.stockQuantity : currentStock;
@@ -539,7 +539,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem('cart_snacks', JSON.stringify(window.cartSnacksArray));
 
-        // Sirf Floating Bar aur Totals update honge, drawer automatic nahi khulega
         if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
         if (typeof calculateTotal === 'function') calculateTotal();
 
@@ -547,10 +546,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (clickedBtn) {
             const originalText = clickedBtn.textContent;
             clickedBtn.textContent = "Added ✓";
-            clickedBtn.style.background = "#15803d";
+            clickedBtn.style.background = "#065f46";
             setTimeout(() => {
                 clickedBtn.textContent = originalText;
-                clickedBtn.style.background = "var(--blinkit-green)";
+                clickedBtn.style.background = "#065f46";
             }, 800);
         }
     }
@@ -601,7 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let allItems = window.cartSnacksArray || [];
         
         if (allItems.length === 0 && (!window.cartPrintJobsArray || window.cartPrintJobsArray.length === 0)) {
-            container.innerHTML = `<p style="font-size:0.8rem; color:#a7f3d0; text-align:center; padding:15px;">Your cart is empty.</p>`;
+            container.innerHTML = `<p style="font-size:0.8rem; color:#64748b; text-align:center; padding:15px;">Your cart is empty.</p>`;
             return;
         }
 
@@ -609,22 +608,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.cartSnacksArray && window.cartSnacksArray.length > 0) {
             window.cartSnacksArray.forEach((snack, idx) => {
                 const itemRow = document.createElement('div');
-                itemRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#065f46; padding:10px; border-radius:10px; border:1px solid #047857; color:white; font-size:0.8rem; margin-bottom:8px;";
+                itemRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:10px; border-radius:10px; border:1px solid #e2e8f0; color:#0f172a; font-size:0.8rem; margin-bottom:8px;";
                 
                 itemRow.innerHTML = `
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <div style="width:36px; height:36px; border-radius:6px; background:#022c22; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0;">
+                        <div style="width:36px; height:36px; border-radius:6px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0;">
                             📦
                         </div>
                         <div>
-                            <div style="font-weight:700; color:#ffffff;">${snack.name}</div>
-                            <div style="font-size:0.7rem; color:#a7f3d0;">₹${snack.price} x ${snack.qty} = ₹${snack.price * snack.qty}</div>
+                            <div style="font-weight:700; color:#0f172a;">${snack.name}</div>
+                            <div style="font-size:0.7rem; color:#64748b;">₹${snack.price} x ${snack.qty} = ₹${snack.price * snack.qty}</div>
                         </div>
                     </div>
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="padding:2px 8px; background:#022c22; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">-</button>
-                        <span style="font-weight:700; color:#fff;">${snack.qty}</span>
-                        <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="padding:2px 8px; background:#022c22; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">+</button>
+                        <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="padding:2px 8px; background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1; border-radius:6px; font-weight:bold; cursor:pointer;">-</button>
+                        <span style="font-weight:700; color:#0f172a;">${snack.qty}</span>
+                        <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="padding:2px 8px; background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1; border-radius:6px; font-weight:bold; cursor:pointer;">+</button>
                     </div>
                 `;
                 container.appendChild(itemRow);
@@ -635,15 +634,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0) {
             window.cartPrintJobsArray.forEach((job, idx) => {
                 const printRow = document.createElement('div');
-                printRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#065f46; padding:10px; border-radius:10px; border:1px solid #047857; color:white; font-size:0.8rem; margin-bottom:8px;";
+                printRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:10px; border-radius:10px; border:1px solid #e2e8f0; color:#0f172a; font-size:0.8rem; margin-bottom:8px;";
                 printRow.innerHTML = `
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <div style="width:36px; height:36px; border-radius:6px; background:#022c22; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0;">
+                        <div style="width:36px; height:36px; border-radius:6px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0;">
                             📄
                         </div>
                         <div>
-                            <div style="font-weight:700; color:#ffffff;">${job.fileName}</div>
-                            <div style="font-size:0.7rem; color:#34d399;">${job.pages} pages | ₹${job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies}</div>
+                            <div style="font-weight:700; color:#0f172a;">${job.fileName}</div>
+                            <div style="font-size:0.7rem; color:#059669;">${job.pages} pages | ₹${job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies}</div>
                         </div>
                     </div>
                     <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1.1rem;">&times;</button>
@@ -651,6 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 container.appendChild(printRow);
             });
         }
+        
         // 🔥 Force calculation update immediately after rendering contents
         if (typeof calculateTotal === 'function') {
             calculateTotal();
