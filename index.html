@@ -39,15 +39,17 @@
     <link rel="apple-touch-icon" sizes="152x152" href="/icon-192.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png">
     <link rel="apple-touch-icon" sizes="167x167" href="/icon-192.png">
-   <style>
+    <style>
         @keyframes slideUpModal {
             from { transform: translateY(100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+        
+        /* 🔥 Light Yellow Payment Option Highlight */
         input[name="cartPaymentMode"]:checked + .payment-option-box {
-            border-color: #065f46 !important;
-            background: #f0fdf4 !important;
-            box-shadow: 0 0 0 2px #065f46;
+            border-color: #ca8a04 !important;
+            background: #fefce8 !important;
+            box-shadow: 0 0 0 2px #ca8a04;
         }
         .payment-option-box { transition: all 0.2s ease; }
 
@@ -68,10 +70,10 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.25) !important;
         }
 
-        /* --- 🍞 MODERN TOAST NOTIFICATION CONTAINER --- */
+        /* --- 🍞 MODERN TOAST NOTIFICATION CONTAINER (Light Yellow Theme) --- */
         #appToastContainer {
             position: fixed;
-            bottom: 80px;
+            bottom: 90px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 999999;
@@ -85,13 +87,13 @@
         }
 
         .app-toast-item {
-            background: rgba(6, 95, 70, 0.95);
-            color: #ffffff;
+            background: rgba(254, 249, 195, 0.95); /* Light Yellow */
+            color: #713f12; /* Rich Dark Yellow/Brown for contrast */
             padding: 10px 16px;
             border-radius: 10px;
             font-size: 0.82rem;
             font-weight: 600;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
             backdrop-filter: blur(6px);
             display: flex;
             align-items: center;
@@ -99,7 +101,7 @@
             animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             pointer-events: auto;
             text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(202, 138, 4, 0.3);
             font-family: 'Poppins', sans-serif;
         }
 
@@ -193,10 +195,11 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(6, 78, 59, 0.9);
+            background: rgba(254, 243, 199, 0.95);
             padding: 4px 10px;
             border-radius: 8px;
             z-index: 10;
+            border: 1px solid #f59e0b;
         }
 
         .cart-item-card {
@@ -209,11 +212,12 @@
             gap: 12px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.02);
         }
+        
         .cart-item-thumb {
             width: 50px;
             height: 50px;
             border-radius: 10px;
-            background: #022c22;
+            background: #fef3c7; /* Light Yellow Thumbnail Background */
             object-fit: cover;
             display: flex;
             align-items: center;
@@ -222,6 +226,7 @@
             flex-shrink: 0;
             overflow: hidden;
         }
+        
         .cart-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
         @media print {
@@ -239,8 +244,8 @@
 
     <div id="rainAnimationContainer"></div>
     <div id="appToastContainer"></div>
-
     <script>
+    
         window.showAppToast = function(message, type = 'info') {
             const container = document.getElementById('appToastContainer');
             if (!container) return;
