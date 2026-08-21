@@ -504,12 +504,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 🔒 STRICT INVENTORY ADD TO CART LOGIC & DRAWER RENDER SYNC
     window.addDynamicProductToCart = function(sku, name, price, currentStock) {
-        const matchedProd = window.storeInventoryProducts.find(p => (p.sku === sku || p.barcode === sku || p.name === name));
+        const matchedProd = window.storeInventoryProducts ? window.storeInventoryProducts.find(p => (p.sku === sku || p.barcode === sku || p.name === name)) : null;
         const availableStock = matchedProd ? matchedProd.stockQuantity : currentStock;
 
         if (availableStock <= 0) {
             alert(`⚠️ Sorry! "${name}" is currently out of stock.`);
             return;
+        }
+
+        if (!window.cartSnacksArray) {
+            window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
         }
 
         const existing = window.cartSnacksArray.find(item => item.sku === sku || item.name === name);
@@ -532,11 +536,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 fileName: `Product: ${name}` 
             });
         }
-        persistCartStateData();
-        updateFloatingCartBar();
-        calculateTotal();
 
-        // 🔥 Render and open Cart Drawer instantly
+        // Force persist to localstorage immediately
+        localStorage.setItem('cart_snacks', JSON.stringify(window.cartSnacksArray));
+
+        // Refresh UI components
+        if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
+        if (typeof calculateTotal === 'function') calculateTotal();
         if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
         if (typeof toggleCartDrawer === 'function') toggleCartDrawer(true);
 
@@ -551,7 +557,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 800);
         }
     }
-
     window.adjustSnackQty = function(index, delta) {
         const snack = window.cartSnacksArray[index];
         const matchedProd = window.storeInventoryProducts.find(p => p.sku === snack.sku || p.barcode === snack.sku || p.name === snack.name);
