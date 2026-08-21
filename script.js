@@ -26,6 +26,29 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedActiveAddress = localStorage.getItem('selected_active_address') || "";  
     window.storeInventoryProducts = []; 
 
+    // 🔥 SAFE FALLBACK HELPER FOR ORDER HISTORY UI TO PREVENT CRASH
+    if (typeof window.renderOrderHistoryUI !== 'function') {
+        window.renderOrderHistoryUI = function(username, showRecent = true) {
+            const container = document.getElementById('ordersHistoryContainer');
+            if (!container) return;
+            const history = JSON.parse(localStorage.getItem(`history_${username}`) || '[]');
+            if (history.length === 0) {
+                container.innerHTML = `<p style="text-align:center; padding:20px; color:#64748b;">No print jobs recorded yet.</p>`;
+                return;
+            }
+            container.innerHTML = history.map(order => `
+                <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:12px; margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; font-weight:800; font-size:0.85rem;">
+                        <span>Order #${order.orderId || 'N/A'}</span>
+                        <span style="color:#065f46;">₹${order.amount}</span>
+                    </div>
+                    <p style="font-size:0.75rem; color:#64748b; margin:4px 0;">Status: <b style="color:#2563eb;">${order.status}</b></p>
+                    <p style="font-size:0.7rem; color:#94a3b8;">${order.date}</p>
+                </div>
+            `).join('');
+        };
+    }
+
     // 🔥 1. DELIVERY PARTNER TIP STATE & SELECTOR HANDLER
     window.currentDeliveryTip = 0;
 
@@ -630,6 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
     };
 
+    // 🔒 STRICT INVENTORY ADD TO CART LOGIC WITH IMAGE CAPTURE
     window.addDynamicProductToCart = function(sku, name, price, currentStock, imageUrl = '') {
         const matchedProd = window.storeInventoryProducts ? window.storeInventoryProducts.find(p => (p.sku === sku || p.barcode === sku || p.name === name)) : null;
         const availableStock = matchedProd ? matchedProd.stockQuantity : currentStock;
@@ -706,7 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
     };
 
-    // 🔥 2. TOGGLE CART DRAWER WITH ABSOLUTE FLOATING BAR HIDE
+    // 🔥 Cart Drawer Toggle & Render Sync
     window.toggleCartDrawer = function(open = true) {
         const drawerOverlay = document.getElementById('cartDrawerOverlay');
         const floatingBar = document.getElementById('floatingCartFooterBar');
@@ -729,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🌟 FLOATING CART BAR WITH STRICT AUTH & DRAWER CHECK
+    // 🌟 FLOATING CART BAR WITH REAL STACKED PRODUCT IMAGES
     window.updateFloatingCartBar = function() {
         const bar = document.getElementById('floatingCartFooterBar');
         const countText = document.getElementById('floatingCartCountText');
@@ -815,7 +839,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🌟 1. FULLY FIXED CART DRAWER RENDERING WITH HORIZONTAL CARDS & STEPPERS
+    // 🌟 CART DRAWER WITH HORIZONTAL SLIDE CARDS, IMAGES, DETAILS & STEPPERS
     window.renderCartDrawerContents = function() {
         const container = document.getElementById('cartDrawerItemsList');
         if (!container) return;
