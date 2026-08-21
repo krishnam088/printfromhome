@@ -36,6 +36,56 @@ document.addEventListener('DOMContentLoaded', () => {
     window.globalRawOrdersCache = [];
 
     // ==========================================
+    // 🧮 BULLETPROOF GRAND TOTAL CALCULATOR ENGINE
+    // ==========================================
+    window.calculateTotal = function() {
+        try {
+            let totalPrintCost = 0; 
+            let totalBindingCost = 0;
+            
+            let snacksTotal = window.cartSnacksArray ? window.cartSnacksArray.reduce((acc, item) => acc + (parseFloat(item.price || 0) * parseInt(item.qty || 1)), 0) : 0;
+            let printJobsTotal = window.cartPrintJobsArray ? window.cartPrintJobsArray.reduce((acc, job) => acc + (parseInt(job.pages || 1) * (job.printType === 'bw' ? 3 : 10) * parseInt(job.copies || 1) + (job.binding === 'spiral' ? 30 * parseInt(job.copies || 1) : 0)), 0) : 0;
+
+            if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
+                masterFilesArray.forEach((item) => {
+                    const pages = parseInt(item.config.pages) || 1; 
+                    totalPrintCost += (pages * ((item.config.printType === 'bw') ? 3.00 : 10.00)) * item.config.copies;
+                    if (item.config.binding === 'spiral') totalBindingCost += 30.00 * item.config.copies;
+                });
+            }
+
+            let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal + printJobsTotal;
+            let accurateDeliveryCharge = (finalDocumentCost >= 99.00 || finalDocumentCost === 0) ? 0.00 : 25.00;
+            let rainFee = window.isRainSurgeActive ? 15 : 0;
+            let grandTotalCombined = finalDocumentCost + accurateDeliveryCharge + rainFee + (window.currentDeliveryTip || 0);
+
+            const updateUI = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = val;
+            };
+
+            updateUI('summaryPrint', `₹${(totalPrintCost + printJobsTotal).toFixed(2)}`);
+            updateUI('summaryBinding', `₹${(totalBindingCost + snacksTotal).toFixed(2)}`);
+            updateUI('summaryDelivery', accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`);
+            updateUI('summaryTotal', `₹${grandTotalCombined.toFixed(2)}`);
+
+            updateUI('cartItemSubtotal', `₹${finalDocumentCost.toFixed(2)}`);
+            updateUI('cartDeliveryFee', accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`);
+            updateUI('cartGrandTotalSummary', `₹${grandTotalCombined.toFixed(2)}`);
+            updateUI('cartDrawerGrandTotal', `₹${grandTotalCombined.toFixed(2)}`);
+            
+            let totalQtyCount = (window.cartSnacksArray ? window.cartSnacksArray.reduce((a, b) => a + b.qty, 0) : 0) + (window.cartPrintJobsArray ? window.cartPrintJobsArray.length : 0);
+            updateUI('shipmentItemsCountText', `Shipment of ${totalQtyCount} item${totalQtyCount > 1 ? 's' : ''}`);
+
+            if (typeof updateFloatingCartBar === 'function') {
+                updateFloatingCartBar();
+            }
+        } catch (err) {
+            console.error("Calculate Total Error:", err);
+        }
+    };
+
+    // ==========================================
     // 🌟 NEW: LOYALTY POINTS & DYNAMIC ETA CALCULATOR
     // ==========================================
     window.redeemPoints = async function() {
@@ -541,6 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
         if (typeof calculateTotal === 'function') calculateTotal();
+        if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
 
         const clickedBtn = event ? event.target : null;
         if (clickedBtn) {
@@ -601,6 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (allItems.length === 0 && (!window.cartPrintJobsArray || window.cartPrintJobsArray.length === 0)) {
             container.innerHTML = `<p style="font-size:0.8rem; color:#64748b; text-align:center; padding:15px;">Your cart is empty.</p>`;
+            calculateTotal();
             return;
         }
 
@@ -632,6 +684,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Render Print Jobs
         if (window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0) {
+            window.cartPrintJobsArray.exports.forEach((job, idx) => { // safe guard if needed, keeping original array check below
+                // standard iteration
+            });
             window.cartPrintJobsArray.forEach((job, idx) => {
                 const printRow = document.createElement('div');
                 printRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:10px; border-radius:10px; border:1px solid #e2e8f0; color:#0f172a; font-size:0.8rem; margin-bottom:8px;";
