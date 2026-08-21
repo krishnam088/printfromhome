@@ -26,8 +26,33 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedActiveAddress = localStorage.getItem('selected_active_address') || "";  
     window.storeInventoryProducts = []; 
 
-    // 🔥 1. DELIVERY PARTNER TIP STATE
+    // 🔥 1. DELIVERY PARTNER TIP STATE & SELECTOR HANDLER
     window.currentDeliveryTip = 0;
+
+    window.setDeliveryTip = function(tipAmount) {
+        if (window.currentDeliveryTip === tipAmount) {
+            window.currentDeliveryTip = 0; // Toggle off if clicked again
+        } else {
+            window.currentDeliveryTip = tipAmount;
+        }
+
+        // Highlight selected tip button visually
+        document.querySelectorAll('.tip-chip-btn').forEach(btn => {
+            btn.style.background = '#ffffff';
+            btn.style.borderColor = '#cbd5e1';
+            btn.style.color = '#0f172a';
+        });
+
+        if (window.currentDeliveryTip > 0 && event && event.target) {
+            event.target.style.background = '#065f46';
+            event.target.style.borderColor = '#065f46';
+            event.target.style.color = '#ffffff';
+        }
+
+        if (typeof calculateTotal === 'function') {
+            calculateTotal();
+        }
+    };
 
     // 🔥 LIVE RE-ROUTE CONFIGS
     const LIVE_SERVER_URL = window.location.origin;
@@ -633,7 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
     };
 
-    // 🔒 STRICT INVENTORY ADD TO CART LOGIC
+    // 🔒 STRICT INVENTORY ADD TO CART LOGIC WITH IMAGE CAPTURE
     window.addDynamicProductToCart = function(sku, name, price, currentStock, imageUrl = '') {
         const matchedProd = window.storeInventoryProducts ? window.storeInventoryProducts.find(p => (p.sku === sku || p.barcode === sku || p.name === name)) : null;
         const availableStock = matchedProd ? matchedProd.stockQuantity : currentStock;
@@ -725,7 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🌟 ENHANCED FLOATING CART BAR WITH STACKED OVERLAPPING REAL PRODUCT IMAGES (Blinkit Style)
+    // 🌟 FLOATING CART BAR WITH REAL STACKED PRODUCT IMAGES
     window.updateFloatingCartBar = function() {
         const bar = document.getElementById('floatingCartFooterBar');
         const countText = document.getElementById('floatingCartCountText');
@@ -739,7 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let totalSnacksPrice = window.cartSnacksArray ? window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0) : 0;
         let totalPrintPrice = window.cartPrintJobsArray ? window.cartPrintJobsArray.reduce((acc, job) => acc + (job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0) : 0;
-        let totalPrice = totalSnacksPrice + totalPrintPrice;
+        let totalPrice = totalSnacksPrice + totalPrintPrice + (window.currentDeliveryTip || 0);
 
         if (totalCount > 0) {
             bar.classList.remove('hidden');
@@ -747,7 +772,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (countText) countText.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
             if (priceText) priceText.textContent = `₹${totalPrice.toFixed(2)}`;
 
-            // Render Stacked Overlapping Real Images
             if (stackContainer) {
                 stackContainer.innerHTML = '';
                 stackContainer.style.cssText = "position:relative; width:45px; height:34px; display:flex; align-items:center;";
@@ -764,7 +788,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.cartPrintJobsArray.forEach(p => allVisualItems.push({ type: 'print', img: '', name: p.fileName }));
                 }
 
-                // Show up to 3 stacked icons
                 let displayItems = allVisualItems.slice(0, 3);
                 displayItems.forEach((item, sIdx) => {
                     const iconBox = document.createElement('div');
@@ -798,7 +821,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🌟 ENHANCED CART DRAWER WITH HORIZONTAL SLIDE CARDS, PRODUCT IMAGES & FULL DETAILS + STEPPERS
+    // 🌟 CART DRAWER WITH HORIZONTAL SLIDE CARDS, IMAGES, DETAILS & STEPPERS
     window.renderCartDrawerContents = function() {
         const container = document.getElementById('cartDrawerItemsList');
         if (!container) return;
@@ -813,23 +836,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Horizontal Scrollable Container for Items
         const sliderWrapper = document.createElement('div');
         sliderWrapper.style.cssText = "display:flex; gap:12px; overflow-x:auto; padding:4px 2px 10px 2px; width:100%; scrollbar-width:thin;";
 
-        // Render Snacks & Products in Horizontal Cards with Image and Details
         if (window.cartSnacksArray && window.cartSnacksArray.length > 0) {
             window.cartSnacksArray.forEach((snack, idx) => {
                 const card = document.createElement('div');
                 card.style.cssText = "min-width: 150px; width: 150px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
                 
-                const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:10px; margin:0 auto 6px auto; display:block;" />` : `<div style="font-size:2rem; text-align:center; margin-bottom:6px;">📦</div>`;
+                const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:55px; height:55px; object-fit:cover; border-radius:10px; margin:0 auto 6px auto; display:block;" />` : `<div style="font-size:2rem; text-align:center; margin-bottom:6px;">📦</div>`;
 
                 card.innerHTML = `
                     <div>
                         ${thumbImg}
                         <div title="${snack.name}" style="font-weight:700; font-size:0.78rem; color:#0f172a; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${snack.name}</div>
-                        <div style="font-size:0.68rem; color:#64748b; text-align:center; font-weight:600; margin-top:2px;">₹${snack.price} / unit</div>
+                        <div style="font-size:0.68rem; color:#64748b; text-align:center; font-weight:600; margin-top:2px;">₹${snack.price} each</div>
                     </div>
                     <div style="margin-top:10px;">
                         <div style="font-weight:800; font-size:0.8rem; color:#065f46; text-align:center; margin-bottom:6px;">₹${snack.price * snack.qty}</div>
@@ -844,7 +865,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Render Print Jobs in Horizontal Cards with Details
         if (window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0) {
             window.cartPrintJobsArray.forEach((job, idx) => {
                 const card = document.createElement('div');
@@ -884,7 +904,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🔥 Clear Entire Cart Function
     window.clearEntireCartData = function() {
         if (!confirm("⚠️ Are you sure you want to clear your cart?")) return;
         window.cartPrintJobsArray = [];
@@ -897,9 +916,6 @@ document.addEventListener('DOMContentLoaded', () => {
         alert("✅ Cart cleared successfully!");
     };
 
-    // ==========================================
-    // 🔙 PHONE BACK BUTTON / HISTORY HANDLER
-    // ==========================================
     window.addEventListener('popstate', (event) => {
         const studioModal = document.getElementById('printStudioModal');
         const cartOverlay = document.getElementById('cartDrawerOverlay');
@@ -929,9 +945,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateFloatingCartBar();
     }
 
-    // ==========================================
-    // 📍 DETAILED ADDRESS MANAGEMENT CORE
-    // ==========================================
     window.loadUserAddressesFromStorage = function() {
         const raw = localStorage.getItem('saved_addresses');
         if (raw) {
