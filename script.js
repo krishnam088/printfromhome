@@ -739,7 +739,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!bar) return;
 
-        // 🔥 CRITICAL FIX: Hide floating bar if user is not logged in / auth screen is active OR cart drawer is open
         const sessionActiveUser = localStorage.getItem('printAppUser');
         const isAuthVisible = document.getElementById('authScreen') && !document.getElementById('authScreen').classList.contains('app-hidden') && document.getElementById('authScreen').style.display !== 'none';
 
@@ -816,7 +815,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🌟 1. FULLY FIXED CART DRAWER RENDERING WITH PROPER DOM TARGETING
+    // 🌟 1. FULLY FIXED CART DRAWER RENDERING WITH HORIZONTAL CARDS & STEPPERS
     window.renderCartDrawerContents = function() {
         const container = document.getElementById('cartDrawerItemsList');
         if (!container) return;
@@ -883,7 +882,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         container.appendChild(sliderWrapper);
-        calculateTotal();
+        
+        if (typeof calculateTotal === 'function') {
+            calculateTotal();
+        }
     };
 
     window.removePrintJobFromCart = function(index) {
