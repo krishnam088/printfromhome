@@ -583,28 +583,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!modal) return;
 
         const finalImgUrl = prod.imageUrl || prod.image || '';
-        nameEl.textContent = prod.name;
-        priceEl.textContent = `₹${prod.sellingPrice || 0}`;
-        stockEl.textContent = prod.stockQuantity > 0 ? `Stock Left: ${prod.stockQuantity} units` : `Status: Out of Stock`;
+        if (nameEl) nameEl.textContent = prod.name;
+        if (priceEl) priceEl.textContent = `₹${prod.sellingPrice || 0}`;
+        if (stockEl) stockEl.textContent = prod.stockQuantity > 0 ? `Stock Left: ${prod.stockQuantity} units` : `Status: Out of Stock`;
         
-        imgContainer.innerHTML = finalImgUrl ? `<img src="${finalImgUrl}" style="width:120px; height:120px; object-fit:contain;" />` : `<span style="font-size:4rem;">📦</span>`;
+        if (imgContainer) imgContainer.innerHTML = finalImgUrl ? `<img src="${finalImgUrl}" style="width:120px; height:120px; object-fit:contain;" />` : `<span style="font-size:4rem;">📦</span>`;
 
         let existing = window.cartSnacksArray ? window.cartSnacksArray.find(item => item.sku === prod.sku || item.name === prod.name) : null;
         let currentQty = existing ? existing.qty : 0;
 
         if (prod.stockQuantity <= 0) {
-            addBtn.outerHTML = `<button type="button" style="width:100%; padding:14px; background:#ef4444; color:white; border:none; border-radius:12px; font-weight:800; font-size:0.95rem; cursor:not-allowed;" disabled>Out of Stock</button>`;
+            if (addBtn) addBtn.outerHTML = `<button type="button" style="width:100%; padding:14px; background:#ef4444; color:white; border:none; border-radius:12px; font-weight:800; font-size:0.95rem; cursor:not-allowed;" disabled>Out of Stock</button>`;
         } else {
-            addBtn.outerHTML = `
-                <div id="modalActionArea" style="display:flex; align-items:center; justify-content:space-between; width:100%; background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:6px 12px;">
-                    <span style="font-weight:700; font-size:0.85rem; color:#0f172a;">Quantity:</span>
-                    <div style="display:flex; align-items:center; gap:14px;">
-                        <button type="button" onclick="adjustModalItemQty('${prod.sku || prod.name}', -1, ${prod.stockQuantity}, ${prod.sellingPrice || 0}, '${prod.name}', '${finalImgUrl}')" style="width:34px; height:34px; background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer;">-</button>
-                        <span id="modalItemQtyVal" style="font-weight:800; font-size:1rem; color:#065f46;">${currentQty}</span>
-                        <button type="button" onclick="adjustModalItemQty('${prod.sku || prod.name}', 1, ${prod.stockQuantity}, ${prod.sellingPrice || 0}, '${prod.name}', '${finalImgUrl}')" style="width:34px; height:34px; background:#065f46; color:white; border:none; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer;">+</button>
+            if (addBtn) {
+                addBtn.outerHTML = `
+                    <div id="modalActionArea" style="display:flex; align-items:center; justify-content:space-between; width:100%; background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:6px 12px;">
+                        <span style="font-weight:700; font-size:0.85rem; color:#0f172a;">Quantity:</span>
+                        <div style="display:flex; align-items:center; gap:14px;">
+                            <button type="button" onclick="adjustModalItemQty('${prod.sku || prod.name}', -1, ${prod.stockQuantity}, ${prod.sellingPrice || 0}, '${prod.name}', '${finalImgUrl}')" style="width:34px; height:34px; background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer;">-</button>
+                            <span id="modalItemQtyVal" style="font-weight:800; font-size:1rem; color:#065f46;">${currentQty}</span>
+                            <button type="button" onclick="adjustModalItemQty('${prod.sku || prod.name}', 1, ${prod.stockQuantity}, ${prod.sellingPrice || 0}, '${prod.name}', '${finalImgUrl}')" style="width:34px; height:34px; background:#065f46; color:white; border:none; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer;">+</button>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
         }
         modal.style.display = 'flex';
     };
@@ -653,7 +655,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
     };
 
-    // 🔒 STRICT INVENTORY ADD TO CART LOGIC WITH IMAGE CAPTURE
     window.addDynamicProductToCart = function(sku, name, price, currentStock, imageUrl = '') {
         const matchedProd = window.storeInventoryProducts ? window.storeInventoryProducts.find(p => (p.sku === sku || p.barcode === sku || p.name === name)) : null;
         const availableStock = matchedProd ? matchedProd.stockQuantity : currentStock;
@@ -730,7 +731,6 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
     };
 
-    // 🔥 Cart Drawer Toggle & Render Sync
     window.toggleCartDrawer = function(open = true) {
         const drawerOverlay = document.getElementById('cartDrawerOverlay');
         const floatingBar = document.getElementById('floatingCartFooterBar');
@@ -753,7 +753,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🌟 FLOATING CART BAR WITH REAL STACKED PRODUCT IMAGES
     window.updateFloatingCartBar = function() {
         const bar = document.getElementById('floatingCartFooterBar');
         const countText = document.getElementById('floatingCartCountText');
@@ -839,7 +838,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🌟 CART DRAWER WITH HORIZONTAL SLIDE CARDS, IMAGES, DETAILS & STEPPERS
     window.renderCartDrawerContents = function() {
         const container = document.getElementById('cartDrawerItemsList');
         if (!container) return;
