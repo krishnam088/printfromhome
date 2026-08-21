@@ -39,7 +39,7 @@
     <link rel="apple-touch-icon" sizes="152x152" href="/icon-192.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png">
     <link rel="apple-touch-icon" sizes="167x167" href="/icon-192.png">
-    <style>
+  <style>
         @keyframes slideUpModal {
             from { transform: translateY(100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
@@ -56,23 +56,29 @@
         body {
             background-color: #f8fafc;
             color: #0f172a;
-            padding-bottom: 90px; /* Prevents content from hiding behind the floating bar */
+            padding-bottom: 90px;
         }
 
-        /* --- 📱 FIXED FLOATING CART BAR OVERLAP FIX (Light Yellow Theme) --- */
+        /* --- 📱 COMPACT & BALANCED FLOATING CART BAR (Second Image Style) --- */
         #floatingCartFooterBar {
             position: fixed !important;
-            bottom: 20px !important;
+            bottom: 16px !important;
             left: 50% !important;
             transform: translateX(-50%) !important;
-            width: 92% !important;
-            max-width: 420px !important;
+            width: 88% !important;
+            max-width: 360px !important;
+            height: 48px !important;
+            padding: 6px 12px !important;
             z-index: 99999 !important;
             background: #fef3c7 !important; /* Light Yellow */
             color: #713f12 !important;
             border: 1px solid #f59e0b !important;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
-            border-radius: 22px !important;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12) !important;
+            border-radius: 24px !important;
+            box-sizing: border-box !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
         }
 
         #floatingCartFooterBar span, 
@@ -83,18 +89,23 @@
         #floatingCartFooterBar button {
             background: rgba(113, 63, 18, 0.1) !important;
             color: #713f12 !important;
+            height: 32px !important;
+            width: 32px !important;
         }
 
         #floatingCartFooterBar .view-btn-box,
         #floatingCartFooterBar div[onclick*="toggleCartDrawer"] {
             background: #f59e0b !important;
             color: #ffffff !important;
+            padding: 6px 12px !important;
+            border-radius: 16px !important;
+            font-size: 0.78rem !important;
         }
 
         /* --- 🍞 MODERN TOAST NOTIFICATION CONTAINER --- */
         #appToastContainer {
             position: fixed;
-            bottom: 100px;
+            bottom: 85px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 999999;
