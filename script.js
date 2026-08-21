@@ -243,13 +243,23 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================
-    // 🔔 PUSH NOTIFICATION PERMISSION & SUBSCRIPTION
+    // 🔔 PUSH NOTIFICATION PERMISSION REQUEST & SUBSCRIPTION
     // ==========================================
     async function requestUserPushNotificationPermission() {
         try {
-            if (!("Notification" in window)) return;
-            await Notification.requestPermission();
-        } catch (err) {}
+            if (!("Notification" in window)) {
+                console.log("This browser does not support notifications.");
+                return;
+            }
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                console.log('✅ Notification permission granted.');
+            } else {
+                console.log('❌ Notification permission denied.');
+            }
+        } catch (err) {
+            console.error('Push permission error:', err);
+        }
     }
 
     setTimeout(requestUserPushNotificationPermission, 4000);
@@ -262,6 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const registration = await navigator.serviceWorker.ready;
+            
             const permissionResult = await Notification.requestPermission();
             if (permissionResult !== 'granted') {
                 alert("⚠️ Please allow notifications to get stock alerts.");
@@ -274,8 +285,8 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             const pushSubscription = await registration.pushManager.subscribe(subscribeOptions);
-            const sessionUser = localStorage.getItem('printAppUserIdentity') || 'guest';
             
+            const sessionUser = localStorage.getItem('printAppUserIdentity') || 'guest';
             await fetch('/api/notifications/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -301,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================
-    // 🕒 REAL-TIME STORE STATUS AUTO-CHECKER
+    // 🕒 REAL-TIME STORE STATUS AUTO-CHECKER & DISMISS HANDLER
     // ==========================================
     async function checkStoreStatusRealtime() {
         try {
@@ -343,7 +354,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error("Store status sync error:", e);
+        }
     }
 
     setInterval(checkStoreStatusRealtime, 3000);
@@ -351,6 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.dismissStoreClosedNotice = function() {
         const storeClosedNotice = document.getElementById('storeClosedNoticeBox');
         const storeClosedModal = document.getElementById('storeClosedPopupModal');
+        
         if (storeClosedNotice) storeClosedNotice.classList.add('hidden');
         if (storeClosedModal) storeClosedModal.style.display = 'none';
         sessionStorage.setItem('storeModalDismissed', 'true');
@@ -399,13 +413,18 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch('/api/store/products');
             const contentType = res.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) return;
+            if (!contentType || !contentType.includes("application/json")) {
+                console.warn("Server returned non-JSON response (Server restarting or down)");
+                return;
+            }
             const data = await res.json();
             if (data.success && Array.isArray(data.products)) {
                 window.storeInventoryProducts = data.products;
                 renderStoreProductsUI();
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error("Failed to load store inventory:", e);
+        }
     }
 
     function renderStoreProductsUI() {
@@ -483,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔒 STRICT INVENTORY ADD TO CART LOGIC & DRAWER RENDER SYNC
+    // 🔒 STRICT INVENTORY ADD TO CART LOGIC & DRAWER SYNC (MATCHED WITH `cartDrawerItemsList`)
     window.addDynamicProductToCart = function(sku, name, price, currentStock) {
         const matchedProd = window.storeInventoryProducts.find(p => (p.sku === sku || p.barcode === sku || p.name === name));
         const availableStock = matchedProd ? matchedProd.stockQuantity : currentStock;
@@ -570,9 +589,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🔥 Full Cart Drawer Render Engine
+    // 🔥 Full Cart Drawer Render Engine (Targeting `cartDrawerItemsList` from index.html)
     window.renderCartDrawerContents = function() {
-        let container = document.getElementById('cartDrawerItemsContainer') || document.getElementById('cartItemsListContainer') || document.querySelector('.cart-drawer-items');
+        const container = document.getElementById('cartDrawerItemsList');
         if (!container) return;
 
         container.innerHTML = '';
@@ -580,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let allCartItems = [...(window.cartSnacksArray || []), ...(window.cartPrintJobsArray || [])];
         
         if (allCartItems.length === 0) {
-            container.innerHTML = `<p style="font-size:0.8rem; color:#64748b; text-align:center; padding:20px;">Your cart is empty.</p>`;
+            container.innerHTML = `<p style="font-size:0.8rem; color:#a7f3d0; text-align:center; padding:20px;">Your cart is empty.</p>`;
             return;
         }
 
@@ -588,16 +607,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.cartSnacksArray && window.cartSnacksArray.length > 0) {
             window.cartSnacksArray.forEach((snack, idx) => {
                 const itemRow = document.createElement('div');
-                itemRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:8px; border:1px solid #e2e8f0; font-size:0.8rem;";
+                itemRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#022c22; padding:10px; border-radius:12px; border:1px solid #047857; color:white; font-size:0.8rem; margin-bottom:6px;";
                 itemRow.innerHTML = `
                     <div>
-                        <div style="font-weight:700; color:#0f172a;">📦 ${snack.name}</div>
-                        <div style="font-size:0.7rem; color:#64748b;">₹${snack.price} x ${snack.qty} = ₹${snack.price * snack.qty}</div>
+                        <div style="font-weight:700; color:#ffffff;">📦 ${snack.name}</div>
+                        <div style="font-size:0.7rem; color:#a7f3d0;">₹${snack.price} x ${snack.qty} = ₹${snack.price * snack.qty}</div>
                     </div>
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="padding:2px 6px; background:#e2e8f0; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">-</button>
-                        <span style="font-weight:700;">${snack.qty}</span>
-                        <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="padding:2px 6px; background:#e2e8f0; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">+</button>
+                        <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="padding:2px 8px; background:#065f46; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">-</button>
+                        <span style="font-weight:700; color:#fff;">${snack.qty}</span>
+                        <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="padding:2px 8px; background:#065f46; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">+</button>
                     </div>
                 `;
                 container.appendChild(itemRow);
@@ -608,13 +627,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0) {
             window.cartPrintJobsArray.forEach((job, idx) => {
                 const printRow = document.createElement('div');
-                printRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#f0fdf4; padding:10px; border-radius:8px; margin-bottom:8px; border:1px solid #bbf7d0; font-size:0.8rem;";
+                printRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#022c22; padding:10px; border-radius:12px; border:1px solid #047857; color:white; font-size:0.8rem; margin-bottom:6px;";
                 printRow.innerHTML = `
                     <div>
-                        <div style="font-weight:700; color:#0f172a;">📄 ${job.fileName}</div>
-                        <div style="font-size:0.7rem; color:#16a34a;">${job.pages} pages | ${job.printType === 'bw' ? 'B&W' : 'Color'} | Copies: ${job.copies}</div>
+                        <div style="font-weight:700; color:#ffffff;">📄 ${job.fileName}</div>
+                        <div style="font-size:0.7rem; color:#34d399;">${job.pages} pages | ${job.printType === 'bw' ? 'B&W' : 'Color'} | Copies: ${job.copies}</div>
                     </div>
-                    <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1rem;">&times;</button>
+                    <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1.1rem;">&times;</button>
                 `;
                 container.appendChild(printRow);
             });
@@ -626,10 +645,11 @@ document.addEventListener('DOMContentLoaded', () => {
         persistCartStateData();
         renderCartDrawerContents();
         calculateTotal();
+        updateFloatingCartBar();
     };
 
     // 🔥 Clear Entire Cart Function
-    window.clearEntireCart = function() {
+    window.clearEntireCartData = function() {
         if (!confirm("⚠️ Are you sure you want to clear your cart?")) return;
         window.cartPrintJobsArray = [];
         window.cartSnacksArray = [];
@@ -637,14 +657,9 @@ document.addEventListener('DOMContentLoaded', () => {
         persistCartStateData();
         renderCartDrawerContents();
         calculateTotal();
+        updateFloatingCartBar();
         alert("✅ Cart cleared successfully!");
     };
-
-    // Bind Clear Cart Button on load
-    const clearBtn = document.querySelector('.clear-cart-btn') || document.getElementById('clearCartBtn');
-    if (clearBtn) {
-        clearBtn.onclick = window.clearEntireCart;
-    }
 
     // ==========================================
     // 🔙 PHONE BACK BUTTON / HISTORY HANDLER
@@ -1298,149 +1313,6 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("⚠️ Please re-upload the document to open A4 interactive studio.");
         }
     };
-
-    window.setDeliveryTip = function(amount) {
-        window.currentDeliveryTip = amount;
-        calculateTotal();
-    };
-
-    function calculateTotal() {
-        let totalPrintCost = 0; let totalBindingCost = 0;
-        const summaryPrint = document.getElementById('summaryPrint');
-        const summaryBinding = document.getElementById('summaryBinding');
-        const summaryDelivery = document.getElementById('summaryDelivery');
-        const summaryTotal = document.getElementById('summaryTotal');
-        if (!summaryPrint || !summaryBinding || !summaryDelivery || !summaryTotal) return;
-        
-        let snacksTotal = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
-        let printJobsTotal = window.cartPrintJobsArray.reduce((acc, job) => acc + (job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0);
-
-        if (masterFilesArray.length === 0 && snacksTotal === 0 && printJobsTotal === 0) { 
-            summaryPrint.textContent = `₹0.00`; summaryBinding.textContent = `₹0.00`; summaryDelivery.textContent = `₹0.00`; summaryTotal.textContent = `₹0.00`; return; 
-        }
-
-        masterFilesArray.forEach((item) => {
-            const pages = parseInt(item.config.pages) || 1; 
-            totalPrintCost += (pages * ((item.config.printType === 'bw') ? 3.00 : 10.00)) * item.config.copies;
-            if (item.config.binding === 'spiral') totalBindingCost += 30.00 * item.config.copies;
-        });
-
-        let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal + printJobsTotal;
-        let accurateDeliveryCharge = (finalDocumentCost >= 99.00 || finalDocumentCost === 0) ? 0.00 : 25.00;
-        let grandTotalCombined = finalDocumentCost + accurateDeliveryCharge + (window.currentDeliveryTip || 0);
-
-        summaryPrint.textContent = `₹${(totalPrintCost + printJobsTotal).toFixed(2)}`;
-        summaryBinding.textContent = `₹${(totalBindingCost + snacksTotal).toFixed(2)}`;
-        summaryDelivery.textContent = accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`;
-        summaryTotal.textContent = `₹${grandTotalCombined.toFixed(2)}`;
-    }
-
-    window.openOrderDeepTrackingWorkspacePage = function(orderStringPayload) {
-        const order = JSON.parse(decodeURIComponent(orderStringPayload));
-        if(typeof navigateDrawerSection === 'function') navigateDrawerSection('order_tracking'); 
-
-        document.getElementById('trackOrderIdLabel').textContent = `ID Reference: ${order.orderId || 'PFH-' + Date.now()}`;
-        document.getElementById('trackGrandTotalBadge').textContent = `₹${order.amount}`;
-        document.getElementById('trackShippingAddressLabel').textContent = order.address || 'N/A';
-
-        const listContainer = document.getElementById('trackFilesManifestList');
-        listContainer.innerHTML = '';
-        if(order.details) {
-            order.details.forEach(file => {
-                const row = document.createElement('div');
-                row.style = 'display:flex; justify-content:space-between; font-size:0.8rem; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0; font-weight:600;';
-                if (file.printType === 'snack') {
-                    row.innerHTML = `<span>📦 ${file.fileName}</span><span style="color:#d97706;">Product / Snack</span>`;
-                } else {
-                    row.innerHTML = `<span>📄 ${file.fileName} (${file.copies} copies)</span><span style="color:var(--blinkit-green);">${file.printType === 'bw' ? 'B&W' : 'Color'} Print</span>`;
-                }
-                listContainer.appendChild(row);
-            });
-        }
-        window.executeLiveTimelineStateStepper(order.status, order.assignedDeliveryBoy);
-
-        let cancelSectionNode = document.getElementById('dynamicCancelOrderSection');
-        if (!cancelSectionNode) {
-            cancelSectionNode = document.createElement('div');
-            cancelSectionNode.id = 'dynamicCancelOrderSection';
-            cancelSectionNode.style.marginTop = '20px';
-            const parentTrackingBox = document.querySelector('#user_section_order_tracking > div');
-            if (parentTrackingBox) parentTrackingBox.appendChild(cancelSectionNode);
-        }
-
-        const isLocked = order.status && (order.status.includes('Out for Delivery') || order.status.includes('Delivered') || order.status.includes('Cancelled'));
-        
-        if (isLocked) {
-            cancelSectionNode.innerHTML = `
-                <div style="background:#fef2f2; border:1px solid #fecaca; padding:12px; border-radius:12px; text-align:center;">
-                    <p style="font-size:0.78rem; font-weight:700; color:#991b1b;">🔒 Cancellation Not Available</p>
-                    <p style="font-size:0.72rem; color:#b91c1c; margin-top:2px;">Order is ${order.status}. Please contact customer care for assistance.</p>
-                </div>
-            `;
-        } else {
-            cancelSectionNode.innerHTML = `
-                <button type="button" onclick="executeUserCancelOrder('${order.orderId}')" style="width:100%; padding:12px; background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:12px; font-weight:800; font-size:0.85rem; cursor:pointer;">
-                    ❌ Cancel Order
-                </button>
-            `;
-        }
-    }
-
-    window.executeUserCancelOrder = async function(orderId) {
-        if (!confirm("⚠️ Are you sure you want to cancel this order? (Delivery fee of ₹25 is non-refundable, remaining amount will be refunded to your source)")) return;
-        try {
-            const res = await fetch('/api/orders/cancel', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert("✅ " + data.message);
-                const activeUserToken = localStorage.getItem('printAppUser');
-                const localHistory = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
-                localHistory.forEach(item => {
-                    if (item.orderId === orderId) item.status = "Cancelled by Customer";
-                });
-                localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(localHistory));
-                renderOrderHistoryUI(activeUserToken);
-                navigateDrawerSection('history');
-            } else {
-                alert(`⚠️ ${data.message}`);
-            }
-        } catch (e) {
-            alert("❌ Failed to cancel order. Please contact customer care.");
-        }
-    }
-
-    function renderOrderHistoryUI(userId) {
-        if(!ordersHistoryContainer) return;
-        const rawHistory = localStorage.getItem(`history_${userId}`);
-        if (!rawHistory || JSON.parse(rawHistory).length === 0) {
-            ordersHistoryContainer.innerHTML = `<p style="font-size:0.85rem; color:#718096; text-align:center; padding:15px;">No orders placed yet.</p>`;
-            return;
-        }
-        const parsedHistory = JSON.parse(rawHistory).reverse(); 
-        ordersHistoryContainer.innerHTML = '';
-
-        parsedHistory.forEach(order => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'history-card-item';
-            const stringifiedPayload = encodeURIComponent(JSON.stringify(order));
-            itemDiv.setAttribute('onclick', `openOrderDeepTrackingWorkspacePage('${stringifiedPayload}')`);
-
-            itemDiv.innerHTML = `
-                <div style="display:flex; justify-content:space-between; font-weight:700; color:#1a202c; border-bottom:1px solid #e2e8f0; padding-bottom:4px; margin-bottom:6px; font-size:0.85rem;">
-                    <span>📅 ${order.date}</span> <span style="color:#0C8346;">₹${order.amount}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
-                    <span style="color:var(--blinkit-green); font-weight:700;">👁️ Tap to View Details &rarr;</span>
-                    <span style="background:${order.status && order.status.includes('Cancelled') ? '#fee2e2' : '#fff3e0'}; padding:2px 6px; border-radius:4px; color:${order.status && order.status.includes('Cancelled') ? '#dc2626' : '#e67e22'}; font-weight:600;">${order.status || 'Active'}</span>
-                </div>
-            `;
-            ordersHistoryContainer.appendChild(itemDiv);
-        });
-    }
 
     const printForm = document.getElementById('printForm');
     if(printForm) {
