@@ -502,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔒 STRICT INVENTORY ADD TO CART LOGIC & DRAWER SYNC (MATCHED WITH `cartDrawerItemsList`)
+    // 🔒 STRICT INVENTORY ADD TO CART LOGIC & DRAWER RENDER SYNC
     window.addDynamicProductToCart = function(sku, name, price, currentStock) {
         const matchedProd = window.storeInventoryProducts.find(p => (p.sku === sku || p.barcode === sku || p.name === name));
         const availableStock = matchedProd ? matchedProd.stockQuantity : currentStock;
@@ -589,7 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🔥 Full Cart Drawer Render Engine (Targeting `cartDrawerItemsList` from index.html)
+    // 🔥 Full Cart Drawer Render Engine (Targeting `cartDrawerItemsList` with Thumbnails & Icons)
     window.renderCartDrawerContents = function() {
         const container = document.getElementById('cartDrawerItemsList');
         if (!container) return;
@@ -603,15 +603,24 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Snacks / Store Products Render
+        // Snacks / Store Products Render with Thumbnails
         if (window.cartSnacksArray && window.cartSnacksArray.length > 0) {
             window.cartSnacksArray.forEach((snack, idx) => {
                 const itemRow = document.createElement('div');
-                itemRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#022c22; padding:10px; border-radius:12px; border:1px solid #047857; color:white; font-size:0.8rem; margin-bottom:6px;";
+                itemRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#022c22; padding:10px; border-radius:12px; border:1px solid #047857; color:white; font-size:0.8rem; margin-bottom:8px;";
+                
+                const matchedInv = window.storeInventoryProducts.find(p => p.sku === snack.sku || p.name === snack.name);
+                const thumbImg = (matchedInv && (matchedInv.imageUrl || matchedInv.image)) ? `<img src="${matchedInv.imageUrl || matchedInv.image}" style="width:100%; height:100%; object-fit:cover;" />` : `📦`;
+
                 itemRow.innerHTML = `
-                    <div>
-                        <div style="font-weight:700; color:#ffffff;">📦 ${snack.name}</div>
-                        <div style="font-size:0.7rem; color:#a7f3d0;">₹${snack.price} x ${snack.qty} = ₹${snack.price * snack.qty}</div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="width:40px; height:40px; border-radius:8px; background:#065f46; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
+                            ${thumbImg}
+                        </div>
+                        <div>
+                            <div style="font-weight:700; color:#ffffff;">${snack.name}</div>
+                            <div style="font-size:0.7rem; color:#a7f3d0;">₹${snack.price} x ${snack.qty} = ₹${snack.price * snack.qty}</div>
+                        </div>
                     </div>
                     <div style="display:flex; align-items:center; gap:8px;">
                         <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="padding:2px 8px; background:#065f46; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">-</button>
@@ -623,15 +632,20 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Print Jobs Render
+        // Print Jobs Render with Document Icon
         if (window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0) {
             window.cartPrintJobsArray.forEach((job, idx) => {
                 const printRow = document.createElement('div');
-                printRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#022c22; padding:10px; border-radius:12px; border:1px solid #047857; color:white; font-size:0.8rem; margin-bottom:6px;";
+                printRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#022c22; padding:10px; border-radius:12px; border:1px solid #047857; color:white; font-size:0.8rem; margin-bottom:8px;";
                 printRow.innerHTML = `
-                    <div>
-                        <div style="font-weight:700; color:#ffffff;">📄 ${job.fileName}</div>
-                        <div style="font-size:0.7rem; color:#34d399;">${job.pages} pages | ${job.printType === 'bw' ? 'B&W' : 'Color'} | Copies: ${job.copies}</div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="width:40px; height:40px; border-radius:8px; background:#065f46; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;">
+                            📄
+                        </div>
+                        <div>
+                            <div style="font-weight:700; color:#ffffff;">${job.fileName}</div>
+                            <div style="font-size:0.7rem; color:#34d399;">${job.pages} pages | ${job.printType === 'bw' ? 'B&W' : 'Color'} | Copies: ${job.copies}</div>
+                        </div>
                     </div>
                     <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:1.1rem;">&times;</button>
                 `;
