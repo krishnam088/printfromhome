@@ -552,7 +552,88 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔒 STRICT INVENTORY ADD TO CART LOGIC (Without forcing automatic redirect)
+    // 🔥 MODERN INTERACTIVE PRODUCT DETAIL MODAL WITH QUANTITY STEPPER
+    window.openProductDetailModal = function(prod) {
+        const modal = document.getElementById('productDetailModal');
+        const imgContainer = document.getElementById('modalProductImgContainer');
+        const nameEl = document.getElementById('modalProductName');
+        const priceEl = document.getElementById('modalProductPrice');
+        const stockEl = document.getElementById('modalProductStock');
+        const addBtn = document.getElementById('modalAddToCartBtn');
+        if (!modal) return;
+
+        const finalImgUrl = prod.imageUrl || prod.image || '';
+        nameEl.textContent = prod.name;
+        priceEl.textContent = `₹${prod.sellingPrice || 0}`;
+        stockEl.textContent = prod.stockQuantity > 0 ? `Stock Left: ${prod.stockQuantity} units` : `Status: Out of Stock`;
+        
+        imgContainer.innerHTML = finalImgUrl ? `<img src="${finalImgUrl}" style="width:120px; height:120px; object-fit:contain;" />` : `<span style="font-size:4rem;">📦</span>`;
+
+        let existing = window.cartSnacksArray ? window.cartSnacksArray.find(item => item.sku === prod.sku || item.name === prod.name) : null;
+        let currentQty = existing ? existing.qty : 0;
+
+        if (prod.stockQuantity <= 0) {
+            addBtn.outerHTML = `<button type="button" style="width:100%; padding:14px; background:#ef4444; color:white; border:none; border-radius:12px; font-weight:800; font-size:0.95rem; cursor:not-allowed;" disabled>Out of Stock</button>`;
+        } else {
+            addBtn.outerHTML = `
+                <div id="modalActionArea" style="display:flex; align-items:center; justify-content:space-between; width:100%; background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:6px 12px;">
+                    <span style="font-weight:700; font-size:0.85rem; color:#0f172a;">Quantity:</span>
+                    <div style="display:flex; align-items:center; gap:14px;">
+                        <button type="button" onclick="adjustModalItemQty('${prod.sku || prod.name}', -1, ${prod.stockQuantity}, ${prod.sellingPrice || 0}, '${prod.name}')" style="width:34px; height:34px; background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer;">-</button>
+                        <span id="modalItemQtyVal" style="font-weight:800; font-size:1rem; color:#065f46;">${currentQty}</span>
+                        <button type="button" onclick="adjustModalItemQty('${prod.sku || prod.name}', 1, ${prod.stockQuantity}, ${prod.sellingPrice || 0}, '${prod.name}')" style="width:34px; height:34px; background:#065f46; color:white; border:none; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer;">+</button>
+                    </div>
+                </div>
+            `;
+        }
+        modal.style.display = 'flex';
+    };
+
+    window.closeProductDetailModal = function(event) {
+        const modal = document.getElementById('productDetailModal');
+        if (modal && (!event || event.target === modal || event.target.tagName === 'SPAN')) {
+            modal.style.display = 'none';
+            // Restore standard button placeholder if closed so modal re-renders cleanly next time
+            const actionArea = document.getElementById('modalActionArea');
+            if (actionArea) {
+                actionArea.outerHTML = `<button type="button" id="modalAddToCartBtn" style="width:100%; padding:14px; background:#065f46; color:white; border:none; border-radius:12px; font-weight:800; font-size:0.95rem; cursor:pointer; box-shadow:0 4px 12px rgba(6,95,70,0.3);">+ Add to Cart</button>`;
+            }
+        }
+    };
+
+    window.adjustModalItemQty = function(skuOrName, delta, maxStock, price, name) {
+        if (!window.cartSnacksArray) window.cartSnacksArray = [];
+        let existing = window.cartSnacksArray.find(item => item.sku === skuOrName || item.name === name);
+
+        if (delta > 0) {
+            let current = existing ? existing.qty : 0;
+            if (current + 1 > maxStock) {
+                alert(`⚠️ Max stock limit reached! Only ${maxStock} units available.`);
+                return;
+            }
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                window.cartSnacksArray.push({ sku: skuOrName, name: name, price: price, qty: 1, printType: 'snack', fileName: `Product: ${name}` });
+            }
+        } else if (delta < 0 && existing) {
+            existing.qty -= 1;
+            if (existing.qty <= 0) {
+                window.cartSnacksArray = window.cartSnacksArray.filter(item => item.sku !== skuOrName && item.name !== name);
+            }
+        }
+
+        let updatedExisting = window.cartSnacksArray.find(item => item.sku === skuOrName || item.name === name);
+        let qtyLabel = document.getElementById('modalItemQtyVal');
+        if (qtyLabel) qtyLabel.textContent = updatedExisting ? updatedExisting.qty : 0;
+
+        persistCartStateData();
+        if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
+        if (typeof calculateTotal === 'function') calculateTotal();
+        if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
+    };
+
+    // 🔒 STRICT INVENTORY ADD TO CART LOGIC
     window.addDynamicProductToCart = function(sku, name, price, currentStock) {
         const matchedProd = window.storeInventoryProducts ? window.storeInventoryProducts.find(p => (p.sku === sku || p.barcode === sku || p.name === name)) : null;
         const availableStock = matchedProd ? matchedProd.stockQuantity : currentStock;
@@ -587,8 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        localStorage.setItem('cart_snacks', JSON.stringify(window.cartSnacksArray));
-
+        persistCartStateData();
         if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
         if (typeof calculateTotal === 'function') calculateTotal();
         if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
@@ -684,9 +764,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Render Print Jobs
         if (window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0) {
-            window.cartPrintJobsArray.exports.forEach((job, idx) => { // safe guard if needed, keeping original array check below
-                // standard iteration
-            });
             window.cartPrintJobsArray.forEach((job, idx) => {
                 const printRow = document.createElement('div');
                 printRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:10px; border-radius:10px; border:1px solid #e2e8f0; color:#0f172a; font-size:0.8rem; margin-bottom:8px;";
