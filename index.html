@@ -52,9 +52,15 @@
         }
         .payment-option-box { transition: all 0.2s ease; }
 
-        /* --- 🌙 GLOBAL DARK THEME (PURE APP DARK MODE) --- */
+        /* --- 🌙 GLOBAL FULL APP DARK & LIGHT THEME BACKGROUND ENGINE --- */
+        body {
+            background-color: #f8fafc;
+            color: #0f172a;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
         body.theme-dark-mode {
-            background-color: #0f172a !important;
+            background-color: #090d16 !important;
             color: #f8fafc !important;
         }
         body.theme-dark-mode .auth-card,
@@ -62,12 +68,18 @@
         body.theme-dark-mode .wallet-modal-card,
         body.theme-dark-mode .store-header-box,
         body.theme-dark-mode .verbatim-docs-promo-card,
-        body.theme-dark-mode .cart-drawer-card {
-            background: #1e293b !important;
+        body.theme-dark-mode .cart-drawer-card,
+        body.theme-dark-mode .brand-premium-header,
+        body.theme-dark-mode .container,
+        body.theme-dark-mode div[style*="background:var(--surface)"],
+        body.theme-dark-mode div[style*="background:#ffffff"] {
+            background-color: #1e293b !important;
             color: #f8fafc !important;
             border-color: #334155 !important;
         }
-        body.theme-dark-mode input, body.theme-dark-mode select {
+        body.theme-dark-mode input, 
+        body.theme-dark-mode select, 
+        body.theme-dark-mode textarea {
             background: #0f172a !important;
             color: #fff !important;
             border-color: #334155 !important;
@@ -515,7 +527,7 @@
                     <span style="font-size: 1.3rem;">🛡️</span>
                     <div>
                         <h4 style="font-size: 0.82rem; font-weight: 800; color: #0f172a; margin-bottom: 2px;">Hide sensitive items</h4>
-                        <p style="font-size: 0.68rem; color: #64748b; font-weight: 500; line-height: 1.3;">Sexual wellness & confidential items will be hidden.</p>
+                        <p style="font-size: 0.68rem; color: #64748b; font-weight: 500; line-height: 1.3;">Adult novelty & confidential documents will be hidden.</p>
                     </div>
                 </div>
                 <input type="checkbox" id="sensitiveToggleCheck" onchange="toggleHideSensitiveItems(this.checked)" style="width: 40px; height: 22px; cursor: pointer; accent-color: #065f46;">
@@ -967,14 +979,12 @@
             try {
                 const statusRes = await fetch('/api/store-status');
                 const statusData = await statusRes.json();
-                
                 let adminRainForced = statusData.success && statusData.rainSurgeActive === true;
 
                 let isRaining = adminRainForced;
                 if (!adminRainForced) {
                     const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.3176&longitude=82.9739&current=precipitation,weather_code');
                     const data = await res.json();
-                    
                     if (data && data.current) {
                         const precipitation = data.current.precipitation || 0; 
                         const weatherCode = data.current.weather_code || 0;
@@ -985,56 +995,23 @@
                 const bodyEl = document.body;
                 const rainBanner = document.getElementById('rainSurgeBanner');
                 const rainSurgeRow = document.getElementById('rainSurgeRow');
-
                 const wasRaining = window.isRainSurgeActive || false;
 
                 if (isRaining) {
                     bodyEl.classList.add('theme-rainy-season');
                     if (rainBanner) rainBanner.classList.remove('hidden');
                     if (rainSurgeRow) rainSurgeRow.style.display = 'flex';
-
                     window.isRainSurgeActive = true;
                     window.rainSurgeFee = 15; 
                     initRealRainAnimation();
-                    highlightRainAndCravingProducts();
                 } else {
                     bodyEl.classList.remove('theme-rainy-season');
                     if (rainBanner) rainBanner.classList.add('hidden');
                     if (rainSurgeRow) rainSurgeRow.style.display = 'none';
-
                     window.isRainSurgeActive = false;
                     window.rainSurgeFee = 0;
                 }
-                
-                if (wasRaining !== window.isRainSurgeActive) {
-                    if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
-                    if (typeof calculateTotal === 'function') calculateTotal();
-                }
-            } catch (e) {
-                console.error("Weather detection error:", e);
-            }
-        }
-
-        function highlightRainAndCravingProducts() {
-            if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) return;
-
-            const rainyKeywords = ['tea', 'chai', 'coffee', 'soup', 'maggi', 'pakoda', 'umbrella', 'raincoat'];
-            const cravingKeywords = ['chocolate', 'chips', 'lays', 'kurkure', 'ice cream', 'cold drink', 'coke', 'pepsi', 'oreo', 'bhujia'];
-
-            window.storeInventoryProducts.forEach(prod => {
-                const nameLower = prod.name.toLowerCase();
-                const isRainItem = rainyKeywords.some(keyword => nameLower.includes(keyword));
-                const isCravingItem = cravingKeywords.some(keyword => nameLower.includes(keyword));
-
-                if (isRainItem || isCravingItem) {
-                    prod.isHighlightedRainOrCraving = true;
-                    prod.badgeText = isRainItem ? '🌧️ Rainy Special' : '🔥 Craving Alert';
-                }
-            });
-
-            if (typeof renderStoreProductsUI === 'function') {
-                renderStoreProductsUI();
-            }
+            } catch (e) {}
         }
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -1059,7 +1036,7 @@
         });
 
         // ==========================================
-        // 📄 UNIVERSAL A4 PRINT STUDIO & PREVIEW ENGINE
+        // 📄 A4 STUDIO & PREVIEW ENGINE
         // ==========================================
         let renderedPagesList = [];
         let isLandscapeMode = false;
