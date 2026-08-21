@@ -502,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔒 STRICT INVENTORY ADD TO CART LOGIC & DRAWER RENDER SYNC
+   // 🔒 STRICT INVENTORY ADD TO CART LOGIC (Without forcing automatic redirect)
     window.addDynamicProductToCart = function(sku, name, price, currentStock) {
         const matchedProd = window.storeInventoryProducts ? window.storeInventoryProducts.find(p => (p.sku === sku || p.barcode === sku || p.name === name)) : null;
         const availableStock = matchedProd ? matchedProd.stockQuantity : currentStock;
@@ -520,7 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentCartQty = existing ? existing.qty : 0;
 
         if (currentCartQty + 1 > availableStock) {
-            alert(`⚠️ Max stock limit reached! Only ${availableStock} units of "${name}" are available in store stock.`);
+            alert(`⚠️ Max stock limit reached! Only ${availableStock} units available.`);
             return;
         }
 
@@ -537,14 +537,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Force persist to localstorage immediately
         localStorage.setItem('cart_snacks', JSON.stringify(window.cartSnacksArray));
 
-        // Refresh UI components
+        // Sirf Floating Bar aur Totals update honge, drawer automatic nahi khulega
         if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
         if (typeof calculateTotal === 'function') calculateTotal();
-        if (typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
-        if (typeof toggleCartDrawer === 'function') toggleCartDrawer(true);
 
         const clickedBtn = event ? event.target : null;
         if (clickedBtn) {
@@ -557,6 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 800);
         }
     }
+    
     window.adjustSnackQty = function(index, delta) {
         const snack = window.cartSnacksArray[index];
         const matchedProd = window.storeInventoryProducts.find(p => p.sku === snack.sku || p.barcode === snack.sku || p.name === snack.name);
@@ -594,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🔥 Full Cart Drawer Render Engine (Targeting `cartDrawerItemsList` with Thumbnails & Icons)
+   // 🔥 Full Cart Drawer Render Engine (Targeting `cartDrawerItemsList` with Thumbnails & Icons)
     window.renderCartDrawerContents = function() {
         const container = document.getElementById('cartDrawerItemsList');
         if (!container) return;
@@ -605,6 +603,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (allCartItems.length === 0) {
             container.innerHTML = `<p style="font-size:0.8rem; color:#a7f3d0; text-align:center; padding:20px;">Your cart is empty.</p>`;
+            // Totals ko bhi zero kar do agar cart khali hai
+            if (typeof calculateTotal === 'function') calculateTotal();
             return;
         }
 
@@ -614,7 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const itemRow = document.createElement('div');
                 itemRow.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#022c22; padding:10px; border-radius:12px; border:1px solid #047857; color:white; font-size:0.8rem; margin-bottom:8px;";
                 
-                const matchedInv = window.storeInventoryProducts.find(p => p.sku === snack.sku || p.name === snack.name);
+                const matchedInv = window.storeInventoryProducts ? window.storeInventoryProducts.find(p => p.sku === snack.sku || p.name === snack.name) : null;
                 const thumbImg = (matchedInv && (matchedInv.imageUrl || matchedInv.image)) ? `<img src="${matchedInv.imageUrl || matchedInv.image}" style="width:100%; height:100%; object-fit:cover;" />` : `📦`;
 
                 itemRow.innerHTML = `
@@ -657,14 +657,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 container.appendChild(printRow);
             });
         }
-    };
 
-    window.removePrintJobFromCart = function(idx) {
-        window.cartPrintJobsArray.splice(idx, 1);
-        persistCartStateData();
-        renderCartDrawerContents();
-        calculateTotal();
-        updateFloatingCartBar();
+        // 🔥 Force calculation update immediately after rendering contents
+        if (typeof calculateTotal === 'function') {
+            calculateTotal();
+        }
     };
 
     // 🔥 Clear Entire Cart Function
