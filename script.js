@@ -26,6 +26,87 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedActiveAddress = localStorage.getItem('selected_active_address') || "";  
     window.storeInventoryProducts = []; 
 
+    // 🔥 REAL GOOGLE MAPS INTEGRATION STATE
+    let googleDeliveryMap = null;
+    let deliveryMarker = null;
+
+    window.initRealGoogleMap = function() {
+        const mapContainer = document.getElementById('userDeliveryMap');
+        const addressInput = document.getElementById('mapSelectedAddressInput');
+        if (!mapContainer) return;
+
+        // Default Varanasi Center coordinates
+        const varanasiCoords = { lat: 25.3176, lng: 82.9739 };
+
+        // Initialize Real Google Map
+        googleDeliveryMap = new google.maps.Map(mapContainer, {
+            center: varanasiCoords,
+            zoom: 16,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            zoomControl: true
+        });
+
+        // Create Draggable Pin Marker
+        deliveryMarker = new google.maps.Marker({
+            position: varanasiCoords,
+            map: googleDeliveryMap,
+            draggable: true,
+            animation: google.maps.Animation.DROP,
+            title: 'Drag pin to your exact delivery spot'
+        });
+
+        const geocoder = new google.maps.Geocoder();
+
+        // 1. When marker is dragged and dropped
+        google.maps.event.addListener(deliveryMarker, 'dragend', function() {
+            const position = deliveryMarker.getPosition();
+            updateAddressFromLatLng(geocoder, position, addressInput);
+        });
+
+        // 2. When user clicks anywhere on the map
+        googleDeliveryMap.addListener('click', function(event) {
+            deliveryMarker.setPosition(event.latLng);
+            googleDeliveryMap.panTo(event.latLng);
+            updateAddressFromLatLng(geocoder, event.latLng, addressInput);
+        });
+
+        // 3. Try fetching user's live GPS location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userPos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+                    googleDeliveryMap.setCenter(userPos);
+                    deliveryMarker.setPosition(userPos);
+                    updateAddressFromLatLng(geocoder, userPos, addressInput);
+                },
+                () => {
+                    updateAddressFromLatLng(geocoder, varanasiCoords, addressInput);
+                }
+            );
+        } else {
+            updateAddressFromLatLng(geocoder, varanasiCoords, addressInput);
+        }
+    };
+
+    function updateAddressFromLatLng(geocoder, latLng, inputElement) {
+        geocoder.geocode({ location: latLng }, (results, status) => {
+            if (status === "OK" && results[0]) {
+                if (inputElement) {
+                    inputElement.value = results[0].formatted_address;
+                }
+            } else {
+                if (inputElement) {
+                    inputElement.value = `Location: ${latLng.lat().toFixed(5)}, ${latLng.lng().toFixed(5)}`;
+                }
+            }
+        });
+    }
+
     // 🔥 SAFE FALLBACK HELPER FOR ORDER HISTORY UI TO PREVENT CRASH
     if (typeof window.renderOrderHistoryUI !== 'function') {
         window.renderOrderHistoryUI = function(username, showRecent = true) {
@@ -1039,7 +1120,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modal) {
             modal.style.display = 'flex';
             history.pushState({ addressModalOpen: true }, '', '');
-            setTimeout(() => { if (typeof initBlinkitStyleMap === 'function') initBlinkitStyleMap(); }, 200);
+            setTimeout(() => { 
+                if (typeof initRealGoogleMap === 'function') {
+                    initRealGoogleMap(); 
+                } else if (googleDeliveryMap) {
+                    google.maps.event.trigger(googleDeliveryMap, 'resize');
+                }
+            }, 300);
         }
     }
 
