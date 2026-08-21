@@ -52,7 +52,7 @@
         }
         .payment-option-box { transition: all 0.2s ease; }
 
-        /* --- 🌙 GLOBAL FULL APP DARK & LIGHT THEME BACKGROUND ENGINE --- */
+        /* --- 🌙 GLOBAL FULL APP & CART DARK THEME BACKGROUND ENGINE --- */
         body {
             background-color: #f8fafc;
             color: #0f172a;
@@ -77,6 +77,24 @@
             color: #f8fafc !important;
             border-color: #334155 !important;
         }
+
+        /* 🛒 DARK THEME CART DRAWER OVERRIDE (MAKES IT MATCH THEME & WORDS VISIBLE) */
+        body.theme-dark-mode .cart-drawer-card,
+        body.theme-dark-mode div[style*="background:#064e3b"],
+        body.theme-dark-mode div[style*="background:#065f46"],
+        body.theme-dark-mode div[style*="background:#022c22"] {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+            border-color: #334155 !important;
+        }
+        body.theme-dark-mode .cart-drawer-card h3,
+        body.theme-dark-mode .cart-drawer-card h4,
+        body.theme-dark-mode .cart-drawer-card span,
+        body.theme-dark-mode .cart-drawer-card p,
+        body.theme-dark-mode .cart-drawer-card div {
+            color: #f8fafc !important;
+        }
+
         body.theme-dark-mode input, 
         body.theme-dark-mode select, 
         body.theme-dark-mode textarea {
