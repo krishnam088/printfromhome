@@ -725,7 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🌟 ENHANCED FLOATING CART BAR WITH STACKED OVERLAPPING ICONS (Blinkit Style)
+    // 🌟 ENHANCED FLOATING CART BAR WITH STACKED OVERLAPPING REAL PRODUCT IMAGES (Blinkit Style)
     window.updateFloatingCartBar = function() {
         const bar = document.getElementById('floatingCartFooterBar');
         const countText = document.getElementById('floatingCartCountText');
@@ -747,14 +747,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (countText) countText.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
             if (priceText) priceText.textContent = `₹${totalPrice.toFixed(2)}`;
 
-            // Render Stacked Overlapping Icons
+            // Render Stacked Overlapping Real Images
             if (stackContainer) {
                 stackContainer.innerHTML = '';
                 stackContainer.style.cssText = "position:relative; width:45px; height:34px; display:flex; align-items:center;";
 
                 let allVisualItems = [];
                 if (window.cartSnacksArray) {
-                    window.cartSnacksArray.forEach(s => allVisualItems.push({ type: 'snack', img: s.imageUrl || '', name: s.name }));
+                    window.cartSnacksArray.forEach(s => {
+                        for(let i=0; i<s.qty; i++) {
+                            allVisualItems.push({ type: 'snack', img: s.imageUrl || '', name: s.name });
+                        }
+                    });
                 }
                 if (window.cartPrintJobsArray) {
                     window.cartPrintJobsArray.forEach(p => allVisualItems.push({ type: 'print', img: '', name: p.fileName }));
@@ -794,7 +798,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🌟 ENHANCED CART DRAWER WITH HORIZONTAL SLIDE CARDS & STEPPERS
+    // 🌟 ENHANCED CART DRAWER WITH HORIZONTAL SLIDE CARDS, PRODUCT IMAGES & FULL DETAILS + STEPPERS
     window.renderCartDrawerContents = function() {
         const container = document.getElementById('cartDrawerItemsList');
         if (!container) return;
@@ -813,23 +817,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const sliderWrapper = document.createElement('div');
         sliderWrapper.style.cssText = "display:flex; gap:12px; overflow-x:auto; padding:4px 2px 10px 2px; width:100%; scrollbar-width:thin;";
 
-        // Render Snacks & Products in Horizontal Cards
+        // Render Snacks & Products in Horizontal Cards with Image and Details
         if (window.cartSnacksArray && window.cartSnacksArray.length > 0) {
             window.cartSnacksArray.forEach((snack, idx) => {
                 const card = document.createElement('div');
-                card.style.cssText = "min-width: 140px; width: 140px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
+                card.style.cssText = "min-width: 150px; width: 150px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
                 
-                const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:50px; height:50px; object-fit:cover; border-radius:10px; margin:0 auto 6px auto; display:block;" />` : `<div style="font-size:1.8rem; text-align:center; margin-bottom:6px;">📦</div>`;
+                const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:60px; height:60px; object-fit:cover; border-radius:10px; margin:0 auto 6px auto; display:block;" />` : `<div style="font-size:2rem; text-align:center; margin-bottom:6px;">📦</div>`;
 
                 card.innerHTML = `
                     <div>
                         ${thumbImg}
                         <div title="${snack.name}" style="font-weight:700; font-size:0.78rem; color:#0f172a; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${snack.name}</div>
-                        <div style="font-size:0.72rem; color:#64748b; text-align:center; font-weight:600; margin-top:2px;">₹${snack.price} each</div>
+                        <div style="font-size:0.68rem; color:#64748b; text-align:center; font-weight:600; margin-top:2px;">₹${snack.price} / unit</div>
                     </div>
                     <div style="margin-top:10px;">
-                        <div style="font-weight:800; font-size:0.78rem; color:#065f46; text-align:center; margin-bottom:6px;">₹${snack.price * snack.qty}</div>
-                        <div style="display:flex; align-items:center; justify-content:space-between; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:2px 6px;">
+                        <div style="font-weight:800; font-size:0.8rem; color:#065f46; text-align:center; margin-bottom:6px;">₹${snack.price * snack.qty}</div>
+                        <div style="display:flex; align-items:center; justify-content:space-between; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:2px 8px;">
                             <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; font-size:1rem; cursor:pointer; color:#0f172a;">-</button>
                             <span style="font-weight:800; font-size:0.8rem; color:#0f172a;">${snack.qty}</span>
                             <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; font-size:1rem; cursor:pointer; color:#065f46;">+</button>
@@ -840,22 +844,22 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Render Print Jobs in Horizontal Cards
+        // Render Print Jobs in Horizontal Cards with Details
         if (window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0) {
             window.cartPrintJobsArray.forEach((job, idx) => {
                 const card = document.createElement('div');
-                card.style.cssText = "min-width: 140px; width: 140px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
+                card.style.cssText = "min-width: 150px; width: 150px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
                 
                 let jobTotal = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
 
                 card.innerHTML = `
                     <div>
-                        <div style="font-size:1.8rem; text-align:center; margin-bottom:6px;">📄</div>
+                        <div style="font-size:2rem; text-align:center; margin-bottom:6px;">📄</div>
                         <div title="${job.fileName}" style="font-weight:700; font-size:0.78rem; color:#0f172a; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${job.fileName}</div>
-                        <div style="font-size:0.68rem; color:#059669; text-align:center; font-weight:600; margin-top:2px;">${job.pages} pages (${job.printType.toUpperCase()})</div>
+                        <div style="font-size:0.68rem; color:#059669; text-align:center; font-weight:600; margin-top:2px;">${job.pages} pgs (${job.printType.toUpperCase()})</div>
                     </div>
                     <div style="margin-top:10px;">
-                        <div style="font-weight:800; font-size:0.78rem; color:#065f46; text-align:center; margin-bottom:6px;">₹${jobTotal}</div>
+                        <div style="font-weight:800; font-size:0.8rem; color:#065f46; text-align:center; margin-bottom:6px;">₹${jobTotal}</div>
                         <button type="button" onclick="removePrintJobFromCart(${idx})" style="width:100%; background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:8px; font-weight:700; font-size:0.72rem; padding:4px; cursor:pointer;">Remove</button>
                     </div>
                 `;
