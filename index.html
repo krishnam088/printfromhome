@@ -78,11 +78,8 @@
             border-color: #334155 !important;
         }
 
-        /* 🛒 DARK THEME CART DRAWER OVERRIDE (MAKES IT MATCH THEME & WORDS VISIBLE) */
-        body.theme-dark-mode .cart-drawer-card,
-        body.theme-dark-mode div[style*="background:#064e3b"],
-        body.theme-dark-mode div[style*="background:#065f46"],
-        body.theme-dark-mode div[style*="background:#022c22"] {
+        /* 🛒 DARK THEME CART DRAWER OVERRIDE */
+        body.theme-dark-mode .cart-drawer-card {
             background-color: #1e293b !important;
             color: #ffffff !important;
             border-color: #334155 !important;
@@ -260,7 +257,6 @@
         }
         .cart-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* --- STRICT A4 HARDWARE PRINT MEDIA RULES --- */
         @media print {
             body * { visibility: hidden !important; }
             #printStudioModal, #printStudioModal * { visibility: visible !important; }
@@ -397,7 +393,7 @@
         </div>
     </div>
 
-    <!-- ⚙️ FULLY FUNCTIONAL EDIT PROFILE & GMAIL MODAL -->
+    <!-- ⚙️ EDIT PROFILE & GMAIL MODAL -->
     <div id="editProfileModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 22000; display: none; justify-content: center; align-items: center; padding: 20px;">
         <div style="background: #ffffff; border-radius: 20px; padding: 24px; max-width: 420px; width: 100%; text-align: left; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
@@ -473,7 +469,7 @@
 
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
-    <!-- 👤 BLINKIT-STYLE USER ACCOUNT SHEET DRAWER (FULLY ACTIVATED) -->
+    <!-- 👤 USER ACCOUNT SHEET DRAWER -->
     <nav id="userSideDrawer" class="side-drawer" style="background: #ffffff; color: #0f172a; width: 100%; max-width: 420px; height: 100vh; position: fixed; top: 0; right: -100%; z-index: 17000; transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.2);">
         
         <div style="background: linear-gradient(135deg, #fef08a 0%, #fde047 100%); padding: 24px 20px; text-align: center; position: relative; border-bottom: 1px solid #e2e8f0;">
@@ -484,8 +480,6 @@
         </div>
 
         <div style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; background: #f8fafc;">
-
-            <!-- Birthday Saver Banner -->
             <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; border-radius: 14px; padding: 14px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;" id="birthdayDisplayBox">
                     <div>
@@ -496,11 +490,10 @@
                 </div>
                 <div id="birthdayInputBox" style="display: none; margin-top: 8px;">
                     <input type="date" id="userBirthdayInput" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #f59e0b; margin-bottom: 6px; font-size: 0.8rem; outline: none;">
-                    <button type="button" onclick="saveUserBirthday()" style="background: #d97706; color: white; border: none; padding: 6px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; width: 100%; cursor: pointer;">Save Birthday for Special Offers 🎁</button>
+                    <button type="button" onclick="saveUserBirthday()" style="background: #d97706; color: white; border: none; padding: 6px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; width: 100%; cursor: pointer;">Save Birthday 🎁</button>
                 </div>
             </div>
 
-            <!-- Quick Action 3 Cards Grid -->
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
                 <div onclick="navigateDrawerSection('history'); toggleUserDrawer(false);" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 10px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                     <div style="font-size: 1.5rem; margin-bottom: 4px;">📋</div>
@@ -516,7 +509,6 @@
                 </div>
             </div>
 
-            <!-- App Update Notice -->
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span style="font-size: 1.3rem;">📱</span>
@@ -528,7 +520,6 @@
                 <span style="background: #f1f5f9; color: #0f172a; font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 6px;">v18.19.0</span>
             </div>
 
-            <!-- Appearance Toggle Box -->
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 10px; font-size: 0.82rem; font-weight: 800; color: #0f172a;">
                     <span>☀️</span> Appearance
@@ -539,7 +530,6 @@
                 </select>
             </div>
 
-            <!-- Hide Sensitive Items Toggle -->
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; gap: 12px; align-items: flex-start;">
                     <span style="font-size: 1.3rem;">🛡️</span>
@@ -551,7 +541,6 @@
                 <input type="checkbox" id="sensitiveToggleCheck" onchange="toggleHideSensitiveItems(this.checked)" style="width: 40px; height: 22px; cursor: pointer; accent-color: #065f46;">
             </div>
 
-            <!-- Your Information Group -->
             <div>
                 <h4 style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 8px; padding-left: 4px;">Your Information</h4>
                 <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden;">
@@ -566,11 +555,9 @@
                 </div>
             </div>
 
-            <!-- Logout Button -->
             <button id="logoutBtn" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; padding:12px; border-radius:12px; font-weight:800; font-size:0.85rem; width:100%; cursor:pointer; text-align:center; margin-top: 10px;">
                 🚪 Logout Account
             </button>
-
         </div>
     </nav>
 
@@ -634,7 +621,7 @@
         </div>
     </div>
 
-    <!-- 🛒 UNIFIED CHECKOUT CART DRAWER WITH DELIVERY TIP & MATCHED THEME -->
+    <!-- 🛒 PROPERLY CONTAINED CHECKOUT CART DRAWER -->
     <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:16000; display:none; justify-content:flex-end;">
         <div class="cart-drawer-card" onclick="event.stopPropagation()" style="background:#090d16; color:#f8fafc; width:100%; max-width:440px; height:100vh; display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.4); overflow:hidden; border-left:1px solid #334155;">
             
@@ -741,62 +728,6 @@
             </div>
 
             <div style="flex-shrink:0; background:#1e293b; border-top:1px solid #334155; padding:15px; box-shadow:0 -4px 15px rgba(0,0,0,0.3);">
-                <button type="button" onclick="executeFinalCartOrderPlacement()" style="width:100%; padding:14px 18px; background:#22c55e; color:#064e3b; border:none; border-radius:14px; font-weight:900; font-size:1rem; display:flex; justify-content:space-between; align-items:center; cursor:pointer; box-shadow:0 4px 12px rgba(34,197,94,0.3);">
-                    <span style="font-size:0.95rem; font-weight:800;">Place Order & Pay</span>
-                    <span id="cartDrawerGrandTotal" style="font-size:1.1rem; font-weight:900;">₹0.00</span>
-                </button>
-            </div>
-
-        </div>
-    </div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#a7f3d0; margin-bottom:5px;">
-                        <span>Delivery Partner Fee</span>
-                        <span id="cartDeliveryFee">₹25.00</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#f59e0b; font-weight:700; margin-bottom:5px; display:none;" id="rainSurgeRow">
-                        <span>🌧️ Rain Surge Fee</span>
-                        <span id="cartRainFee">₹15.00</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#34d399; font-weight:700; margin-bottom:8px;">
-                        <span>Taxes & Platform Charges</span>
-                        <span>FREE</span>
-                    </div>
-                    <div style="border-top:1px solid #047857; margin-top:8px; padding-top:8px; display:flex; justify-content:space-between; font-size:0.95rem; font-weight:900; color:white;">
-                        <span>Grand Total Payable</span>
-                        <span id="cartGrandTotalSummary" style="color:#f59e0b;">₹0.00</span>
-                    </div>
-                </div>
-
-                <div style="background:#065f46; border:1px solid #047857; border-radius:16px; padding:16px;">
-                    <h4 style="font-size:0.85rem; font-weight:800; color:white; margin-bottom:12px;">💳 Select Payment Method</h4>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-                        <label style="cursor:pointer; position:relative;">
-                            <input type="radio" name="cartPaymentMode" value="online" checked style="position:absolute; opacity:0; top:0; left:0;">
-                            <div class="payment-option-box" style="padding:10px 6px; border:2px solid #f59e0b; border-radius:12px; background:#022c22; text-align:center; color:white;">
-                                <div style="font-size:1.1rem;">⚡</div>
-                                <div style="font-size:0.7rem; font-weight:800; margin-top:4px;">Online</div>
-                            </div>
-                        </label>
-                        <label style="cursor:pointer; position:relative;">
-                            <input type="radio" name="cartPaymentMode" value="wallet" style="position:absolute; opacity:0; top:0; left:0;">
-                            <div class="payment-option-box" style="padding:10px 6px; border:2px solid #047857; border-radius:12px; background:#022c22; text-align:center; color:white;">
-                                <div style="font-size:1.1rem;">💰</div>
-                                <div style="font-size:0.7rem; font-weight:800; margin-top:4px;">Wallet (<span id="walletDrawerBalanceText">₹0</span>)</div>
-                            </div>
-                        </label>
-                        <label style="cursor:pointer; position:relative;">
-                            <input type="radio" name="cartPaymentMode" value="cod" style="position:absolute; opacity:0; top:0; left:0;">
-                            <div class="payment-option-box" style="padding:10px 6px; border:2px solid #047857; border-radius:12px; background:#022c22; text-align:center; color:white;">
-                                <div style="font-size:1.1rem;">💵</div>
-                                <div style="font-size:0.7rem; font-weight:800; margin-top:4px;">COD</div>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
-            </div>
-
-            <div style="flex-shrink:0; background:#065f46; border-top:1px solid #047857; padding:15px; box-shadow:0 -4px 15px rgba(0,0,0,0.3);">
                 <button type="button" onclick="executeFinalCartOrderPlacement()" style="width:100%; padding:14px 18px; background:#22c55e; color:#064e3b; border:none; border-radius:14px; font-weight:900; font-size:1rem; display:flex; justify-content:space-between; align-items:center; cursor:pointer; box-shadow:0 4px 12px rgba(34,197,94,0.3);">
                     <span style="font-size:0.95rem; font-weight:800;">Place Order & Pay</span>
                     <span id="cartDrawerGrandTotal" style="font-size:1.1rem; font-weight:900;">₹0.00</span>
@@ -1069,7 +1000,6 @@
                 const bodyEl = document.body;
                 const rainBanner = document.getElementById('rainSurgeBanner');
                 const rainSurgeRow = document.getElementById('rainSurgeRow');
-                const wasRaining = window.isRainSurgeActive || false;
 
                 if (isRaining) {
                     bodyEl.classList.add('theme-rainy-season');
@@ -1109,9 +1039,6 @@
             if(sensitiveCheck) sensitiveCheck.checked = hideSensitive;
         });
 
-        // ==========================================
-        // 📄 A4 STUDIO & PREVIEW ENGINE
-        // ==========================================
         let renderedPagesList = [];
         let isLandscapeMode = false;
         let currentStudioActiveFile = null;
@@ -1175,7 +1102,6 @@
                     updateStudioPageCountBadge();
                 }
             } catch (err) {
-                console.error("A4 Studio Error:", err);
                 container.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 30px; text-align: center;">❌ Failed to render document: ${err.message}</div>`;
             }
         };
@@ -1244,7 +1170,6 @@
                 document.getElementById('studioPasswordValidationBox').classList.add('hidden');
                 showAppToast("PDF Unlocked Successfully!", "success");
             } catch (err) {
-                console.error("Unlock Error:", err);
                 container.innerHTML = `<div style="color: #f87171; font-weight: 700; padding: 30px; text-align: center;">🔒 This PDF is password protected!<br><span style="font-size:0.75rem; color:#94a3b8;">Please enter the correct password below to unlock.</span></div>`;
                 showAppToast("Incorrect Password! Please try again.", "error");
             }
@@ -1308,7 +1233,6 @@
             toggleCartDrawer(true);
         };
 
-        // --- 🎂 BIRTHDAY SAVER SYSTEM ---
         function toggleBirthdayInputBox() {
             const box = document.getElementById('birthdayInputBox');
             if(box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
@@ -1323,10 +1247,9 @@
             const titleEl = document.getElementById('birthdayTitleText');
             if(titleEl) titleEl.textContent = `Birthday: ${bday} 🎂`;
             document.getElementById('birthdayInputBox').style.display = 'none';
-            showAppToast("Birthday saved! Company will send you wishes & special offers.", "success");
+            showAppToast("Birthday saved successfully!", "success");
         }
 
-        // --- 🌙 LIGHT / DARK THEME SWITCHER ---
         function switchAppThemeMode(mode) {
             const body = document.body;
             if (mode === 'dark') {
@@ -1339,20 +1262,17 @@
             showAppToast(`Theme switched to ${mode.toUpperCase()}`, "success");
         }
 
-        // --- 🛡️ HIDE SENSITIVE ITEMS FILTER ---
         function toggleHideSensitiveItems(hide) {
             localStorage.setItem('hide_sensitive_items', hide ? 'true' : 'false');
             if (typeof renderStoreProductsUI === 'function') renderStoreProductsUI();
             showAppToast(hide ? "Sensitive items hidden from inventory" : "Sensitive items visible", "success");
         }
 
-        // --- 💬 NEED HELP & SUPPORT HUB ---
         function toggleHelpModal(open) {
             const modal = document.getElementById('helpCenterModal');
             if(modal) modal.style.display = open ? 'flex' : 'none';
         }
 
-        // --- ⚙️ EDIT PROFILE & GMAIL MODAL ---
         function openEditProfileModal() {
             const modal = document.getElementById('editProfileModal');
             const sessionUser = localStorage.getItem('printAppUser') || '';
@@ -1390,7 +1310,7 @@
 
                 localStorage.setItem(`user_email_${sessionUser}`, newEmail);
                 localStorage.setItem(`user_name_${sessionUser}`, newName);
-                showAppToast("Profile & Gmail updated successfully in database!", "success");
+                showAppToast("Profile & Gmail updated successfully!", "success");
                 closeEditProfileModal();
             } catch(err) {
                 showAppToast("Failed to update profile", "error");
@@ -1415,14 +1335,11 @@
                     if (newProductsJson !== lastRenderedData) {
                         lastRenderedData = newProductsJson;
                         window.storeInventoryProducts = prods;
-                        highlightRainAndCravingProducts();
                         renderStoreProductsUI();
                         updateFloatingCartBar();
                     }
                 }
-            } catch (e) {
-                console.error("Failed to load store inventory:", e);
-            }
+            } catch (e) {}
         }
 
         function renderStoreProductsUI() {
@@ -1453,12 +1370,10 @@
                     card.className = 'blinkit-cat-card';
                     card.style.cssText = `
                         min-width: 110px; width: 110px; background: #ffffff;
-                        border: 1px solid ${prod.isHighlightedRainOrCraving ? '#0284c7' : '#e2e8f0'};
-                        border-radius: 14px; padding: 10px; position: relative; 
+                        border: 1px solid #e2e8f0; border-radius: 14px; padding: 10px; position: relative; 
                         opacity: ${isOutOfStock ? '0.7' : '1'}; display: flex; 
                         flex-direction: column; align-items: center; cursor: pointer;
-                        box-shadow: ${prod.isHighlightedRainOrCraving ? '0 0 10px rgba(2,132,199,0.25)' : '0 2px 6px rgba(0,0,0,0.03)'};
-                        flex-shrink: 0;
+                        box-shadow: 0 2px 6px rgba(0,0,0,0.03); flex-shrink: 0;
                     `;
                     
                     card.onclick = (e) => {
@@ -1470,10 +1385,7 @@
                         ? `<img src="${finalImgUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px; display:block;" />` 
                         : `<div style="font-size:2rem; margin-bottom:6px; height:65px; display:flex; align-items:center; justify-content:center;">📦</div>`;
 
-                    const badgeHtml = prod.isHighlightedRainOrCraving ? `<span class="rain-craving-badge">${prod.badgeText}</span>` : '';
-
                     card.innerHTML = `
-                        ${badgeHtml}
                         ${imageHtml}
                         <div title="${prod.name}" style="font-weight:700; font-size:0.78rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; color:#0f172a;">${prod.name}</div>
                         <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
@@ -1520,7 +1432,7 @@
                 return;
             }
             if (existing) existing.qty += 1;
-            else window.cartSnacksArray.push({ name, price, qty: 1 });
+            else window.cartSnacksArray.push({ sku, name, price, qty: 1 });
             if (typeof persistCartStateData === 'function') persistCartStateData();
             updateFloatingCartBar();
             showAppToast(`Added "${name}" to cart!`, "success");
@@ -1534,7 +1446,7 @@
             const countText = document.getElementById('floatingCartCountText');
             const priceText = document.getElementById('floatingCartTotalPriceText');
             if (!bar) return;
-            let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0);
+            let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0) + (window.cartPrintJobsArray ? window.cartPrintJobsArray.length : 0);
             let totalSnacksPrice = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
             if (totalSnacksCount > 0) {
                 bar.classList.remove('hidden');
