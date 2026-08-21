@@ -325,9 +325,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 500);
     };
 
-    // ==========================================
-    // 🔔 PUSH NOTIFICATION PERMISSION REQUEST & SUBSCRIPTION
-    // ==========================================
     async function requestUserPushNotificationPermission() {
         try {
             if (!("Notification" in window)) return;
@@ -375,9 +372,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // ==========================================
-    // 🕒 REAL-TIME STORE STATUS AUTO-CHECKER & GUARD
-    // ==========================================
     let isStoreCurrentlyOpen = true;
 
     async function checkStoreStatusRealtime() {
@@ -422,9 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-        } catch (e) {
-            console.error("Store status sync error:", e);
-        }
+        } catch (e) {}
     }
 
     setInterval(checkStoreStatusRealtime, 3000);
@@ -714,26 +706,48 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
     };
 
+    // 🔥 2. TOGGLE CART DRAWER WITH ABSOLUTE FLOATING BAR HIDE
     window.toggleCartDrawer = function(open = true) {
         const drawerOverlay = document.getElementById('cartDrawerOverlay');
+        const floatingBar = document.getElementById('floatingCartFooterBar');
         if (!drawerOverlay) return;
 
         if (open) {
             drawerOverlay.style.display = 'flex';
+            if (floatingBar) {
+                floatingBar.classList.add('hidden');
+                floatingBar.style.display = 'none';
+            }
             if (typeof renderCartDrawerContents === 'function') {
                 renderCartDrawerContents();
             }
         } else {
             drawerOverlay.style.display = 'none';
+            if (typeof updateFloatingCartBar === 'function') {
+                updateFloatingCartBar();
+            }
         }
     };
 
+    // 🌟 FLOATING CART BAR WITH STRICT AUTH & DRAWER CHECK
     window.updateFloatingCartBar = function() {
         const bar = document.getElementById('floatingCartFooterBar');
         const countText = document.getElementById('floatingCartCountText');
         const priceText = document.getElementById('floatingCartTotalPriceText');
         const stackContainer = document.getElementById('floatingCartImagesStack');
+        const drawerOverlay = document.getElementById('cartDrawerOverlay');
+        
         if (!bar) return;
+
+        // 🔥 CRITICAL FIX: Hide floating bar if user is not logged in / auth screen is active OR cart drawer is open
+        const sessionActiveUser = localStorage.getItem('printAppUser');
+        const isAuthVisible = document.getElementById('authScreen') && !document.getElementById('authScreen').classList.contains('app-hidden') && document.getElementById('authScreen').style.display !== 'none';
+
+        if (!sessionActiveUser || isAuthVisible || (drawerOverlay && drawerOverlay.style.display === 'flex')) {
+            bar.classList.add('hidden');
+            bar.style.display = 'none';
+            return;
+        }
 
         let totalSnacksCount = window.cartSnacksArray ? window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0) : 0;
         let totalPrintCount = window.cartPrintJobsArray ? window.cartPrintJobsArray.length : 0;
@@ -802,7 +816,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🌟 FULLY FIXED CART DRAWER RENDERING WITH HORIZONTAL CARDS & STEPPERS
+    // 🌟 1. FULLY FIXED CART DRAWER RENDERING WITH PROPER DOM TARGETING
     window.renderCartDrawerContents = function() {
         const container = document.getElementById('cartDrawerItemsList');
         if (!container) return;
@@ -869,10 +883,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         container.appendChild(sliderWrapper);
-        
-        if (typeof calculateTotal === 'function') {
-            calculateTotal();
-        }
+        calculateTotal();
     };
 
     window.removePrintJobFromCart = function(index) {
@@ -1579,12 +1590,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 💳 FINAL CART ORDER PLACEMENT (WITH STORE CLOSED GUARD & HISTORY SYNC)
+    // 💳 FINAL CART ORDER PLACEMENT (WITH REDIRECT & TRACKING WORKSPACE)
     // ==========================================
     window.executeFinalCartOrderPlacement = async function() {
-        // 🔥 Strict Store Closed Guard
         if (!isStoreCurrentlyOpen) {
-            alert("🚨 Store is currently CLOSED! Orders cannot be accepted at the moment.");
+            alert("🚨 Store is currently CLOSED! Orders cannot be accepted.");
             const storeClosedModal = document.getElementById('storeClosedPopupModal');
             if (storeClosedModal) storeClosedModal.style.display = 'flex';
             return;
@@ -1697,13 +1707,14 @@ document.addEventListener('DOMContentLoaded', () => {
             window.currentDeliveryTip = 0;
             persistCartStateData();
             toggleCartDrawer(false);
-            
+
             if (typeof renderOrderHistoryUI === 'function') {
                 renderOrderHistoryUI(sessionActiveUser);
             }
-            
             if (typeof openOrderDeepTrackingWorkspacePage === 'function') {
                 openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
+            } else if (typeof navigateDrawerSection === 'function') {
+                navigateDrawerSection('order_tracking');
             }
             loadDynamicStoreProducts();
         };
@@ -1771,7 +1782,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 await finalizeOrderSuccess(data.order_id);
                             }
                         } catch (err) {
-                            // Fallback success if verification network times out but payment went through
                             alert('🎉 Payment Recorded Successfully!');
                             await finalizeOrderSuccess(data.order_id);
                         }
