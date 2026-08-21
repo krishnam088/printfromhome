@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.globalRawOrdersCache = [];
 
     // ==========================================
-    // 🧮 BULLETPROOF GRAND TOTAL CALCULATOR ENGINE
+    // 🧮 BULLETPROOF GRAND TOTAL CALCULATOR ENGINE & FREE DELIVERY PROGRESS BAR
     // ==========================================
     window.calculateTotal = function() {
         try {
@@ -80,7 +80,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal + printJobsTotal;
-            let accurateDeliveryCharge = (finalDocumentCost >= 99.00 || finalDocumentCost === 0) ? 0.00 : 25.00;
+            
+            // 🔥 ACTIVATED FREE DELIVERY PROGRESS BAR & THRESHOLD (₹99)
+            const freeDeliveryThreshold = 99.00;
+            let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || finalDocumentCost === 0) ? 0.00 : 25.00;
+            
+            const progressBarBox = document.getElementById('freeDeliveryProgressBarBox');
+            const messageText = document.getElementById('freeDeliveryMessageText');
+            const fillBar = document.getElementById('freeDeliveryFillBar');
+
+            if (progressBarBox && messageText && fillBar) {
+                if (finalDocumentCost >= freeDeliveryThreshold) {
+                    messageText.innerHTML = "🎉 Yay! You have unlocked <b>FREE Delivery</b>!";
+                    fillBar.style.width = "100%";
+                } else {
+                    let neededMore = freeDeliveryThreshold - finalDocumentCost;
+                    let progressPercent = Math.min(100, (finalDocumentCost / freeDeliveryThreshold) * 100);
+                    messageText.innerHTML = `🎉 Add items worth <b>₹${neededMore.toFixed(2)}</b> more for FREE delivery!`;
+                    fillBar.style.width = `${progressPercent}%`;
+                }
+            }
+
             let rainFee = window.isRainSurgeActive ? 15 : 0;
             let grandTotalCombined = finalDocumentCost + accurateDeliveryCharge + rainFee + (window.currentDeliveryTip || 0);
 
@@ -764,7 +784,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let totalSnacksPrice = window.cartSnacksArray ? window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0) : 0;
         let totalPrintPrice = window.cartPrintJobsArray ? window.cartPrintJobsArray.reduce((acc, job) => acc + (job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0) : 0;
-        let totalPrice = totalSnacksPrice + totalPrintPrice + (window.currentDeliveryTip || 0);
+        
+        let subtotalCalc = totalSnacksPrice + totalPrintPrice;
+        let delFee = (subtotalCalc >= 99.00 || subtotalCalc === 0) ? 0.00 : 25.00;
+        let rainFee = window.isRainSurgeActive ? 15 : 0;
+        let totalPrice = subtotalCalc + delFee + rainFee + (window.currentDeliveryTip || 0);
 
         if (totalCount > 0) {
             bar.classList.remove('hidden');
@@ -1598,7 +1622,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 💳 FINAL CART ORDER PLACEMENT (WITH SKU MAPPING)
+    // 💳 FINAL CART ORDER PLACEMENT (WITH SKU MAPPING & TIP)
     // ==========================================
     window.executeFinalCartOrderPlacement = async function() {
         let totalItemsCount = (window.cartSnacksArray ? window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0) : 0) + 
@@ -1684,7 +1708,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 amount: grandTotal.toFixed(2), 
                 status: initialOrderStatus, 
                 details: finalMetaConfig, 
-                address: selectedActiveAddress 
+                address: selectedActiveAddress,
+                deliveryTip: window.currentDeliveryTip || 0
             };
             currentHistoryArray.push(newOrderPayload);
             localStorage.setItem(`history_${sessionActiveUser}`, JSON.stringify(currentHistoryArray));
