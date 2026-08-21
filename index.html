@@ -1,1425 +1,909 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" href="data:,">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Print From Home - India's Last Minute Printing App</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    </script>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <script>
-        const nowCheck = new Date();
-        const manifestTag = document.createElement('link');
-        manifestTag.rel = 'manifest';
-        
-        const isFestiveSeason = (nowCheck.getMonth() === 7 && nowCheck.getDate() >= 14 && nowCheck.getDate() <= 15) || 
-                                (nowCheck.getMonth() === 10 && nowCheck.getDate() >= 7 && nowCheck.getDate() <= 8);
-        
-        manifestTag.href = isFestiveSeason ? '/manifest-festive.json' : '/manifest.json';
-        document.head.appendChild(manifestTag);
-    </script>
+    <link rel="icon" href="data:,">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Print From Home - India's Last Minute Printing App</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        const nowCheck = new Date();
+        const manifestTag = document.createElement('link');
+        manifestTag.rel = 'manifest';
+        
+        const isFestiveSeason = (nowCheck.getMonth() === 7 && nowCheck.getDate() >= 14 && nowCheck.getDate() <= 15) || 
+                                (nowCheck.getMonth() === 10 && nowCheck.getDate() >= 7 && nowCheck.getDate() <= 8);
+        
+        manifestTag.href = isFestiveSeason ? '/manifest-festive.json' : '/manifest.json';
+        document.head.appendChild(manifestTag);
+    </script>
 
-    <meta name="theme-color" content="#F4C430">
-    <meta name="mobile-web-app-capable" content="yes">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="PrintFromHome">
-    <link rel="apple-touch-icon" href="/icon-192.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/icon-192.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png">
-    <link rel="apple-touch-icon" sizes="167x167" href="/icon-192.png">
-    
-    <style>
-        @keyframes slideUpModal {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        input[name="cartPaymentMode"]:checked + .payment-option-box {
-            border-color: #065f46 !important;
-            background: #f0fdf4 !important;
-            box-shadow: 0 0 0 2px #065f46;
-        }
-        .payment-option-box { transition: all 0.2s ease; }
+    <meta name="theme-color" content="#F4C430">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PrintFromHome">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="/icon-192.png">
+    
+    <style>
+        @keyframes slideUpModal {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        input[name="cartPaymentMode"]:checked + .payment-option-box {
+            border-color: #065f46 !important;
+            background: #f0fdf4 !important;
+            box-shadow: 0 0 0 2px #065f46;
+        }
+        .payment-option-box { transition: all 0.2s ease; }
 
-        body {
-            background-color: #f8fafc;
-            color: #0f172a;
-        }
+        body {
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
 
-        /* --- 🍞 MODERN TOAST NOTIFICATION CONTAINER --- */
-        #appToastContainer {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 999999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            align-items: center;
-            pointer-events: none;
-            width: 90%;
-            max-width: 400px;
-        }
+        /* --- 🍞 MODERN TOAST NOTIFICATION CONTAINER --- */
+        #appToastContainer {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+            pointer-events: none;
+            width: 90%;
+            max-width: 400px;
+        }
 
-        .app-toast-item {
-            background: rgba(6, 95, 70, 0.95);
-            color: #ffffff;
-            padding: 10px 16px;
-            border-radius: 10px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
-            backdrop-filter: blur(6px);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            pointer-events: auto;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-            font-family: 'Poppins', sans-serif;
-        }
+        .app-toast-item {
+            background: rgba(6, 95, 70, 0.95);
+            color: #ffffff;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            pointer-events: auto;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            font-family: 'Poppins', sans-serif;
+        }
 
-        @keyframes toastSlideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes toastSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        /* --- 🌧️ REAL ANIMATED RAIN & LIGHTNING STYLES --- */
-        #rainAnimationContainer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 999;
-            overflow: hidden;
-            display: none;
-        }
+        /* --- 🌧️ REAL ANIMATED RAIN & LIGHTNING STYLES --- */
+        #rainAnimationContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 999;
+            overflow: hidden;
+            display: none;
+        }
 
-        body.theme-rainy-season #rainAnimationContainer {
-            display: block;
-        }
+        body.theme-rainy-season #rainAnimationContainer {
+            display: block;
+        }
 
-        .raindrop {
-            position: absolute;
-            background: linear-gradient(transparent, rgba(255, 255, 255, 0.75));
-            width: 1.5px;
-            height: 30px;
-            opacity: 0.8;
-            animation: fall linear infinite;
-        }
+        .raindrop {
+            position: absolute;
+            background: linear-gradient(transparent, rgba(255, 255, 255, 0.75));
+            width: 1.5px;
+            height: 30px;
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
 
-        @keyframes fall {
-            0% { transform: translateY(-40px); }
-            100% { transform: translateY(105vh); }
-        }
+        @keyframes fall {
+            0% { transform: translateY(-40px); }
+            100% { transform: translateY(105vh); }
+        }
 
-        @keyframes lightningFlash {
-            0%, 88%, 92%, 96%, 100% { opacity: 0; }
-            90%, 94% { opacity: 0.4; background-color: #ffffff; }
-        }
+        @keyframes lightningFlash {
+            0%, 88%, 92%, 96%, 100% { opacity: 0; }
+            90%, 94% { opacity: 0.4; background-color: #ffffff; }
+        }
 
-        body.theme-rainy-season::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 1000;
-            animation: lightningFlash 6s infinite;
-        }
+        body.theme-rainy-season::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1000;
+            animation: lightningFlash 6s infinite;
+        }
 
-        /* --- 🖨️ UNIVERSAL A4 STUDIO SHEET STYLES --- */
-        .a4-page-wrapper {
-            width: 210mm;
-            min-height: 297mm;
-            max-width: 95vw;
-            background: #ffffff;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            position: relative;
-            border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            margin: 0 auto;
-            box-sizing: border-box;
-        }
+        /* --- 🖨️ UNIVERSAL A4 STUDIO SHEET STYLES --- */
+        .a4-page-wrapper {
+            width: 210mm;
+            min-height: 297mm;
+            max-width: 95vw;
+            background: #ffffff;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
 
-        .a4-page-wrapper.landscape {
-            width: 297mm;
-            min-height: 210mm;
-        }
+        .a4-page-wrapper.landscape {
+            width: 297mm;
+            min-height: 210mm;
+        }
 
-        .a4-page-canvas {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            display: block;
-        }
+        .a4-page-canvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+        }
 
-        .page-badge-toolbar {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(6, 78, 59, 0.9);
-            padding: 4px 10px;
-            border-radius: 8px;
-            z-index: 10;
-        }
+        .page-badge-toolbar {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(6, 78, 59, 0.9);
+            padding: 4px 10px;
+            border-radius: 8px;
+            z-index: 10;
+        }
 
-        .cart-item-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-        }
-        .cart-item-thumb {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            background: #022c22;
-            object-fit: cover;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
-        .cart-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .cart-item-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .cart-item-thumb {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background: #022c22;
+            object-fit: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .cart-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-        @media print {
-            body * { visibility: hidden !important; }
-            #printStudioModal, #printStudioModal * { visibility: visible !important; }
-            #printStudioModal { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: #ffffff !important; overflow: visible !important; }
-            .studio-toolbar, .page-badge-toolbar, #floatingCartFooterBar, #userInstallBanner, .side-drawer, .drawer-overlay, #appToastContainer, #rainAnimationContainer { display: none !important; }
-            #a4PagesContainer { padding: 0 !important; margin: 0 !important; background: none !important; display: block !important; }
-            .a4-page-wrapper { width: 100% !important; min-height: 100vh !important; height: 100% !important; margin: 0 !important; box-shadow: none !important; border: none !important; page-break-after: always !important; break-after: page !important; }
-            @page { size: A4 portrait; margin: 0; }
-        }
-    </style>
+        @media print {
+            body * { visibility: hidden !important; }
+            #printStudioModal, #printStudioModal * { visibility: visible !important; }
+            #printStudioModal { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: #ffffff !important; overflow: visible !important; }
+            .studio-toolbar, .page-badge-toolbar, #floatingCartFooterBar, #userInstallBanner, .side-drawer, .drawer-overlay, #appToastContainer, #rainAnimationContainer { display: none !important; }
+            #a4PagesContainer { padding: 0 !important; margin: 0 !important; background: none !important; display: block !important; }
+            .a4-page-wrapper { width: 100% !important; min-height: 100vh !important; height: 100% !important; margin: 0 !important; box-shadow: none !important; border: none !important; page-break-after: always !important; break-after: page !important; }
+            @page { size: A4 portrait; margin: 0; }
+        }
+    </style>
 </head>
 <body>
 
-    <div id="rainAnimationContainer"></div>
-    <div id="appToastContainer"></div>
-
-    <script>
-        window.showAppToast = function(message, type = 'info') {
-            const container = document.getElementById('appToastContainer');
-            if (!container) return;
-
-            const toast = document.createElement('div');
-            toast.className = 'app-toast-item';
-            
-            let icon = 'ℹ️';
-            if (type === 'success') icon = '✅';
-            if (type === 'error') icon = '⚠️';
-
-            toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-10px)';
-                toast.style.transition = 'all 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        };
-
-        window.alert = function(msg) {
-            let cleanMsg = msg;
-            if (typeof msg === 'string') {
-                if (msg.includes('password')) cleanMsg = "Please enter a valid password.";
-            }
-            showAppToast(cleanMsg, 'error');
-        };
-    </script>
-
-    <!-- 📄 DOCUMENT PREVIEW & CONFIG MODAL -->
-    <div id="docPreviewModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 25000; display: none; justify-content: center; align-items: center; padding: 16px;">
-        <div style="background: #065f46; border: 2px solid #f59e0b; border-radius: 20px; padding: 22px; max-width: 450px; width: 100%; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 12px 35px rgba(0,0,0,0.5);">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #047857; padding-bottom: 8px;">
-                <h3 style="color: white; font-size: 1.1rem; font-weight: 800;">📄 Document Print Preview</h3>
-                <span style="cursor: pointer; font-size: 1.4rem; color: #a7f3d0;" onclick="closeDocPreviewModal()">&times;</span>
-            </div>
-
-            <div id="previewContainerBox" style="width: 100%; height: 200px; background: #022c22; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid #047857; overflow: hidden; position: relative;">
-                <iframe id="pdfPreviewFrame" style="width: 100%; height: 100%; border: none; display: none;"></iframe>
-                <div id="genericFilePreviewText" style="text-align: center; color: #a7f3d0; font-weight: 700;">📂 Document Ready for Print</div>
-            </div>
-
-            <div style="background: #064e3b; padding: 12px; border-radius: 10px; border: 1px solid #047857; font-size: 0.82rem; display: flex; flex-direction: column; gap: 6px;">
-                <span id="previewFileName" style="color: white; font-weight: 700; word-break: break-all;">file.pdf</span>
-                <div style="display: flex; justify-content: space-between; color: #a7f3d0;">
-                    <span>Estimated Pages: <b id="previewPageCount" style="color: #f59e0b;">1</b></span>
-                    <span>Print Type: <b id="previewPrintTypeBadge" style="color: #22c55e;">B&W</b></span>
-                </div>
-            </div>
-
-            <button type="button" onclick="confirmDocumentAddToCart()" style="background: #22c55e; color: #064e3b; border: none; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; text-align: center; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);">
-                🛒 Add Document to Cart
-            </button>
-        </div>
-    </div>
-
-    <div id="productDetailModal" onclick="closeProductDetailModal(event)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:99999; display:none; justify-content:center; align-items:flex-end; padding:0;">
-        <div style="background:#ffffff; border-radius:24px 24px 0 0; padding:24px; width:100%; max-width:500px; max-height:85vh; overflow-y:auto; box-shadow:0 -10px 30px rgba(0,0,0,0.2); text-align:left; animation:slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1); position:relative;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
-                <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a;">Product Details</h3>
-                <span style="cursor:pointer; font-size:1.5rem; font-weight:bold; color:#64748b;" onclick="closeProductDetailModal()">&times;</span>
-            </div>
-            
-            <div id="modalProductImgContainer" style="width:100%; height:220px; background:#f8fafc; border-radius:16px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; overflow:hidden; border:1px solid #e2e8f0;">
-            </div>
-            
-            <h3 id="modalProductName" style="font-size:1.3rem; font-weight:800; color:#0f172a; margin-bottom:6px;">Product Name</h3>
-            <p id="modalProductPrice" style="font-size:1.2rem; font-weight:900; color:#065f46; margin-bottom:10px;">₹0.00</p>
-            <p id="modalProductStock" style="font-size:0.78rem; font-weight:700; color:#64748b; background:#f1f5f9; padding:6px 12px; border-radius:8px; display:inline-block; margin-bottom:20px;">Stock: Available</p>
-            
-            <button type="button" id="modalAddToCartBtn" style="width:100%; padding:14px; background:#065f46; color:white; border:none; border-radius:12px; font-weight:800; font-size:0.95rem; cursor:pointer; box-shadow:0 4px 12px rgba(6,95,70,0.3);">+ Add to Cart</button>
-        </div>
-    </div>
-
-    <!-- 📄 A4 STUDIO PREVIEW MODAL -->
-    <div id="printStudioModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); z-index: 100000; flex-direction: column; overflow: hidden; font-family: 'Poppins', sans-serif;">
-        <div class="studio-toolbar" style="background: #1e293b; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; flex-wrap: wrap; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <button type="button" onclick="closePrintStudio()" style="background: #334155; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem;">&larr; Cancel</button>
-                <h3 style="font-size: 1rem; color: #f8fafc; margin: 0; font-weight: 800;">📑 A4 Preview (<span id="totalActivePagesCount" style="color: #22c55e;">0</span> Pages)</h3>
-            </div>
-            
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <button type="button" onclick="toggleGlobalOrientation()" style="background: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">🔄 Rotate</button>
-                <button type="button" onclick="addStudioDocumentToCartAndRedirect()" style="background: #22c55e; color: #064e3b; border: none; padding: 8px 18px; border-radius: 8px; font-weight: 800; font-size: 0.88rem; cursor: pointer; box-shadow: 0 4px 12px rgba(34,197,94,0.3);">🛒 Add to Cart & Proceed &rarr;</button>
-            </div>
-        </div>
-
-        <div id="studioPasswordValidationBox" class="hidden" style="background: rgba(239, 68, 68, 0.15); border-bottom: 1px solid #ef4444; padding: 10px 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-            <span style="font-size: 0.8rem; font-weight: 800; color: #f87171;">🔐 Locked PDF Detected! Enter Password:</span>
-            <input type="password" id="studioRequiredPdfPassword" placeholder="Enter password to unlock..." style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ef4444; background: #0f172a; color: white; font-size: 0.8rem; outline: none; flex: 1; min-width: 200px;">
-            <button type="button" onclick="tryUnlockAndRenderLockedPdf()" style="background: #ef4444; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; cursor: pointer;">Unlock</button>
-        </div>
-
-        <div id="a4PagesContainer" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 25px 12px; background: #0f172a; -webkit-overflow-scrolling: touch;">
-        </div>
-    </div>
-
-    <!-- 💬 NEED HELP & CUSTOMER CARE MODAL -->
-    <div id="helpCenterModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 21000; display: none; justify-content: center; align-items: center; padding: 20px;">
-        <div style="background: #ffffff; border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
-            <div style="font-size: 3rem; margin-bottom: 8px;">💬</div>
-            <h3 style="font-size: 1.2rem; font-weight: 900; color: #0f172a; margin-bottom: 6px;">Customer Support Hub</h3>
-            <p style="font-size: 0.78rem; color: #64748b; margin-bottom: 16px;">We are available 24/7 for print orders and delivery inquiries.</p>
-            
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
-                <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Print%20From%20Home" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #25D366; color: white; padding: 12px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.85rem;">
-                    <span>💬</span> Chat on WhatsApp (+91 7007626731)
-                </a>
-                <a href="tel:7007626731" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #0f172a; color: white; padding: 12px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.85rem;">
-                    <span>📞</span> Call Support Helpline
-                </a>
-            </div>
-            <button type="button" onclick="toggleHelpModal(false)" style="background: #e2e8f0; color: #334155; border: none; padding: 10px; border-radius: 10px; font-weight: 700; width: 100%; cursor: pointer;">Close</button>
-        </div>
-    </div>
-
-    <!-- ⚙️ EDIT PROFILE & GMAIL MODAL -->
-    <div id="editProfileModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 22000; display: none; justify-content: center; align-items: center; padding: 20px;">
-        <div style="background: #ffffff; border-radius: 20px; padding: 24px; max-width: 420px; width: 100%; text-align: left; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
-                <h3 style="font-size: 1.1rem; font-weight: 900; color: #0f172a;">⚙️ Edit Profile & Gmail</h3>
-                <span style="cursor: pointer; font-size: 1.4rem; color: #64748b;" onclick="closeEditProfileModal()">&times;</span>
-            </div>
-            <form id="activeProfileUpdateForm" onsubmit="submitProfileUpdates(event)">
-                <div style="margin-bottom: 12px;">
-                    <label style="font-size: 0.75rem; font-weight: 800; color: #475569; display: block; margin-bottom: 4px;">Full Name</label>
-                    <input type="text" id="modalEditNameInput" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none;" required>
-                </div>
-                <div style="margin-bottom: 12px;">
-                    <label style="font-size: 0.75rem; font-weight: 800; color: #475569; display: block; margin-bottom: 4px;">Notification Gmail Address</label>
-                    <input type="email" id="modalEditEmailInput" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none;" placeholder="name@gmail.com" required>
-                </div>
-                <div style="margin-bottom: 16px;">
-                    <label style="font-size: 0.75rem; font-weight: 800; color: #475569; display: block; margin-bottom: 4px;">New Password (Optional)</label>
-                    <input type="password" id="modalEditPasswordInput" placeholder="Leave blank to keep current" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none;">
-                </div>
-                <button type="submit" style="background: #065f46; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 800; width: 100%; cursor: pointer;">Save Profile Changes</button>
-            </form>
-        </div>
-    </div>
-
-    <div id="iosInstallModal" onclick="closeIosInstallModal(event)" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(5px); z-index: 100000; justify-content: center; align-items: flex-end; padding: 0;">
-        <div onclick="event.stopPropagation()" style="background: #1e293b; color: #f8fafc; width: 100%; max-width: 460px; border-radius: 24px 24px 0 0; padding: 24px; border-top: 1px solid #334155; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); text-align: center; animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1); position: relative;">
-            <div style="width: 42px; height: 5px; background: #475569; border-radius: 4px; margin: 0 auto 16px auto;"></div>
-            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 6px;">
-                <span style="font-size: 1.6rem;">📲</span>
-                <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0;">Install Print From Home</h3>
-            </div>
-            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 18px;">Install on your iPhone / iPad for instant full-screen access:</p>
-            <div style="display: flex; flex-direction: column; gap: 12px; text-align: left; background: #0f172a; padding: 16px; border-radius: 14px; border: 1px solid #334155; margin-bottom: 20px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="background: #22c55e; color: white; min-width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem;">1</span>
-                    <span style="font-size: 0.84rem; color: #e2e8f0;">Tap the <strong>Share</strong> button <span style="font-size: 1.1rem; color: #38bdf8;">⎋</span> in Safari.</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="background: #22c55e; color: white; min-width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem;">2</span>
-                    <span style="font-size: 0.84rem; color: #e2e8f0;">Scroll down and tap <strong>'Add to Home Screen'</strong> ➕.</span>
-                </div>
-            </div>
-            <button type="button" onclick="closeIosInstallModal()" style="width: 100%; background: #334155; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">Got It, Thanks!</button>
-        </div>
-    </div>
-
-    <div id="splashScreen" class="splash-container">
-        <div class="splash-content">
-            <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
-            <p class="splash-tagline">India's Last Minute Printing App</p>
-        </div>
-    </div>
-
-    <div id="authScreen" class="auth-container app-hidden">
-        <div class="auth-card">
-            <div class="auth-brand">print<span class="brand-green">from</span>home</div>
-            <h2 id="authTitle">Welcome Back!</h2>
-            <form id="authForm">
-                <div class="form-group signup-only hidden"><label>Full Name</label><input type="text" id="authName" placeholder="Enter your full name"></div>
-                <div class="form-group"><label>Mobile Number</label><input type="text" id="authIdentity" placeholder="Enter 10-digit mobile number" maxlength="10" required></div>
-                <div class="form-group signup-only hidden"><label>Gmail Address</label><input type="email" id="authEmailInput" placeholder="Enter your Gmail address"></div>
-                <div class="form-group" id="passwordGroup"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters" required></div>
-                
-                <div style="text-align: right; margin-bottom: 12px;">
-                    <button type="button" onclick="initiatePasswordReset()" style="background: none; border: none; color: #2563eb; font-size: 0.78rem; font-weight: 700; cursor: pointer; padding: 0;">Forgot Password?</button>
-                </div>
-
-                <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
-            </form>
-            <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
-        </div>
-    </div>
-
-    <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
-
-    <!-- 👤 USER ACCOUNT SHEET DRAWER -->
-    <nav id="userSideDrawer" class="side-drawer" style="background: #ffffff; color: #0f172a; width: 100%; max-width: 420px; height: 100vh; position: fixed; top: 0; right: -100%; z-index: 17000; transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.2);">
-        
-        <div style="background: linear-gradient(135deg, #fef08a 0%, #fde047 100%); padding: 24px 20px; text-align: center; position: relative; border-bottom: 1px solid #e2e8f0;">
-            <span style="position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 1.4rem; font-weight: bold; color: #1e293b;" onclick="toggleUserDrawer(false)">&larr;</span>
-            <div style="width: 75px; height: 75px; background: #ffffff; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 2px solid #f59e0b;">👤</div>
-            <h3 style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin-bottom: 2px;">Your account</h3>
-            <p id="drawerUserMobileText" style="font-size: 0.82rem; font-weight: 700; color: #334155;">7398746551</p>
-        </div>
-
-        <div style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; background: #f8fafc;">
-            <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; border-radius: 14px; padding: 14px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;" id="birthdayDisplayBox">
-                    <div>
-                        <h4 style="font-size: 0.85rem; font-weight: 800; color: #92400e; margin-bottom: 2px;" id="birthdayTitleText">Add your birthday</h4>
-                        <span style="font-size: 0.72rem; font-weight: 700; color: #d97706; cursor: pointer;" onclick="toggleBirthdayInputBox()">Enter details &rarr;</span>
-                    </div>
-                    <div style="font-size: 2rem;">🎂</div>
-                </div>
-                <div id="birthdayInputBox" style="display: none; margin-top: 8px;">
-                    <input type="date" id="userBirthdayInput" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #f59e0b; margin-bottom: 6px; font-size: 0.8rem; outline: none;">
-                    <button type="button" onclick="saveUserBirthday()" style="background: #d97706; color: white; border: none; padding: 6px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; width: 100%; cursor: pointer;">Save Birthday 🎁</button>
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-                <div onclick="navigateDrawerSection('history'); toggleUserDrawer(false);" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 10px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-                    <div style="font-size: 1.5rem; margin-bottom: 4px;">📋</div>
-                    <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a;">Your orders</div>
-                </div>
-                <div onclick="toggleWalletPopupGrid(true, event); toggleUserDrawer(false);" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 10px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-                    <div style="font-size: 1.5rem; margin-bottom: 4px;">💰</div>
-                    <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a;">Print Wallet</div>
-                </div>
-                <div onclick="toggleHelpModal(true); toggleUserDrawer(false);" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 10px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-                    <div style="font-size: 1.5rem; margin-bottom: 4px;">💬</div>
-                    <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a;">Need help?</div>
-                </div>
-            </div>
-
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="font-size: 1.3rem;">📱</span>
-                    <div>
-                        <h4 style="font-size: 0.82rem; font-weight: 800; color: #0f172a;">App update available</h4>
-                        <p style="font-size: 0.68rem; color: #64748b; font-weight: 600;">bug fixes and performance improvements</p>
-                    </div>
-                </div>
-                <span style="background: #f1f5f9; color: #0f172a; font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 6px;">v18.19.0</span>
-            </div>
-
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; gap: 12px; align-items: flex-start;">
-                    <span style="font-size: 1.3rem;">🛡️</span>
-                    <div>
-                        <h4 style="font-size: 0.82rem; font-weight: 800; color: #0f172a; margin-bottom: 2px;">Hide sensitive items</h4>
-                        <p style="font-size: 0.68rem; color: #64748b; font-weight: 500; line-height: 1.3;">Adult novelty & confidential documents will be hidden.</p>
-                    </div>
-                </div>
-                <input type="checkbox" id="sensitiveToggleCheck" onchange="toggleHideSensitiveItems(this.checked)" style="width: 40px; height: 22px; cursor: pointer; accent-color: #065f46;">
-            </div>
-
-            <div>
-                <h4 style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 8px; padding-left: 4px;">Your Information</h4>
-                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden;">
-                    <div onclick="openAddressManagerModal(); toggleUserDrawer(false);" style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 0.82rem; font-weight: 700; color: #0f172a;">
-                        <span>📍 Address book</span>
-                        <span style="color: #94a3b8;">&rsaquo;</span>
-                    </div>
-                    <div onclick="openEditProfileModal(); toggleUserDrawer(false);" style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 0.82rem; font-weight: 700; color: #0f172a;">
-                        <span>⚙️ Edit profile & Gmail</span>
-                        <span style="color: #94a3b8;">&rsaquo;</span>
-                    </div>
-                </div>
-            </div>
-
-            <button id="logoutBtn" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; padding:12px; border-radius:12px; font-weight:800; font-size:0.85rem; width:100%; cursor:pointer; text-align:center; margin-top: 10px;">
-                🚪 Logout Account
-            </button>
-        </div>
-    </nav>
-
-    <div id="walletDepositModal" class="wallet-modal-overlay" onclick="toggleWalletPopupGrid(false, event)">
-        <div class="wallet-modal-card">
-            <h3 style="font-size:1.3rem; font-weight:800; margin-bottom:6px;">💰 Recharge Print Wallet</h3>
-            <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:15px;">Add cash balance for seamless dispatches</p>
-            <div class="form-group" style="text-align:left;">
-                <label style="font-size:0.75rem; font-weight:700; color:var(--text-main);">Enter Custom Amount (₹):</label>
-                <input type="number" id="walletCustomAmountInput" value="100" style="width:100%; padding:12px; border:2px solid var(--border-color); border-radius:12px; font-weight:700; font-size:1rem; outline:none; margin-top:4px;">
-            </div>
-            <div class="wallet-chip-grid">
-                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(100)">+ ₹100</button>
-                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(200)">+ ₹200</button>
-                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(500)">+ ₹500</button>
-            </div>
-            <button class="btn-admin" style="background:#065f46; margin-top:10px; width:100%; padding:12px; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;" onclick="executeWalletRazorpayDeposit()">Pay & Add Cash</button>
-        </div>
-    </div>
-
-    <div id="addressManagerModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:18000; display:none; justify-content:center; align-items:center; padding:15px; overflow-y:auto;">
-        <div style="background:#ffffff; border-radius:24px; padding:20px; max-width:480px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.3); text-align:left; max-height:90vh; overflow-y:auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a;">📍 Enter Delivery Address</h3>
-                <span style="cursor:pointer; font-size:1.5rem; font-weight:bold; color:#64748b;" onclick="closeAddressManagerModal()">&times;</span>
-            </div>
-            <p style="font-size:0.72rem; color:#64748b; margin-bottom:12px;">Provide exact details so our delivery executive can reach you in 15 mins.</p>
-            
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-                <div>
-                    <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Your Full Name *</label>
-                    <input type="text" id="addrContactName" style="width:100%; padding:9px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none;" placeholder="Enter name" required>
-                </div>
-                <div>
-                    <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Contact Mobile *</label>
-                    <input type="tel" id="addrContactMobile" maxlength="10" style="width:100%; padding:9px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none;" placeholder="10-digit mobile" required>
-                </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1.4fr 1fr; gap:10px; margin-bottom:10px;">
-                <div>
-                    <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Flat / House / Building *</label>
-                    <input type="text" id="addrFlatBuilding" style="width:100%; padding:9px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none;" placeholder="Flat No / Building Name" required>
-                </div>
-                <div>
-                    <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Floor (Optional)</label>
-                    <input type="text" id="addrFloor" style="width:100%; padding:9px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none;" placeholder="e.g. 2nd Floor">
-                </div>
-            </div>
-
-            <div style="margin-bottom:10px;">
-                <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Nearby Landmark (Optional)</label>
-                <input type="text" id="addrLandmark" style="width:100%; padding:9px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none;" placeholder="e.g. Near Hanuman Temple">
-            </div>
-
-            <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Pin Location on Map (Drag Pin):</label>
-            <div id="userDeliveryMap" style="width:100%; height:180px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:8px; z-index:999;"></div>
-            <textarea id="mapSelectedAddressInput" rows="2" style="width:100%; padding:8px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.75rem; font-weight:600; outline:none; margin-bottom:12px; background:#f8fafc;" placeholder="Map location area..." readonly></textarea>
-
-            <button type="button" onclick="saveFullAddressFormToStorage()" style="width:100%; padding:12px; background:#065f46; color:white; border:none; border-radius:10px; font-weight:700; font-size:0.88rem; cursor:pointer;">Save & Deliver Here</button>
-        </div>
-    </div>
-
-    <!-- 🛒 PROPERLY CONTAINED CHECKOUT CART DRAWER -->
-    <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:16000; display:none; justify-content:flex-end;">
-        <div class="cart-drawer-card" onclick="event.stopPropagation()" style="background:#ffffff; color:#0f172a; width:100%; max-width:440px; height:100vh; display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.2); overflow:hidden; border-left:1px solid #e2e8f0;">
-            
-            <div style="flex-shrink:0; background:#f8fafc; padding:16px 20px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="cursor:pointer; font-size:1.2rem; font-weight:bold; color:#0f172a;" onclick="toggleCartDrawer(false)">&larr;</span>
-                    <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin:0;">Review Cart & Checkout</h3>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <button type="button" onclick="clearEntireCartData()" style="background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid #fecaca; padding: 5px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer;">Clear</button>
-                    <span style="font-size:0.8rem; font-weight:700; color:#d97706; background:rgba(245,158,11,0.1); padding:4px 10px; border-radius:8px; cursor:pointer;" onclick="toggleCartDrawer(false)">Close</span>
-                </div>
-            </div>
-
-            <div style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:15px; display:flex; flex-direction:column; gap:14px;">
-                
-                <div id="freeDeliveryProgressBarBox" style="background: rgba(16,185,129,0.08); border: 1px solid #10b981; border-radius: 12px; padding: 10px 14px;">
-                    <p id="freeDeliveryMessageText" style="font-size: 0.78rem; font-weight: 700; color: #065f46; margin: 0 0 6px 0;">🎉 Add items worth ₹99 more for FREE delivery!</p>
-                    <div style="width: 100%; background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
-                        <div id="freeDeliveryFillBar" style="width: 0%; background: #22c55e; height: 100%; transition: width 0.3s ease;"></div>
-                    </div>
-                </div>
-
-                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:14px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <span style="font-size:0.75rem; font-weight:800; color:#0284c7; text-transform:uppercase;">📍 Delivery Address</span>
-                        <span style="font-size:0.75rem; font-weight:700; color:#d97706; cursor:pointer;" onclick="openAddressManagerModal()">+ Add New Address</span>
-                    </div>
-                    <div id="cartSavedAddressesList" style="max-height:120px; overflow-y:auto; margin-bottom:4px; color:#0f172a;"></div>
-                </div>
-
-                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:14px; display:flex; align-items:center; gap:12px;">
-                    <div style="font-size:1.8rem;">⏰</div>
-                    <div>
-                        <h4 style="font-size:0.95rem; font-weight:800; color:#0f172a; margin:0 0 2px 0;">Delivery in 15 minutes</h4>
-                        <p style="font-size:0.75rem; color:#64748b; font-weight:600; margin:0;" id="shipmentItemsCountText">Shipment of items</p>
-                    </div>
-                </div>
-
-                <!-- Redesigned Cart Items List Container -->
-                <div id="cartDrawerItemsList" style="display:flex; flex-direction:column; gap:10px;"></div>
-
-                <!-- Delivery Partner Tipping Section -->
-                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:14px;">
-                    <span style="font-size:0.75rem; font-weight:800; color:#0284c7; text-transform:uppercase; display:block; margin-bottom:8px;">🛵 Tip your delivery partner</span>
-                    <div style="display:flex; gap:8px;">
-                        <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(10)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:8px; background:#ffffff; color:#0f172a; font-weight:700; font-size:0.75rem; cursor:pointer;">+ ₹10</button>
-                        <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(20)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:8px; background:#ffffff; color:#0f172a; font-weight:700; font-size:0.75rem; cursor:pointer;">+ ₹20</button>
-                        <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(50)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:8px; background:#ffffff; color:#0f172a; font-weight:700; font-size:0.75rem; cursor:pointer;">+ ₹50</button>
-                    </div>
-                </div>
-
-                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:16px;">
-                    <h4 style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:10px; border-bottom:1px dashed #cbd5e1; padding-bottom:6px;">📄 Bill Invoice Summary</h4>
-                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#64748b; margin-bottom:5px;">
-                        <span>Item Total (Prints & Products)</span>
-                        <span id="cartItemSubtotal">₹0.00</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#64748b; margin-bottom:5px;">
-                        <span>Delivery Partner Fee</span>
-                        <span id="cartDeliveryFee">₹25.00</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#d97706; font-weight:700; margin-bottom:5px; display:none;" id="rainSurgeRow">
-                        <span>🌧️ Rain Surge Fee</span>
-                        <span id="cartRainFee">₹15.00</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#10b981; font-weight:700; margin-bottom:8px;">
-                        <span>Taxes & Platform Charges</span>
-                        <span>FREE</span>
-                    </div>
-                    <div style="border-top:1px solid #cbd5e1; margin-top:8px; padding-top:8px; display:flex; justify-content:space-between; font-size:0.95rem; font-weight:900; color:#0f172a;">
-                        <span>Grand Total Payable</span>
-                        <span id="cartGrandTotalSummary" style="color:#065f46;">₹0.00</span>
-                    </div>
-                </div>
-
-                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:16px;">
-                    <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:12px;">💳 Select Payment Method</h4>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-                        <label style="cursor:pointer; position:relative;">
-                            <input type="radio" name="cartPaymentMode" value="online" checked style="position:absolute; opacity:0; top:0; left:0;">
-                            <div class="payment-option-box" style="padding:10px 6px; border:2px solid #cbd5e1; border-radius:12px; background:#ffffff; text-align:center; color:#0f172a;">
-                                <div style="font-size:1.1rem;">⚡</div>
-                                <div style="font-size:0.7rem; font-weight:800; margin-top:4px;">Online</div>
-                            </div>
-                        </label>
-                        <label style="cursor:pointer; position:relative;">
-                            <input type="radio" name="cartPaymentMode" value="wallet" style="position:absolute; opacity:0; top:0; left:0;">
-                            <div class="payment-option-box" style="padding:10px 6px; border:2px solid #cbd5e1; border-radius:12px; background:#ffffff; text-align:center; color:#0f172a;">
-                                <div style="font-size:1.1rem;">💰</div>
-                                <div style="font-size:0.7rem; font-weight:800; margin-top:4px;">Wallet (<span id="walletDrawerBalanceText">₹0</span>)</div>
-                            </div>
-                        </label>
-                        <label style="cursor:pointer; position:relative;">
-                            <input type="radio" name="cartPaymentMode" value="cod" style="position:absolute; opacity:0; top:0; left:0;">
-                            <div class="payment-option-box" style="padding:10px 6px; border:2px solid #cbd5e1; border-radius:12px; background:#ffffff; text-align:center; color:#0f172a;">
-                                <div style="font-size:1.1rem;">💵</div>
-                                <div style="font-size:0.7rem; font-weight:800; margin-top:4px;">COD</div>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
-            </div>
-
-            <div style="flex-shrink:0; background:#f8fafc; border-top:1px solid #e2e8f0; padding:15px; box-shadow:0 -4px 15px rgba(0,0,0,0.05);">
-                <button type="button" onclick="executeFinalCartOrderPlacement()" style="width:100%; padding:14px 18px; background:#065f46; color:#ffffff; border:none; border-radius:14px; font-weight:900; font-size:1rem; display:flex; justify-content:space-between; align-items:center; cursor:pointer; box-shadow:0 4px 12px rgba(6,95,70,0.2);">
-                    <span style="font-size:0.95rem; font-weight:800;">Place Order & Pay</span>
-                    <span id="cartDrawerGrandTotal" style="font-size:1.1rem; font-weight:900;">₹0.00</span>
-                </button>
-            </div>
-
-        </div>
-    </div>
-
-    <div id="mainApp" class="app-hidden">
-        <header class="brand-premium-header">
-            <div class="header-container">
-                <div class="header-meta-row">
-                    <div class="delivery-brand-box">
-                        <div id="userGreeting" class="user-greeting-inline">HI, KRISHNA</div>
-                        <h2 class="delivery-time-countdown">
-                            <span class="delivery-time-title" style="margin-right:6px;">Prints in</span> 15 mins
-                        </h2>
-                    </div>
-                    <div class="header-profile-cluster">
-                        <div class="status-micro-nav">
-                            <span id="userShopStatus" class="shop-status-text-badge open">OPEN 🟢</span>
-                            <span class="shop-timing-subtext">7AM - 10PM</span>
-                        </div>
-                        <div class="profile-wallet-row">
-                            <div class="wallet-micro-badge" onclick="toggleWalletPopupGrid(true, event)">
-                                <span>💵</span> <span class="wallet-cash-value" id="headerWalletDisplayBalance">₹0.00</span>
-                            </div>
-                            <div class="avatar-circle-trigger" onclick="toggleUserDrawer(true)">👤</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <div id="rainSurgeBanner" class="hidden" style="background: #0284c7; color: white; padding: 8px 15px; text-align: center; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <span>🌧️ Heavy Rain Detected / Rain Surge Active! A ₹15 fee applies to ensure 15-min safe delivery.</span>
-        </div>
-
-        <div class="container" id="mainLayoutAppContainer">
-            <div id="user_section_store" class="view-section active">
-                
-                <div style="background: linear-gradient(90deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); border-bottom: 1px solid #334155; border-top: 1px solid #334155; padding: 10px 0; overflow: hidden; white-space: nowrap; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 14px; border-radius: 12px;">
-                    <marquee scrollamount="6" style="width: 100%; display: flex; align-items: center; font-family: 'Poppins', sans-serif;">
-                        <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #f8fafc;">
-                            <span style="font-size: 1rem;">🪔✨</span> 
-                            <span style="color: #38bdf8;">Coming Soon:</span> Official Launch on <strong style="color: #f59e0b;">Diwali 2026</strong> in Varanasi!
-                        </span>
-                        <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #10b981;">
-                            <span>⚡</span> 15-Minute Instant Print & Delivery App
-                        </span>
-                    </marquee>
-                </div>
-
-                <div id="uploadScreenInitialState" style="width:100%;">
-                    <div class="compact-offers-bar" id="storeOffersTopBanner" style="margin-top:10px;">
-                        <span>📢 <b>Offers:</b></span>
-                        <marquee scrollamount="4" style="width: 100%;">
-                            ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!
-                        </marquee>
-                    </div>
-                    
-                    <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border: 1px solid #ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            🚨 <b>Store is Closed!</b> We are not taking orders currently.
-                        </div>
-                        <button type="button" onclick="dismissStoreClosedNotice()" style="background: none; border: none; font-size: 1.3rem; font-weight: bold; color: #991b1b; cursor: pointer; padding: 0 5px;">&times;</button>
-                    </div>
-
-                    <div class="store-header-box">
-                        <h2>Print Store</h2>
-                        <p>printfromhome ensures secure prints at every stage</p>
-                    </div>
-
-                    <div class="verbatim-docs-promo-card">
-                        <div class="promo-details-block">
-                            <h3 class="promo-main-title">Documents</h3>
-                            <ul class="promo-bullet-list">
-                                <li class="promo-bullet-item">✦ Price starting at ₹3/page</li>
-                                <li class="promo-bullet-item">✦ Paper quality: 70 GSM</li>
-                                <li class="promo-bullet-item">✦ Dynamic Customization Controls</li>
-                            </ul>
-                            <label class="verbatim-upload-btn" for="fileUpload">Upload Files</label>
-                            <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
-                        </div>
-                        <div class="promo-graphic-mockup">
-                            <img src="/printer-icon.jpg" alt="HP Smart Tank Printer" style="width: 100%; filter: grayscale(100%);">
-                        </div>
-                    </div>
-
-                    <div class="category-section-title">
-                        <span>⚡ Store Products & Snacks (Slide &rarr;)</span>
-                    </div>
-                    <div class="snacks-horizontal-slider" id="homeSnacksGrid"></div>
-                </div>
-
-                <div id="configurationScreenState" class="hidden" style="width:100%;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <h3 style="font-size:1.1rem; font-weight:800;">Configure Print & Add to Cart</h3>
-                        <button type="button" onclick="forceReturnToUploadView()" style="background:none; border:none; color:#065f46; font-weight:700; cursor:pointer; font-size:0.85rem;">&larr; Back to Upload</button>
-                    </div>
-
-                    <div style="background:var(--surface); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:15px;">
-                        <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:10px; color:#1e293b;">⚡ Hungry while waiting? Add Store Products</h4>
-                        <div class="snacks-horizontal-slider" id="configSnacksGrid"></div>
-                    </div>
-
-                    <form id="printForm" enctype="multipart/form-data" style="width:100%;">
-                        <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
-                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: #065f46; font-weight: 700; width: 100%;">Add Print Job to Cart</button>
-                    </form>
-                </div>
-            </div>
-
-            <div id="user_section_history" class="view-section">
-                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
-                    <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
-                    <div id="ordersHistoryContainer" style="width:100%;">
-                        <p style="text-align:center; padding:20px; color:var(--text-sub);">No print jobs recorded yet.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div id="user_section_order_tracking" class="view-section">
-                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%; text-align:left;">
-                    <button type="button" class="back-to-upload-link" onclick="navigateDrawerSection('history')">&larr; Back to All Orders</button>
-                    
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-bottom:2px solid var(--border-color); padding-bottom:12px;">
-                        <div>
-                            <h3 style="font-weight:800; font-size:1.2rem;">Order Details Matrix</h3>
-                            <p id="trackOrderIdLabel" style="font-size:0.75rem; color:var(--text-sub); font-weight:600;"></p>
-                        </div>
-                        <div id="trackGrandTotalBadge" style="font-size:1.4rem; font-weight:900; color:#065f46;">₹0.00</div>
-                    </div>
-
-                    <div style="margin-top:20px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 16px; padding: 18px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase;">Live Status</span>
-                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; color: #065f46;">
-                                🟢 ACTIVE TRACKING
-                            </div>
-                        </div>
-                        <h3 id="liveOrderStatusBadge" style="font-size: 1.2rem; font-weight: 900; color: #065f46;">Processing Order...</h3>
-                    </div>
-
-                    <div id="liveTrackingTimelineContainer" style="margin-top: 20px;">
-                        <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); text-transform:uppercase; margin-bottom: 12px;">📦 Real-Time Package Journey</h4>
-                        <div class="tracking-timeline-box" style="display: flex; flex-direction: column; gap: 15px;">
-                            <div class="timeline-step" id="step_pending" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Order Received</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">Awaiting verification parameters sync</p></div></div>
-                            <div class="timeline-step" id="step_paid" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Payment Confirmed</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">Order routed successfully</p></div></div>
-                            <div class="timeline-step" id="step_printing" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Printing Document</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">HP Smart Tank running active logs</p></div></div>
-                            <div class="timeline-step" id="step_delivery" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Out For Delivery</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">Delivery Executive arriving</p></div></div>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 15px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; display: flex; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="width: 44px; height: 44px; background: #0f172a; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🛵</div>
-                            <div>
-                                <h4 style="font-size: 0.88rem; font-weight: 800; color: var(--text-main);" id="deliveryExecutiveName">Assigning Delivery Partner...</h4>
-                                <p style="font-size: 0.72rem; font-weight: 600; color: var(--text-sub); margin-top: 2px;" id="deliveryExecutivePhone">Will be assigned shortly</p>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 8px;">
-                            <a id="callExecutiveBtn" href="tel:" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1rem;" title="Call Delivery Executive">📞</a>
-                        </div>
-                    </div>
-
-                    <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); margin-top:25px; text-transform:uppercase; border-bottom:1px dashed var(--border-color); padding-bottom:6px;">📄 Printable Items & Products Summary</h4>
-                    <div id="trackFilesManifestList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
-                    
-                    <div style="margin-top:20px; background:var(--bg-primary); padding:15px; border-radius:12px; border:1px dashed var(--border-color);">
-                        <p style="font-size:0.8rem; font-weight:700; color:var(--text-main);">📍 Shipping Gate Destination:</p>
-                        <p id="trackShippingAddressLabel" style="font-size:0.8rem; color:var(--text-sub); margin-top:2px; font-weight:500;"></p>
-                    </div>
-                </div>
-            </div>
-
-            <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; background:var(--surface); border:1px solid var(--border-color); padding:20px; border-radius:16px;">
-                <h2>Order Invoice Summary</h2>
-                <div class="summary-card">
-                    <div class="summary-row"><span>Printing Sheet Cost</span><span id="summaryPrint">₹0.00</span></div>
-                    <div class="summary-row"><span>Binding Cost Allocation</span><span id="summaryBinding">₹0.00</span></div>
-                    <div class="summary-row"><span>Delivery Logistics Fee</span><span id="summaryDelivery">₹0.00</span></div>
-                    <hr class="summary-divider">
-                    <div class="summary-row total-row"><h3>Grand Total Amount</h3><h3 id="summaryTotal">₹0.00</h3></div>
-                </div>
-            </section>
-        </div>
-    </div>
-
-    <!-- 📱 Compact & Attractive Floating Cart Footer Bar -->
-    <div id="floatingCartFooterBar" class="floating-cart-footer hidden" style="display:flex; justify-content:space-between; align-items:center; padding: 10px 15px !important; border-radius: 22px !important; max-width: 380px !important; background: #065f46;">
-        <div class="floating-cart-left" style="display:flex; align-items:center; gap:10px; cursor:pointer; flex:1;" onclick="toggleCartDrawer(true)">
-            <div id="floatingCartImagesStack" style="position:relative; width: 38px; height: 38px; margin-left:4px;"></div>
-            <div style="display:flex; flex-direction:column; text-align:left;">
-                <span id="floatingCartCountText" style="font-size:0.68rem; font-weight:700; color:#ffffff; opacity:0.85; text-transform:uppercase; letter-spacing:0.3px;">1 item</span>
-                <span id="floatingCartTotalPriceText" style="font-size:0.95rem; font-weight:900; color:#ffffff;">₹45.00</span>
-            </div>
-        </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-            <button type="button" onclick="clearEntireCartData()" style="background: rgba(255,255,255,0.18); color: white; border: none; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem;" title="Clear Cart">🗑️</button>
-            <div style="background: #ffffff; color: #065f46; padding: 8px 14px; border-radius: 18px; font-weight: 800; font-size: 0.82rem; display: flex; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onclick="toggleCartDrawer(true)">
-                <span>View</span> <span>&rarr;</span>
-            </div>
-        </div>
-    </div>
-
-    <div id="userInstallBanner" class="hidden" style="background: #0f172a; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: fixed; bottom: 0; left: 0; width: 100%; z-index: 99999; box-shadow: 0 -4px 12px rgba(0,0,0,0.2);">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 1.5rem;">📥</span>
-            <div>
-                <h4 style="font-size: 0.85rem; font-weight: 800; margin: 0;">Install Print From Home App</h4>
-                <p style="font-size: 0.7rem; color: #cbd5e1; margin: 0;">Add to home screen for instant prints & quick login!</p>
-            </div>
-        </div>
-        <button type="button" id="userInstallTriggerBtn" onclick="triggerUniversalPWAInstall()" style="background: #065f46; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">Install App</button>
-    </div>
-
-    <div id="storeClosedPopupModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 99999; display: none; justify-content: center; align-items: center; padding: 20px;">
-        <div style="background: #ffffff; border-radius: 24px; padding: 30px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 3px solid #ef4444;">
-            <div style="font-size: 3.5rem; margin-bottom: 10px;">🏪🚨</div>
-            <h3 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Store is Currently Closed</h3>
-            <p style="font-size: 0.88rem; color: #64748b; line-height: 1.6; margin-bottom: 20px; font-weight: 500;">We are currently not accepting any orders at the moment.</p>
-            <button type="button" onclick="dismissStoreClosedNotice()" style="width: 100%; padding: 12px; background: #0f172a; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">Understood, Got It!</button>
-        </div>
-    </div>
-
-    <script>
-        window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
-        window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
-        window.storeInventoryProducts = [];
-        let lastRenderedData = "";
-
-        function initRealRainAnimation() {
-            const container = document.getElementById('rainAnimationContainer');
-            if (!container) return;
-            
-            if (container.children.length === 0) {
-                const dropCount = 90;
-                for (let i = 0; i < dropCount; i++) {
-                    const drop = document.createElement('div');
-                    drop.className = 'raindrop';
-                    drop.style.left = `${Math.random() * 100}vw`;
-                    drop.style.top = `${Math.random() * -50}vh`;
-                    drop.style.animationDuration = `${0.4 + Math.random() * 0.5}s`;
-                    drop.style.animationDelay = `${Math.random() * 2}s`;
-                    container.appendChild(drop);
-                }
-            }
-        }
-
-        async function checkLocalWeatherAndApplyRainSurge() {
-            try {
-                const statusRes = await fetch('/api/store-status');
-                const statusData = await statusRes.json();
-                let adminRainForced = statusData.success && statusData.rainSurgeActive === true;
-
-                let isRaining = adminRainForced;
-                if (!adminRainForced) {
-                    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.3176&longitude=82.9739&current=precipitation,weather_code');
-                    const data = await res.json();
-                    if (data && data.current) {
-                        const precipitation = data.current.precipitation || 0; 
-                        const weatherCode = data.current.weather_code || 0;
-                        isRaining = precipitation > 0 || (weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 99);
-                    }
-                }
-
-                const bodyEl = document.body;
-                const rainBanner = document.getElementById('rainSurgeBanner');
-                const rainSurgeRow = document.getElementById('rainSurgeRow');
-
-                if (isRaining) {
-                    bodyEl.classList.add('theme-rainy-season');
-                    if (rainBanner) rainBanner.classList.remove('hidden');
-                    if (rainSurgeRow) rainSurgeRow.style.display = 'flex';
-                    window.isRainSurgeActive = true;
-                    window.rainSurgeFee = 15; 
-                    initRealRainAnimation();
-                } else {
-                    bodyEl.classList.remove('theme-rainy-season');
-                    if (rainBanner) rainBanner.classList.add('hidden');
-                    if (rainSurgeRow) rainSurgeRow.style.display = 'none';
-                    window.isRainSurgeActive = false;
-                    window.rainSurgeFee = 0;
-                }
-            } catch (e) {}
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            checkLocalWeatherAndApplyRainSurge();
-            setInterval(checkLocalWeatherAndApplyRainSurge, 5000);
-
-            const sessionUser = localStorage.getItem('printAppUser');
-            const savedBday = localStorage.getItem(`user_bday_${sessionUser}`);
-            if(savedBday) {
-                const titleEl = document.getElementById('birthdayTitleText');
-                if(titleEl) titleEl.textContent = `Birthday: ${savedBday} 🎂`;
-            }
-
-            const hideSensitive = localStorage.getItem('hide_sensitive_items') === 'true';
-            const sensitiveCheck = document.getElementById('sensitiveToggleCheck');
-            if(sensitiveCheck) sensitiveCheck.checked = hideSensitive;
-        });
-
-        let renderedPagesList = [];
-        let isLandscapeMode = false;
-        let currentStudioActiveFile = null;
-        let currentStudioFileName = 'Document.pdf';
-        let isCurrentFileLocked = false;
-
-        window.openDocumentInA4Studio = async function(fileBlobOrUrl, originalFileName = 'Document') {
-            const container = document.getElementById('a4PagesContainer');
-            const modal = document.getElementById('printStudioModal');
-            const passwordBox = document.getElementById('studioPasswordValidationBox');
-            const passwordInput = document.getElementById('studioRequiredPdfPassword');
-            
-            if (!container || !modal) return;
-
-            currentStudioActiveFile = fileBlobOrUrl;
-            currentStudioFileName = originalFileName || 'Document.pdf';
-            if (passwordInput) passwordInput.value = '';
-            if (passwordBox) passwordBox.classList.add('hidden');
-            isCurrentFileLocked = false;
-
-            container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Generating pixel-perfect A4 Sheets...</div>';
-            modal.style.display = 'flex';
-            renderedPagesList = [];
-
-            try {
-                const isPdf = (typeof fileBlobOrUrl === 'string' && fileBlobOrUrl.toLowerCase().includes('.pdf')) || 
-                            (fileBlobOrUrl.type === 'application/pdf') || 
-                            (fileBlobOrUrl.name && fileBlobOrUrl.name.toLowerCase().endsWith('.pdf'));
-
-                if (isPdf) {
-                    const fileSource = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
-                    
-                    try {
-                        await loadPdfIntoStudio(fileSource, undefined);
-                    } catch (passErr) {
-                        if (passErr.name === 'PasswordException' || passErr.message.includes('password') || passErr.message.includes('No password given')) {
-                            isCurrentFileLocked = true;
-                            if (passwordBox) passwordBox.classList.remove('hidden');
-                            container.innerHTML = `<div style="color: #f87171; font-weight: 700; padding: 30px; text-align: center;">🔒 This PDF is password protected!<br><span style="font-size:0.75rem; color:#94a3b8;">Please enter the password in the top red bar above to unlock and preview.</span></div>`;
-                            return;
-                        } else {
-                            throw passErr;
-                        }
-                    }
-                } else {
-                    const imgSourceUrl = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
-                    container.innerHTML = '';
-
-                    const pageWrapper = document.createElement('div');
-                    pageWrapper.className = `a4-page-wrapper ${isLandscapeMode ? 'landscape' : ''}`;
-                    pageWrapper.id = `a4_sheet_element_1`;
-
-                    pageWrapper.innerHTML = `
-                        <div class="page-badge-toolbar">
-                            <span style="color: #38bdf8; font-size: 0.75rem; font-weight: 800;">Page 1 of 1</span>
-                        </div>
-                        <img src="${imgSourceUrl}" class="a4-page-canvas" style="width: 100%; height: 100%; object-fit: contain;" />
-                    `;
-                    container.appendChild(pageWrapper);
-                    renderedPagesList.push({ pageNum: 1, elementId: `a4_sheet_element_1` });
-                    updateStudioPageCountBadge();
-                }
-            } catch (err) {
-                container.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 30px; text-align: center;">❌ Failed to render document: ${err.message}</div>`;
-            }
-        };
-
-        async function loadPdfIntoStudio(fileSource, passwordArg) {
-            const container = document.getElementById('a4PagesContainer');
-            const loadingTask = pdfjsLib.getDocument({ url: fileSource, password: passwordArg });
-            const pdf = await loadingTask.promise;
-            container.innerHTML = '';
-
-            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                const page = await pdf.getPage(pageNum);
-                const viewport = page.getViewport({ scale: 2.0 });
-
-                const pageWrapper = document.createElement('div');
-                pageWrapper.className = `a4-page-wrapper ${isLandscapeMode ? 'landscape' : ''}`;
-                pageWrapper.id = `a4_sheet_element_${pageNum}`;
-
-                const badgeBar = document.createElement('div');
-                badgeBar.className = 'page-badge-toolbar';
-                badgeBar.innerHTML = `
-                    <span style="color: #38bdf8; font-size: 0.75rem; font-weight: 800;">Page ${pageNum} of ${pdf.numPages}</span>
-                    <button type="button" onclick="removeA4StudioPage(${pageNum})" style="background: #ef4444; color: white; border: none; border-radius: 6px; padding: 2px 8px; font-size: 0.7rem; font-weight: 800; cursor: pointer;">Delete</button>
-                `;
-
-                const canvas = document.createElement('canvas');
-                canvas.className = 'a4-page-canvas';
-                const context = canvas.getContext('2d');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-
-                await page.render({ canvasContext: context, viewport: viewport }).promise;
-
-                pageWrapper.appendChild(badgeBar);
-                pageWrapper.appendChild(canvas);
-                container.appendChild(pageWrapper);
-
-                renderedPagesList.push({ pageNum, elementId: `a4_sheet_element_${pageNum}` });
-            }
-            updateStudioPageCountBadge();
-        }
-
-        window.tryUnlockAndRenderLockedPdf = async function() {
-            const passwordInput = document.getElementById('studioRequiredPdfPassword');
-            const pwd = passwordInput ? passwordInput.value.trim() : '';
-            if (!pwd) {
-                showAppToast("Please enter the password to unlock this PDF.", "error");
-                return;
-            }
-            const container = document.getElementById('a4PagesContainer');
-            container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Unlocking and rendering PDF...</div>';
-
-            try {
-                let fileSource;
-                if (typeof currentStudioActiveFile === 'string') {
-                    fileSource = currentStudioActiveFile;
-                } else if (currentStudioActiveFile instanceof Blob || currentStudioActiveFile instanceof File) {
-                    fileSource = URL.createObjectURL(currentStudioActiveFile);
-                } else {
-                    throw new Error("Invalid file reference.");
-                }
-
-                renderedPagesList = [];
-                await loadPdfIntoStudio(fileSource, pwd);
-                isCurrentFileLocked = false;
-                document.getElementById('studioPasswordValidationBox').classList.add('hidden');
-                showAppToast("PDF Unlocked Successfully!", "success");
-            } catch (err) {
-                container.innerHTML = `<div style="color: #f87171; font-weight: 700; padding: 30px; text-align: center;">🔒 This PDF is password protected!<br><span style="font-size:0.75rem; color:#94a3b8;">Please enter the correct password below to unlock.</span></div>`;
-                showAppToast("Incorrect Password! Please try again.", "error");
-            }
-        };
-
-        window.updateStudioPageCountBadge = function() {
-            const badge = document.getElementById('totalActivePagesCount');
-            if (badge) badge.textContent = renderedPagesList.length;
-        };
-
-        window.removeA4StudioPage = function(pageNum) {
-            const index = renderedPagesList.findIndex(p => p.pageNum === pageNum);
-            if (index !== -1) {
-                const item = renderedPagesList[index];
-                const el = document.getElementById(item.elementId);
-                if (el) el.remove();
-                renderedPagesList.splice(index, 1);
-                updateStudioPageCountBadge();
-            }
-        };
-
-        window.toggleGlobalOrientation = function() {
-            isLandscapeMode = !isLandscapeMode;
-            document.querySelectorAll('.a4-page-wrapper').forEach(sheet => {
-                sheet.classList.toggle('landscape', isLandscapeMode);
-            });
-        };
-
-        window.closePrintStudio = function() {
-            const modal = document.getElementById('printStudioModal');
-            if (modal) modal.style.display = 'none';
-        };
-
-        window.addStudioDocumentToCartAndRedirect = function() {
-            const passwordInput = document.getElementById('studioRequiredPdfPassword');
-            const enteredPassword = passwordInput ? passwordInput.value.trim() : '';
-
-            if (isCurrentFileLocked && !enteredPassword) {
-                showAppToast("This PDF file is locked! You must enter the correct password.", "error");
-                return;
-            }
-
-            const totalPages = renderedPagesList.length > 0 ? renderedPagesList.length : 1;
-
-            window.cartPrintJobsArray.push({
-                fileName: currentStudioFileName,
-                pages: totalPages,
-                printType: 'bw',
-                sides: isLandscapeMode ? 'landscape' : 'single',
-                binding: 'none',
-                copies: 1,
-                orientation: isLandscapeMode ? 'landscape' : 'portrait',
-                fileData: currentStudioActiveFile,
-                pdfPassword: enteredPassword
-            });
-
-            if (typeof persistCartStateData === 'function') persistCartStateData();
-            if (typeof calculateTotal === 'function') calculateTotal();
-            
-            closePrintStudio();
-            toggleCartDrawer(true);
-        };
-
-        function toggleBirthdayInputBox() {
-            const box = document.getElementById('birthdayInputBox');
-            if(box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
-        }
-
-        function saveUserBirthday() {
-            const bday = document.getElementById('userBirthdayInput').value;
-            if(!bday) { showAppToast("Please select your birth date", "error"); return; }
-            const sessionUser = localStorage.getItem('printAppUser') || 'guest';
-            localStorage.setItem(`user_bday_${sessionUser}`, bday);
-            
-            const titleEl = document.getElementById('birthdayTitleText');
-            if(titleEl) titleEl.textContent = `Birthday: ${bday} 🎂`;
-            document.getElementById('birthdayInputBox').style.display = 'none';
-            showAppToast("Birthday saved successfully!", "success");
-        }
-
-        function toggleHideSensitiveItems(hide) {
-            localStorage.setItem('hide_sensitive_items', hide ? 'true' : 'false');
-            if (typeof renderStoreProductsUI === 'function') renderStoreProductsUI();
-            showAppToast(hide ? "Sensitive items hidden from inventory" : "Sensitive items visible", "success");
-        }
-
-        function toggleHelpModal(open) {
-            const modal = document.getElementById('helpCenterModal');
-            if(modal) modal.style.display = open ? 'flex' : 'none';
-        }
-
-        function openEditProfileModal() {
-            const modal = document.getElementById('editProfileModal');
-            const sessionUser = localStorage.getItem('printAppUser') || '';
-            const emailField = document.getElementById('modalEditEmailInput');
-            const nameField = document.getElementById('modalEditNameInput');
-            if(emailField) emailField.value = localStorage.getItem(`user_email_${sessionUser}`) || '';
-            if(nameField) nameField.value = localStorage.getItem(`user_name_${sessionUser}`) || 'Krishna';
-            if(modal) modal.style.display = 'flex';
-        }
-
-        function closeEditProfileModal() {
-            const modal = document.getElementById('editProfileModal');
-            if(modal) modal.style.display = 'none';
-        }
-
-        async function submitProfileUpdates(e) {
-            e.preventDefault();
-            const sessionUser = localStorage.getItem('printAppUser');
-            const newName = document.getElementById('modalEditNameInput').value;
-            const newEmail = document.getElementById('modalEditEmailInput').value;
-            const newPass = document.getElementById('modalEditPasswordInput').value;
-
-            try {
-                await fetch('/api/auth/update-profile', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ identity: sessionUser, name: newName, newPassword: newPass || undefined })
-                });
-
-                await fetch('/api/auth/update-email', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ identity: sessionUser, email: newEmail })
-                });
-
-                localStorage.setItem(`user_email_${sessionUser}`, newEmail);
-                localStorage.setItem(`user_name_${sessionUser}`, newName);
-                showAppToast("Profile & Gmail updated successfully!", "success");
-                closeEditProfileModal();
-            } catch(err) {
-                showAppToast("Failed to update profile", "error");
-            }
-        }
-
-        async function loadDynamicStoreProducts() {
-            try {
-                const res = await fetch('/api/store/products');
-                const data = await res.json();
-                if (data.success && Array.isArray(data.products)) {
-                    let prods = data.products;
-                    const hideSensitive = localStorage.getItem('hide_sensitive_items') === 'true';
-                    if (hideSensitive) {
-                        prods = prods.filter(p => {
-                            const n = (p.name || '').toLowerCase();
-                            return !n.includes('sexual') && !n.includes('nashela') && !n.includes('adult') && !n.includes('cigar') && !n.includes('beer');
-                        });
-                    }
-
-                    const newProductsJson = JSON.stringify(prods);
-                    if (newProductsJson !== lastRenderedData) {
-                        lastRenderedData = newProductsJson;
-                        window.storeInventoryProducts = prods;
-                        renderStoreProductsUI();
-                        updateFloatingCartBar();
-                    }
-                }
-            } catch (e) {}
-        }
-
-        function renderStoreProductsUI() {
-            const gridContainers = document.querySelectorAll('.snacks-horizontal-slider');
-            if (gridContainers.length === 0) return;
-
-            gridContainers.forEach(container => {
-                if (!container.style.display || container.style.display === "") {
-                    container.style.display = 'flex';
-                    container.style.gap = '12px';
-                    container.style.overflowX = 'auto';
-                    container.style.padding = '10px 4px';
-                    container.style.width = '100%';
-                    container.style.scrollbarWidth = 'none';
-                }
-
-                container.innerHTML = '';
-                if (window.storeInventoryProducts.length === 0) {
-                    container.innerHTML = `<p style="font-size:0.75rem; color:#64748b; padding:10px;">No store products available currently.</p>`;
-                    return;
-                }
-
-                window.storeInventoryProducts.forEach((prod, index) => {
-                    const isOutOfStock = (prod.stockQuantity <= 0);
-                    const finalImgUrl = prod.imageUrl || prod.image || '';
-
-                    const card = document.createElement('div');
-                    card.className = 'blinkit-cat-card';
-                    card.style.cssText = `
-                        min-width: 110px; width: 110px; background: #ffffff;
-                        border: 1px solid #e2e8f0; border-radius: 14px; padding: 10px; position: relative; 
-                        opacity: ${isOutOfStock ? '0.7' : '1'}; display: flex; 
-                        flex-direction: column; align-items: center; cursor: pointer;
-                        box-shadow: 0 2px 6px rgba(0,0,0,0.03); flex-shrink: 0;
-                    `;
-                    
-                    card.onclick = (e) => {
-                        if (e.target.tagName === 'BUTTON') return;
-                        openProductDetailModal(window.storeInventoryProducts[index]);
-                    };
-
-                    const imageHtml = finalImgUrl 
-                        ? `<img src="${finalImgUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px; display:block;" />` 
-                        : `<div style="font-size:2rem; margin-bottom:6px; height:65px; display:flex; align-items:center; justify-content:center;">📦</div>`;
-
-                    card.innerHTML = `
-                        ${imageHtml}
-                        <div title="${prod.name}" style="font-weight:700; font-size:0.78rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; color:#0f172a;">${prod.name}</div>
-                        <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
-                        ${isOutOfStock 
-                            ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); notifyWhenAvailable('${prod.name}')">Notify</button>`
-                            : `<button type="button" class="btn-quick-add-item" style="background:#065f46; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
-                        }
-                    `;
-                    container.appendChild(card);
-                });
-            });
-        }
-
-        window.openProductDetailModal = function(prod) {
-            const modal = document.getElementById('productDetailModal');
-            const imgContainer = document.getElementById('modalProductImgContainer');
-            const nameEl = document.getElementById('modalProductName');
-            const priceEl = document.getElementById('modalProductPrice');
-            const stockEl = document.getElementById('modalProductStock');
-            const addBtn = document.getElementById('modalAddToCartBtn');
-            if (!modal) return;
-            const finalImgUrl = prod.imageUrl || prod.image || '';
-            nameEl.textContent = prod.name;
-            priceEl.textContent = `₹${prod.sellingPrice || 0}`;
-            stockEl.textContent = prod.stockQuantity > 0 ? `Stock Left: ${prod.stockQuantity} units` : `Status: Out of Stock`;
-            imgContainer.innerHTML = finalImgUrl ? `<img src="${finalImgUrl}" style="width:100%; height:100%; object-fit:contain;" />` : `<span style="font-size:3.5rem;">📦</span>`;
-            addBtn.onclick = () => {
-                addDynamicProductToCart(prod.sku, prod.name, prod.sellingPrice || 0, prod.stockQuantity);
-                closeProductDetailModal();
-            };
-            modal.style.display = 'flex';
-        };
-
-        window.closeProductDetailModal = function(event) {
-            const modal = document.getElementById('productDetailModal');
-            if (modal && (!event || event.target === modal || event.target.tagName === 'SPAN')) modal.style.display = 'none';
-        };
-
-        window.addDynamicProductToCart = function(sku, name, price, currentStock) {
-            const existing = window.cartSnacksArray.find(item => item.name === name);
-            const currentCartQty = existing ? existing.qty : 0;
-            if (currentCartQty + 1 > currentStock) {
-                showAppToast(`Sorry! Only ${currentStock} units available.`, "error");
-                return;
-            }
-            if (existing) existing.qty += 1;
-            else window.cartSnacksArray.push({ sku, name, price, qty: 1 });
-            if (typeof persistCartStateData === 'function') persistCartStateData();
-            updateFloatingCartBar();
-            showAppToast(`Added "${name}" to cart!`, "success");
-        };
-
-        loadDynamicStoreProducts();
-        setInterval(loadDynamicStoreProducts, 5000);
-
-        window.updateFloatingCartBar = function() {
-            const bar = document.getElementById('floatingCartFooterBar');
-            const countText = document.getElementById('floatingCartCountText');
-            const priceText = document.getElementById('floatingCartTotalPriceText');
-            if (!bar) return;
-            let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0) + (window.cartPrintJobsArray ? window.cartPrintJobsArray.length : 0);
-            let totalSnacksPrice = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
-            if (totalSnacksCount > 0) {
-                bar.classList.remove('hidden');
-                bar.style.display = 'flex';
-                if (countText) countText.textContent = `${totalSnacksCount} item${totalSnacksCount > 1 ? 's' : ''}`;
-                if (priceText) priceText.textContent = `₹${totalSnacksPrice.toFixed(2)}`;
-            } else {
-                bar.classList.add('hidden');
-                bar.style.display = 'none';
-            }
-        };
-
-        window.toggleCartDrawer = function(open) {
-            const overlay = document.getElementById('cartDrawerOverlay');
-            if (overlay) overlay.style.display = open ? 'flex' : 'none';
-            if (open && typeof renderCartDrawerContents === 'function') renderCartDrawerContents();
-        };
-
-        function toggleUserDrawer(open) {
-            const drawer = document.getElementById('userSideDrawer');
-            const overlay = document.getElementById('drawerOverlay');
-            if (!drawer) return;
-            if (open) {
-                drawer.style.right = '0';
-                if(overlay) { overlay.classList.add('active'); overlay.style.display = 'block'; }
-                const sessionUser = localStorage.getItem('printAppUser');
-                document.getElementById('drawerUserMobileText').textContent = sessionUser || '7398746551';
-            } else {
-                drawer.style.right = '-100%';
-                if(overlay) { overlay.classList.remove('active'); overlay.style.display = 'none'; }
-            }
-        }
-        function toggleWalletPopupGrid(show, event) {
-            const modal = document.getElementById('walletDepositModal');
-            if (modal) modal.style.display = show ? 'flex' : 'none';
-        }
-        function navigateDrawerSection(targetId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            if(document.getElementById(`user_section_${targetId}`)) {
-                document.getElementById(`user_section_${targetId}`).classList.add('active');
-            }
-            toggleUserDrawer(false);
-        }
-    </script>
-    <script src="script.js"></script>
+    <div id="rainAnimationContainer"></div>
+    <div id="appToastContainer"></div>
+
+    <script>
+        window.showAppToast = function(message, type = 'info') {
+            const container = document.getElementById('appToastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = 'app-toast-item';
+            
+            let icon = 'ℹ️';
+            if (type === 'success') icon = '✅';
+            if (type === 'error') icon = '⚠️';
+
+            toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        window.alert = function(msg) {
+            let cleanMsg = msg;
+            if (typeof msg === 'string') {
+                if (msg.includes('password')) cleanMsg = "Please enter a valid password.";
+            }
+            showAppToast(cleanMsg, 'error');
+        };
+    </script>
+
+    <!-- 📄 DOCUMENT PREVIEW & CONFIG MODAL -->
+    <div id="docPreviewModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 25000; display: none; justify-content: center; align-items: center; padding: 16px;">
+        <div style="background: #065f46; border: 2px solid #f59e0b; border-radius: 20px; padding: 22px; max-width: 450px; width: 100%; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 12px 35px rgba(0,0,0,0.5);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #047857; padding-bottom: 8px;">
+                <h3 style="color: white; font-size: 1.1rem; font-weight: 800;">📄 Document Print Preview</h3>
+                <span style="cursor: pointer; font-size: 1.4rem; color: #a7f3d0;" onclick="closeDocPreviewModal()">&times;</span>
+            </div>
+
+            <div id="previewContainerBox" style="width: 100%; height: 200px; background: #022c22; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid #047857; overflow: hidden; position: relative;">
+                <iframe id="pdfPreviewFrame" style="width: 100%; height: 100%; border: none; display: none;"></iframe>
+                <div id="genericFilePreviewText" style="text-align: center; color: #a7f3d0; font-weight: 700;">📂 Document Ready for Print</div>
+            </div>
+
+            <div style="background: #064e3b; padding: 12px; border-radius: 10px; border: 1px solid #047857; font-size: 0.82rem; display: flex; flex-direction: column; gap: 6px;">
+                <span id="previewFileName" style="color: white; font-weight: 700; word-break: break-all;">file.pdf</span>
+                <div style="display: flex; justify-content: space-between; color: #a7f3d0;">
+                    <span>Estimated Pages: <b id="previewPageCount" style="color: #f59e0b;">1</b></span>
+                    <span>Print Type: <b id="previewPrintTypeBadge" style="color: #22c55e;">B&W</b></span>
+                </div>
+            </div>
+
+            <button type="button" onclick="confirmDocumentAddToCart()" style="background: #22c55e; color: #064e3b; border: none; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; text-align: center; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);">
+                🛒 Add Document to Cart
+            </button>
+        </div>
+    </div>
+
+    <!-- 🛍️ PRODUCT DETAIL MODAL -->
+    <div id="productDetailModal" onclick="closeProductDetailModal(event)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:99999; display:none; justify-content:center; align-items:flex-end; padding:0;">
+        <div style="background:#ffffff; border-radius:24px 24px 0 0; padding:24px; width:100%; max-width:500px; max-height:85vh; overflow-y:auto; box-shadow:0 -10px 30px rgba(0,0,0,0.2); text-align:left; animation:slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1); position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a;">Product Details</h3>
+                <span style="cursor:pointer; font-size:1.5rem; font-weight:bold; color:#64748b;" onclick="closeProductDetailModal()">&times;</span>
+            </div>
+            
+            <div id="modalProductImgContainer" style="width:100%; height:220px; background:#f8fafc; border-radius:16px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; overflow:hidden; border:1px solid #e2e8f0;">
+            </div>
+            
+            <h3 id="modalProductName" style="font-size:1.3rem; font-weight:800; color:#0f172a; margin-bottom:6px;">Product Name</h3>
+            <p id="modalProductPrice" style="font-size:1.2rem; font-weight:900; color:#065f46; margin-bottom:10px;">₹0.00</p>
+            <p id="modalProductStock" style="font-size:0.78rem; font-weight:700; color:#64748b; background:#f1f5f9; padding:6px 12px; border-radius:8px; display:inline-block; margin-bottom:20px;">Stock: Available</p>
+            
+            <button type="button" id="modalAddToCartBtn" style="width:100%; padding:14px; background:#065f46; color:white; border:none; border-radius:12px; font-weight:800; font-size:0.95rem; cursor:pointer; box-shadow:0 4px 12px rgba(6,95,70,0.3);">+ Add to Cart</button>
+        </div>
+    </div>
+
+    <!-- 📄 A4 STUDIO PREVIEW MODAL -->
+    <div id="printStudioModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); z-index: 100000; flex-direction: column; overflow: hidden; font-family: 'Poppins', sans-serif;">
+        <div class="studio-toolbar" style="background: #1e293b; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button type="button" onclick="closePrintStudio()" style="background: #334155; color: white; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem;">&larr; Cancel</button>
+                <h3 style="font-size: 1rem; color: #f8fafc; margin: 0; font-weight: 800;">📑 A4 Preview (<span id="totalActivePagesCount" style="color: #22c55e;">0</span> Pages)</h3>
+            </div>
+            
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button type="button" onclick="toggleGlobalOrientation()" style="background: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82rem; cursor: pointer;">🔄 Rotate</button>
+                <button type="button" onclick="addStudioDocumentToCartAndRedirect()" style="background: #22c55e; color: #064e3b; border: none; padding: 8px 18px; border-radius: 8px; font-weight: 800; font-size: 0.88rem; cursor: pointer; box-shadow: 0 4px 12px rgba(34,197,94,0.3);">🛒 Add to Cart & Proceed &rarr;</button>
+            </div>
+        </div>
+
+        <div id="studioPasswordValidationBox" class="hidden" style="background: rgba(239, 68, 68, 0.15); border-bottom: 1px solid #ef4444; padding: 10px 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <span style="font-size: 0.8rem; font-weight: 800; color: #f87171;">🔐 Locked PDF Detected! Enter Password:</span>
+            <input type="password" id="studioRequiredPdfPassword" placeholder="Enter password to unlock..." style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ef4444; background: #0f172a; color: white; font-size: 0.8rem; outline: none; flex: 1; min-width: 200px;">
+            <button type="button" onclick="tryUnlockAndRenderLockedPdf()" style="background: #ef4444; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; cursor: pointer;">Unlock</button>
+        </div>
+
+        <div id="a4PagesContainer" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 25px 12px; background: #0f172a; -webkit-overflow-scrolling: touch;">
+        </div>
+    </div>
+
+    <!-- 💬 NEED HELP & CUSTOMER CARE MODAL -->
+    <div id="helpCenterModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 21000; display: none; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #ffffff; border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            <div style="font-size: 3rem; margin-bottom: 8px;">💬</div>
+            <h3 style="font-size: 1.2rem; font-weight: 900; color: #0f172a; margin-bottom: 6px;">Customer Support Hub</h3>
+            <p style="font-size: 0.78rem; color: #64748b; margin-bottom: 16px;">We are available 24/7 for print orders and delivery inquiries.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+                <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Print%20From%20Home" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #25D366; color: white; padding: 12px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.85rem;">
+                    <span>💬</span> Chat on WhatsApp (+91 7007626731)
+                </a>
+                <a href="tel:7007626731" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #0f172a; color: white; padding: 12px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.85rem;">
+                    <span>📞</span> Call Support Helpline
+                </a>
+            </div>
+            <button type="button" onclick="toggleHelpModal(false)" style="background: #e2e8f0; color: #334155; border: none; padding: 10px; border-radius: 10px; font-weight: 700; width: 100%; cursor: pointer;">Close</button>
+        </div>
+    </div>
+
+    <!-- ⚙️ EDIT PROFILE & GMAIL MODAL -->
+    <div id="editProfileModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 22000; display: none; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #ffffff; border-radius: 20px; padding: 24px; max-width: 420px; width: 100%; text-align: left; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                <h3 style="font-size: 1.1rem; font-weight: 900; color: #0f172a;">⚙️ Edit Profile & Gmail</h3>
+                <span style="cursor: pointer; font-size: 1.4rem; color: #64748b;" onclick="closeEditProfileModal()">&times;</span>
+            </div>
+            <form id="activeProfileUpdateForm" onsubmit="submitProfileUpdates(event)">
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 0.75rem; font-weight: 800; color: #475569; display: block; margin-bottom: 4px;">Full Name</label>
+                    <input type="text" id="modalEditNameInput" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none;" required>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 0.75rem; font-weight: 800; color: #475569; display: block; margin-bottom: 4px;">Notification Gmail Address</label>
+                    <input type="email" id="modalEditEmailInput" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none;" placeholder="name@gmail.com" required>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="font-size: 0.75rem; font-weight: 800; color: #475569; display: block; margin-bottom: 4px;">New Password (Optional)</label>
+                    <input type="password" id="modalEditPasswordInput" placeholder="Leave blank to keep current" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none;">
+                </div>
+                <button type="submit" style="background: #065f46; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 800; width: 100%; cursor: pointer;">Save Profile Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="iosInstallModal" onclick="closeIosInstallModal(event)" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(5px); z-index: 100000; justify-content: center; align-items: flex-end; padding: 0;">
+        <div onclick="event.stopPropagation()" style="background: #1e293b; color: #f8fafc; width: 100%; max-width: 460px; border-radius: 24px 24px 0 0; padding: 24px; border-top: 1px solid #334155; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); text-align: center; animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1); position: relative;">
+            <div style="width: 42px; height: 5px; background: #475569; border-radius: 4px; margin: 0 auto 16px auto;"></div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 6px;">
+                <span style="font-size: 1.6rem;">📲</span>
+                <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0;">Install Print From Home</h3>
+            </div>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 18px;">Install on your iPhone / iPad for instant full-screen access:</p>
+            <div style="display: flex; flex-direction: column; gap: 12px; text-align: left; background: #0f172a; padding: 16px; border-radius: 14px; border: 1px solid #334155; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="background: #22c55e; color: white; min-width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem;">1</span>
+                    <span style="font-size: 0.84rem; color: #e2e8f0;">Tap the <strong>Share</strong> button <span style="font-size: 1.1rem; color: #38bdf8;">⎋</span> in Safari.</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="background: #22c55e; color: white; min-width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem;">2</span>
+                    <span style="font-size: 0.84rem; color: #e2e8f0;">Scroll down and tap <strong>'Add to Home Screen'</strong> ➕.</span>
+                </div>
+            </div>
+            <button type="button" onclick="closeIosInstallModal()" style="width: 100%; background: #334155; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">Got It, Thanks!</button>
+        </div>
+    </div>
+
+    <div id="splashScreen" class="splash-container">
+        <div class="splash-content">
+            <h1 class="splash-logo">print<span class="logo-green">from</span>home</h1>
+            <p class="splash-tagline">India's Last Minute Printing App</p>
+        </div>
+    </div>
+
+    <div id="authScreen" class="auth-container app-hidden">
+        <div class="auth-card">
+            <div class="auth-brand">print<span class="brand-green">from</span>home</div>
+            <h2 id="authTitle">Welcome Back!</h2>
+            <form id="authForm">
+                <div class="form-group signup-only hidden"><label>Full Name</label><input type="text" id="authName" placeholder="Enter your full name"></div>
+                <div class="form-group"><label>Mobile Number</label><input type="text" id="authIdentity" placeholder="Enter 10-digit mobile number" maxlength="10" required></div>
+                <div class="form-group signup-only hidden"><label>Gmail Address</label><input type="email" id="authEmailInput" placeholder="Enter your Gmail address"></div>
+                <div class="form-group" id="passwordGroup"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters" required></div>
+                
+                <div style="text-align: right; margin-bottom: 12px;">
+                    <button type="button" onclick="initiatePasswordReset()" style="background: none; border: none; color: #2563eb; font-size: 0.78rem; font-weight: 700; cursor: pointer; padding: 0;">Forgot Password?</button>
+                </div>
+
+                <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
+            </form>
+            <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
+        </div>
+    </div>
+
+    <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
+
+    <!-- 👤 USER ACCOUNT SHEET DRAWER -->
+    <nav id="userSideDrawer" class="side-drawer" style="background: #ffffff; color: #0f172a; width: 100%; max-width: 420px; height: 100vh; position: fixed; top: 0; right: -100%; z-index: 17000; transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.2);">
+        
+        <div style="background: linear-gradient(135deg, #fef08a 0%, #fde047 100%); padding: 24px 20px; text-align: center; position: relative; border-bottom: 1px solid #e2e8f0;">
+            <span style="position: absolute; top: 15px; left: 15px; cursor: pointer; font-size: 1.4rem; font-weight: bold; color: #1e293b;" onclick="toggleUserDrawer(false)">&larr;</span>
+            <div style="width: 75px; height: 75px; background: #ffffff; border-radius: 50%; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 2px solid #f59e0b;">👤</div>
+            <h3 style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin-bottom: 2px;">Your account</h3>
+            <p id="drawerUserMobileText" style="font-size: 0.82rem; font-weight: 700; color: #334155;">7398746551</p>
+        </div>
+
+        <div style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; background: #f8fafc;">
+            <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; border-radius: 14px; padding: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;" id="birthdayDisplayBox">
+                    <div>
+                        <h4 style="font-size: 0.85rem; font-weight: 800; color: #92400e; margin-bottom: 2px;" id="birthdayTitleText">Add your birthday</h4>
+                        <span style="font-size: 0.72rem; font-weight: 700; color: #d97706; cursor: pointer;" onclick="toggleBirthdayInputBox()">Enter details &rarr;</span>
+                    </div>
+                    <div style="font-size: 2rem;">🎂</div>
+                </div>
+                <div id="birthdayInputBox" style="display: none; margin-top: 8px;">
+                    <input type="date" id="userBirthdayInput" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #f59e0b; margin-bottom: 6px; font-size: 0.8rem; outline: none;">
+                    <button type="button" onclick="saveUserBirthday()" style="background: #d97706; color: white; border: none; padding: 6px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; width: 100%; cursor: pointer;">Save Birthday 🎁</button>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                <div onclick="navigateDrawerSection('history'); toggleUserDrawer(false);" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 10px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                    <div style="font-size: 1.5rem; margin-bottom: 4px;">📋</div>
+                    <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a;">Your orders</div>
+                </div>
+                <div onclick="toggleWalletPopupGrid(true, event); toggleUserDrawer(false);" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 10px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                    <div style="font-size: 1.5rem; margin-bottom: 4px;">💰</div>
+                    <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a;">Print Wallet</div>
+                </div>
+                <div onclick="toggleHelpModal(true); toggleUserDrawer(false);" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 10px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                    <div style="font-size: 1.5rem; margin-bottom: 4px;">💬</div>
+                    <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a;">Need help?</div>
+                </div>
+            </div>
+
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 1.3rem;">📱</span>
+                    <div>
+                        <h4 style="font-size: 0.82rem; font-weight: 800; color: #0f172a;">App update available</h4>
+                        <p style="font-size: 0.68rem; color: #64748b; font-weight: 600;">bug fixes and performance improvements</p>
+                    </div>
+                </div>
+                <span style="background: #f1f5f9; color: #0f172a; font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 6px;">v18.19.0</span>
+            </div>
+
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 12px; align-items: flex-start;">
+                    <span style="font-size: 1.3rem;">🛡️</span>
+                    <div>
+                        <h4 style="font-size: 0.82rem; font-weight: 800; color: #0f172a; margin-bottom: 2px;">Hide sensitive items</h4>
+                        <p style="font-size: 0.68rem; color: #64748b; font-weight: 500; line-height: 1.3;">Adult novelty & confidential documents will be hidden.</p>
+                    </div>
+                </div>
+                <input type="checkbox" id="sensitiveToggleCheck" onchange="toggleHideSensitiveItems(this.checked)" style="width: 40px; height: 22px; cursor: pointer; accent-color: #065f46;">
+            </div>
+
+            <div>
+                <h4 style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 8px; padding-left: 4px;">Your Information</h4>
+                <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden;">
+                    <div onclick="openAddressManagerModal(); toggleUserDrawer(false);" style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 0.82rem; font-weight: 700; color: #0f172a;">
+                        <span>📍 Address book</span>
+                        <span style="color: #94a3b8;">&rsaquo;</span>
+                    </div>
+                    <div onclick="openEditProfileModal(); toggleUserDrawer(false);" style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 0.82rem; font-weight: 700; color: #0f172a;">
+                        <span>⚙️ Edit profile & Gmail</span>
+                        <span style="color: #94a3b8;">&rsaquo;</span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="logoutBtn" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; padding:12px; border-radius:12px; font-weight:800; font-size:0.85rem; width:100%; cursor:pointer; text-align:center; margin-top: 10px;">
+                🚪 Logout Account
+            </button>
+        </div>
+    </nav>
+
+    <div id="walletDepositModal" class="wallet-modal-overlay" onclick="toggleWalletPopupGrid(false, event)">
+        <div class="wallet-modal-card">
+            <h3 style="font-size:1.3rem; font-weight:800; margin-bottom:6px;">💰 Recharge Print Wallet</h3>
+            <p style="font-size:0.8rem; color:var(--text-sub); margin-bottom:15px;">Add cash balance for seamless dispatches</p>
+            <div class="form-group" style="text-align:left;">
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-main);">Enter Custom Amount (₹):</label>
+                <input type="number" id="walletCustomAmountInput" value="100" style="width:100%; padding:12px; border:2px solid var(--border-color); border-radius:12px; font-weight:700; font-size:1rem; outline:none; margin-top:4px;">
+            </div>
+            <div class="wallet-chip-grid">
+                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(100)">+ ₹100</button>
+                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(200)">+ ₹200</button>
+                <button type="button" class="wallet-chip-btn" onclick="setWalletQuickAmount(500)">+ ₹500</button>
+            </div>
+            <button class="btn-admin" style="background:#065f46; margin-top:10px; width:100%; padding:12px; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;" onclick="executeWalletRazorpayDeposit()">Pay & Add Cash</button>
+        </div>
+    </div>
+
+    <div id="addressManagerModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:18000; display:none; justify-content:center; align-items:center; padding:15px; overflow-y:auto;">
+        <div style="background:#ffffff; border-radius:24px; padding:20px; max-width:480px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.3); text-align:left; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a;">📍 Enter Delivery Address</h3>
+                <span style="cursor:pointer; font-size:1.5rem; font-weight:bold; color:#64748b;" onclick="closeAddressManagerModal()">&times;</span>
+            </div>
+            <p style="font-size:0.72rem; color:#64748b; margin-bottom:12px;">Provide exact details so our delivery executive can reach you in 15 mins.</p>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                <div>
+                    <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Your Full Name *</label>
+                    <input type="text" id="addrContactName" style="width:100%; padding:9px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none;" placeholder="Enter name" required>
+                </div>
+                <div>
+                    <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Contact Mobile *</label>
+                    <input type="tel" id="addrContactMobile" maxlength="10" style="width:100%; padding:9px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none;" placeholder="10-digit mobile" required>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1.4fr 1fr; gap:10px; margin-bottom:10px;">
+                <div>
+                    <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Flat / House / Building *</label>
+                    <input type="text" id="addrFlatBuilding" style="width:100%; padding:9px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none;" placeholder="Flat No / Building Name" required>
+                </div>
+                <div>
+                    <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Floor (Optional)</label>
+                    <input type="text" id="addrFloor" style="width:100%; padding:9px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none;" placeholder="e.g. 2nd Floor">
+                </div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+                <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Nearby Landmark (Optional)</label>
+                <input type="text" id="addrLandmark" style="width:100%; padding:9px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.8rem; font-weight:600; outline:none;" placeholder="e.g. Near Hanuman Temple">
+            </div>
+
+            <label style="font-size:0.7rem; font-weight:700; color:#4a5568; display:block; margin-bottom:3px;">Pin Location on Map (Drag Pin):</label>
+            <div id="userDeliveryMap" style="width:100%; height:180px; border-radius:10px; border:1px solid #cbd5e1; margin-bottom:8px; z-index:999;"></div>
+            <textarea id="mapSelectedAddressInput" rows="2" style="width:100%; padding:8px; border-radius:8px; border:1px solid #cbd5e1; font-size:0.75rem; font-weight:600; outline:none; margin-bottom:12px; background:#f8fafc;" placeholder="Map location area..." readonly></textarea>
+
+            <button type="button" onclick="saveFullAddressFormToStorage()" style="width:100%; padding:12px; background:#065f46; color:white; border:none; border-radius:10px; font-weight:700; font-size:0.88rem; cursor:pointer;">Save & Deliver Here</button>
+        </div>
+    </div>
+
+    <!-- 🛒 PROPERLY CONTAINED CHECKOUT CART DRAWER -->
+    <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:16000; display:none; justify-content:flex-end;">
+        <div class="cart-drawer-card" onclick="event.stopPropagation()" style="background:#ffffff; color:#0f172a; width:100%; max-width:440px; height:100vh; display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.2); overflow:hidden; border-left:1px solid #e2e8f0;">
+            
+            <div style="flex-shrink:0; background:#f8fafc; padding:16px 20px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="cursor:pointer; font-size:1.2rem; font-weight:bold; color:#0f172a;" onclick="toggleCartDrawer(false)">&larr;</span>
+                    <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin:0;">Review Cart & Checkout</h3>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button type="button" onclick="clearEntireCartData()" style="background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid #fecaca; padding: 5px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer;">Clear</button>
+                    <span style="font-size:0.8rem; font-weight:700; color:#d97706; background:rgba(245,158,11,0.1); padding:4px 10px; border-radius:8px; cursor:pointer;" onclick="toggleCartDrawer(false)">Close</span>
+                </div>
+            </div>
+
+            <div style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:15px; display:flex; flex-direction:column; gap:14px;">
+                
+                <div id="freeDeliveryProgressBarBox" style="background: rgba(16,185,129,0.08); border: 1px solid #10b981; border-radius: 12px; padding: 10px 14px;">
+                    <p id="freeDeliveryMessageText" style="font-size: 0.78rem; font-weight: 700; color: #065f46; margin: 0 0 6px 0;">🎉 Add items worth ₹99 more for FREE delivery!</p>
+                    <div style="width: 100%; background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
+                        <div id="freeDeliveryFillBar" style="width: 0%; background: #22c55e; height: 100%; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:0.75rem; font-weight:800; color:#0284c7; text-transform:uppercase;">📍 Delivery Address</span>
+                        <span style="font-size:0.75rem; font-weight:700; color:#d97706; cursor:pointer;" onclick="openAddressManagerModal()">+ Add New Address</span>
+                    </div>
+                    <div id="cartSavedAddressesList" style="max-height:120px; overflow-y:auto; margin-bottom:4px; color:#0f172a;"></div>
+                </div>
+
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:14px; display:flex; align-items:center; gap:12px;">
+                    <div style="font-size:1.8rem;">⏰</div>
+                    <div>
+                        <h4 style="font-size:0.95rem; font-weight:800; color:#0f172a; margin:0 0 2px 0;">Delivery in 15 minutes</h4>
+                        <p style="font-size:0.75rem; color:#64748b; font-weight:600; margin:0;" id="shipmentItemsCountText">Shipment of items</p>
+                    </div>
+                </div>
+
+                <!-- Redesigned Cart Items List Container -->
+                <div id="cartDrawerItemsList" style="display:flex; flex-direction:column; gap:10px;"></div>
+
+                <!-- Delivery Partner Tipping Section -->
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:14px;">
+                    <span style="font-size:0.75rem; font-weight:800; color:#0284c7; text-transform:uppercase; display:block; margin-bottom:8px;">🛵 Tip your delivery partner</span>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(10)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:8px; background:#ffffff; color:#0f172a; font-weight:700; font-size:0.75rem; cursor:pointer;">+ ₹10</button>
+                        <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(20)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:8px; background:#ffffff; color:#0f172a; font-weight:700; font-size:0.75rem; cursor:pointer;">+ ₹20</button>
+                        <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(50)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:8px; background:#ffffff; color:#0f172a; font-weight:700; font-size:0.75rem; cursor:pointer;">+ ₹50</button>
+                    </div>
+                </div>
+
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:16px;">
+                    <h4 style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:10px; border-bottom:1px dashed #cbd5e1; padding-bottom:6px;">📄 Bill Invoice Summary</h4>
+                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#64748b; margin-bottom:5px;">
+                        <span>Item Total (Prints & Products)</span>
+                        <span id="cartItemSubtotal">₹0.00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#64748b; margin-bottom:5px;">
+                        <span>Delivery Partner Fee</span>
+                        <span id="cartDeliveryFee">₹25.00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#d97706; font-weight:700; margin-bottom:5px; display:none;" id="rainSurgeRow">
+                        <span>🌧️ Rain Surge Fee</span>
+                        <span id="cartRainFee">₹15.00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#10b981; font-weight:700; margin-bottom:8px;">
+                        <span>Taxes & Platform Charges</span>
+                        <span>FREE</span>
+                    </div>
+                    <div style="border-top:1px solid #cbd5e1; margin-top:8px; padding-top:8px; display:flex; justify-content:space-between; font-size:0.95rem; font-weight:900; color:#0f172a;">
+                        <span>Grand Total Payable</span>
+                        <span id="cartGrandTotalSummary" style="color:#065f46;">₹0.00</span>
+                    </div>
+                </div>
+
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:16px;">
+                    <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:12px;">💳 Select Payment Method</h4>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                        <label style="cursor:pointer; position:relative;">
+                            <input type="radio" name="cartPaymentMode" value="online" checked style="position:absolute; opacity:0; top:0; left:0;">
+                            <div class="payment-option-box" style="padding:10px 6px; border:2px solid #cbd5e1; border-radius:12px; background:#ffffff; text-align:center; color:#0f172a;">
+                                <div style="font-size:1.1rem;">⚡</div>
+                                <div style="font-size:0.7rem; font-weight:800; margin-top:4px;">Online</div>
+                            </div>
+                        </label>
+                        <label style="cursor:pointer; position:relative;">
+                            <input type="radio" name="cartPaymentMode" value="wallet" style="position:absolute; opacity:0; top:0; left:0;">
+                            <div class="payment-option-box" style="padding:10px 6px; border:2px solid #cbd5e1; border-radius:12px; background:#ffffff; text-align:center; color:#0f172a;">
+                                <div style="font-size:1.1rem;">💰</div>
+                                <div style="font-size:0.7rem; font-weight:800; margin-top:4px;">Wallet (<span id="walletDrawerBalanceText">₹0</span>)</div>
+                            </div>
+                        </label>
+                        <label style="cursor:pointer; position:relative;">
+                            <input type="radio" name="cartPaymentMode" value="cod" style="position:absolute; opacity:0; top:0; left:0;">
+                            <div class="payment-option-box" style="padding:10px 6px; border:2px solid #cbd5e1; border-radius:12px; background:#ffffff; text-align:center; color:#0f172a;">
+                                <div style="font-size:1.1rem;">💵</div>
+                                <div style="font-size:0.7rem; font-weight:800; margin-top:4px;">COD</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+
+            <div style="flex-shrink:0; background:#f8fafc; border-top:1px solid #e2e8f0; padding:15px; box-shadow:0 -4px 15px rgba(0,0,0,0.05);">
+                <button type="button" onclick="executeFinalCartOrderPlacement()" style="width:100%; padding:14px 18px; background:#065f46; color:#ffffff; border:none; border-radius:14px; font-weight:900; font-size:1rem; display:flex; justify-content:space-between; align-items:center; cursor:pointer; box-shadow:0 4px 12px rgba(6,95,70,0.2);">
+                    <span style="font-size:0.95rem; font-weight:800;">Place Order & Pay</span>
+                    <span id="cartDrawerGrandTotal" style="font-size:1.1rem; font-weight:900;">₹0.00</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="mainApp" class="app-hidden">
+        <header class="brand-premium-header">
+            <div class="header-container">
+                <div class="header-meta-row">
+                    <div class="delivery-brand-box">
+                        <div id="userGreeting" class="user-greeting-inline">HI, KRISHNA</div>
+                        <h2 class="delivery-time-countdown">
+                            <span class="delivery-time-title" style="margin-right:6px;">Prints in</span> 15 mins
+                        </h2>
+                    </div>
+                    <div class="header-profile-cluster">
+                        <div class="status-micro-nav">
+                            <span id="userShopStatus" class="shop-status-text-badge open">OPEN 🟢</span>
+                            <span class="shop-timing-subtext">7AM - 10PM</span>
+                        </div>
+                        <div class="profile-wallet-row">
+                            <div class="wallet-micro-badge" onclick="toggleWalletPopupGrid(true, event)">
+                                <span>💵</span> <span class="wallet-cash-value" id="headerWalletDisplayBalance">₹0.00</span>
+                            </div>
+                            <div class="avatar-circle-trigger" onclick="toggleUserDrawer(true)">👤</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div id="rainSurgeBanner" class="hidden" style="background: #0284c7; color: white; padding: 8px 15px; text-align: center; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>🌧️ Heavy Rain Detected / Rain Surge Active! A ₹15 fee applies to ensure 15-min safe delivery.</span>
+        </div>
+
+        <div class="container" id="mainLayoutAppContainer">
+            <div id="user_section_store" class="view-section active">
+                
+                <div style="background: linear-gradient(90deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); border-bottom: 1px solid #334155; border-top: 1px solid #334155; padding: 10px 0; overflow: hidden; white-space: nowrap; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 14px; border-radius: 12px;">
+                    <marquee scrollamount="6" style="width: 100%; display: flex; align-items: center; font-family: 'Poppins', sans-serif;">
+                        <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #f8fafc;">
+                            <span style="font-size: 1rem;">🪔✨</span> 
+                            <span style="color: #38bdf8;">Coming Soon:</span> Official Launch on <strong style="color: #f59e0b;">Diwali 2026</strong> in Varanasi!
+                        </span>
+                        <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #10b981;">
+                            <span>⚡</span> 15-Minute Instant Print & Delivery App
+                        </span>
+                    </marquee>
+                </div>
+
+                <div id="uploadScreenInitialState" style="width:100%;">
+                    <div class="compact-offers-bar" id="storeOffersTopBanner" style="margin-top:10px;">
+                        <span>📢 <b>Offers:</b></span>
+                        <marquee scrollamount="4" style="width: 100%;">
+                            ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!
+                        </marquee>
+                    </div>
+                    
+                    <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border: 1px solid #ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            🚨 <b>Store is Closed!</b> We are not taking orders currently.
+                        </div>
+                        <button type="button" onclick="dismissStoreClosedNotice()" style="background: none; border: none; font-size: 1.3rem; font-weight: bold; color: #991b1b; cursor: pointer; padding: 0 5px;">&times;</button>
+                    </div>
+
+                    <div class="store-header-box">
+                        <h2>Print Store</h2>
+                        <p>printfromhome ensures secure prints at every stage</p>
+                    </div>
+
+                    <div class="verbatim-docs-promo-card">
+                        <div class="promo-details-block">
+                            <h3 class="promo-main-title">Documents</h3>
+                            <ul class="promo-bullet-list">
+                                <li class="promo-bullet-item">✦ Price starting at ₹3/page</li>
+                                <li class="promo-bullet-item">✦ Paper quality: 70 GSM</li>
+                                <li class="promo-bullet-item">✦ Dynamic Customization Controls</li>
+                            </ul>
+                            <label class="verbatim-upload-btn" for="fileUpload">Upload Files</label>
+                            <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
+                        </div>
+                        <div class="promo-graphic-mockup">
+                            <img src="/printer-icon.jpg" alt="HP Smart Tank Printer" style="width: 100%; filter: grayscale(100%);">
+                        </div>
+                    </div>
+
+                    <div class="category-section-title">
+                        <span>⚡ Store Products & Snacks (Slide &rarr;)</span>
+                    </div>
+                    <div class="snacks-horizontal-slider" id="homeSnacksGrid"></div>
+                </div>
+
+                <div id="configurationScreenState" class="hidden" style="width:100%;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3 style="font-size:1.1rem; font-weight:800;">Configure Print & Add to Cart</h3>
+                        <button type="button" onclick="forceReturnToUploadView()" style="background:none; border:none; color:#065f46; font-weight:700; cursor:pointer; font-size:0.85rem;">&larr; Back to Upload</button>
+                    </div>
+
+                    <div style="background:var(--surface); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:15px;">
+                        <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:10px; color:#1e293b;">⚡ Hungry while waiting? Add Store Products</h4>
+                        <div class="snacks-horizontal-slider" id="configSnacksGrid"></div>
+                    </div>
+
+                    <form id="printForm" enctype="multipart/form-data" style="width:100%;">
+                        <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
+                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: #065f46; font-weight: 700; width: 100%;">Add Print Job to Cart</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="user_section_history" class="view-section">
+                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
+                    <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
+                    <div id="ordersHistoryContainer" style="width:100%;">
+                        <p style="text-align:center; padding:20px; color:var(--text-sub);">No print jobs recorded yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="user_section_order_tracking" class="view-section">
+                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%; text-align:left;">
+                    <button type="button" class="back-to-upload-link" onclick="navigateDrawerSection('history')">&larr; Back to All Orders</button>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-bottom:2px solid var(--border-color); padding-bottom:12px;">
+                        <div>
+                            <h3 style="font-weight:800; font-size:1.2rem;">Order Details Matrix</h3>
+                            <p id="trackOrderIdLabel" style="font-size:0.75rem; color:var(--text-sub); font-weight:600;"></p>
+                        </div>
+                        <div id="trackGrandTotalBadge" style="font-size:1.4rem; font-weight:900; color:#065f46;">₹0.00</div>
+                    </div>
+
+                    <div style="margin-top:20px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 16px; padding: 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase;">Live Status</span>
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; color: #065f46;">
+                                🟢 ACTIVE TRACKING
+                            </div>
+                        </div>
+                        <h3 id="liveOrderStatusBadge" style="font-size: 1.2rem; font-weight: 900; color: #065f46;">Processing Order...</h3>
+                    </div>
+
+                    <div id="liveTrackingTimelineContainer" style="margin-top: 20px;">
+                        <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); text-transform:uppercase; margin-bottom: 12px;">📦 Real-Time Package Journey</h4>
+                        <div class="tracking-timeline-box" style="display: flex; flex-direction: column; gap: 15px;">
+                            <div class="timeline-step" id="step_pending" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Order Received</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">Awaiting verification parameters sync</p></div></div>
+                            <div class="timeline-step" id="step_paid" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Payment Confirmed</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">Order routed successfully</p></div></div>
+                            <div class="timeline-step" id="step_printing" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Printing Document</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">HP Smart Tank running active logs</p></div></div>
+                            <div class="timeline-step" id="step_delivery" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Out For Delivery</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">Delivery Executive arriving</p></div></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 15px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 44px; height: 44px; background: #0f172a; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🛵</div>
+                            <div>
+                                <h4 style="font-size: 0.88rem; font-weight: 800; color: var(--text-main);" id="deliveryExecutiveName">Assigning Delivery Partner...</h4>
+                                <p style="font-size: 0.72rem; font-weight: 600; color: var(--text-sub); margin-top: 2px;" id="deliveryExecutivePhone">Will be assigned shortly</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <a id="callExecutiveBtn" href="tel:" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1rem;" title="Call Delivery Executive">📞</a>
+                        </div>
+                    </div>
+
+                    <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); margin-top:25px; text-transform:uppercase; border-bottom:1px dashed var(--border-color); padding-bottom:6px;">📄 Printable Items & Products Summary</h4>
+                    <div id="trackFilesManifestList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+                    
+                    <div style="margin-top:20px; background:var(--bg-primary); padding:15px; border-radius:12px; border:1px dashed var(--border-color);">
+                        <p style="font-size:0.8rem; font-weight:700; color:var(--text-main);">📍 Shipping Gate Destination:</p>
+                        <p id="trackShippingAddressLabel" style="font-size:0.8rem; color:var(--text-sub); margin-top:2px; font-weight:500;"></p>
+                    </div>
+                </div>
+            </div>
+
+            <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; background:var(--surface); border:1px solid var(--border-color); padding:20px; border-radius:16px;">
+                <h2>Order Invoice Summary</h2>
+                <div class="summary-card">
+                    <div class="summary-row"><span>Printing Sheet Cost</span><span id="summaryPrint">₹0.00</span></div>
+                    <div class="summary-row"><span>Binding Cost Allocation</span><span id="summaryBinding">₹0.00</span></div>
+                    <div class="summary-row"><span>Delivery Logistics Fee</span><span id="summaryDelivery">₹0.00</span></div>
+                    <hr class="summary-divider">
+                    <div class="summary-row total-row"><h3>Grand Total Amount</h3><h3 id="summaryTotal">₹0.00</h3></div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- 📱 Compact & Attractive Floating Cart Footer Bar -->
+    <div id="floatingCartFooterBar" class="floating-cart-footer hidden" style="display:flex; justify-content:space-between; align-items:center; padding: 10px 15px !important; border-radius: 22px !important; max-width: 380px !important; background: #065f46;">
+        <div class="floating-cart-left" style="display:flex; align-items:center; gap:10px; cursor:pointer; flex:1;" onclick="toggleCartDrawer(true)">
+            <div id="floatingCartImagesStack" style="position:relative; width: 38px; height: 38px; margin-left:4px;"></div>
+            <div style="display:flex; flex-direction:column; text-align:left;">
+                <span id="floatingCartCountText" style="font-size:0.68rem; font-weight:700; color:#ffffff; opacity:0.85; text-transform:uppercase; letter-spacing:0.3px;">1 item</span>
+                <span id="floatingCartTotalPriceText" style="font-size:0.95rem; font-weight:900; color:#ffffff;">₹45.00</span>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <button type="button" onclick="clearEntireCartData()" style="background: rgba(255,255,255,0.18); color: white; border: none; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem;" title="Clear Cart">🗑️</button>
+            <div style="background: #ffffff; color: #065f46; padding: 8px 14px; border-radius: 18px; font-weight: 800; font-size: 0.82rem; display: flex; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onclick="toggleCartDrawer(true)">
+                <span>View</span> <span>&rarr;</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="userInstallBanner" class="hidden" style="background: #0f172a; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; position: fixed; bottom: 0; left: 0; width: 100%; z-index: 99999; box-shadow: 0 -4px 12px rgba(0,0,0,0.2);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.5rem;">📥</span>
+            <div>
+                <h4 style="font-size: 0.85rem; font-weight: 800; margin: 0;">Install Print From Home App</h4>
+                <p style="font-size: 0.7rem; color: #cbd5e1; margin: 0;">Add to home screen for instant prints & quick login!</p>
+            </div>
+        </div>
+        <button type="button" id="userInstallTriggerBtn" onclick="triggerUniversalPWAInstall()" style="background: #065f46; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">Install App</button>
+    </div>
+
+    <div id="storeClosedPopupModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 99999; display: none; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #ffffff; border-radius: 24px; padding: 30px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 3px solid #ef4444;">
+            <div style="font-size: 3.5rem; margin-bottom: 10px;">🏪🚨</div>
+            <h3 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Store is Currently Closed</h3>
+            <p style="font-size: 0.88rem; color: #64748b; line-height: 1.6; margin-bottom: 20px; font-weight: 500;">We are currently not accepting any orders at the moment.</p>
+            <button type="button" onclick="dismissStoreClosedNotice()" style="width: 100%; padding: 12px; background: #0f172a; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer;">Understood, Got It!</button>
+        </div>
+    </div>
+
+    <!-- 🛑 IMPORTANT: Cleaned up inline conflicting script handlers. All cart and store logic is handled entirely by script.js -->
+    <script src="script.js"></script>
 </body>
 </html>
