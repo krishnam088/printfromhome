@@ -42,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentPoints = parseInt(localStorage.getItem('user_loyalty_points') || 0);
         if (currentPoints < 50) { alert("⚠️ Minimum 50 points needed to redeem!"); return; }
         
-        // ₹20 Discount logic via delivery tip / discount offset
         window.currentDeliveryTip -= 20; 
         localStorage.setItem('user_loyalty_points', currentPoints - 50);
         calculateTotal();
@@ -63,63 +62,61 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentStudioFileName = 'Document.pdf';
 
     window.openDocumentInA4Studio = async function(fileBlobOrUrl, originalFileName = 'Document') {
-    const container = document.getElementById('a4PagesContainer');
-    const modal = document.getElementById('printStudioModal');
-    const passwordBox = document.getElementById('studioPasswordValidationBox');
-    const passwordInput = document.getElementById('studioRequiredPdfPassword');
-    
-    if (!container || !modal) return;
+        const container = document.getElementById('a4PagesContainer');
+        const modal = document.getElementById('printStudioModal');
+        const passwordBox = document.getElementById('studioPasswordValidationBox');
+        const passwordInput = document.getElementById('studioRequiredPdfPassword');
+        
+        if (!container || !modal) return;
 
-    currentStudioActiveFile = fileBlobOrUrl;
-    currentStudioFileName = originalFileName || 'Document.pdf';
-    if (passwordInput) passwordInput.value = '';
-    if (passwordBox) passwordBox.classList.add('hidden');
-    isCurrentFileLocked = false;
+        currentStudioActiveFile = fileBlobOrUrl;
+        currentStudioFileName = originalFileName || 'Document.pdf';
+        if (passwordInput) passwordInput.value = '';
+        if (passwordBox) passwordBox.classList.add('hidden');
+        isCurrentFileLocked = false;
 
-    container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Generating pixel-perfect A4 Sheets...</div>';
-    modal.style.display = 'flex';
-    renderedPagesList = [];
+        container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Generating pixel-perfect A4 Sheets...</div>';
+        modal.style.display = 'flex';
+        renderedPagesList = [];
 
-    try {
-        const isPdf = (typeof fileBlobOrUrl === 'string' && fileBlobOrUrl.toLowerCase().includes('.pdf')) || 
-                    (fileBlobOrUrl.type === 'application/pdf') || 
-                    (fileBlobOrUrl.name && fileBlobOrUrl.name.toLowerCase().endsWith('.pdf'));
+        try {
+            const isPdf = (typeof fileBlobOrUrl === 'string' && fileBlobOrUrl.toLowerCase().includes('.pdf')) || 
+                        (fileBlobOrUrl.type === 'application/pdf') || 
+                        (fileBlobOrUrl.name && fileBlobOrUrl.name.toLowerCase().endsWith('.pdf'));
 
-        if (isPdf) {
-            const fileSource = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
-            
-            try {
-                // Pehle bina password ke load karne ki koshish karein
-                await loadPdfIntoStudio(fileSource, undefined);
-            } catch (passErr) {
-                // Agar password required hoga, toh error catch karke password box dikhayenge
-                isCurrentFileLocked = true;
-                if (passwordBox) passwordBox.classList.remove('hidden');
-                container.innerHTML = `<div style="color: #f87171; font-weight: 700; padding: 30px; text-align: center;">🔒 This PDF is password protected!<br><span style="font-size:0.75rem; color:#94a3b8;">Please enter the password in the top red bar above to unlock and preview.</span></div>`;
+            if (isPdf) {
+                const fileSource = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
+                
+                try {
+                    await loadPdfIntoStudio(fileSource, undefined);
+                } catch (passErr) {
+                    isCurrentFileLocked = true;
+                    if (passwordBox) passwordBox.classList.remove('hidden');
+                    container.innerHTML = `<div style="color: #f87171; font-weight: 700; padding: 30px; text-align: center;">🔒 This PDF is password protected!<br><span style="font-size:0.75rem; color:#94a3b8;">Please enter the password in the top red bar above to unlock and preview.</span></div>`;
+                }
+            } else {
+                const imgSourceUrl = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
+                container.innerHTML = '';
+
+                const pageWrapper = document.createElement('div');
+                pageWrapper.className = `a4-page-wrapper ${isLandscapeMode ? 'landscape' : ''}`;
+                pageWrapper.id = `a4_sheet_element_1`;
+
+                pageWrapper.innerHTML = `
+                    <div class="page-badge-toolbar">
+                        <span style="color: #38bdf8; font-size: 0.75rem; font-weight: 800;">Page 1 of 1</span>
+                    </div>
+                    <img src="${imgSourceUrl}" class="a4-page-canvas" style="width: 100%; height: 100%; object-fit: contain;" />
+                `;
+                container.appendChild(pageWrapper);
+                renderedPagesList.push({ pageNum: 1, elementId: `a4_sheet_element_1` });
+                updateStudioPageCountBadge();
             }
-        } else {
-            const imgSourceUrl = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
-            container.innerHTML = '';
-
-            const pageWrapper = document.createElement('div');
-            pageWrapper.className = `a4-page-wrapper ${isLandscapeMode ? 'landscape' : ''}`;
-            pageWrapper.id = `a4_sheet_element_1`;
-
-            pageWrapper.innerHTML = `
-                <div class="page-badge-toolbar">
-                    <span style="color: #38bdf8; font-size: 0.75rem; font-weight: 800;">Page 1 of 1</span>
-                </div>
-                <img src="${imgSourceUrl}" class="a4-page-canvas" style="width: 100%; height: 100%; object-fit: contain;" />
-            `;
-            container.appendChild(pageWrapper);
-            renderedPagesList.push({ pageNum: 1, elementId: `a4_sheet_element_1` });
-            updateStudioPageCountBadge();
+        } catch (err) {
+            console.error("A4 Studio Error:", err);
+            container.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 30px; text-align: center;">❌ Failed to render document: ${err.message}</div>`;
         }
-    } catch (err) {
-        console.error("A4 Studio Error:", err);
-        container.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 30px; text-align: center;">❌ Failed to render document: ${err.message}</div>`;
-    }
-};
+    };
 
     window.updateStudioPageCountBadge = function() {
         const badge = document.getElementById('totalActivePagesCount');
@@ -150,7 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modal) modal.style.display = 'none';
     };
 
-    // 🔥 Preview se exact count ke sath Cart mein add karke direct Checkout Cart Drawer open karna
     window.addStudioDocumentToCartAndRedirect = function() {
         const totalPages = renderedPagesList.length > 0 ? renderedPagesList.length : 1;
 
@@ -172,7 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleCartDrawer(true);
     };
 
-    // 🔥 FIXED: Direct Image open hone ke bajaye iframe ke zariye clean A4 print dialog trigger karega (Auto & Manual Print support)
     window.executeNativeA4Print = function() {
         const container = document.getElementById('a4PagesContainer');
         if (!container) {
@@ -252,24 +247,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     async function requestUserPushNotificationPermission() {
         try {
-            if (!("Notification" in window)) {
-                console.log("This browser does not support notifications.");
-                return;
-            }
-            const permission = await Notification.requestPermission();
-            if (permission === 'granted') {
-                console.log('✅ Notification permission granted.');
-            } else {
-                console.log('❌ Notification permission denied.');
-            }
-        } catch (err) {
-            console.error('Push permission error:', err);
-        }
+            if (!("Notification" in window)) return;
+            await Notification.requestPermission();
+        } catch (err) {}
     }
 
     setTimeout(requestUserPushNotificationPermission, 4000);
 
-    // 🔔 Subscribe User for Out of Stock Product Push Notifications
     window.subscribeUserToPushNotifications = async function(productName) {
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
             alert("⚠️ Push notifications are not supported on this browser.");
@@ -278,7 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const registration = await navigator.serviceWorker.ready;
-            
             const permissionResult = await Notification.requestPermission();
             if (permissionResult !== 'granted') {
                 alert("⚠️ Please allow notifications to get stock alerts.");
@@ -291,8 +274,8 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             const pushSubscription = await registration.pushManager.subscribe(subscribeOptions);
-            
             const sessionUser = localStorage.getItem('printAppUserIdentity') || 'guest';
+            
             await fetch('/api/notifications/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -318,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================
-    // 🕒 REAL-TIME STORE STATUS AUTO-CHECKER & DISMISS HANDLER
+    // 🕒 REAL-TIME STORE STATUS AUTO-CHECKER
     // ==========================================
     async function checkStoreStatusRealtime() {
         try {
@@ -360,9 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-        } catch (e) {
-            console.error("Store status sync error:", e);
-        }
+        } catch (e) {}
     }
 
     setInterval(checkStoreStatusRealtime, 3000);
@@ -370,14 +351,13 @@ document.addEventListener('DOMContentLoaded', () => {
     window.dismissStoreClosedNotice = function() {
         const storeClosedNotice = document.getElementById('storeClosedNoticeBox');
         const storeClosedModal = document.getElementById('storeClosedPopupModal');
-        
         if (storeClosedNotice) storeClosedNotice.classList.add('hidden');
         if (storeClosedModal) storeClosedModal.style.display = 'none';
         sessionStorage.setItem('storeModalDismissed', 'true');
     };
 
     // ==========================================
-    // 🛵 LIVE STATUS & DELIVERY EXECUTIVE STEPPER (Feature 3 Update)
+    // 🛵 LIVE STATUS & DELIVERY EXECUTIVE STEPPER
     // ==========================================
     window.executeLiveTimelineStateStepper = function(statusText, assignedDeliveryBoyPhone) {
         const statusBadge = document.getElementById('liveOrderStatusBadge');
@@ -387,7 +367,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (statusBadge) statusBadge.textContent = statusText || "Processing Order...";
 
-        // Feature 3: Pulse effect active toggle on timeline steps
         document.querySelectorAll('.timeline-step').forEach(step => step.classList.remove('active'));
         if (statusText) {
             const lower = statusText.toLowerCase();
@@ -420,18 +399,13 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch('/api/store/products');
             const contentType = res.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                console.warn("Server returned non-JSON response (Server restarting or down)");
-                return;
-            }
+            if (!contentType || !contentType.includes("application/json")) return;
             const data = await res.json();
             if (data.success && Array.isArray(data.products)) {
                 window.storeInventoryProducts = data.products;
                 renderStoreProductsUI();
             }
-        } catch (e) {
-            console.error("Failed to load store inventory:", e);
-        }
+        } catch (e) {}
     }
 
     function renderStoreProductsUI() {
@@ -509,7 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔒 STRICT INVENTORY ADD TO CART LOGIC WITH LIVE STOCK VALIDATION
+    // 🔒 STRICT INVENTORY ADD TO CART LOGIC WITH SKU MAPPING
     window.addDynamicProductToCart = function(sku, name, price, currentStock) {
         const matchedProd = window.storeInventoryProducts.find(p => (p.sku === sku || p.barcode === sku || p.name === name));
         const availableStock = matchedProd ? matchedProd.stockQuantity : currentStock;
@@ -557,7 +531,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 🔥 LOCKED CART DRAWER QUANTITY ADJUSTMENT (+ / -) WITH STOCK VALIDATION
     window.adjustSnackQty = function(index, delta) {
         const snack = window.cartSnacksArray[index];
         const matchedProd = window.storeInventoryProducts.find(p => p.sku === snack.sku || p.barcode === snack.sku || p.name === snack.name);
@@ -592,39 +565,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const configScreen = document.getElementById('configurationScreenState');
         const productModal = document.getElementById('productDetailModal');
         
-        if (studioModal && studioModal.style.display === 'flex') {
-            studioModal.style.display = 'none';
-            return;
-        }
-        if (productModal && productModal.style.display === 'flex') {
-            productModal.style.display = 'none';
-            return;
-        }
-        if (cartOverlay && cartOverlay.style.display === 'flex') {
-            cartOverlay.style.display = 'none';
-            return;
-        }
-        if (addressModal && addressModal.style.display === 'flex') {
-            addressModal.style.display = 'none';
-            return;
-        }
-        if (walletModal && walletModal.style.display === 'flex') {
-            walletModal.style.display = 'none';
-            return;
-        }
+        if (studioModal && studioModal.style.display === 'flex') { studioModal.style.display = 'none'; return; }
+        if (productModal && productModal.style.display === 'flex') { productModal.style.display = 'none'; return; }
+        if (cartOverlay && cartOverlay.style.display === 'flex') { cartOverlay.style.display = 'none'; return; }
+        if (addressModal && addressModal.style.display === 'flex') { addressModal.style.display = 'none'; return; }
+        if (walletModal && walletModal.style.display === 'flex') { walletModal.style.display = 'none'; return; }
         if (sideDrawer && sideDrawer.classList.contains('active')) {
             sideDrawer.classList.remove('active');
             document.getElementById('drawerOverlay').classList.remove('active');
             return;
         }
-        if (configScreen && !configScreen.classList.contains('hidden')) {
-            forceReturnToUploadView();
-            return;
-        }
-        
-        if (typeof navigateDrawerSection === 'function') {
-            navigateDrawerSection('store');
-        }
+        if (configScreen && !configScreen.classList.contains('hidden')) { forceReturnToUploadView(); return; }
+        if (typeof navigateDrawerSection === 'function') navigateDrawerSection('store');
     });
 
     window.persistCartStateData = function() {
@@ -1005,7 +957,7 @@ document.addEventListener('DOMContentLoaded', () => {
             synchronizeWalletInterfaceBalance();
             checkStoreStatusRealtime();
         } else {
-            if(authScreen) { authScreen.classList.add('app-hidden'); authScreen.style.display = 'flex'; }
+            if(authScreen) { authScreen.classList.remove('app-hidden'); authScreen.style.display = 'flex'; }
         }
         calculateTotal();
         updateFloatingCartBar();
@@ -1260,149 +1212,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.setDeliveryTip = function(amount) {
-        window.currentDeliveryTip = amount;
-        calculateTotal();
-    };
-
-    function calculateTotal() {
-        let totalPrintCost = 0; let totalBindingCost = 0;
-        const summaryPrint = document.getElementById('summaryPrint');
-        const summaryBinding = document.getElementById('summaryBinding');
-        const summaryDelivery = document.getElementById('summaryDelivery');
-        const summaryTotal = document.getElementById('summaryTotal');
-        if (!summaryPrint || !summaryBinding || !summaryDelivery || !summaryTotal) return;
-        
-        let snacksTotal = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
-        let printJobsTotal = window.cartPrintJobsArray.reduce((acc, job) => acc + (job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0);
-
-        if (masterFilesArray.length === 0 && snacksTotal === 0 && printJobsTotal === 0) { 
-            summaryPrint.textContent = `₹0.00`; summaryBinding.textContent = `₹0.00`; summaryDelivery.textContent = `₹0.00`; summaryTotal.textContent = `₹0.00`; return; 
-        }
-
-        masterFilesArray.forEach((item) => {
-            const pages = parseInt(item.config.pages) || 1; 
-            totalPrintCost += (pages * ((item.config.printType === 'bw') ? 3.00 : 10.00)) * item.config.copies;
-            if (item.config.binding === 'spiral') totalBindingCost += 30.00 * item.config.copies;
-        });
-
-        let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal + printJobsTotal;
-        let accurateDeliveryCharge = (finalDocumentCost >= 99.00 || finalDocumentCost === 0) ? 0.00 : 25.00;
-        let grandTotalCombined = finalDocumentCost + accurateDeliveryCharge + (window.currentDeliveryTip || 0);
-
-        summaryPrint.textContent = `₹${(totalPrintCost + printJobsTotal).toFixed(2)}`;
-        summaryBinding.textContent = `₹${(totalBindingCost + snacksTotal).toFixed(2)}`;
-        summaryDelivery.textContent = accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`;
-        summaryTotal.textContent = `₹${grandTotalCombined.toFixed(2)}`;
-    }
-
-    window.openOrderDeepTrackingWorkspacePage = function(orderStringPayload) {
-        const order = JSON.parse(decodeURIComponent(orderStringPayload));
-        if(typeof navigateDrawerSection === 'function') navigateDrawerSection('order_tracking'); 
-
-        document.getElementById('trackOrderIdLabel').textContent = `ID Reference: ${order.orderId || 'PFH-' + Date.now()}`;
-        document.getElementById('trackGrandTotalBadge').textContent = `₹${order.amount}`;
-        document.getElementById('trackShippingAddressLabel').textContent = order.address || 'N/A';
-
-        const listContainer = document.getElementById('trackFilesManifestList');
-        listContainer.innerHTML = '';
-        if(order.details) {
-            order.details.forEach(file => {
-                const row = document.createElement('div');
-                row.style = 'display:flex; justify-content:space-between; font-size:0.8rem; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0; font-weight:600;';
-                if (file.printType === 'snack') {
-                    row.innerHTML = `<span>📦 ${file.fileName}</span><span style="color:#d97706;">Product / Snack</span>`;
-                } else {
-                    row.innerHTML = `<span>📄 ${file.fileName} (${file.copies} copies)</span><span style="color:var(--blinkit-green);">${file.printType === 'bw' ? 'B&W' : 'Color'} Print</span>`;
-                }
-                listContainer.appendChild(row);
-            });
-        }
-        window.executeLiveTimelineStateStepper(order.status, order.assignedDeliveryBoy);
-
-        let cancelSectionNode = document.getElementById('dynamicCancelOrderSection');
-        if (!cancelSectionNode) {
-            cancelSectionNode = document.createElement('div');
-            cancelSectionNode.id = 'dynamicCancelOrderSection';
-            cancelSectionNode.style.marginTop = '20px';
-            const parentTrackingBox = document.querySelector('#user_section_order_tracking > div');
-            if (parentTrackingBox) parentTrackingBox.appendChild(cancelSectionNode);
-        }
-
-        const isLocked = order.status && (order.status.includes('Out for Delivery') || order.status.includes('Delivered') || order.status.includes('Cancelled'));
-        
-        if (isLocked) {
-            cancelSectionNode.innerHTML = `
-                <div style="background:#fef2f2; border:1px solid #fecaca; padding:12px; border-radius:12px; text-align:center;">
-                    <p style="font-size:0.78rem; font-weight:700; color:#991b1b;">🔒 Cancellation Not Available</p>
-                    <p style="font-size:0.72rem; color:#b91c1c; margin-top:2px;">Order is ${order.status}. Please contact customer care for assistance.</p>
-                </div>
-            `;
-        } else {
-            cancelSectionNode.innerHTML = `
-                <button type="button" onclick="executeUserCancelOrder('${order.orderId}')" style="width:100%; padding:12px; background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:12px; font-weight:800; font-size:0.85rem; cursor:pointer;">
-                    ❌ Cancel Order
-                </button>
-            `;
-        }
-    }
-
-    window.executeUserCancelOrder = async function(orderId) {
-        if (!confirm("⚠️ Are you sure you want to cancel this order? (Delivery fee of ₹25 is non-refundable, remaining amount will be refunded to your source)")) return;
-        try {
-            const res = await fetch('/api/orders/cancel', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert("✅ " + data.message);
-                const activeUserToken = localStorage.getItem('printAppUser');
-                const localHistory = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
-                localHistory.forEach(item => {
-                    if (item.orderId === orderId) item.status = "Cancelled by Customer";
-                });
-                localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(localHistory));
-                renderOrderHistoryUI(activeUserToken);
-                navigateDrawerSection('history');
-            } else {
-                alert(`⚠️ ${data.message}`);
-            }
-        } catch (e) {
-            alert("❌ Failed to cancel order. Please contact customer care.");
-        }
-    }
-
-    function renderOrderHistoryUI(userId) {
-        if(!ordersHistoryContainer) return;
-        const rawHistory = localStorage.getItem(`history_${userId}`);
-        if (!rawHistory || JSON.parse(rawHistory).length === 0) {
-            ordersHistoryContainer.innerHTML = `<p style="font-size:0.85rem; color:#718096; text-align:center; padding:15px;">No orders placed yet.</p>`;
-            return;
-        }
-        const parsedHistory = JSON.parse(rawHistory).reverse(); 
-        ordersHistoryContainer.innerHTML = '';
-
-        parsedHistory.forEach(order => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'history-card-item';
-            const stringifiedPayload = encodeURIComponent(JSON.stringify(order));
-            itemDiv.setAttribute('onclick', `openOrderDeepTrackingWorkspacePage('${stringifiedPayload}')`);
-
-            itemDiv.innerHTML = `
-                <div style="display:flex; justify-content:space-between; font-weight:700; color:#1a202c; border-bottom:1px solid #e2e8f0; padding-bottom:4px; margin-bottom:6px; font-size:0.85rem;">
-                    <span>📅 ${order.date}</span> <span style="color:#0C8346;">₹${order.amount}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
-                    <span style="color:var(--blinkit-green); font-weight:700;">👁️ Tap to View Details &rarr;</span>
-                    <span style="background:${order.status && order.status.includes('Cancelled') ? '#fee2e2' : '#fff3e0'}; padding:2px 6px; border-radius:4px; color:${order.status && order.status.includes('Cancelled') ? '#dc2626' : '#e67e22'}; font-weight:600;">${order.status || 'Active'}</span>
-                </div>
-            `;
-            ordersHistoryContainer.appendChild(itemDiv);
-        });
-    }
-
     const printForm = document.getElementById('printForm');
     if(printForm) {
         printForm.addEventListener('submit', (e) => {
@@ -1438,9 +1247,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // 💳 FINAL CART ORDER PLACEMENT (WITH DYNAMIC STATUS & INVENTORY DECREMENT)
+    // 💳 FINAL CART ORDER PLACEMENT (WITH SKU MAPPING)
     // ==========================================
     window.executeFinalCartOrderPlacement = async function() {
+        let totalItemsCount = (window.cartSnacksArray ? window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0) : 0) + 
+                            (window.cartPrintJobsArray ? window.cartPrintJobsArray.length : 0);
+
+        if (totalItemsCount === 0) {
+            alert("⚠️ Your cart is empty! Please add print jobs or store products first.");
+            return;
+        }
+
         if (!selectedActiveAddress || selectedActiveAddress.trim() === "") {
             alert("⚠️ Please add and select a delivery address first!");
             openAddressManagerModal();
@@ -1583,19 +1400,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const options = {
-                    "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Print From Home", "order_id": data.rzp_order_id,
-                    "handler": async function (response){
-                        const verifyRes = await fetch('/api/verify-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId: data.order_id, paymentId: response.razorpay_payment_id }) });
+                    key: data.key_id,
+                    amount: data.amount,
+                    currency: 'INR',
+                    name: 'Print From Home',
+                    order_id: data.rzp_order_id,
+                    handler: async function (response) {
+                        const verifyRes = await fetch('/api/verify-payment', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                orderId: data.order_id,
+                                paymentId: response.razorpay_payment_id
+                            })
+                        });
                         const verifyData = await verifyRes.json();
-                        if(verifyData.success) {
+                        if (verifyData.success) {
                             alert('🎉 Payment Successful!');
                             await finalizeOrderSuccess(data.order_id);
                         }
-                    }, "theme": { "color": "#F4C430" }
+                    },
+                    theme: { color: '#F4C430' }
                 };
-                const rzp1 = new Razorpay(options); rzp1.open();
+
+                const rzp1 = new Razorpay(options);
+                rzp1.open();
             } catch (error) {
-                alert("❌ Connection Breakdown during order placement.");
+                alert('❌ Connection Breakdown during order placement.');
             }
         }
     };

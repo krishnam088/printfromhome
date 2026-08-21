@@ -705,6 +705,43 @@ app.get('/api/store/products', async (req, res) => {
     }
 });
 
+// 🔥 CART CHECKOUT INVENTORY DECREMENT ENDPOINT
+app.post('/api/admin/inventory/decrement', async (req, res) => {
+    try {
+        const { items } = req.body;
+        if (!items || !Array.isArray(items)) {
+            return res.status(400).json({ success: false, message: "Invalid items payload!" });
+        }
+
+        for (const item of items) {
+            if (item.printType === 'snack' || item.printType === 'product' || (item.fileName && String(item.fileName).startsWith('Product:'))) {
+                let prodName = String(item.fileName || item.name || '').replace('Product: ', '').split(' (Qty:')[0].trim();
+                let prodSku = item.sku;
+                let qty = Number(item.copies || item.qty || 1);
+                
+                let matchedProd = null;
+                if (prodSku) {
+                    matchedProd = await Product.findOne({ sku: prodSku });
+                }
+                if (!matchedProd && prodName) {
+                    matchedProd = await Product.findOne({ name: { $regex: new RegExp(prodName, 'i') } });
+                }
+
+                if (matchedProd) {
+                    matchedProd.stockQuantity = Math.max(0, matchedProd.stockQuantity - qty);
+                    matchedProd.totalSold += qty;
+                    await matchedProd.save();
+                    console.log(`✅ Inventory Decremented via Cart: "${matchedProd.name}" (-${qty}). Remaining: ${matchedProd.stockQuantity}`);
+                }
+            }
+        }
+        res.json({ success: true, message: "Inventory updated successfully!" });
+    } catch (err) {
+        console.error("Inventory Decrement Error:", err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // 🔥 RESTOCK SCANNED ITEM AFTER CANCELLATION ENDPOINT
 app.post('/api/admin/inventory/restock-scanned', async (req, res) => {
     try {
@@ -734,7 +771,7 @@ app.post('/api/admin/inventory/restock-scanned', async (req, res) => {
     }
 });
 
-// 🔥 PRECISE TOTAL SALES, NET PROFIT (Sales - Delivery - Purchase Cost) & DELIVERY FEES CALCULATOR
+// 🔥 PRECISE TOTAL SALES, NET PROFIT & DELIVERY FEES CALCULATOR
 app.get('/api/admin/stats', async (req, res) => {
     try {
         const requestedDate = req.query.date;
@@ -782,7 +819,6 @@ app.get('/api/admin/stats', async (req, res) => {
                                 totalPurchaseCost += (matchedProd.purchasePrice || 0) * qty;
                             }
                         } else {
-                            // Print orders cost: ₹1 per page as requested
                             let pages = Number(item.pages || 1);
                             let copies = Number(item.copies || 1);
                             totalPurchaseCost += pages * 1 * copies;
@@ -792,7 +828,6 @@ app.get('/api/admin/stats', async (req, res) => {
             }
         }
 
-        // Net Profit = (Total Sales - Delivery Fees) - Purchase Cost
         let netProfit = (totalSales - totalDeliveryFeesCollected) - totalPurchaseCost;
 
         res.json({
@@ -808,10 +843,8 @@ app.get('/api/admin/stats', async (req, res) => {
     }
 });
 
-// 🔥 FIXED: PREDICTIVE RESTOCK LOGIC
 app.get('/api/admin/inventory/predictive-restock', async (req, res) => {
     try {
-        // Sirf un products ko uthao jinka stock 5 ya usse kam hai
         const products = await Product.find({ stockQuantity: { $lte: 5 } }).sort({ stockQuantity: 1 });
         res.json({ success: true, suggestions: products });
     } catch (e) { 
@@ -819,18 +852,15 @@ app.get('/api/admin/inventory/predictive-restock', async (req, res) => {
     }
 });
 
-// 🔥 Picker Active Orders API (Strictly Today's Active, Not Delivered/Out for Delivery)
 app.get('/api/picker/active-orders', async (req, res) => { 
     try {
         const todayIso = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-        
         const orders = await Order.find({ status: { $ne: 'Pending Payment' } }).sort({ timestamp: -1 });
         
         const activePickerOrders = orders.filter(o => {
             let dObj = o.timestamp ? new Date(o.timestamp) : new Date();
             let orderDateIso = dObj.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
             
-            // Sirf aaj ke orders, jo Delivered ya Out for Delivery ya Cancelled na hon
             let isToday = (orderDateIso === todayIso);
             let status = o.status || '';
             let notFinished = !status.includes('Delivered') && !status.includes('Out for Delivery') && !status.includes('Cancelled');
