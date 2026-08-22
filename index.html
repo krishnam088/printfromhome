@@ -59,7 +59,7 @@
             padding-bottom: 100px;
         }
 
-        /* --- 📱 COMPACT & BALANCED FLOATING CART BAR (Fixed Overlap & Light Yellow Theme) --- */
+        /* --- 📱 COMPACT & BALANCED FLOATING CART BAR --- */
         #floatingCartFooterBar {
             position: fixed !important;
             bottom: 20px !important;
@@ -751,10 +751,10 @@
             </div>
         </header>
 
-        <!-- 🔍 Rain Surge Banner ki jagah Search Bar aur Category Chips yahan add kar diye gaye hain -->
+        <!-- 🔥 Blinkit Style Search Bar (Triggers Fullscreen Overlay) & Category Chips -->
         <div style="padding: 10px 16px; background: #ffffff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000;">
             <div style="margin-bottom: 8px;">
-                <input type="text" id="storeSearchInput" placeholder="🔍 Search chips, munchies, socks, etc..." oninput="filterStoreBySearchInput(this.value)" style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 0.85rem; outline: none; background: #f8fafc; box-sizing: border-box;" />
+                <input type="text" id="storeSearchInput" placeholder="🔍 Search chips, munchies, socks, etc..." onclick="openSearchOverlay()" readonly style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 0.85rem; outline: none; background: #f8fafc; box-sizing: border-box; cursor: pointer;" />
             </div>
             <div style="display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px;">
                 <button type="button" class="store-category-chip" data-category="all" onclick="filterStoreByCategory('all')" style="background:#065f46; color:#ffffff; border:1px solid #065f46; padding:6px 14px; border-radius:20px; font-size:0.75rem; font-weight:700; cursor:pointer; flex-shrink:0;">All Items</button>
@@ -780,7 +780,6 @@
                 </div>
 
                 <div id="uploadScreenInitialState" style="width:100%;">
-                    <!-- ❌ Offer banner poori tarah hata diya gaya hai -->
                     
                     <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border: 1px solid #ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%; display: flex; justify-content: space-between; align-items: center;">
                         <div>
