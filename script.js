@@ -892,20 +892,14 @@ window.addEventListener('DOMContentLoaded', () => {
     if (gridContainers.length === 0) return;
 
     gridContainers.forEach(container => {
-        container.style.display = 'flex';
-        container.style.flexWrap = 'nowrap';
-        container.style.overflowX = 'auto';
-        container.style.gap = '12px';
-        container.style.padding = '10px 4px';
-        container.style.width = '100%';
-        container.style.scrollbarWidth = 'none';
+        container.style.cssText = 'display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 12px; padding: 10px 4px; width: 100%; scrollbar-width: none; align-items: flex-start;';
+        
+        container.innerHTML = '';
 
-        container.innerHTML = '';
-
-        if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) {
-            container.innerHTML = `<p style="font-size:0.75rem; color:#64748b; padding:10px; grid-column: 1 / -1; text-align:center;">No store products available currently.</p>`;
-            return;
-        }
+        if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) {
+            container.innerHTML = `<p style="font-size:0.75rem; color:#64748b; padding:10px; grid-column: 1 / -1; text-align:center;">No store products available currently.</p>`;
+            return;
+        }
 
         let filteredProducts = window.storeInventoryProducts.filter(prod => {
             let nameMatch = (prod.name || '').toLowerCase().includes(window.currentStoreSearchQuery);
@@ -928,22 +922,22 @@ window.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        filteredProducts.forEach((prod) => {
-            let originalIndex = window.storeInventoryProducts.findIndex(p => p.sku === prod.sku || p.name === prod.name);
-            const isOutOfStock = (prod.stockQuantity <= 0);
-            const isLowStock = !isOutOfStock && prod.stockQuantity <= 5;
-            const finalImgUrl = prod.imageUrl || prod.image || '';
+       filteredProducts.forEach((prod) => {
+            let originalIndex = window.storeInventoryProducts.findIndex(p => p.sku === prod.sku || p.name === prod.name);
+            const isOutOfStock = (prod.stockQuantity <= 0);
+            const isLowStock = !isOutOfStock && prod.stockQuantity <= 5;
+            const finalImgUrl = prod.imageUrl || prod.image || '';
 
-            const card = document.createElement('div');
-            card.className = 'blinkit-cat-card';
-            card.style.cssText = `
-                background: #ffffff; border: 1px solid ${isLowStock ? '#ef4444' : '#e2e8f0'};
-                border-radius: 14px; padding: 10px; position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; 
-                display: flex; flex-direction: column; align-items: center; cursor: pointer;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-                min-width: 120px; max-width: 120px; flex: 0 0 auto;
-            `;
-            
+            const card = document.createElement('div');
+            card.className = 'blinkit-cat-card';
+            card.style.cssText = `
+                background: #ffffff; border: 1px solid ${isLowStock ? '#ef4444' : '#e2e8f0'};
+                border-radius: 14px; padding: 10px; position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; 
+                display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+                width: 130px; min-width: 130px; max-width: 130px; height: 190px;
+                box-sizing: border-box; flex: 0 0 auto;
+            `;     
             card.onclick = (e) => {
                 if (e.target.tagName === 'BUTTON') return;
                 if (typeof openProductDetailModal === 'function') {
