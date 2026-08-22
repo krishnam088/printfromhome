@@ -980,7 +980,7 @@ window.addEventListener('DOMContentLoaded', () => {
             alert(`🔔 We have noted your request! You will be notified when "${prodName}" is back in stock.`);
         }
     };
-// 🔥 ULTIMATE BULLETPROOF USER PRODUCT DETAIL MODAL
+// 🔥 FULLY FIXED USER PRODUCT DETAIL MODAL (QUOTE ESCAPING FIX)
 window.openProductDetailModal = function(prod) {
     let modal = document.getElementById('productDetailModal');
     if (!modal) {
@@ -1025,13 +1025,11 @@ window.openProductDetailModal = function(prod) {
     if (priceEl) priceEl.textContent = `₹${prod.sellingPrice || prod.price || 0}`;
     if (stockEl) stockEl.textContent = (prod.stockQuantity || prod.stock || 0) > 0 ? `Stock: ${prod.stockQuantity || prod.stock} units` : `Out of Stock`;
     
-    // 🔥 Robust Description Fallback
     if (descBox) {
         let descText = prod.description || prod.desc || prod.details || "";
         descBox.textContent = descText.trim() !== "" ? descText : "No additional description available for this product.";
     }
 
-    // 🔥 Robust Image Fallback (Handles Array, Comma-separated String, imageUrl, image)
     let imagesList = [];
     if (Array.isArray(prod.images)) {
         imagesList = prod.images.filter(Boolean);
@@ -1039,12 +1037,8 @@ window.openProductDetailModal = function(prod) {
         imagesList = prod.images.split(',').map(s => s.trim()).filter(Boolean);
     }
 
-    if (imagesList.length === 0 && prod.imageUrl) {
-        imagesList.push(prod.imageUrl);
-    }
-    if (imagesList.length === 0 && prod.image) {
-        imagesList.push(prod.image);
-    }
+    if (imagesList.length === 0 && prod.imageUrl) imagesList.push(prod.imageUrl);
+    if (imagesList.length === 0 && prod.image) imagesList.push(prod.image);
 
     if (sliderContainer) {
         if (imagesList.length > 0) {
@@ -1072,6 +1066,10 @@ window.openProductDetailModal = function(prod) {
     let primaryImg = imagesList.length > 0 ? imagesList[0] : '';
     let stockVal = prod.stockQuantity !== undefined ? prod.stockQuantity : (prod.stock || 0);
 
+    // Safe escaped strings for inline onclick handlers
+    let safeSkuOrName = String(prod.sku || prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    let safeName = String(prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
     if (stockVal <= 0) {
         if (addBtn) addBtn.outerHTML = `<button type="button" style="width:100%; padding:12px; background:#ef4444; color:white; border:none; border-radius:12px; font-weight:800; font-size:0.9rem; cursor:not-allowed;" disabled>Out of Stock</button>`;
     } else {
@@ -1080,9 +1078,9 @@ window.openProductDetailModal = function(prod) {
                 <div id="modalActionArea" style="display:flex; align-items:center; justify-content:space-between; width:100%; background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:6px 12px;">
                     <span style="font-weight:700; font-size:0.85rem; color:#0f172a;">Quantity:</span>
                     <div style="display:flex; align-items:center; gap:14px;">
-                        <button type="button" onclick="adjustModalItemQty('${prod.sku || prod.name}', -1, ${stockVal}, ${prod.sellingPrice || prod.price || 0}, '${prod.name}', '${primaryImg}')" style="width:34px; height:34px; background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer;">-</button>
+                        <button type="button" onclick="adjustModalItemQty('${safeSkuOrName}', -1, ${stockVal}, ${prod.sellingPrice || prod.price || 0}, '${safeName}', '${primaryImg}')" style="width:34px; height:34px; background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer;">-</button>
                         <span id="modalItemQtyVal" style="font-weight:800; font-size:1rem; color:#065f46;">${currentQty}</span>
-                        <button type="button" onclick="adjustModalItemQty('${prod.sku || prod.name}', 1, ${stockVal}, ${prod.sellingPrice || prod.price || 0}, '${prod.name}', '${primaryImg}')" style="width:34px; height:34px; background:#065f46; color:white; border:none; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer;">+</button>
+                        <button type="button" onclick="adjustModalItemQty('${safeSkuOrName}', 1, ${stockVal}, ${prod.sellingPrice || prod.price || 0}, '${safeName}', '${primaryImg}')" style="width:34px; height:34px; background:#065f46; color:white; border:none; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer;">+</button>
                     </div>
                 </div>
             `;
