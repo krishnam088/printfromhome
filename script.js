@@ -981,7 +981,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-  // 🔥 ENHANCED USER PRODUCT DETAIL MODAL WITH MULTI-IMAGE SLIDER & SCROLLABLE DESCRIPTION
+// 🔥 ENHANCED USER PRODUCT DETAIL MODAL WITH NULL SAFETY
 window.openProductDetailModal = function(prod) {
     let modal = document.getElementById('productDetailModal');
     if (!modal) {
@@ -992,7 +992,7 @@ window.openProductDetailModal = function(prod) {
             <div style="background:white; border-radius:20px; width:100%; max-width:400px; max-height:85vh; overflow-y:auto; padding:20px; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.2); font-family:'Poppins',sans-serif;">
                 <span onclick="closeProductDetailModal()" style="position:absolute; top:12px; right:16px; font-size:1.4rem; cursor:pointer; font-weight:bold; color:#64748b; z-index:10;">&times;</span>
                 
-                <!-- Image Slider Container (Supports Multiple Images) -->
+                <!-- Image Slider Container -->
                 <div id="modalImageSliderContainer" style="position:relative; width:100%; height:200px; background:#f8fafc; border-radius:14px; overflow:hidden; display:flex; align-items:center; justify-content:center; margin-bottom:14px;"></div>
 
                 <h3 id="modalProductName" style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:4px;"></h3>
@@ -1022,12 +1022,12 @@ window.openProductDetailModal = function(prod) {
     const descBox = document.getElementById('modalProductDescriptionBox');
     const addBtn = document.getElementById('modalAddToCartBtn');
 
-    if (nameEl) nameEl.textContent = prod.name;
+    if (nameEl) nameEl.textContent = prod.name || '';
     if (priceEl) priceEl.textContent = `₹${prod.sellingPrice || 0}`;
     if (stockEl) stockEl.textContent = prod.stockQuantity > 0 ? `Stock: ${prod.stockQuantity} units` : `Out of Stock`;
     if (descBox) descBox.textContent = prod.description ? prod.description : "No additional description available for this product.";
 
-    // Handle Images Slider (Array of images or single image)
+    // Handle Images Slider
     let imagesList = [];
     if (Array.isArray(prod.images) && prod.images.length > 0) {
         imagesList = prod.images;
@@ -1037,23 +1037,25 @@ window.openProductDetailModal = function(prod) {
         imagesList = [prod.image];
     }
 
-    if (imagesList.length > 0) {
-        sliderContainer.innerHTML = `
-            <div id="sliderTrack" style="display:flex; width:100%; height:100%; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none;">
-                ${imagesList.map((imgUrl) => `
-                    <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center;">
-                        <img src="${imgUrl}" style="max-width:100%; max-height:100%; object-fit:contain;" />
-                    </div>
-                `).join('')}
-            </div>
-            ${imagesList.length > 1 ? `
-                <div style="position:absolute; bottom:8px; background:rgba(0,0,0,0.6); color:white; padding:2px 8px; border-radius:10px; font-size:0.65rem; font-weight:700;">
-                    Swipe for more (${imagesList.length} photos)
+    if (sliderContainer) {
+        if (imagesList.length > 0) {
+            sliderContainer.innerHTML = `
+                <div id="sliderTrack" style="display:flex; width:100%; height:100%; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none;">
+                    ${imagesList.map((imgUrl) => `
+                        <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center;">
+                            <img src="${imgUrl}" style="max-width:100%; max-height:100%; object-fit:contain;" />
+                        </div>
+                    `).join('')}
                 </div>
-            ` : ''}
-        `;
-    } else {
-        sliderContainer.innerHTML = `<span style="font-size:3.5rem;">📦</span>`;
+                ${imagesList.length > 1 ? `
+                    <div style="position:absolute; bottom:8px; background:rgba(0,0,0,0.6); color:white; padding:2px 8px; border-radius:10px; font-size:0.65rem; font-weight:700;">
+                        Swipe for more (${imagesList.length} photos)
+                    </div>
+                ` : ''}
+            `;
+        } else {
+            sliderContainer.innerHTML = `<span style="font-size:3.5rem;">📦</span>`;
+        }
     }
 
     let existing = window.cartSnacksArray ? window.cartSnacksArray.find(item => item.sku === prod.sku || item.name === prod.name) : null;
