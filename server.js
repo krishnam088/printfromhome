@@ -118,6 +118,7 @@ const storeConfigSchema = new mongoose.Schema({
 });
 const StoreConfig = mongoose.model('StoreConfig', storeConfigSchema);
 
+// 🔥 Updated Product Schema with Description & Multiple Images Support
 const productSchema = new mongoose.Schema({
     sku: { type: String, unique: true },
     name: String,
@@ -126,7 +127,10 @@ const productSchema = new mongoose.Schema({
     stockQuantity: Number,
     totalSold: { type: Number, default: 0 },
     barcode: { type: String, default: '' },
-    imageUrl: { type: String, default: '' }
+    category: { type: String, default: 'munchies' },
+    description: { type: String, default: '' },
+    imageUrl: { type: String, default: '' },
+    images: { type: Array, default: [] }
 });
 const Product = mongoose.model('Product', productSchema);
 
@@ -238,8 +242,6 @@ app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); }
 app.get('/admin-panel', (req, res) => { res.sendFile(path.join(__dirname, 'admin.html')); });
 app.get('/delivery', (req, res) => { res.sendFile(path.join(__dirname, 'delivery.html')); });
 app.get('/store-qr', (req, res) => { res.sendFile(path.join(__dirname, 'store-qr.html')); });
-
-// 🔥 Picker App Route Added Here
 app.get('/picker', (req, res) => { res.sendFile(path.join(__dirname, 'picker.html')); });
 
 app.get('/manifest.json', (req, res) => {
@@ -305,7 +307,6 @@ const handleStoreToggle = async (req, res) => {
 app.post('/api/store-status/toggle', handleStoreToggle);
 app.post('/api/admin/toggle-store', handleStoreToggle);
 
-// 🌧️ Admin Rain Surge Status & Toggle Endpoints
 app.get('/api/admin/rain-status', async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
@@ -665,6 +666,55 @@ app.post('/api/admin/inventory/add', uploadCloudinary.single('productImage'), as
     }
 });
 
+// 🔥 1. Add New Product API Route (Advanced Modal Support)
+app.post('/api/admin/product/add', async (req, res) => {
+    try {
+        const { sku, name, sellingPrice, stockQuantity, category, description, imageUrl, images } = req.body;
+        
+        const newProduct = new Product({
+            sku: sku || `SKU_${Date.now()}`,
+            barcode: sku || `SKU_${Date.now()}`,
+            name,
+            sellingPrice: parseFloat(sellingPrice) || 0,
+            stockQuantity: parseInt(stockQuantity) || 0,
+            category: category || 'munchies',
+            description: description || '',
+            imageUrl: imageUrl || '',
+            images: images || []
+        });
+
+        await newProduct.save();
+        res.json({ success: true, message: "Product added successfully!" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// 🔥 2. Update Existing Product API Route (Advanced Modal Support)
+app.post('/api/admin/product/update', async (req, res) => {
+    try {
+        const { id, name, sellingPrice, stockQuantity, category, description, imageUrl, images } = req.body;
+        
+        if (!id) {
+            return res.status(400).json({ success: false, message: "Product ID is missing for update." });
+        }
+
+        await Product.findByIdAndUpdate(id, {
+            name,
+            sellingPrice: parseFloat(sellingPrice) || 0,
+            stockQuantity: parseInt(stockQuantity) || 0,
+            category: category || 'munchies',
+            description: description || '',
+            imageUrl: imageUrl || '',
+            images: images || []
+        });
+
+        res.json({ success: true, message: "Product updated successfully!" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 app.delete('/api/admin/inventory/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -731,13 +781,11 @@ app.post('/api/admin/inventory/decrement', async (req, res) => {
                     matchedProd.stockQuantity = Math.max(0, matchedProd.stockQuantity - qty);
                     matchedProd.totalSold += qty;
                     await matchedProd.save();
-                    console.log(`✅ Inventory Decremented via Cart: "${matchedProd.name}" (-${qty}). Remaining: ${matchedProd.stockQuantity}`);
                 }
             }
         }
         res.json({ success: true, message: "Inventory updated successfully!" });
     } catch (err) {
-        console.error("Inventory Decrement Error:", err.message);
         res.status(500).json({ success: false, error: err.message });
     }
 });
@@ -771,7 +819,6 @@ app.post('/api/admin/inventory/restock-scanned', async (req, res) => {
     }
 });
 
-// 🔥 PRECISE TOTAL SALES, NET PROFIT & DELIVERY FEES CALCULATOR
 app.get('/api/admin/stats', async (req, res) => {
     try {
         const requestedDate = req.query.date;
