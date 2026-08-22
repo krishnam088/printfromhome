@@ -1175,11 +1175,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!hasItems) {
             container.innerHTML = `<p style="font-size:0.8rem; color:#64748b; text-align:center; padding:15px;">Your cart is empty.</p>`;
             calculateTotal();
-            toggleCartDrawer(false); // Auto close cart if empty
+            toggleCartDrawer(false);
             return;
         }
 
-        // Vertical stack list container (One below another)
+        // Wrapper for vertical list of items in cart
         const verticalListWrapper = document.createElement('div');
         verticalListWrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
 
@@ -1234,6 +1234,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         container.appendChild(verticalListWrapper);
+
+        // 🔥 ADDING STORE INVENTORY / UPSELLING SECTION INSIDE CART DRAWER FOR SALES BOOST
+        const upsellingSection = document.createElement('div');
+        upsellingSection.style.cssText = "margin-top: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;";
+        upsellingSection.innerHTML = `
+            <h4 style="font-size:0.8rem; font-weight:800; color:#0f172a; margin-bottom:8px; text-transform:uppercase;">⚡ Quick Add Store Items (Boost Sales)</h4>
+            <div id="cartDrawerUpsellingGrid" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;"></div>
+        `;
+        container.appendChild(upsellingSection);
+
+        // Render available store products into the cart upselling section
+        const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
+        if (upsellingGrid && window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
+            upsellingGrid.innerHTML = '';
+            window.storeInventoryProducts.forEach(prod => {
+                if (prod.stockQuantity > 0) {
+                    const thumb = prod.imageUrl || prod.image || '';
+                    const itemCard = document.createElement('div');
+                    itemCard.style.cssText = "min-width: 90px; width: 90px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);";
+                    itemCard.innerHTML = `
+                        ${thumb ? `<img src="${thumb}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; margin-bottom:4px;" />` : '<div style="font-size:1.5rem; margin-bottom:4px;">📦</div>'}
+                        <div title="${prod.name}" style="font-size:0.68rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name}</div>
+                        <div style="font-size:0.68rem; font-weight:800; color:#065f46; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
+                        <button type="button" style="background:#065f46; color:white; border:none; padding:3px 6px; border-radius:6px; font-size:0.65rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${prod.sku || prod.name}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity}, '${thumb}')">+ Add</button>
+                    `;
+                    upsellingGrid.appendChild(itemCard);
+                }
+            });
+        }
         
         if (typeof calculateTotal === 'function') {
             calculateTotal();
@@ -1268,7 +1297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCartDrawerContents();
         calculateTotal();
         updateFloatingCartBar();
-        toggleCartDrawer(false); // Close cart drawer immediately
+        toggleCartDrawer(false);
         alert("✅ Cart cleared successfully!");
     };
 
