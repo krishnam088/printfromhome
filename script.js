@@ -1051,7 +1051,7 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
     };
 
-    // 🔥 CART DRAWER & FOOTER BAR UI
+    // 🔥 CART DRAWER & FOOTER BAR UI (WITH AUTO-CLOSE & VERTICAL DETAILED LIST)
     window.toggleCartDrawer = function(open = true) {
         const drawerOverlay = document.getElementById('cartDrawerOverlay');
         const floatingBar = document.getElementById('floatingCartFooterBar');
@@ -1095,6 +1095,11 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0);
         let totalPrintCount = window.cartPrintJobsArray.length;
         let totalCount = totalSnacksCount + totalPrintCount;
+
+        // Auto-close cart drawer if empty
+        if (totalCount === 0 && drawerOverlay && drawerOverlay.style.display === 'flex') {
+            toggleCartDrawer(false);
+        }
 
         if (!sessionActiveUser || isAuthVisible || !isStoreActive || totalCount === 0 || (drawerOverlay && drawerOverlay.style.display === 'flex')) {
             bar.classList.add('hidden');
@@ -1170,61 +1175,78 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!hasItems) {
             container.innerHTML = `<p style="font-size:0.8rem; color:#64748b; text-align:center; padding:15px;">Your cart is empty.</p>`;
             calculateTotal();
+            toggleCartDrawer(false); // Auto close cart if empty
             return;
         }
 
-        const sliderWrapper = document.createElement('div');
-        sliderWrapper.style.cssText = "display:flex; gap:12px; overflow-x:auto; padding:4px 2px 10px 2px; width:100%; scrollbar-width:thin;";
+        // Vertical stack list container (One below another)
+        const verticalListWrapper = document.createElement('div');
+        verticalListWrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
 
+        // Render Store Products / Snacks in Cart
         window.cartSnacksArray.forEach((snack, idx) => {
             const card = document.createElement('div');
-            card.style.cssText = "min-width: 150px; width: 150px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
+            card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.02); gap:12px;";
             
-            const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:55px; height:55px; object-fit:cover; border-radius:10px; margin:0 auto 6px auto; display:block;" />` : `<div style="font-size:2rem; text-align:center; margin-bottom:6px;">📦</div>`;
+            const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:45px; height:45px; object-fit:cover; border-radius:10px;" />` : `<div style="font-size:1.8rem; width:45px; height:45px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:10px;">📦</div>`;
 
             card.innerHTML = `
-                <div>
+                <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
                     ${thumbImg}
-                    <div title="${snack.name}" style="font-weight:700; font-size:0.78rem; color:#0f172a; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${snack.name}</div>
-                    <div style="font-size:0.68rem; color:#64748b; text-align:center; font-weight:600; margin-top:2px;">₹${snack.price} each</div>
-                </div>
-                <div style="margin-top:10px;">
-                    <div style="font-weight:800; font-size:0.8rem; color:#065f46; text-align:center; margin-bottom:6px;">₹${snack.price * snack.qty}</div>
-                    <div style="display:flex; align-items:center; justify-content:space-between; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:2px 8px;">
-                        <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; font-size:1rem; cursor:pointer; color:#0f172a;">-</button>
-                        <span style="font-weight:800; font-size:0.8rem; color:#0f172a;">${snack.qty}</span>
-                        <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; font-size:1rem; cursor:pointer; color:#065f46;">+</button>
+                    <div style="overflow:hidden;">
+                        <div title="${snack.name}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</div>
+                        <div style="font-size:0.72rem; color:#059669; font-weight:800; margin-top:2px;">₹${snack.price * snack.qty} <span style="color:#64748b; font-weight:500;">(₹${snack.price} ea)</span></div>
                     </div>
                 </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:2px 6px; gap:8px;">
+                        <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; font-size:1rem; cursor:pointer; color:#0f172a;">-</button>
+                        <span style="font-weight:800; font-size:0.82rem; color:#0f172a;">${snack.qty}</span>
+                        <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; font-size:1rem; cursor:pointer; color:#065f46;">+</button>
+                    </div>
+                    <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:6px; font-size:0.75rem; cursor:pointer;" title="Remove Item">🗑️</button>
+                </div>
             `;
-            sliderWrapper.appendChild(card);
+            verticalListWrapper.appendChild(card);
         });
 
+        // Render Print Jobs in Cart
         window.cartPrintJobsArray.forEach((job, idx) => {
             const card = document.createElement('div');
-            card.style.cssText = "min-width: 150px; width: 150px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
+            card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.02); gap:12px;";
             
             let jobTotal = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
 
             card.innerHTML = `
-                <div>
-                    <div style="font-size:2rem; text-align:center; margin-bottom:6px;">📄</div>
-                    <div title="${job.fileName}" style="font-weight:700; font-size:0.78rem; color:#0f172a; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${job.fileName}</div>
-                    <div style="font-size:0.68rem; color:#059669; text-align:center; font-weight:600; margin-top:2px;">${job.pages} pgs (${job.printType.toUpperCase()})</div>
+                <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                    <div style="font-size:1.8rem; width:45px; height:45px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:10px;">📄</div>
+                    <div style="overflow:hidden;">
+                        <div title="${job.fileName}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
+                        <div style="font-size:0.7rem; color:#64748b; font-weight:600; margin-top:2px;">${job.pages} pgs | ${job.printType.toUpperCase()} | Copies: ${job.copies}</div>
+                    </div>
                 </div>
-                <div style="margin-top:10px;">
-                    <div style="font-weight:800; font-size:0.8rem; color:#065f46; text-align:center; margin-bottom:6px;">₹${jobTotal}</div>
-                    <button type="button" onclick="removePrintJobFromCart(${idx})" style="width:100%; background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:8px; font-weight:700; font-size:0.72rem; padding:4px; cursor:pointer;">Remove</button>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="font-weight:800; font-size:0.82rem; color:#065f46;">₹${jobTotal}</div>
+                    <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:6px; font-size:0.75rem; cursor:pointer;" title="Remove Print Job">🗑️</button>
                 </div>
             `;
-            sliderWrapper.appendChild(card);
+            verticalListWrapper.appendChild(card);
         });
 
-        container.appendChild(sliderWrapper);
+        container.appendChild(verticalListWrapper);
         
         if (typeof calculateTotal === 'function') {
             calculateTotal();
         }
+    };
+
+    window.removeSnackItemCompletely = function(index) {
+        window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
+        window.cartSnacksArray.splice(index, 1);
+        persistCartStateData();
+        renderCartDrawerContents();
+        updateFloatingCartBar();
+        calculateTotal();
     };
 
     window.removePrintJobFromCart = function(index) {
@@ -1246,6 +1268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCartDrawerContents();
         calculateTotal();
         updateFloatingCartBar();
+        toggleCartDrawer(false); // Close cart drawer immediately
         alert("✅ Cart cleared successfully!");
     };
 
