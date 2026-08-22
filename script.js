@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedActiveAddress = localStorage.getItem('selected_active_address') || "";  
     window.storeInventoryProducts = []; 
 
-    // 🔥 REAL GOOGLE MAPS INTEGRATION STATE
+    // 🔥 REAL GOOGLE MAPS INTEGRATION STATE WITH AUTO-FILL & EDIT
     let googleDeliveryMap = null;
     let deliveryMarker = null;
 
@@ -35,10 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const addressInput = document.getElementById('mapSelectedAddressInput');
         if (!mapContainer) return;
 
-        // Default Varanasi Center coordinates
         const varanasiCoords = { lat: 25.3176, lng: 82.9739 };
 
-        // Initialize Real Google Map
         googleDeliveryMap = new google.maps.Map(mapContainer, {
             center: varanasiCoords,
             zoom: 16,
@@ -48,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
             zoomControl: true
         });
 
-        // Create Draggable Pin Marker
         deliveryMarker = new google.maps.Marker({
             position: varanasiCoords,
             map: googleDeliveryMap,
@@ -59,20 +56,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const geocoder = new google.maps.Geocoder();
 
-        // 1. When marker is dragged and dropped
         google.maps.event.addListener(deliveryMarker, 'dragend', function() {
             const position = deliveryMarker.getPosition();
             updateAddressFromLatLng(geocoder, position, addressInput);
         });
 
-        // 2. When user clicks anywhere on the map
         googleDeliveryMap.addListener('click', function(event) {
             deliveryMarker.setPosition(event.latLng);
             googleDeliveryMap.panTo(event.latLng);
             updateAddressFromLatLng(geocoder, event.latLng, addressInput);
         });
 
-        // 3. Try fetching user's live GPS location
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -98,10 +92,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (status === "OK" && results[0]) {
                 if (inputElement) {
                     inputElement.value = results[0].formatted_address;
+                    inputElement.removeAttribute('readonly'); // Allow user editing
                 }
             } else {
                 if (inputElement) {
                     inputElement.value = `Location: ${latLng.lat().toFixed(5)}, ${latLng.lng().toFixed(5)}`;
+                    inputElement.removeAttribute('readonly'); // Allow user editing
                 }
             }
         });
@@ -845,8 +841,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const sessionActiveUser = localStorage.getItem('printAppUser');
         const isAuthVisible = document.getElementById('authScreen') && !document.getElementById('authScreen').classList.contains('app-hidden') && document.getElementById('authScreen').style.display !== 'none';
+        
+        // 🔥 Check if user is actively on the Store / Home page section
+        const storeSection = document.getElementById('user_section_store');
+        const isStoreActive = storeSection && storeSection.classList.contains('active');
 
-        if (!sessionActiveUser || isAuthVisible || (drawerOverlay && drawerOverlay.style.display === 'flex')) {
+        if (!sessionActiveUser || isAuthVisible || !isStoreActive || (drawerOverlay && drawerOverlay.style.display === 'flex')) {
             bar.classList.add('hidden');
             bar.style.display = 'none';
             return;
@@ -1013,29 +1013,6 @@ document.addEventListener('DOMContentLoaded', () => {
         alert("✅ Cart cleared successfully!");
     };
 
-    window.addEventListener('popstate', (event) => {
-        const studioModal = document.getElementById('printStudioModal');
-        const cartOverlay = document.getElementById('cartDrawerOverlay');
-        const walletModal = document.getElementById('walletDepositModal');
-        const sideDrawer = document.getElementById('userSideDrawer');
-        const addressModal = document.getElementById('addressManagerModal');
-        const configScreen = document.getElementById('configurationScreenState');
-        const productModal = document.getElementById('productDetailModal');
-        
-        if (studioModal && studioModal.style.display === 'flex') { studioModal.style.display = 'none'; return; }
-        if (productModal && productModal.style.display === 'flex') { productModal.style.display = 'none'; return; }
-        if (cartOverlay && cartOverlay.style.display === 'flex') { cartOverlay.style.display = 'none'; return; }
-        if (addressModal && addressModal.style.display === 'flex') { addressModal.style.display = 'none'; return; }
-        if (walletModal && walletModal.style.display === 'flex') { walletModal.style.display = 'none'; return; }
-        if (sideDrawer && sideDrawer.classList.contains('active')) {
-            sideDrawer.classList.remove('active');
-            document.getElementById('drawerOverlay').classList.remove('active');
-            return;
-        }
-        if (configScreen && !configScreen.classList.contains('hidden')) { forceReturnToUploadView(); return; }
-        if (typeof navigateDrawerSection === 'function') navigateDrawerSection('store');
-    });
-
     window.persistCartStateData = function() {
         localStorage.setItem('cart_print_jobs', JSON.stringify(window.cartPrintJobsArray));
         localStorage.setItem('cart_snacks', JSON.stringify(window.cartSnacksArray));
@@ -1083,6 +1060,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert("✅ Address saved successfully!");
     }
 
+    // 🔥 ADDRESS DELETE & MANAGEMENT UI
     function renderSavedAddressesUI() {
         const listContainer = document.getElementById('cartSavedAddressesList');
         const summaryNode = document.getElementById('cartDrawerAddressSummary');
@@ -1097,15 +1075,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
         window.savedUserAddresses.forEach((addr, idx) => {
             const isChecked = addr === selectedActiveAddress ? 'checked' : '';
-            const card = document.createElement('label');
-            card.style = `display:flex; align-items:flex-start; gap:10px; background:${isChecked ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${isChecked ? '#16a34a' : '#cbd5e1'}; padding:10px 12px; border-radius:10px; cursor:pointer; font-size:0.78rem; font-weight:600; color:#0f172a; margin-bottom:6px;`;
+            const card = document.createElement('div');
+            card.style = `display:flex; align-items:center; justify-content:space-between; background:${isChecked ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${isChecked ? '#16a34a' : '#cbd5e1'}; padding:8px 12px; border-radius:10px; font-size:0.78rem; font-weight:600; color:#0f172a; margin-bottom:6px;`;
+            
             card.innerHTML = `
-                <input type="radio" name="selectedDeliveryAddressRadio" value="${idx}" ${isChecked} onchange="selectActiveAddressByIndex(${idx})" style="margin-top:2px;">
-                <span style="flex:1; word-break:break-word;">📍 ${addr}</span>
+                <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; flex:1;">
+                    <input type="radio" name="selectedDeliveryAddressRadio" value="${idx}" ${isChecked} onchange="selectActiveAddressByIndex(${idx})" style="margin-top:2px;">
+                    <span style="word-break:break-word;">📍 ${addr}</span>
+                </label>
+                <button type="button" onclick="deleteSavedAddress(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:3px 8px; font-size:0.7rem; font-weight:700; cursor:pointer; margin-left:6px;" title="Delete Address">Delete</button>
             `;
             listContainer.appendChild(card);
         });
     }
+
+    window.deleteSavedAddress = function(idx) {
+        if (confirm("⚠️ Are you sure you want to delete this address?")) {
+            const removedAddr = window.savedUserAddresses[idx];
+            window.savedUserAddresses.splice(idx, 1);
+            localStorage.setItem('saved_addresses', JSON.stringify(window.savedUserAddresses));
+            
+            if (selectedActiveAddress === removedAddr) {
+                selectedActiveAddress = window.savedUserAddresses.length > 0 ? window.savedUserAddresses[0] : "";
+                localStorage.setItem('selected_active_address', selectedActiveAddress);
+            }
+            renderSavedAddressesUI();
+            alert("✅ Address deleted successfully!");
+        }
+    };
 
     window.selectActiveAddressByIndex = function(idx) {
         if (window.savedUserAddresses[idx]) {
@@ -1135,269 +1132,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modal) modal.style.display = 'none';
     }
 
-    const profileForm = document.getElementById('drawerProfileUpdateForm');
-    if (profileForm) {
-        profileForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const identity = localStorage.getItem('printAppUserIdentity');
-            if (!identity) { alert("⚠️ Please log in again!"); return; }
-
-            const name = document.getElementById('drawerEditName').value.trim();
-            const currentPassword = document.getElementById('drawerEditPassword').value;
-            const newPassword = document.getElementById('drawerEditNewPassword') ? document.getElementById('drawerEditNewPassword').value : '';
-
-            const payload = { identity };
-            if (name) payload.name = name;
-            if (newPassword) {
-                if (!currentPassword) { alert("⚠️ Current password is required to change it!"); return; }
-                payload.currentPassword = currentPassword;
-                payload.newPassword = newPassword;
-            }
-
-            try {
-                const res = await fetch('/api/auth/update-profile', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert("✅ Profile updated successfully in database!");
-                    if (name) {
-                        localStorage.setItem('printAppUser', name);
-                        document.getElementById('userGreeting').innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${name}</span>`;
-                    }
-                    const successMsg = document.getElementById('profileUpdateSuccessMsg');
-                    if (successMsg) { successMsg.style.display = 'block'; setTimeout(() => successMsg.style.display = 'none', 3000); }
-                } else {
-                    alert("❌ " + data.message);
-                }
-            } catch (err) {
-                alert("❌ Connection error while updating profile.");
-            }
-        });
-    }
-
-    window.updateUserGmailProfile = async function() {
-        const emailInput = document.getElementById('userProfileEmailField');
-        if (!emailInput || !emailInput.value.trim()) { alert("⚠️ Please enter a valid Gmail address!"); return; }
-        
-        const identity = localStorage.getItem('printAppUserIdentity');
-        try {
-            const res = await fetch('/api/auth/update-email', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ identity, email: emailInput.value.trim() })
-            });
-            const data = await res.json();
-            if (data.success) alert("✅ Gmail updated successfully!");
-            else alert("❌ " + data.message);
-        } catch (e) {
-            alert("❌ Failed to update Gmail.");
-        }
-    }
-
-    window.initiatePasswordReset = async function() {
-        const identityInput = document.getElementById('authIdentity');
-        const identity = identityInput ? identityInput.value.trim() : prompt("Enter your registered 10-digit mobile number:");
-        
-        if (!identity || identity.length !== 10) {
-            alert("⚠️ Please enter a valid 10-digit mobile number first!");
-            return;
-        }
-
-        try {
-            const res = await fetch('/api/auth/verify-identity', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ identity })
-            });
-            const data = await res.json();
-            
-            if (data.success) {
-                const newPassword = prompt("✅ Mobile number verified! Enter your new password (min 6 characters):");
-                if (newPassword && newPassword.length >= 6) {
-                    const resetRes = await fetch('/api/auth/reset-password', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ identity, newPassword })
-                    });
-                    const resetData = await resetRes.json();
-                    if (resetData.success) {
-                        alert("🎉 Password reset successfully! You can now log in with your new password.");
-                    } else {
-                        alert("❌ " + resetData.message);
-                    }
-                } else if (newPassword) {
-                    alert("⚠️ Password must be at least 6 characters long.");
-                }
-            } else {
-                alert("❌ " + data.message);
-            }
-        } catch (err) {
-            alert("❌ Network error during password reset.");
-        }
-    }
-
-    let deferredUserPrompt = null;
-    const userInstallBanner = document.getElementById('userInstallBanner');
-    const userInstallTriggerBtn = document.getElementById('userInstallTriggerBtn');
-
-    const isRunningStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    if (!isRunningStandalone) {
-        const checkBrowserInstallState = localStorage.getItem('user_pwa_installed');
-        if (checkBrowserInstallState === 'true' && !window.matchMedia('(display-mode: standalone)').matches) {
-            localStorage.removeItem('user_pwa_installed');
-        }
-    }
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredUserPrompt = e;
-        
-        if (userInstallBanner && localStorage.getItem('user_pwa_installed') !== 'true') {
-            userInstallBanner.classList.remove('hidden');
-            userInstallBanner.style.display = 'flex';
-        }
-    });
-
-    if (userInstallTriggerBtn) {
-        userInstallTriggerBtn.addEventListener('click', async () => {
-            if (typeof window.triggerUniversalPWAInstall === 'function') {
-                window.triggerUniversalPWAInstall();
-                return;
-            }
-            if (!deferredUserPrompt) {
-                alert("💡 To install, tap your browser's menu (3 dots at top right) and select 'Install app' or 'Add to Home screen'.");
-                return;
-            }
-            deferredUserPrompt.prompt();
-            const { outcome } = await deferredUserPrompt.userChoice;
-            if (outcome === 'accepted') {
-                localStorage.setItem('user_pwa_installed', 'true');
-                if (userInstallBanner) userInstallBanner.style.display = 'none';
-            }
-            deferredUserPrompt = null;
-        });
-    }
-
-    window.addEventListener('appinstalled', () => {
-        localStorage.setItem('user_pwa_installed', 'true');
-        if (userInstallBanner) userInstallBanner.style.display = 'none';
-    });
-
-    async function silentlySyncOrdersArrayCache() {
-        try {
-            const res = await fetch(`${LIVE_SERVER_URL}/api/admin/orders`);
-            if (!res.ok) return;
-            const data = await res.json();
-            if (Array.isArray(data)) {
-                window.globalRawOrdersCache = data;
-                loadDynamicStoreProducts();
-                
-                const currentActiveTrackingId = document.getElementById('trackOrderIdLabel')?.textContent?.replace('ID Reference: ', '')?.replace('ID: ', '')?.trim();
-                if (currentActiveTrackingId && typeof window.executeLiveTimelineStateStepper === 'function') {
-                    const match = data.find(o => o.orderId === currentActiveTrackingId);
-                    if (match) {
-                        window.executeLiveTimelineStateStepper(match.status, match.assignedDeliveryBoy);
-                        
-                        const activeUserToken = localStorage.getItem('printAppUser');
-                        const localHistory = JSON.parse(localStorage.getItem(`history_${activeUserToken}`) || '[]');
-                        let historyUpdated = false;
-                        localHistory.forEach(item => {
-                            if(item.orderId === currentActiveTrackingId && item.status !== match.status) {
-                                item.status = match.status;
-                                historyUpdated = true;
-                            }
-                        });
-                        if(historyUpdated) {
-                            localStorage.setItem(`history_${activeUserToken}`, JSON.stringify(localHistory));
-                            renderOrderHistoryUI(activeUserToken, false);
-                        }
-                    }
-                }
-            }
-        } catch (err) {}
-    }
-    setInterval(silentlySyncOrdersArrayCache, 4000);
-    setTimeout(silentlySyncOrdersArrayCache, 500);
-
-    function synchronizeWalletInterfaceBalance() {
-        const sessionActiveUser = localStorage.getItem('printAppUser');
-        const balanceDisplayNode = document.getElementById('headerWalletDisplayBalance');
-        const drawerWalletText = document.getElementById('walletDrawerBalanceText');
-        if(!balanceDisplayNode) return;
-        if(!sessionActiveUser) { 
-            balanceDisplayNode.textContent = "₹0.00"; 
-            if(drawerWalletText) drawerWalletText.textContent = "₹0";
-            return; 
-        }
-        let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
-        balanceDisplayNode.textContent = `₹${currentWalletCash.toFixed(2)}`;
-        if(drawerWalletText) drawerWalletText.textContent = `₹${currentWalletCash.toFixed(2)}`;
-    }
-    window.synchronizeWalletInterfaceBalance = synchronizeWalletInterfaceBalance;
-
-    window.executeWalletRazorpayDeposit = async function() {
-        const sessionActiveUser = localStorage.getItem('printAppUser');
-        if(!sessionActiveUser) { alert("❌ Log in kijiye!"); return; }
-        const depositAmount = parseFloat(document.getElementById('walletCustomAmountInput').value) || 100;
-        if (depositAmount <= 0) return;
-        try {
-            const response = await fetch('/api/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ totalAmount: depositAmount.toString(), address: "Wallet Deposit", configDetails: "[]" }) });
-            const data = await response.json();
-            if(!data.success) return;
-            const options = {
-                "key": data.key_id, "amount": data.amount, "currency": "INR", "name": "Wallet Topup", "order_id": data.rzp_order_id || data.order_id,
-                "handler": async function (response){
-                    let oldCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
-                    localStorage.setItem(`wallet_cash_${sessionActiveUser}`, (oldCash + depositAmount).toFixed(2));
-                    synchronizeWalletInterfaceBalance();
-                    document.getElementById('walletDepositModal').style.display = 'none';
-                    alert(`🎉 Successfully added ₹${depositAmount} to your Print From Home Wallet!`);
-                }, "theme": { "color": "#0C8346" }
-            };
-            const rzpWallet = new Razorpay(options); rzpWallet.open();
-        } catch (err) {}
-    }
-
-    window.refreshInvoiceTabState = function() {
-        const sideInvoicePanel = document.getElementById('sidebarPricingPanel');
-        const layoutContainer = document.getElementById('mainLayoutAppContainer');
-        const uploadInitialScreen = document.getElementById('uploadScreenInitialState');
-        const configWorkspaceScreen = document.getElementById('configurationScreenState');
-        const activeTabStoreNode = document.getElementById('user_section_store');
-
-        const activeTabIsStore = activeTabStoreNode && activeTabStoreNode.classList.contains('active');
-        if (!activeTabIsStore) return;
-
-        if (masterFilesArray && masterFilesArray.length > 0) {
-            if(uploadInitialScreen) uploadInitialScreen.classList.add('hidden');
-            if(configWorkspaceScreen) {
-                configWorkspaceScreen.classList.remove('hidden');
-                history.pushState({ configOpen: true }, '', '');
-            }
-            if(sideInvoicePanel) sideInvoicePanel.classList.remove('hidden');
-            if (window.innerWidth > 992) {
-                if(layoutContainer) { layoutContainer.classList.add('has-invoice'); layoutContainer.style.gridTemplateColumns = '2.5fr 1.2fr'; }
-            } else { if(layoutContainer) layoutContainer.style.gridTemplateColumns = '1fr'; }
-        } else {
-            if(uploadInitialScreen) uploadInitialScreen.classList.remove('hidden');
-            if(configWorkspaceScreen) configWorkspaceScreen.classList.add('hidden');
-            if(sideInvoicePanel) sideInvoicePanel.classList.add('hidden');
-            if(layoutContainer) { layoutContainer.classList.remove('has-invoice'); layoutContainer.style.gridTemplateColumns = '1fr'; }
-        }
-        updateFloatingCartBar();
-    }
-
-    window.addEventListener('resize', window.refreshInvoiceTabState);
-
-    window.forceReturnToUploadView = function() {
-        masterFilesArray = []; sessionStorage.removeItem('savedPrintFiles');
-        if(multiFilesContainer) multiFilesContainer.innerHTML = '';
-        refreshInvoiceTabState(); calculateTotal();
-    }
-
     setTimeout(() => {
         if (splashScreen) splashScreen.classList.add('hidden');
         const sessionActiveUser = localStorage.getItem('printAppUser');
@@ -1417,11 +1151,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateFloatingCartBar();
     }, 2500);
 
-    // --- AUTH FORM (Login & Signup with mandatory Gmail) ---
     if (authForm) {
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-
             const isSignUpModeActive = !signupOnlyFields[0].classList.contains('hidden');
             const targetApiUrl = isSignUpModeActive ? '/api/auth/signup' : '/api/auth/login';
             const payloadData = {
@@ -1504,407 +1236,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if(fileUpload) {
-        fileUpload.addEventListener('change', async () => {
-            if (fileUpload.files.length === 0) return;
-            
-            for (const file of Array.from(fileUpload.files)) {
-                if (!masterFilesArray.some(f => f.name === file.name && f.size === file.size)) {
-                    let pageCount = 1;
-                    
-                    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-                        try {
-                            const arrayBuffer = await file.arrayBuffer();
-                            const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                            pageCount = pdfDoc.numPages || 1;
-                        } catch (e) {
-                            pageCount = 1;
-                        }
-                    }
-
-                    masterFilesArray.push({ 
-                        name: file.name, 
-                        size: file.size, 
-                        type: file.type, 
-                        fileData: file, 
-                        config: { 
-                            pages: pageCount, 
-                            printType: 'bw', 
-                            orientation: 'portrait', 
-                            binding: 'none', 
-                            copies: 1 
-                        } 
-                    });
-                }
-            }
-            fileUpload.value = ''; 
-            saveCurrentFilesToSession(); 
-            renderFilesUI();
-        });
-    }
-
-    window.triggerInlineFileUploadClick = function() {
-        if(fileUpload) fileUpload.click();
-    };
-
-    function saveCurrentFilesToSession() {
-        sessionStorage.setItem('savedPrintFiles', JSON.stringify(masterFilesArray.map(i => ({ name: i.name, size: i.size, type: i.type, config: i.config }))));
-    }
-
-    function loadSavedFilesFromSession() {
-        const raw = sessionStorage.getItem('savedPrintFiles');
-        if (raw) {
-            masterFilesArray = JSON.parse(raw).map(i => ({ name: i.name, size: i.size, type: i.type, fileData: null, config: i.config }));
-            renderFilesUI();
+    // Navigation and tab helpers
+    window.navigateDrawerSection = function(targetId) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        const targetNode = document.getElementById(`user_section_${targetId}`);
+        if (targetNode) {
+            targetNode.classList.add('active');
         }
-    }
-
-    function renderFilesUI() {
-        if(!multiFilesContainer) return; 
-        multiFilesContainer.innerHTML = ''; 
-        refreshInvoiceTabState();
-        if (masterFilesArray.length === 0) return;
-
-        masterFilesArray.forEach((item, index) => {
-            const fileRow = document.createElement('div');
-            fileRow.className = 'blinkit-file-card';
-            fileRow.style.cssText = "background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);";
-
-            const activeColorBw = item.config.printType === 'bw' ? 'active' : '';
-            const activeColorCol = item.config.printType === 'color' ? 'active' : '';
-            const activeOriPort = item.config.orientation === 'portrait' ? 'active' : '';
-            const activeOriLand = item.config.orientation === 'landscape' ? 'active' : '';
-
-            fileRow.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; padding-bottom: 8px; margin-bottom: 10px;">
-                    <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; cursor:pointer;" onclick="previewFileInA4Studio(${index})">
-                        <span style="font-size: 1.1rem;">📄</span>
-                        <div>
-                            <h4 style="font-weight: 700; font-size: 0.85rem; color: #1a202c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;" title="${item.name}">${item.name}</h4>
-                            <span style="font-size:0.68rem; color:var(--blinkit-green); font-weight:700;">👁️ Tap to View A4 Preview</span>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <button type="button" class="add-more-inline-card-btn" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 3px 8px; font-size: 0.7rem; font-weight: 700; border-radius: 6px; cursor: pointer;" onclick="triggerInlineFileUploadClick()">+ Add More</button>
-                        <button type="button" id="removeFile_${index}" style="background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; width: 24px; height: 24px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">&times;</button>
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-bottom: 12px; align-items: center;">
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <label style="font-size: 0.7rem; font-weight: 700; color: #4a5568;">Total Pages:</label>
-                        <input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 0.8rem; background: #f8fafc; outline: none;" required>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <label style="font-size: 0.7rem; font-weight: 700; color: #4a5568;">Copies:</label>
-                        <div class="blinkit-stepper" style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 2px 8px; height: 32px;">
-                            <button type="button" id="minusCopy_${index}" class="stepper-btn" style="background: none; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; color: #334155;">-</button>
-                            <span id="copyCountLabel_${index}" style="font-weight: 700; font-size: 0.8rem; color: #0f172a;">${item.config.copies}</span>
-                            <button type="button" id="plusCopy_${index}" class="stepper-btn" style="background: none; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; color: #334155;">+</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-bottom: 10px;">
-                    <p style="font-size: 0.7rem; font-weight: 700; color: #4a5568; margin-bottom: 6px;">Print Color</p>
-                    <div class="blinkit-grid-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                        <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeColorCol ? '#16a34a' : '#cbd5e1'}; background: ${activeColorCol ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
-                            <div style="font-size: 1rem;">🎨</div>
-                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Coloured</span><span style="font-size: 0.65rem; color: #64748b;">₹10/pg</span></div>
-                        </div>
-                        <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeColorBw ? '#16a34a' : '#cbd5e1'}; background: ${activeColorBw ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
-                            <div style="font-size: 1rem;">🌑</div>
-                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">B & W</span><span style="font-size: 0.65rem; color: #64748b;">₹3/pg</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-bottom: 10px;">
-                    <p style="font-size: 0.7rem; font-weight: 700; color: #4a5568; margin-bottom: 6px;">Orientation</p>
-                    <div class="blinkit-grid-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                        <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeOriPort ? '#16a34a' : '#cbd5e1'}; background: ${activeOriPort ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
-                            <div style="font-size: 1rem;">📱</div>
-                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Portrait</span></div>
-                        </div>
-                        <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeOriLand ? '#16a34a' : '#cbd5e1'}; background: ${activeOriLand ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
-                            <div style="font-size: 1rem;">💻</div>
-                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Landscape</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
-                    <label style="font-size: 0.75rem; font-weight: 700; color: #334155;">Binding Option:</label>
-                    <select id="binding_${index}" style="padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.75rem; font-weight: 600; background: #ffffff; outline: none;">
-                        <option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option>
-                        <option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option>
-                        <option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral (+₹30)</option>
-                    </select>
-                </div>
-            `;
-            multiFilesContainer.appendChild(fileRow);
-
-            document.getElementById(`optColor_${index}`).addEventListener('click', () => { item.config.printType = 'color'; saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`optBw_${index}`).addEventListener('click', () => { item.config.printType = 'bw'; saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`optPort_${index}`).addEventListener('click', () => { item.config.orientation = 'portrait'; saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`optLand_${index}`).addEventListener('click', () => { item.config.orientation = 'landscape'; saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`plusCopy_${index}`).addEventListener('click', () => { item.config.copies++; saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`minusCopy_${index}`).addEventListener('click', () => { if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); renderFilesUI(); } });
-            document.getElementById(`removeFile_${index}`).addEventListener('click', () => { masterFilesArray.splice(index, 1); saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`pages_${index}`).addEventListener('input', (e) => { item.config.pages = parseInt(e.target.value) || 1; saveCurrentFilesToSession(); calculateTotal(); });
-            document.getElementById(`binding_${index}`).addEventListener('change', (e) => { item.config.binding = e.target.value; saveCurrentFilesToSession(); calculateTotal(); });
-        });
-        calculateTotal();
+        if (typeof toggleUserDrawer === 'function') toggleUserDrawer(false);
         updateFloatingCartBar();
-    }
-
-    window.previewFileInA4Studio = function(index) {
-        if (masterFilesArray[index] && masterFilesArray[index].fileData) {
-            window.openDocumentInA4Studio(masterFilesArray[index].fileData, masterFilesArray[index].name);
-        } else {
-            alert("⚠️ Please re-upload the document to open A4 interactive studio.");
-        }
-    };
-
-    const printForm = document.getElementById('printForm');
-    if(printForm) {
-        printForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (masterFilesArray.length === 0) {
-                alert("⚠️ Please upload at least one valid document to add to cart.");
-                return;
-            }
-
-            masterFilesArray.forEach(item => {
-                window.cartPrintJobsArray.push({
-                    fileName: item.name,
-                    pages: parseInt(item.config.pages) || 1,
-                    printType: item.config.printType,
-                    sides: item.config.orientation === 'portrait' ? 'single' : 'landscape',
-                    binding: item.config.binding,
-                    copies: parseInt(item.config.copies) || 1,
-                    orientation: item.config.orientation,
-                    fileData: item.fileData
-                });
-            });
-
-            persistCartStateData();
-            alert("🎉 Print job(s) successfully added to Cart!");
-            masterFilesArray = [];
-            sessionStorage.removeItem('savedPrintFiles');
-            printForm.reset();
-            if(multiFilesContainer) multiFilesContainer.innerHTML = '';
-            refreshInvoiceTabState();
-            calculateTotal();
-            toggleCartDrawer(true);
-        });
-    }
-
-    // ==========================================
-    // 💳 FINAL CART ORDER PLACEMENT (WITH REDIRECT & TRACKING WORKSPACE)
-    // ==========================================
-    window.executeFinalCartOrderPlacement = async function() {
-        if (!isStoreCurrentlyOpen) {
-            alert("🚨 Store is currently CLOSED! Orders cannot be accepted.");
-            const storeClosedModal = document.getElementById('storeClosedPopupModal');
-            if (storeClosedModal) storeClosedModal.style.display = 'flex';
-            return;
-        }
-
-        let totalItemsCount = (window.cartSnacksArray ? window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0) : 0) + 
-                            (window.cartPrintJobsArray ? window.cartPrintJobsArray.length : 0);
-
-        if (totalItemsCount === 0) {
-            alert("⚠️ Your cart is empty! Please add print jobs or store products first.");
-            return;
-        }
-
-        if (!selectedActiveAddress || selectedActiveAddress.trim() === "") {
-            alert("⚠️ Please add and select a delivery address first!");
-            openAddressManagerModal();
-            return;
-        }
-
-        let totalPrintVal = 0;
-        let totalSnacksVal = 0;
-        const finalMetaConfig = [];
-
-        window.cartPrintJobsArray.forEach(job => {
-            const cost = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
-            totalPrintVal += cost;
-            finalMetaConfig.push({ fileName: job.fileName, pages: job.pages, printType: job.printType, binding: job.binding, copies: job.copies });
-        });
-
-        window.cartSnacksArray.forEach(snack => {
-            totalSnacksVal += snack.price * snack.qty;
-            finalMetaConfig.push({ 
-                sku: snack.sku || '',
-                name: snack.name,
-                fileName: `Product: ${snack.name} (Qty: ${snack.qty}, Price: ₹${snack.price} each)`, 
-                copies: snack.qty, 
-                qty: snack.qty,
-                printType: 'snack', 
-                pages: 1 
-            });
-        });
-
-        if (finalMetaConfig.length === 0) {
-            alert("⚠️ Your cart is empty!");
-            return;
-        }
-
-        const hasPrintJobs = window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0;
-        const hasSnacks = window.cartSnacksArray && window.cartSnacksArray.length > 0;
-
-        let initialOrderStatus = "Order Placed & Processing";
-        if (hasPrintJobs && !hasSnacks) {
-            initialOrderStatus = "Ready for Print";
-        } else if (hasPrintJobs && hasSnacks) {
-            initialOrderStatus = "Ready for Print & Processing";
-        } else if (!hasPrintJobs && hasSnacks) {
-            initialOrderStatus = "Order Placed & Picking";
-        }
-
-        let subtotal = totalPrintVal + totalSnacksVal;
-        let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
-        let rainFee = window.isRainSurgeActive ? 15 : 0;
-        let grandTotal = subtotal + delivery + rainFee + (window.currentDeliveryTip || 0);
-
-        const selectedPaymentRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
-        const paymentMode = selectedPaymentRadio ? selectedPaymentRadio.value : 'online';
-        const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
-
-        const formData = new FormData();
-        window.cartPrintJobsArray.forEach(job => {
-            if (job.fileData) formData.append('document', job.fileData);
-        });
-
-        formData.append('totalAmount', grandTotal.toFixed(2));
-        formData.append('configDetails', JSON.stringify(finalMetaConfig));
-        formData.append('address', selectedActiveAddress);
-        formData.append('customerName', sessionActiveUser);
-        formData.append('phone', localStorage.getItem('printAppUserIdentity') || 'N/A');
-        formData.append('deliveryTip', window.currentDeliveryTip || 0);
-
-        const finalizeOrderSuccess = async (orderId) => {
-            const historyKey = `history_${sessionActiveUser}`;
-            const currentHistoryArray = JSON.parse(localStorage.getItem(historyKey) || '[]');
-            
-            const newOrderPayload = { 
-                orderId: orderId,
-                date: new Date().toLocaleString(), 
-                amount: grandTotal.toFixed(2), 
-                status: initialOrderStatus, 
-                details: finalMetaConfig, 
-                address: selectedActiveAddress,
-                deliveryTip: window.currentDeliveryTip || 0
-            };
-            
-            currentHistoryArray.push(newOrderPayload);
-            localStorage.setItem(historyKey, JSON.stringify(currentHistoryArray));
-
-            try {
-                await fetch('/api/admin/inventory/decrement', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ items: finalMetaConfig })
-                });
-            } catch (e) {
-                console.error("Inventory decrement sync error:", e);
-            }
-
-            window.cartPrintJobsArray = [];
-            window.cartSnacksArray = [];
-            window.currentDeliveryTip = 0;
-            persistCartStateData();
-            toggleCartDrawer(false);
-
-            if (typeof renderOrderHistoryUI === 'function') {
-                renderOrderHistoryUI(sessionActiveUser);
-            }
-            if (typeof openOrderDeepTrackingWorkspacePage === 'function') {
-                openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
-            } else if (typeof navigateDrawerSection === 'function') {
-                navigateDrawerSection('order_tracking');
-            }
-            loadDynamicStoreProducts();
-        };
-
-        if (paymentMode === 'wallet') {
-            let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
-            if (currentWalletCash < grandTotal) {
-                alert(`❌ Insufficient wallet balance! You have ₹${currentWalletCash.toFixed(2)}, but grand total is ₹${grandTotal.toFixed(2)}. Please recharge your wallet.`);
-                toggleWalletPopupGrid(true, event);
-                return;
-            }
-
-            let newBalance = currentWalletCash - grandTotal;
-            localStorage.setItem(`wallet_cash_${sessionActiveUser}`, newBalance.toFixed(2));
-            synchronizeWalletInterfaceBalance();
-            formData.append('paymentMode', 'wallet');
-
-            try {
-                const response = await fetch('/api/create-order', { method: 'POST', body: formData });
-                const data = await response.json();
-                if (data.success) {
-                    alert('🎉 Order Placed Successfully using Print From Home Wallet!');
-                    await finalizeOrderSuccess(data.order_id);
-                    return;
-                }
-            } catch (err) {
-                alert("❌ Wallet order placement error.");
-                return;
-            }
-        } else {
-            formData.append('paymentMode', paymentMode);
-            try {
-                const response = await fetch('/api/create-order', { method: 'POST', body: formData });
-                const data = await response.json();
-                if (!data.success) {
-                    alert(`⚠️ Error: ${data.message || 'Failed to create order'}`);
-                    return;
-                }
-
-                if (paymentMode === 'cod') {
-                    alert('🎉 Order Placed Successfully via Cash on Delivery!');
-                    await finalizeOrderSuccess(data.order_id);
-                    return;
-                }
-
-                const options = {
-                    key: data.key_id,
-                    amount: data.amount,
-                    currency: 'INR',
-                    name: 'Print From Home',
-                    order_id: data.rzp_order_id,
-                    handler: async function (response) {
-                        try {
-                            const verifyRes = await fetch('/api/verify-payment', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    orderId: data.order_id,
-                                    paymentId: response.razorpay_payment_id
-                                })
-                            });
-                            const verifyData = await verifyRes.json();
-                            if (verifyData.success) {
-                                alert('🎉 Payment Successful!');
-                                await finalizeOrderSuccess(data.order_id);
-                            }
-                        } catch (err) {
-                            alert('🎉 Payment Recorded Successfully!');
-                            await finalizeOrderSuccess(data.order_id);
-                        }
-                    },
-                    theme: { color: '#F4C430' }
-                };
-
-                const rzp1 = new Razorpay(options);
-                rzp1.open();
-            } catch (error) {
-                alert('❌ Connection Breakdown during order placement.');
-            }
-        }
     };
 });
