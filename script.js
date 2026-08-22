@@ -980,7 +980,7 @@ window.addEventListener('DOMContentLoaded', () => {
             alert(`🔔 We have noted your request! You will be notified when "${prodName}" is back in stock.`);
         }
     };
-// 🔥 FULLY FIXED USER PRODUCT DETAIL MODAL (IMAGES & DESCRIPTION FIX)
+// 🔥 ULTIMATE BULLETPROOF USER PRODUCT DETAIL MODAL
 window.openProductDetailModal = function(prod) {
     let modal = document.getElementById('productDetailModal');
     if (!modal) {
@@ -1025,17 +1025,20 @@ window.openProductDetailModal = function(prod) {
     if (priceEl) priceEl.textContent = `₹${prod.sellingPrice || prod.price || 0}`;
     if (stockEl) stockEl.textContent = (prod.stockQuantity || prod.stock || 0) > 0 ? `Stock: ${prod.stockQuantity || prod.stock} units` : `Out of Stock`;
     
-    // Set Description correctly (fallback if empty)
+    // 🔥 Robust Description Fallback
     if (descBox) {
-        let descText = prod.description || prod.desc || "";
+        let descText = prod.description || prod.desc || prod.details || "";
         descBox.textContent = descText.trim() !== "" ? descText : "No additional description available for this product.";
     }
 
-    // Collect all possible images into a clean array
+    // 🔥 Robust Image Fallback (Handles Array, Comma-separated String, imageUrl, image)
     let imagesList = [];
-    if (Array.isArray(prod.images) && prod.images.length > 0) {
+    if (Array.isArray(prod.images)) {
         imagesList = prod.images.filter(Boolean);
+    } else if (typeof prod.images === 'string' && prod.images.trim() !== '') {
+        imagesList = prod.images.split(',').map(s => s.trim()).filter(Boolean);
     }
+
     if (imagesList.length === 0 && prod.imageUrl) {
         imagesList.push(prod.imageUrl);
     }
