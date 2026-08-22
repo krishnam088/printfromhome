@@ -989,39 +989,41 @@ window.addEventListener('DOMContentLoaded', () => {
             alert(`🔔 We have noted your request! You will be notified when "${prodName}" is back in stock.`);
         }
     };
-// 🔥 FULLY FIXED USER PRODUCT DETAIL MODAL (QUOTE ESCAPING FIX)
+// 🔥 100% BULLETPROOF PRODUCT DETAIL MODAL (FORCED HTML INJECTION)
 window.openProductDetailModal = function(prod) {
     let modal = document.getElementById('productDetailModal');
     if (!modal) {
         modal = document.createElement('div');
         modal.id = 'productDetailModal';
-        modal.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:999999; display:none; align-items:center; justify-content:center; padding:16px;";
-        modal.innerHTML = `
-            <div style="background:white; border-radius:20px; width:100%; max-width:400px; max-height:85vh; overflow-y:auto; padding:20px; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.2); font-family:'Poppins',sans-serif;">
-                <span onclick="closeProductDetailModal()" style="position:absolute; top:12px; right:16px; font-size:1.4rem; cursor:pointer; font-weight:bold; color:#64748b; z-index:10;">&times;</span>
-                
-                <!-- Image Slider Container -->
-                <div id="modalImageSliderContainer" style="position:relative; width:100%; height:220px; background:#f8fafc; border-radius:14px; overflow:hidden; display:flex; align-items:center; justify-content:center; margin-bottom:14px; border:1px solid #e2e8f0;"></div>
-
-                <h3 id="modalProductName" style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:4px;"></h3>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <span id="modalProductPrice" style="font-size:1rem; font-weight:900; color:#065f46;"></span>
-                    <span id="modalProductStock" style="font-size:0.75rem; font-weight:700; color:#64748b; background:#f1f5f9; padding:3px 8px; border-radius:6px;"></span>
-                </div>
-
-                <!-- Scrollable Description Section -->
-                <div style="margin-bottom:16px;">
-                    <h4 style="font-size:0.78rem; font-weight:800; color:#475569; text-transform:uppercase; margin-bottom:4px;">Product Details</h4>
-                    <div id="modalProductDescriptionBox" style="font-size:0.82rem; color:#334155; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; max-height:110px; overflow-y:auto; line-height:1.5;">No additional description available.</div>
-                </div>
-
-                <div id="modalActionArea">
-                    <button type="button" id="modalAddToCartBtn" style="width:100%; padding:12px; background:#065f46; color:white; border:none; border-radius:12px; font-weight:800; font-size:0.9rem; cursor:pointer;">+ Add to Cart</button>
-                </div>
-            </div>
-        `;
         document.body.appendChild(modal);
     }
+    
+    // Forcefully set style and updated HTML layout so elements always exist
+    modal.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:999999; display:none; align-items:center; justify-content:center; padding:16px;";
+    modal.innerHTML = `
+        <div style="background:white; border-radius:20px; width:100%; max-width:400px; max-height:85vh; overflow-y:auto; padding:20px; position:relative; box-shadow:0 10px 30px rgba(0,0,0,0.2); font-family:'Poppins',sans-serif;">
+            <span onclick="closeProductDetailModal()" style="position:absolute; top:12px; right:16px; font-size:1.4rem; cursor:pointer; font-weight:bold; color:#64748b; z-index:10;">&times;</span>
+            
+            <!-- Image Slider Container -->
+            <div id="modalImageSliderContainer" style="position:relative; width:100%; height:220px; background:#f8fafc; border-radius:14px; overflow:hidden; display:flex; align-items:center; justify-content:center; margin-bottom:14px; border:1px solid #e2e8f0;"></div>
+
+            <h3 id="modalProductName" style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:4px;"></h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <span id="modalProductPrice" style="font-size:1rem; font-weight:900; color:#065f46;"></span>
+                <span id="modalProductStock" style="font-size:0.75rem; font-weight:700; color:#64748b; background:#f1f5f9; padding:3px 8px; border-radius:6px;"></span>
+            </div>
+
+            <!-- Scrollable Description Section -->
+            <div style="margin-bottom:16px;">
+                <h4 style="font-size:0.78rem; font-weight:800; color:#475569; text-transform:uppercase; margin-bottom:4px;">Product Details</h4>
+                <div id="modalProductDescriptionBox" style="font-size:0.82rem; color:#334155; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; max-height:110px; overflow-y:auto; line-height:1.5;">No additional description available.</div>
+            </div>
+
+            <div id="modalActionArea">
+                <button type="button" id="modalAddToCartBtn" style="width:100%; padding:12px; background:#065f46; color:white; border:none; border-radius:12px; font-weight:800; font-size:0.9rem; cursor:pointer;">+ Add to Cart</button>
+            </div>
+        </div>
+    `;
 
     const nameEl = document.getElementById('modalProductName');
     const priceEl = document.getElementById('modalProductPrice');
@@ -1034,11 +1036,13 @@ window.openProductDetailModal = function(prod) {
     if (priceEl) priceEl.textContent = `₹${prod.sellingPrice || prod.price || 0}`;
     if (stockEl) stockEl.textContent = (prod.stockQuantity || prod.stock || 0) > 0 ? `Stock: ${prod.stockQuantity || prod.stock} units` : `Out of Stock`;
     
+    // Description Mapping
     if (descBox) {
         let descText = prod.description || prod.desc || prod.details || "";
         descBox.textContent = descText.trim() !== "" ? descText : "No additional description available for this product.";
     }
 
+    // Image Mapping
     let imagesList = [];
     if (Array.isArray(prod.images)) {
         imagesList = prod.images.filter(Boolean);
@@ -1055,7 +1059,7 @@ window.openProductDetailModal = function(prod) {
                 <div style="display:flex; width:100%; height:100%; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; -webkit-overflow-scrolling:touch;">
                     ${imagesList.map((imgUrl) => `
                         <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; flex-shrink:0;">
-                            <img src="${imgUrl}" style="width:100%; height:100%; object-fit:contain; background:#ffffff;" />
+                            <img src="${imgUrl}" style="max-width:100%; max-height:200px; object-fit:contain; display:block;" />
                         </div>
                     `).join('')}
                 </div>
@@ -1075,7 +1079,6 @@ window.openProductDetailModal = function(prod) {
     let primaryImg = imagesList.length > 0 ? imagesList[0] : '';
     let stockVal = prod.stockQuantity !== undefined ? prod.stockQuantity : (prod.stock || 0);
 
-    // Safe escaped strings for inline onclick handlers
     let safeSkuOrName = String(prod.sku || prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
     let safeName = String(prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
