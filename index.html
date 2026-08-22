@@ -777,25 +777,30 @@
         <header class="brand-premium-header">
             <div class="header-container">
                 <div class="header-meta-row">
-                   <div class="delivery-brand-box" style="display: flex; flex-direction: column; gap: 4px;">
+             <div class="delivery-brand-box" style="display: flex; flex-direction: column; gap: 2px;">
+    <!-- Line 1: User Greeting -->
     <div id="userGreeting" class="user-greeting-inline">HI, KRISHNA</div>
     
-    <!-- Top Row: Big Minutes + Distance Pill Badge (Blinkit Style) -->
-    <div style="display: flex; align-items: center; gap: 10px; margin-top: 2px;">
-        <h2 class="delivery-time-countdown" style="font-size: 1.5rem; font-weight: 900; margin: 0; color: #0f172a; line-height: 1;">
-            <span id="dynamicStoreEtaMinutes">15</span> <span style="font-size: 1.1rem; font-weight: 800;">minutes</span>
+    <!-- Line 2: Print From Home Subtitle -->
+    <div style="font-size: 0.8rem; font-weight: 800; color: #065f46; letter-spacing: 0.5px; text-transform: uppercase;">
+        Print From Home
+    </div>
+
+    <!-- Line 3: Time & Distance (e.g. in 12 mins · 1.7 km away) -->
+    <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+        <h2 class="delivery-time-countdown" style="font-size: 1.25rem; font-weight: 900; margin: 0; color: #0f172a; line-height: 1.2;">
+            in <span id="dynamicStoreEtaMinutes">12</span> mins
         </h2>
-        <div style="background: rgba(15, 23, 42, 0.08); border: 1px solid rgba(15, 23, 42, 0.12); padding: 3px 10px; border-radius: 20px; display: flex; align-items: center; gap: 4px;">
-            <span style="font-size: 0.75rem;">🏪</span>
-            <span id="storeDistanceBadgeText" style="font-size: 0.72rem; font-weight: 800; color: #0f172a;">1.7 km away</span>
+        <div style="background: rgba(15, 23, 42, 0.08); border: 1px solid rgba(15, 23, 42, 0.12); padding: 2px 8px; border-radius: 14px; display: flex; align-items: center; gap: 4px;">
+            <span style="font-size: 0.68rem;">🏪</span>
+            <span id="storeDistanceBadgeText" style="font-size: 0.68rem; font-weight: 800; color: #0f172a;">1.7 km away</span>
         </div>
     </div>
     
-    <!-- Bottom Row: Selected Delivery Address (Clickable to change) -->
-    <div onclick="openAddressManagerModal()" style="display: flex; align-items: center; gap: 4px; cursor: pointer; margin-top: 4px;">
-        <span style="font-size: 0.78rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">HOME</span>
-        <span style="font-size: 0.78rem; font-weight: 600; color: #475569; max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="headerActiveAddressPreview">- E-52 Premchand Nagar Colony</span>
-        <span style="font-size: 0.65rem; color: #0f172a; font-weight: bold;">▼</span>
+    <!-- Bottom Row: Selected Delivery Address Preview (Clickable) -->
+    <div onclick="openAddressManagerModal()" style="display: flex; align-items: center; gap: 4px; cursor: pointer; margin-top: 3px;">
+        <span style="font-size: 0.72rem; font-weight: 600; color: #64748b; max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="headerActiveAddressPreview">- E-52 Premchand Nagar Colony</span>
+        <span style="font-size: 0.6rem; color: #0f172a; font-weight: bold;">▼</span>
     </div>
 </div>
                     <div class="header-profile-cluster">
