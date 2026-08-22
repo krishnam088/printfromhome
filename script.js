@@ -687,7 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 🔥 DYNAMIC PRODUCTS, LIVE SEARCH & CATEGORY FILTERING
+    // 🔥 DYNAMIC PRODUCTS, LIVE SEARCH & CATEGORY FILTERING (REPLACED RAIN SURGE)
     async function loadDynamicStoreProducts() {
         try {
             const res = await fetch('/api/store/products');
@@ -729,25 +729,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const gridContainers = document.querySelectorAll('.snacks-horizontal-slider');
         if (gridContainers.length === 0) return;
 
-        let storeParentSection = document.getElementById('user_section_store');
-        if (storeParentSection && !document.getElementById('storeSearchAndFilterBox')) {
-            const filterWrapper = document.createElement('div');
-            filterWrapper.id = 'storeSearchAndFilterBox';
-            filterWrapper.style.cssText = "padding: 10px 15px; background: #ffffff; border-bottom: 1px solid #e2e8f0; margin-bottom: 10px;";
-            filterWrapper.innerHTML = `
-                <div style="margin-bottom: 10px;">
-                    <input type="text" id="storeSearchInput" placeholder="🔍 Search chips, munchies, socks, etc..." oninput="filterStoreBySearchInput(this.value)" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.85rem; outline: none; background: #f8fafc;" />
-                </div>
-                <div style="display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px;">
-                    <button type="button" class="store-category-chip" data-category="all" onclick="filterStoreByCategory('all')" style="background:#065f46; color:#ffffff; border:1px solid #065f46; padding:6px 14px; border-radius:20px; font-size:0.75rem; font-weight:700; cursor:pointer; flex-shrink:0;">All Items</button>
-                    <button type="button" class="store-category-chip" data-category="munchies" onclick="filterStoreByCategory('munchies')" style="background:#ffffff; color:#0f172a; border:1px solid #cbd5e1; padding:6px 14px; border-radius:20px; font-size:0.75rem; font-weight:700; cursor:pointer; flex-shrink:0;">🍟 Munchies & Chips</button>
-                    <button type="button" class="store-category-chip" data-category="snacks" onclick="filterStoreByCategory('snacks')" style="background:#ffffff; color:#0f172a; border:1px solid #cbd5e1; padding:6px 14px; border-radius:20px; font-size:0.75rem; font-weight:700; cursor:pointer; flex-shrink:0;">🍿 Snacks</button>
-                    <button type="button" class="store-category-chip" data-category="socks" onclick="filterStoreByCategory('socks')" style="background:#ffffff; color:#0f172a; border:1px solid #cbd5e1; padding:6px 14px; border-radius:20px; font-size:0.75rem; font-weight:700; cursor:pointer; flex-shrink:0;">🧦 Socks & Apparel</button>
-                </div>
-            `;
-            storeParentSection.insertBefore(filterWrapper, storeParentSection.firstChild);
-        }
-
         gridContainers.forEach(container => {
             container.style.display = 'grid';
             container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(110px, 1fr))';
@@ -758,17 +739,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             container.innerHTML = '';
 
+            if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) {
+                container.innerHTML = `<p style="font-size:0.75rem; color:#64748b; padding:10px; grid-column: 1 / -1; text-align:center;">No store products available currently.</p>`;
+                return;
+            }
+
             let filteredProducts = window.storeInventoryProducts.filter(prod => {
-                let nameMatch = prod.name.toLowerCase().includes(window.currentStoreSearchQuery);
+                let nameMatch = (prod.name || '').toLowerCase().includes(window.currentStoreSearchQuery);
                 let categoryLower = (prod.category || prod.type || '').toLowerCase();
                 
                 let matchesCategory = true;
                 if (window.currentStoreSelectedCategory === 'munchies') {
-                    matchesCategory = categoryLower.includes('munchies') || categoryLower.includes('chips') || categoryLower.includes('namkeen');
+                    matchesCategory = categoryLower.includes('munchies') || categoryLower.includes('chips') || categoryLower.includes('namkeen') || (prod.name || '').toLowerCase().includes('lays') || (prod.name || '').toLowerCase().includes('kurkure');
                 } else if (window.currentStoreSelectedCategory === 'snacks') {
                     matchesCategory = categoryLower.includes('snacks') || categoryLower.includes('food') || categoryLower.includes('beverage');
                 } else if (window.currentStoreSelectedCategory === 'socks') {
-                    matchesCategory = categoryLower.includes('socks') || categoryLower.includes('apparel') || categoryLower.includes('clothing');
+                    matchesCategory = categoryLower.includes('socks') || categoryLower.includes('apparel') || categoryLower.includes('clothing') || (prod.name || '').toLowerCase().includes('sock');
                 }
 
                 return nameMatch && matchesCategory;
