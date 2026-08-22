@@ -70,7 +70,7 @@ function fallbackHaversineCalculation(userLat, userLng) {
     updateEtaAndDistanceUI(estimatedMins, formattedDistance);
 }
 
-// 🎨 UI UPDATER (Strictly showing "Store" instead of E-52 address)
+// 🎨 UI UPDATER (Strictly showing clean distance like "1.7 km away" with store icon)
 function updateEtaAndDistanceUI(mins, distanceStr) {
     const homeEtaNode = document.getElementById('dynamicStoreEtaMinutes');
     if (homeEtaNode) homeEtaNode.textContent = mins;
@@ -80,10 +80,15 @@ function updateEtaAndDistanceUI(mins, distanceStr) {
 
     const distanceBadgeNode = document.getElementById('storeDistanceBadgeText');
     if (distanceBadgeNode) {
-        distanceBadgeNode.textContent = `📍 ${distanceStr} from Store`; // Only "Store", no address
+        distanceBadgeNode.textContent = `${distanceStr} away`; // Matches Blinkit style: "1.7 km away"
+    }
+
+    // Update Address Preview in Header if selectedActiveAddress exists
+    const addressPreviewNode = document.getElementById('headerActiveAddressPreview');
+    if (addressPreviewNode && typeof selectedActiveAddress !== 'undefined' && selectedActiveAddress) {
+        addressPreviewNode.textContent = `- ${selectedActiveAddress}`;
     }
 }
-
 // 🛵 LIVE ORDER TRACKING: DELIVERY BOY TO USER DISTANCE & TIME
 window.updateDeliveryBoyTrackingMatrix = function(deliveryBoyLat, deliveryBoyLng, userDeliveryLat, userDeliveryLng) {
     const R = 6371;
