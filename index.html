@@ -40,232 +40,179 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png">
     <link rel="apple-touch-icon" sizes="167x167" href="/icon-192.png">
   <style>
-        @keyframes slideUpModal {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        /* 🔥 Light Yellow Payment Option Highlight */
-        input[name="cartPaymentMode"]:checked + .payment-option-box {
-            border-color: #ca8a04 !important;
-            background: #fefce8 !important;
-            box-shadow: 0 0 0 2px #ca8a04;
-        }
-        .payment-option-box { transition: all 0.2s ease; }
+    @keyframes slideUpModal {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    
+    /* 🔥 Light Yellow Payment Option Highlight */
+    input[name="cartPaymentMode"]:checked + .payment-option-box {
+        border-color: #ca8a04 !important;
+        background: #fefce8 !important;
+        box-shadow: 0 0 0 2px #ca8a04;
+    }
+    .payment-option-box { transition: all 0.2s ease; }
 
-        body {
-            background-color: #f8fafc;
-            color: #0f172a;
-            padding-bottom: 100px;
-        }
+    body {
+        background-color: #f8fafc;
+        color: #0f172a;
+        padding-bottom: 100px;
+    }
 
-        /* --- 📱 COMPACT & BALANCED FLOATING CART BAR --- */
-        #floatingCartFooterBar {
-            position: fixed !important;
-            bottom: 20px !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
-            width: 90% !important;
-            max-width: 380px !important;
-            height: 50px !important;
-            padding: 0 14px !important;
-            z-index: 99999 !important;
-            background: #fef3c7 !important;
-            color: #713f12 !important;
-            border: 1px solid #f59e0b !important;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
-            border-radius: 24px !important;
-            box-sizing: border-box !important;
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-        }
+    /* --- 📱 COMPACT & BALANCED FLOATING CART BAR --- */
+    #floatingCartFooterBar {
+        position: fixed !important;
+        bottom: 20px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 90% !important;
+        max-width: 380px !important;
+        height: 50px !important;
+        padding: 0 14px !important;
+        z-index: 99999 !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+        border-radius: 26px !important;
+        box-sizing: border-box !important;
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+    }
 
-        #floatingCartFooterBar span, 
-        #floatingCartFooterBar div {
-            color: #713f12 !important;
-        }
+    #floatingCartFooterBar span, 
+    #floatingCartFooterBar div {
+        color: #0f172a !important;
+    }
 
-        #floatingCartFooterBar button {
-            background: rgba(113, 63, 18, 0.1) !important;
-            color: #713f12 !important;
-        }
+    /* --- 🍞 MODERN TOAST NOTIFICATION CONTAINER --- */
+    #appToastContainer {
+        position: fixed;
+        bottom: 85px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 999999;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+        pointer-events: none;
+        width: 90%;
+        max-width: 400px;
+    }
 
-        #floatingCartFooterBar .view-btn-box,
-        #floatingCartFooterBar div[onclick*="toggleCartDrawer"] {
-            background: #f59e0b !important;
-            color: #ffffff !important;
-        }
+    .app-toast-item {
+        background: rgba(254, 249, 195, 0.95);
+        color: #713f12;
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        backdrop-filter: blur(6px);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        pointer-events: auto;
+        text-align: center;
+        border: 1px solid rgba(202, 138, 4, 0.3);
+        font-family: 'Poppins', sans-serif;
+    }
 
-        /* --- 🍞 MODERN TOAST NOTIFICATION CONTAINER --- */
-        #appToastContainer {
-            position: fixed;
-            bottom: 85px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 999999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            align-items: center;
-            pointer-events: none;
-            width: 90%;
-            max-width: 400px;
-        }
+    @keyframes toastSlideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-        .app-toast-item {
-            background: rgba(254, 249, 195, 0.95);
-            color: #713f12;
-            padding: 10px 16px;
-            border-radius: 10px;
-            font-size: 0.82rem;
-            font-weight: 700;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            backdrop-filter: blur(6px);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            pointer-events: auto;
-            text-align: center;
-            border: 1px solid rgba(202, 138, 4, 0.3);
-            font-family: 'Poppins', sans-serif;
-        }
+    /* --- 🌧️ REAL ANIMATED RAIN & LIGHTNING STYLES --- */
+    #rainAnimationContainer {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        pointer-events: none; z-index: 999; overflow: hidden; display: none;
+    }
 
-        @keyframes toastSlideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    body.theme-rainy-season #rainAnimationContainer {
+        display: block;
+    }
 
-        /* --- 🌧️ REAL ANIMATED RAIN & LIGHTNING STYLES --- */
-        #rainAnimationContainer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 999;
-            overflow: hidden;
-            display: none;
-        }
+    .raindrop {
+        position: absolute;
+        background: linear-gradient(transparent, rgba(255, 255, 255, 0.75));
+        width: 1.5px; height: 30px; opacity: 0.8; animation: fall linear infinite;
+    }
 
-        body.theme-rainy-season #rainAnimationContainer {
-            display: block;
-        }
+    @keyframes fall {
+        0% { transform: translateY(-40px); }
+        100% { transform: translateY(105vh); }
+    }
 
-        .raindrop {
-            position: absolute;
-            background: linear-gradient(transparent, rgba(255, 255, 255, 0.75));
-            width: 1.5px;
-            height: 30px;
-            opacity: 0.8;
-            animation: fall linear infinite;
-        }
+    @keyframes lightningFlash {
+        0%, 88%, 92%, 96%, 100% { opacity: 0; }
+        90%, 94% { opacity: 0.4; background-color: #ffffff; }
+    }
 
-        @keyframes fall {
-            0% { transform: translateY(-40px); }
-            100% { transform: translateY(105vh); }
-        }
+    body.theme-rainy-season::after {
+        content: '';
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        pointer-events: none; z-index: 1000; animation: lightningFlash 6s infinite;
+    }
 
-        @keyframes lightningFlash {
-            0%, 88%, 92%, 96%, 100% { opacity: 0; }
-            90%, 94% { opacity: 0.4; background-color: #ffffff; }
-        }
+    /* --- 🖨️ UNIVERSAL A4 STUDIO SHEET STYLES --- */
+    .a4-page-wrapper {
+        width: 210mm; min-height: 297mm; max-width: 95vw; background: #ffffff;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); position: relative; border-radius: 6px;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        overflow: hidden; margin: 0 auto; box-sizing: border-box;
+    }
+    .a4-page-wrapper.landscape { width: 297mm; min-height: 210mm; }
+    .a4-page-canvas { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+    .page-badge-toolbar {
+        position: absolute; top: 10px; right: 10px; display: flex; align-items: center; gap: 8px;
+        background: rgba(254, 243, 199, 0.95); padding: 4px 10px; border-radius: 8px; z-index: 10; border: 1px solid #f59e0b;
+    }
 
-        body.theme-rainy-season::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 1000;
-            animation: lightningFlash 6s infinite;
+    .cart-item-card {
+        background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;
+        display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.02); gap: 12px;
+    }
+    
+    /* --- 📱 MOBILE RESPONSIVE HEADER FIX --- */
+    @media (max-width: 768px) {
+        .brand-premium-header {
+            padding: 10px 12px !important;
         }
+        .header-meta-row {
+            align-items: flex-start !important;
+            gap: 8px !important;
+        }
+        .delivery-brand-box {
+            max-width: 65% !important;
+        }
+        .delivery-brand-box h2 {
+            font-size: 1.15rem !important;
+        }
+        #headerActiveAddressPreview {
+            max-width: 180px !important;
+            font-size: 0.68rem !important;
+        }
+        .header-profile-cluster {
+            transform: scale(0.9);
+            transform-origin: top right;
+        }
+    }
 
-        /* --- 🖨️ UNIVERSAL A4 STUDIO SHEET STYLES --- */
-        .a4-page-wrapper {
-            width: 210mm;
-            min-height: 297mm;
-            max-width: 95vw;
-            background: #ffffff;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            position: relative;
-            border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            margin: 0 auto;
-            box-sizing: border-box;
-        }
-
-        .a4-page-wrapper.landscape {
-            width: 297mm;
-            min-height: 210mm;
-        }
-
-        .a4-page-canvas {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            display: block;
-        }
-
-        .page-badge-toolbar {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(254, 243, 199, 0.95);
-            padding: 4px 10px;
-            border-radius: 8px;
-            z-index: 10;
-            border: 1px solid #f59e0b;
-        }
-
-        .cart-item-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-        }
-        
-        .cart-item-thumb {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            background: #fef3c7;
-            object-fit: cover;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            flex-shrink: 0;
-            overflow: hidden;
-        }
-        
-        .cart-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
-
-        @media print {
-            body * { visibility: hidden !important; }
-            #printStudioModal, #printStudioModal * { visibility: visible !important; }
-            #printStudioModal { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: #ffffff !important; overflow: visible !important; }
-            .studio-toolbar, .page-badge-toolbar, #floatingCartFooterBar, #userInstallBanner, .side-drawer, .drawer-overlay, #appToastContainer, #rainAnimationContainer { display: none !important; }
-            #a4PagesContainer { padding: 0 !important; margin: 0 !important; background: none !important; display: block !important; }
-            .a4-page-wrapper { width: 100% !important; min-height: 100vh !important; height: 100% !important; margin: 0 !important; box-shadow: none !important; border: none !important; page-break-after: always !important; break-after: page !important; }
-            @page { size: A4 portrait; margin: 0; }
-        }
-    </style>
+    @media print {
+        body * { visibility: hidden !important; }
+        #printStudioModal, #printStudioModal * { visibility: visible !important; }
+        #printStudioModal { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: #ffffff !important; overflow: visible !important; }
+        .studio-toolbar, .page-badge-toolbar, #floatingCartFooterBar, #userInstallBanner, .side-drawer, .drawer-overlay, #appToastContainer, #rainAnimationContainer { display: none !important; }
+        #a4PagesContainer { padding: 0 !important; margin: 0 !important; background: none !important; display: block !important; }
+        .a4-page-wrapper { width: 100% !important; min-height: 100vh !important; height: 100% !important; margin: 0 !important; box-shadow: none !important; border: none !important; page-break-after: always !important; break-after: page !important; }
+        @page { size: A4 portrait; margin: 0; }
+    }
+</style>
 </head>
 <body>
 
