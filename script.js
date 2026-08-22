@@ -26,17 +26,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedActiveAddress = localStorage.getItem('selected_active_address') || "";  
     window.storeInventoryProducts = []; 
 
-    // 🌍 STORE EXACT LOCATION CONFIG (Pandeypur, Varanasi)
+   // 🌍 STORE EXACT LOCATION CONFIG (Pandeypur, Varanasi - Hidden from public address text)
 const STORE_LOCATION = {
     lat: 25.3451, 
     lng: 83.0012,
-    address: "E-52 Premchand Nagar Colony, Pandeypur, Varanasi, 221002"
+    name: "Store" // Store name display fix (No address shown)
 };
 
-// ⏱️ CALCULATE REAL-TIME DISTANCE & ETA (Using Direct Haversine to avoid Legacy API Errors)
+// ⏱️ CALCULATE REAL-TIME DISTANCE & ETA FROM STORE TO USER (Home & Cart)
 window.calculateRealtimeDistanceAndEta = function() {
     if (!navigator.geolocation) {
-        updateEtaAndDistanceUI("15", "Pandeypur Hub");
+        updateEtaAndDistanceUI("15", "Store");
         return;
     }
 
@@ -47,15 +47,15 @@ window.calculateRealtimeDistanceAndEta = function() {
             fallbackHaversineCalculation(userLat, userLng);
         },
         (error) => {
-            updateEtaAndDistanceUI("15", "Pandeypur Store");
+            updateEtaAndDistanceUI("15", "Store");
         },
         { timeout: 10000, enableHighAccuracy: true }
     );
 };
 
-// 📐 Haversine Formula for Accurate Distance & Time Calculation
+// 📐 Haversine Formula for Distance & Time
 function fallbackHaversineCalculation(userLat, userLng) {
-    const R = 6371; // Earth radius in km
+    const R = 6371; 
     const dLat = (STORE_LOCATION.lat - userLat) * Math.PI / 180;
     const dLng = (STORE_LOCATION.lng - userLng) * Math.PI / 180;
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -64,14 +64,13 @@ function fallbackHaversineCalculation(userLat, userLng) {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     const distanceKm = R * c;
 
-    // Estimated delivery time: 5 mins base prep + 3 mins per km travel time
     let estimatedMins = Math.max(10, Math.round(5 + (distanceKm * 3)));
     let formattedDistance = `${distanceKm.toFixed(1)} km`;
 
     updateEtaAndDistanceUI(estimatedMins, formattedDistance);
 }
 
-// 🎨 UI UPDATER FOR HOME PAGE & CART DRAWER
+// 🎨 UI UPDATER (Strictly showing "Store" instead of E-52 address)
 function updateEtaAndDistanceUI(mins, distanceStr) {
     const homeEtaNode = document.getElementById('dynamicStoreEtaMinutes');
     if (homeEtaNode) homeEtaNode.textContent = mins;
@@ -81,11 +80,29 @@ function updateEtaAndDistanceUI(mins, distanceStr) {
 
     const distanceBadgeNode = document.getElementById('storeDistanceBadgeText');
     if (distanceBadgeNode) {
-        distanceBadgeNode.textContent = `📍 ${distanceStr} from E-52 Pandeypur Store`;
+        distanceBadgeNode.textContent = `📍 ${distanceStr} from Store`; // Only "Store", no address
     }
 }
 
-// Run on page load
+// 🛵 LIVE ORDER TRACKING: DELIVERY BOY TO USER DISTANCE & TIME
+window.updateDeliveryBoyTrackingMatrix = function(deliveryBoyLat, deliveryBoyLng, userDeliveryLat, userDeliveryLng) {
+    const R = 6371;
+    const dLat = (userDeliveryLat - deliveryBoyLat) * Math.PI / 180;
+    const dLng = (userDeliveryLng - deliveryBoyLng) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(deliveryBoyLat * Math.PI / 180) * Math.cos(userDeliveryLat * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distanceKm = R * c;
+
+    let boyEtaMins = Math.max(2, Math.round(distanceKm * 3)); // Delivery boy travel time
+    
+    const trackingStatusNode = document.getElementById('liveOrderStatusBadge');
+    if (trackingStatusNode) {
+        trackingStatusNode.innerHTML = `🛵 Out for Delivery — Arriving in <b>${boyEtaMins} mins</b> (${distanceKm.toFixed(1)} km away)`;
+    }
+};
+
 window.addEventListener('DOMContentLoaded', () => {
     setTimeout(calculateRealtimeDistanceAndEta, 1000);
 });
