@@ -1738,6 +1738,33 @@ document.addEventListener('DOMContentLoaded', () => {
         window.open('https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Print%20From%20Home%20Support,%20I%20need%20assistance.', '_blank');
     };
 
+    // 🔥 TIMEOUT BOOTSTRAP INITIALIZATION (WITH FORCE BYPASS)
+    setTimeout(() => {
+        if (splashScreen) {
+            splashScreen.classList.add('app-hidden');
+            splashScreen.style.display = 'none';
+        }
+        
+        const sessionActiveUser = localStorage.getItem('printAppUser');
+        if (sessionActiveUser) {
+            if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${sessionActiveUser}</span>`;
+            if(mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
+            loadSavedFilesFromSession();
+            loadUserAddressesFromStorage();
+            loadDynamicStoreProducts();
+            renderOrderHistoryUI(sessionActiveUser);
+            synchronizeWalletInterfaceBalance();
+            checkStoreStatusRealtime();
+        } else {
+            if(authScreen) { 
+                authScreen.classList.remove('app-hidden'); 
+                authScreen.style.display = 'flex'; 
+            }
+        }
+        calculateTotal();
+        updateFloatingCartBar();
+    }, 1500);
+
     // --- AUTH FORM (Login & Signup) ---
     if (authForm) {
         authForm.addEventListener('submit', async (e) => {
