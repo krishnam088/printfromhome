@@ -27,82 +27,68 @@ document.addEventListener('DOMContentLoaded', () => {
     window.storeInventoryProducts = []; 
 
     // 🌍 STORE EXACT LOCATION CONFIG (Pandeypur, Varanasi)
-    const STORE_LOCATION = {
-        lat: 25.3451, 
-        lng: 83.0012,
-        address: "E-52 Premchand Nagar Colony, Pandeypur, Varanasi, 221002"
-    };
+const STORE_LOCATION = {
+    lat: 25.3451, 
+    lng: 83.0012,
+    address: "E-52 Premchand Nagar Colony, Pandeypur, Varanasi, 221002"
+};
 
-    // ⏱️ CALCULATE REAL-TIME DISTANCE & ETA FROM PANDEYPUR STORE
-    window.calculateRealtimeDistanceAndEta = function() {
-        if (!navigator.geolocation) {
-            updateEtaAndDistanceUI("15", "Varanasi Hub");
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const userLat = position.coords.latitude;
-                const userLng = position.coords.longitude;
-
-                if (typeof google !== 'undefined' && google.maps && google.maps.DistanceMatrixService) {
-                    const service = new google.maps.DistanceMatrixService();
-                    service.getDistanceMatrix({
-                        origins: [{ lat: userLat, lng: userLng }],
-                        destinations: [{ lat: STORE_LOCATION.lat, lng: STORE_LOCATION.lng }],
-                        travelMode: google.maps.TravelMode.TWO_WHEELER,
-                        unitSystem: google.maps.UnitSystem.METRIC
-                    }, (response, status) => {
-                        if (status === "OK" && response.rows[0].elements[0].status === "OK") {
-                            const element = response.rows[0].elements[0];
-                            const distanceText = element.distance.text; 
-                            const durationMins = Math.ceil(element.duration.value / 60);
-                            updateEtaAndDistanceUI(durationMins, distanceText);
-                        } else {
-                            fallbackHaversineCalculation(userLat, userLng);
-                        }
-                    });
-                } else {
-                    fallbackHaversineCalculation(userLat, userLng);
-                }
-            },
-            (error) => {
-                updateEtaAndDistanceUI("15", "Pandeypur Store");
-            },
-            { timeout: 10000, enableHighAccuracy: true }
-        );
-    };
-
-    // 📐 Fallback Haversine Formula for Distance Calculation
-    function fallbackHaversineCalculation(userLat, userLng) {
-        const R = 6371; 
-        const dLat = (STORE_LOCATION.lat - userLat) * Math.PI / 180;
-        const dLng = (STORE_LOCATION.lng - userLng) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(userLat * Math.PI / 180) * Math.cos(STORE_LOCATION.lat * Math.PI / 180) *
-                  Math.sin(dLng/2) * Math.sin(dLng/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        const distanceKm = R * c;
-
-        let estimatedMins = Math.max(10, Math.round(5 + (distanceKm * 3)));
-        let formattedDistance = `${distanceKm.toFixed(1)} km`;
-
-        updateEtaAndDistanceUI(estimatedMins, formattedDistance);
+// ⏱️ CALCULATE REAL-TIME DISTANCE & ETA (Using Direct Haversine to avoid Legacy API Errors)
+window.calculateRealtimeDistanceAndEta = function() {
+    if (!navigator.geolocation) {
+        updateEtaAndDistanceUI("15", "Pandeypur Hub");
+        return;
     }
 
-    // 🎨 UI UPDATER FOR HOME PAGE & CART DRAWER
-    function updateEtaAndDistanceUI(mins, distanceStr) {
-        const homeEtaNode = document.getElementById('dynamicStoreEtaMinutes');
-        if (homeEtaNode) homeEtaNode.textContent = mins;
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            fallbackHaversineCalculation(userLat, userLng);
+        },
+        (error) => {
+            updateEtaAndDistanceUI("15", "Pandeypur Store");
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+    );
+};
 
-        const cartEtaNode = document.getElementById('cartDrawerEtaMinutes');
-        if (cartEtaNode) cartEtaNode.textContent = mins;
+// 📐 Haversine Formula for Accurate Distance & Time Calculation
+function fallbackHaversineCalculation(userLat, userLng) {
+    const R = 6371; // Earth radius in km
+    const dLat = (STORE_LOCATION.lat - userLat) * Math.PI / 180;
+    const dLng = (STORE_LOCATION.lng - userLng) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(userLat * Math.PI / 180) * Math.cos(STORE_LOCATION.lat * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distanceKm = R * c;
 
-        const distanceBadgeNode = document.getElementById('storeDistanceBadgeText');
-        if (distanceBadgeNode) {
-            distanceBadgeNode.textContent = `📍 ${distanceStr} from E-52 Pandeypur Store`;
-        }
+    // Estimated delivery time: 5 mins base prep + 3 mins per km travel time
+    let estimatedMins = Math.max(10, Math.round(5 + (distanceKm * 3)));
+    let formattedDistance = `${distanceKm.toFixed(1)} km`;
+
+    updateEtaAndDistanceUI(estimatedMins, formattedDistance);
+}
+
+// 🎨 UI UPDATER FOR HOME PAGE & CART DRAWER
+function updateEtaAndDistanceUI(mins, distanceStr) {
+    const homeEtaNode = document.getElementById('dynamicStoreEtaMinutes');
+    if (homeEtaNode) homeEtaNode.textContent = mins;
+
+    const cartEtaNode = document.getElementById('cartDrawerEtaMinutes');
+    if (cartEtaNode) cartEtaNode.textContent = mins;
+
+    const distanceBadgeNode = document.getElementById('storeDistanceBadgeText');
+    if (distanceBadgeNode) {
+        distanceBadgeNode.textContent = `📍 ${distanceStr} from E-52 Pandeypur Store`;
     }
+}
+
+// Run on page load
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(calculateRealtimeDistanceAndEta, 1000);
+});
 
     // 🔥 REAL GOOGLE MAPS INTEGRATION STATE
     let googleDeliveryMap = null;
