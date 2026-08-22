@@ -1333,16 +1333,11 @@ window.openProductDetailModal = function(prod) {
 
   // 🔥 UNIVERSAL CART RENDERER (Handles all container IDs automatically)
 window.renderCartDrawerContents = function() {
-    // Check all possible container IDs used in your HTML
     const container = document.getElementById('cartDrawerItemsList') || 
                       document.getElementById('cartItemsListContainer') || 
                       document.getElementById('cartItemsContainer');
     
-    if (!container) {
-        console.warn("⚠️ Cart container element not found in HTML!");
-        return;
-    }
-
+    if (!container) return;
     container.innerHTML = '';
     
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
@@ -1351,97 +1346,66 @@ window.renderCartDrawerContents = function() {
     let hasItems = (window.cartSnacksArray.length > 0) || (window.cartPrintJobsArray.length > 0);
     
     if (!hasItems) {
-        container.innerHTML = `<p style="font-size:0.8rem; color:#64748b; text-align:center; padding:15px;">Your cart is empty.</p>`;
+        container.innerHTML = `<p class="empty-cart-text">Your cart is empty.</p>`;
         if (typeof calculateTotal === 'function') calculateTotal();
         if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
         return;
     }
 
-    const verticalListWrapper = document.createElement('div');
-    verticalListWrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
+    const wrapper = document.createElement('div');
+    wrapper.className = 'cart-items-wrapper';
 
-    // 📦 Snacks / Store Products List
+    // Snacks Items
     window.cartSnacksArray.forEach((snack, idx) => {
         const card = document.createElement('div');
-        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.02); gap:12px;";
+        card.className = 'cart-item-row'; // Purani original clean class
         
-        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:45px; height:45px; object-fit:cover; border-radius:10px;" />` : `<div style="font-size:1.8rem; width:45px; height:45px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:10px;">📦</div>`;
+        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" class="cart-item-thumb" />` : `<div class="cart-item-placeholder">📦</div>`;
 
         card.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+            <div class="cart-item-info">
                 ${thumbImg}
-                <div style="overflow:hidden;">
-                    <div style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</div>
-                    <div style="font-size:0.72rem; color:#059669; font-weight:800; margin-top:2px;">₹${snack.price * snack.qty} <span style="color:#64748b; font-weight:500;">(₹${snack.price} ea)</span></div>
+                <div>
+                    <div class="cart-item-title">${snack.name}</div>
+                    <div class="cart-item-price">₹${snack.price * snack.qty}</div>
                 </div>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:2px 6px; gap:8px;">
-                    <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; cursor:pointer;">-</button>
-                    <span style="font-weight:800; font-size:0.82rem;">${snack.qty}</span>
-                    <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; cursor:pointer;">+</button>
+            <div class="cart-item-actions">
+                <div class="blinkit-stepper">
+                    <button type="button" onclick="adjustSnackQty(${idx}, -1)">-</button>
+                    <span>${snack.qty}</span>
+                    <button type="button" onclick="adjustSnackQty(${idx}, 1)">+</button>
                 </div>
-                <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:#fef2f2; color:#ef4444; border:none; border-radius:6px; padding:6px; cursor:pointer;">🗑️</button>
+                <button type="button" class="cart-item-delete-btn" onclick="removeSnackItemCompletely(${idx})">🗑️</button>
             </div>
         `;
-        verticalListWrapper.appendChild(card);
+        wrapper.appendChild(card);
     });
 
-    // 📄 Print Jobs List
+    // Print Jobs Items
     window.cartPrintJobsArray.forEach((job, idx) => {
         const card = document.createElement('div');
-        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.02); gap:12px;";
+        card.className = 'cart-item-row';
         let jobTotal = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
 
         card.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
-                <div style="font-size:1.8rem; width:45px; height:45px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:10px;">📄</div>
-                <div style="overflow:hidden;">
-                    <div style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
-                    <div style="font-size:0.7rem; color:#64748b; font-weight:600; margin-top:2px;">${job.pages} pgs | ${job.printType.toUpperCase()} | Copies: ${job.copies}</div>
+            <div class="cart-item-info">
+                <div class="cart-item-placeholder">📄</div>
+                <div>
+                    <div class="cart-item-title">${job.fileName}</div>
+                    <div class="cart-item-subtitle">${job.pages} pgs | ${job.printType.toUpperCase()}</div>
                 </div>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <div style="font-weight:800; font-size:0.82rem; color:#065f46;">₹${jobTotal}</div>
-                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fef2f2; color:#ef4444; border:none; border-radius:6px; padding:6px; cursor:pointer;">🗑️</button>
+            <div class="cart-item-actions">
+                <div class="cart-item-price">₹${jobTotal}</div>
+                <button type="button" class="cart-item-delete-btn" onclick="removePrintJobFromCart(${idx})">🗑️</button>
             </div>
         `;
-        verticalListWrapper.appendChild(card);
+        wrapper.appendChild(card);
     });
 
-    container.appendChild(verticalListWrapper);
-
-    // 🔥 Quick Add Upselling Section inside Cart Drawer
-    const upsellingSection = document.createElement('div');
-    upsellingSection.style.cssText = "margin-top: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;";
-    upsellingSection.innerHTML = `
-        <h4 style="font-size:0.8rem; font-weight:800; color:#0f172a; margin-bottom:8px; text-transform:uppercase;">⚡ Quick Add Store Items</h4>
-        <div id="cartDrawerUpsellingGrid" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;"></div>
-    `;
-    container.appendChild(upsellingSection);
-
-    const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
-    if (upsellingGrid && window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
-        upsellingGrid.innerHTML = '';
-        window.storeInventoryProducts.forEach(prod => {
-            if (prod.stockQuantity > 0) {
-                const thumb = prod.imageUrl || prod.image || '';
-                const itemCard = document.createElement('div');
-                itemCard.style.cssText = "min-width: 90px; width: 90px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);";
-                itemCard.innerHTML = `
-                    ${thumb ? `<img src="${thumb}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; margin-bottom:4px;" />` : '<div style="font-size:1.5rem; margin-bottom:4px;">📦</div>'}
-                    <div title="${prod.name}" style="font-size:0.68rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name}</div>
-                    <div style="font-size:0.68rem; font-weight:800; color:#065f46; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
-                    <button type="button" style="background:#065f46; color:white; border:none; padding:3px 6px; border-radius:6px; font-size:0.65rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${prod.sku || prod.name}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity}, '${thumb}')">+ Add</button>
-                `;
-                upsellingGrid.appendChild(itemCard);
-            }
-        });
-    }
-
-    if (typeof calculateTotal === 'function') {
-        calculateTotal();
-    }
+    container.appendChild(wrapper);
+    if (typeof calculateTotal === 'function') calculateTotal();
 };
     window.removeSnackItemCompletely = function(index) {
         window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
@@ -1523,34 +1487,52 @@ window.renderCartDrawerContents = function() {
         alert("✅ Address saved successfully!");
     };
 
-    function renderSavedAddressesUI() {
-        const listContainer = document.getElementById('cartSavedAddressesList');
-        const summaryNode = document.getElementById('cartDrawerAddressSummary');
-        if (summaryNode) summaryNode.textContent = selectedActiveAddress || "No delivery address added yet.";
-        if (!listContainer) return;
+  function renderSavedAddressesUI() {
+        const listContainer = document.getElementById('cartSavedAddressesList');
+        const summaryNode = document.getElementById('cartDrawerAddressSummary');
+        if (summaryNode) summaryNode.textContent = selectedActiveAddress || "No delivery address added yet.";
+        if (!listContainer) return;
 
-        listContainer.innerHTML = '';
-        if (window.savedUserAddresses.length === 0) {
-            listContainer.innerHTML = `<p style="font-size:0.75rem; color:#ef4444; font-weight:600;">⚠️ No address saved. Tap '+ Add New Address' to add one.</p>`;
-            return;
-        }
+        listContainer.innerHTML = '';
+        if (window.savedUserAddresses.length === 0) {
+            listContainer.innerHTML = `<p style="font-size:0.75rem; color:#ef4444; font-weight:600;">⚠️ No address saved. Tap '+ Add New Address' to add one.</p>`;
+            return;
+        }
 
-        window.savedUserAddresses.forEach((addr, idx) => {
-            const isChecked = addr === selectedActiveAddress ? 'checked' : '';
-            const card = document.createElement('div');
-            card.style = `display:flex; align-items:center; justify-content:space-between; background:${isChecked ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${isChecked ? '#16a34a' : '#cbd5e1'}; padding:8px 12px; border-radius:10px; font-size:0.78rem; font-weight:600; color:#0f172a; margin-bottom:6px;`;
-            
-            card.innerHTML = `
-                <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; flex:1;">
-                    <input type="radio" name="selectedDeliveryAddressRadio" value="${idx}" ${isChecked} onchange="selectActiveAddressByIndex(${idx})" style="margin-top:2px;">
-                    <span style="word-break:break-word;">📍 ${addr}</span>
-                </label>
-                <button type="button" onclick="deleteSavedAddress(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:3px 8px; font-size:0.7rem; font-weight:700; cursor:pointer; margin-left:6px;" title="Delete Address">Delete</button>
-            `;
-            listContainer.appendChild(card);
-        });
-    }
+        window.savedUserAddresses.forEach((addr, idx) => {
+            const isChecked = addr === selectedActiveAddress ? 'checked' : '';
+            const card = document.createElement('div');
+            
+            card.style.cssText = `display:flex; align-items:flex-start; justify-content:space-between; background:${isChecked ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${isChecked ? '#16a34a' : '#cbd5e1'}; padding:10px 12px; border-radius:10px; font-size:0.78rem; font-weight:600; color:#0f172a; margin-bottom:8px; width:100%; box-sizing:border-box;`;
+            
+            card.innerHTML = `
+                <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; flex:1; overflow:hidden;">
+                    <input type="radio" name="selectedDeliveryAddressRadio" value="${idx}" ${isChecked} onchange="selectActiveAddressByIndex(${idx})" style="margin-top:2px; flex-shrink:0;">
+                    <span style="word-break:break-word; white-space:normal; line-height:1.4; flex:1;">📍 ${addr}</span>
+                </label>
+                <button type="button" onclick="deleteSavedAddress(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:3px 8px; font-size:0.7rem; font-weight:700; cursor:pointer; margin-left:8px; flex-shrink:0;" title="Delete Address">Delete</button>
+            `;
+            listContainer.appendChild(card);
+        });
+    }
 
+        window.savedUserAddresses.forEach((addr, idx) => {
+            const isChecked = addr === selectedActiveAddress ? 'checked' : '';
+            const card = document.createElement('div');
+            
+            // Fixed style assignment with width & box-sizing
+            card.style.cssText = `display:flex; align-items:flex-start; justify-content:space-between; background:${isChecked ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${isChecked ? '#16a34a' : '#cbd5e1'}; padding:10px 12px; border-radius:10px; font-size:0.78rem; font-weight:600; color:#0f172a; margin-bottom:8px; width:100%; box-sizing:border-box;`;
+            
+            card.innerHTML = `
+                <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; flex:1; overflow:hidden;">
+                    <input type="radio" name="selectedDeliveryAddressRadio" value="${idx}" ${isChecked} onchange="selectActiveAddressByIndex(${idx})" style="margin-top:2px; flex-shrink:0;">
+                    <span style="word-break:break-word; white-space:normal; line-height:1.4; flex:1;">📍 ${addr}</span>
+                </label>
+                <button type="button" onclick="deleteSavedAddress(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:3px 8px; font-size:0.7rem; font-weight:700; cursor:pointer; margin-left:8px; flex-shrink:0;" title="Delete Address">Delete</button>
+            `;
+            listContainer.appendChild(card);
+        });
+    }
     window.deleteSavedAddress = function(idx) {
         if (confirm("⚠️ Are you sure you want to delete this address?")) {
             const removedAddr = window.savedUserAddresses[idx];
@@ -2113,33 +2095,34 @@ window.renderCartDrawerContents = function() {
         const verticalListWrapper = document.createElement('div');
         verticalListWrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
 
-        // Render Store Products / Snacks in Cart
-        window.cartSnacksArray.forEach((snack, idx) => {
-            const card = document.createElement('div');
-            card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.02); gap:12px;";
-            
-            const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:45px; height:45px; object-fit:cover; border-radius:10px;" />` : `<div style="font-size:1.8rem; width:45px; height:45px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:10px;">📦</div>`;
+       // Render Store Products / Snacks in Cart
+        window.cartSnacksArray.forEach((snack, idx) => {
+            const card = document.createElement('div');
+            // Reduced padding and margin for a compact, neat row
+            card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 3px rgba(0,0,0,0.02); gap:10px; width:100%; box-sizing:border-box;";
+            
+            // Fixed image container with object-fit contain so it doesn't stretch
+            const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:40px; height:40px; object-fit:contain; border-radius:8px;" />` : `<div style="font-size:1.5rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📦</div>`;
 
-            card.innerHTML = `
-                <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
-                    ${thumbImg}
-                    <div style="overflow:hidden;">
-                        <div title="${snack.name}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</div>
-                        <div style="font-size:0.72rem; color:#059669; font-weight:800; margin-top:2px;">₹${snack.price * snack.qty} <span style="color:#64748b; font-weight:500;">(₹${snack.price} ea)</span></div>
-                    </div>
-                </div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:2px 6px; gap:8px;">
-                        <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; font-size:1rem; cursor:pointer; color:#0f172a;">-</button>
-                        <span style="font-weight:800; font-size:0.82rem; color:#0f172a;">${snack.qty}</span>
-                        <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; font-size:1rem; cursor:pointer; color:#065f46;">+</button>
-                    </div>
-                    <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:6px; font-size:0.75rem; cursor:pointer;" title="Remove Item">🗑️</button>
-                </div>
-            `;
-            verticalListWrapper.appendChild(card);
-        });
-
+            card.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                    ${thumbImg}
+                    <div style="overflow:hidden; flex:1;">
+                        <div title="${snack.name}" style="font-weight:700; font-size:0.8rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</div>
+                        <div style="font-size:0.7rem; color:#059669; font-weight:800; margin-top:2px;">₹${snack.price * snack.qty} <span style="color:#64748b; font-weight:500;">(₹${snack.price} ea)</span></div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                    <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:2px 6px; gap:6px;">
+                        <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; font-size:0.9rem; cursor:pointer; color:#0f172a;">-</button>
+                        <span style="font-weight:800; font-size:0.8rem; color:#0f172a;">${snack.qty}</span>
+                        <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; font-size:0.9rem; cursor:pointer; color:#065f46;">+</button>
+                    </div>
+                    <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:5px; font-size:0.7rem; cursor:pointer;" title="Remove Item">🗑️</button>
+                </div>
+            `;
+            verticalListWrapper.appendChild(card);
+        });
         // Render Print Jobs in Cart
         window.cartPrintJobsArray.forEach((job, idx) => {
             const card = document.createElement('div');
