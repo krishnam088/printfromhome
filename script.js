@@ -1164,6 +1164,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // 🔥 THE DEFINITIVE CART DRAWER RENDERER WITH VERTICAL LIST & UPSELLING SLIDER
     window.renderCartDrawerContents = function() {
         const container = document.getElementById('cartDrawerItemsList');
         if (!container) return;
@@ -1237,7 +1238,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         container.appendChild(verticalListWrapper);
 
-        // 🔥 UPSELLING SECTION INSIDE CART DRAWER
+        // 🔥 UPSELLING SECTION: If inventory products are loaded, display them
         const upsellingSection = document.createElement('div');
         upsellingSection.style.cssText = "margin-top: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;";
         upsellingSection.innerHTML = `

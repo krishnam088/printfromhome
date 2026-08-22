@@ -996,7 +996,7 @@
         </div>
     </div>
 
-    <script>
+   <script>
         window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
         window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
         window.storeInventoryProducts = [];
@@ -1071,7 +1071,7 @@
             if(sensitiveCheck) sensitiveCheck.checked = hideSensitive;
         });
 
-        // 🔥 COMPLETE & FIXED CART DRAWER CONTENTS RENDERER WITH UPSELLING SLIDER
+        // 🔥 COMPLETE & FIXED CART DRAWER CONTENTS RENDERER WITH VERTICAL LIST & UPSELLING SLIDER
         window.renderCartDrawerContents = function() {
             const container = document.getElementById('cartDrawerItemsList');
             if (!container) return;
