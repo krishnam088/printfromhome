@@ -690,14 +690,13 @@
                     <div id="cartSavedAddressesList" style="max-height:120px; overflow-y:auto; margin-bottom:4px; color:#0f172a;"></div>
                 </div>
 
-                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:14px; display:flex; align-items:center; gap:12px;">
-                    <div style="font-size:1.8rem;">⏰</div>
-                    <div>
-                        <h4 style="font-size:0.95rem; font-weight:800; color:#0f172a; margin:0 0 2px 0;">Delivery in 15 minutes</h4>
-                        <p style="font-size:0.75rem; color:#64748b; font-weight:600; margin:0;" id="shipmentItemsCountText">Shipment of items</p>
-                    </div>
-                </div>
-
+               <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:14px; display:flex; align-items:center; gap:12px;">
+    <div style="font-size:1.8rem;">⏰</div>
+    <div>
+        <h4 style="font-size:0.95rem; font-weight:800; color:#0f172a; margin:0 0 2px 0;">Delivery in <span id="cartDrawerEtaMinutes">15</span> minutes</h4>
+        <p style="font-size:0.75rem; color:#64748b; font-weight:600; margin:0;" id="shipmentItemsCountText">From E-52 Pandeypur Store</p>
+    </div>
+</div>
                 <!-- Redesigned Cart Items List Container -->
                 <div id="cartDrawerItemsList" style="display:flex; flex-direction:column; gap:10px;"></div>
 
@@ -780,9 +779,11 @@
                 <div class="header-meta-row">
                     <div class="delivery-brand-box">
                         <div id="userGreeting" class="user-greeting-inline">HI, KRISHNA</div>
-                        <h2 class="delivery-time-countdown">
-                            <span class="delivery-time-title" style="margin-right:6px;">Prints in</span> 15 mins
-                        </h2>
+                       <h2 class="delivery-time-countdown">
+    <span class="delivery-time-title" style="margin-right:6px;">Delivery in</span> <span id="dynamicStoreEtaMinutes">15</span> mins
+</h2>
+<!-- Distance Subtext (Optional banner ke niche ya header mein add kar sakte ho) -->
+<div id="storeDistanceBadgeText" style="font-size:0.7rem; color:#64748b; font-weight:600; margin-top:2px;">📍 Calculating distance to Pandeypur store...</div>
                     </div>
                     <div class="header-profile-cluster">
                         <div class="status-micro-nav">
