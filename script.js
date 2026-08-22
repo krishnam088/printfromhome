@@ -26,6 +26,84 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedActiveAddress = localStorage.getItem('selected_active_address') || "";  
     window.storeInventoryProducts = []; 
 
+    // 🌍 STORE EXACT LOCATION CONFIG (Pandeypur, Varanasi)
+    const STORE_LOCATION = {
+        lat: 25.3451, 
+        lng: 83.0012,
+        address: "E-52 Premchand Nagar Colony, Pandeypur, Varanasi, 221002"
+    };
+
+    // ⏱️ CALCULATE REAL-TIME DISTANCE & ETA FROM PANDEYPUR STORE
+    window.calculateRealtimeDistanceAndEta = function() {
+        if (!navigator.geolocation) {
+            updateEtaAndDistanceUI("15", "Varanasi Hub");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+
+                if (typeof google !== 'undefined' && google.maps && google.maps.DistanceMatrixService) {
+                    const service = new google.maps.DistanceMatrixService();
+                    service.getDistanceMatrix({
+                        origins: [{ lat: userLat, lng: userLng }],
+                        destinations: [{ lat: STORE_LOCATION.lat, lng: STORE_LOCATION.lng }],
+                        travelMode: google.maps.TravelMode.TWO_WHEELER,
+                        unitSystem: google.maps.UnitSystem.METRIC
+                    }, (response, status) => {
+                        if (status === "OK" && response.rows[0].elements[0].status === "OK") {
+                            const element = response.rows[0].elements[0];
+                            const distanceText = element.distance.text; 
+                            const durationMins = Math.ceil(element.duration.value / 60);
+                            updateEtaAndDistanceUI(durationMins, distanceText);
+                        } else {
+                            fallbackHaversineCalculation(userLat, userLng);
+                        }
+                    });
+                } else {
+                    fallbackHaversineCalculation(userLat, userLng);
+                }
+            },
+            (error) => {
+                updateEtaAndDistanceUI("15", "Pandeypur Store");
+            },
+            { timeout: 10000, enableHighAccuracy: true }
+        );
+    };
+
+    // 📐 Fallback Haversine Formula for Distance Calculation
+    function fallbackHaversineCalculation(userLat, userLng) {
+        const R = 6371; 
+        const dLat = (STORE_LOCATION.lat - userLat) * Math.PI / 180;
+        const dLng = (STORE_LOCATION.lng - userLng) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(userLat * Math.PI / 180) * Math.cos(STORE_LOCATION.lat * Math.PI / 180) *
+                  Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distanceKm = R * c;
+
+        let estimatedMins = Math.max(10, Math.round(5 + (distanceKm * 3)));
+        let formattedDistance = `${distanceKm.toFixed(1)} km`;
+
+        updateEtaAndDistanceUI(estimatedMins, formattedDistance);
+    }
+
+    // 🎨 UI UPDATER FOR HOME PAGE & CART DRAWER
+    function updateEtaAndDistanceUI(mins, distanceStr) {
+        const homeEtaNode = document.getElementById('dynamicStoreEtaMinutes');
+        if (homeEtaNode) homeEtaNode.textContent = mins;
+
+        const cartEtaNode = document.getElementById('cartDrawerEtaMinutes');
+        if (cartEtaNode) cartEtaNode.textContent = mins;
+
+        const distanceBadgeNode = document.getElementById('storeDistanceBadgeText');
+        if (distanceBadgeNode) {
+            distanceBadgeNode.textContent = `📍 ${distanceStr} from E-52 Pandeypur Store`;
+        }
+    }
+
     // 🔥 REAL GOOGLE MAPS INTEGRATION STATE
     let googleDeliveryMap = null;
     let deliveryMarker = null;
@@ -35,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const addressInput = document.getElementById('mapSelectedAddressInput');
         if (!mapContainer) return;
 
-        const varanasiCoords = { lat: 25.3176, lng: 82.9739 };
+        const varanasiCoords = { lat: STORE_LOCATION.lat, lng: STORE_LOCATION.lng };
 
         googleDeliveryMap = new google.maps.Map(mapContainer, {
             center: varanasiCoords,
@@ -1815,6 +1893,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderOrderHistoryUI(sessionActiveUser);
             synchronizeWalletInterfaceBalance();
             checkStoreStatusRealtime();
+            calculateRealtimeDistanceAndEta();
         } else {
             if(authScreen) { 
                 authScreen.classList.remove('app-hidden'); 
@@ -1873,6 +1952,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     renderOrderHistoryUI(activeUserName);
                     synchronizeWalletInterfaceBalance();
                     checkStoreStatusRealtime();
+                    calculateRealtimeDistanceAndEta();
                 } else {
                     alert(`⚠️ Error: ${data.message}`);
                 }
@@ -1921,7 +2001,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateFloatingCartBar();
     };
 
-    // 🔥 COMPLETE RENDER CART DRAWER CONTENTS FUNCTION
+    // 🔥 COMPLETE RENDER CART DRAWER CONTENTS FUNCTION WITH E-52 PANDEYPUR STORE INTEGRATION
     window.renderCartDrawerContents = function() {
         const container = document.getElementById('cartDrawerItemsList');
         if (!container) return;
@@ -1995,7 +2075,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         container.appendChild(verticalListWrapper);
 
-        // 🔥 UPSELLING SECTION INSIDE CART DRAWER
+        // 🔥 UPSELLING SECTION
         const upsellingSection = document.createElement('div');
         upsellingSection.style.cssText = "margin-top: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;";
         upsellingSection.innerHTML = `
