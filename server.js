@@ -690,7 +690,6 @@ app.post('/api/admin/product/add', async (req, res) => {
     }
 });
 
-// 🔥 2. Update Existing Product API Route (Advanced Modal Support)
 app.post('/api/admin/product/update', async (req, res) => {
     try {
         const { id, name, sellingPrice, stockQuantity, category, description, imageUrl, images } = req.body;
@@ -699,7 +698,12 @@ app.post('/api/admin/product/update', async (req, res) => {
             return res.status(400).json({ success: false, message: "Product ID is missing for update." });
         }
 
-        await Product.findByIdAndUpdate(id, {
+        let query = { _id: id };
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            query = { sku: id };
+        }
+
+        await Product.findOneAndUpdate(query, {
             name,
             sellingPrice: parseFloat(sellingPrice) || 0,
             stockQuantity: parseInt(stockQuantity) || 0,
@@ -707,14 +711,13 @@ app.post('/api/admin/product/update', async (req, res) => {
             description: description || '',
             imageUrl: imageUrl || '',
             images: images || []
-        });
+        }, { new: true });
 
         res.json({ success: true, message: "Product updated successfully!" });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
 });
-
 app.delete('/api/admin/inventory/:id', async (req, res) => {
     try {
         const { id } = req.params;
