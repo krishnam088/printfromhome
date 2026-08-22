@@ -1624,7 +1624,21 @@ document.addEventListener('DOMContentLoaded', () => {
         refreshInvoiceTabState(); calculateTotal();
     };
 
-    // 🤖 SMART APP-SPECIFIC AI ASSISTANT & CUSTOMER SUPPORT LOGIC
+    // 🤖 BILINGUAL AI ASSISTANT & SUPPORT LOGIC (ENGLISH & HINDI)
+    let currentAiLang = 'en'; // Default English
+
+    window.changeAiLanguage = function(lang) {
+        currentAiLang = lang;
+        const welcomeBubble = document.getElementById('aiWelcomeMessageBubble');
+        if (welcomeBubble) {
+            if (lang === 'hi') {
+                welcomeBubble.textContent = "👋 नमस्ते! मैं Print From Home का AI सहायक हूँ। आपको ऑर्डर ट्रैकिंग, कैंसिलेशन, प्राइसिंग या अकाउंट से जुड़ी किस बात में सहायता चाहिए?";
+            } else {
+                welcomeBubble.textContent = "👋 Hello! I am the AI Assistant for Print From Home. How can I help you with order tracking, cancellation, pricing, or your account?";
+            }
+        }
+    };
+
     window.toggleAiChatModal = function(open) {
         const modal = document.getElementById('aiChatModal');
         if (modal) {
@@ -1663,34 +1677,56 @@ document.addEventListener('DOMContentLoaded', () => {
         input.value = "";
         msgBox.scrollTop = msgBox.scrollHeight;
 
-        // 2. Process App-Related FAQs via AI Assistant
+        // 2. Process App-Related FAQs via AI Assistant in English / Hindi
         setTimeout(() => {
             const aiBubble = document.createElement('div');
             aiBubble.style.cssText = "background: #e2e8f0; color: #0f172a; padding: 10px 14px; border-radius: 12px; font-size: 0.82rem; max-width: 80%; align-self: flex-start; font-weight: 500; line-height: 1.4;";
             
             const lower = userText.toLowerCase();
 
-            if (lower.includes('order') && (lower.includes('where') || lower.includes('track') || lower.includes('status') || lower.includes('kahan hai'))) {
-                aiBubble.innerHTML = `📦 <b>Where is my order?</b><br>Aap apne order ki live tracking dekhne ke liye app ke menu (<span style="color:#065f46; font-weight:700;">👤 icon</span>) par click karke <b>'Your orders'</b> section mein ja sakte hain wahan se real-time status pata chal jayega!`;
+            if (lower.includes('order') || lower.includes('track') || lower.includes('status') || lower.includes('kahan') || lower.includes('where')) {
+                if (currentAiLang === 'hi') {
+                    aiBubble.innerHTML = `📦 <b>मेरा ऑर्डर कहाँ है?</b><br>अपने ऑर्डर की लाइव स्टेटस देखने के लिए ऐप के मेनू (<span style="color:#065f46; font-weight:700;">👤 icon</span>) पर क्लिक करें और <b>'Your orders'</b> सेक्शन में जाएं!`;
+                } else {
+                    aiBubble.innerHTML = `📦 <b>Where is my order?</b><br>You can check your live order tracking by clicking the menu (<span style="color:#065f46; font-weight:700;">👤 icon</span>) in the top right and opening the <b>'Your orders'</b> section!`;
+                }
             } 
-            else if (lower.includes('cancel') || lower.includes('cancellation')) {
-                aiBubble.innerHTML = `❌ <b>How to cancel my order?</b><br>Agar print job ya order abhi processing mein hai, toh aap turant hamare customer support executive ko call ya WhatsApp par message karke cancel karwa sakte hain.`;
+            else if (lower.includes('cancel') || lower.includes('cancellation') || lower.includes('रद्द')) {
+                if (currentAiLang === 'hi') {
+                    aiBubble.innerHTML = `❌ <b>ऑर्डर कैसे कैंसिल करें?</b><br>यदि आपका ऑर्डर प्रोसेसिंग में है, तो कृपया इसे रद्द करने के लिए तुरंत हमारे कस्टमर सपोर्ट एग्जीक्यूटिव को कॉल या WhatsApp पर संपर्क करें।`;
+                } else {
+                    aiBubble.innerHTML = `❌ <b>How to cancel my order?</b><br>If your print job or order is currently in processing, please contact our support executive immediately via phone or WhatsApp call to cancel it.`;
+                }
             } 
-            else if (lower.includes('account') || lower.includes('login') || lower.includes('register') || lower.includes('signup') || lower.includes('profile')) {
-                aiBubble.innerHTML = `👤 <b>User Account Help:</b><br>Aap apna account manage karne ke liye top right corner par bane <b>Profile/Avatar icon</b> par click karein. Wahan se aap <b>Address Book</b> update kar sakte hain aur apna <b>Name/Gmail</b> bhi edit kar sakte hain.`;
+            else if (lower.includes('account') || lower.includes('login') || lower.includes('register') || lower.includes('profile')) {
+                if (currentAiLang === 'hi') {
+                    aiBubble.innerHTML = `👤 <b>यूज़र अकाउंट सहायता:</b><br>आप ऊपर दिए गए <b>Profile/Avatar icon</b> पर क्लिक करके अपनी अकाउंट डिटेल्स मैनेज कर सकते हैं। यहाँ से आप एड्रेस बुक और अपनी जानकारी अपडेट कर सकते हैं।`;
+                } else {
+                    aiBubble.innerHTML = `👤 <b>User Account Help:</b><br>You can manage your account details by clicking the <b>Profile/Avatar icon</b> in the top right corner. From there, you can update your Address Book or edit your profile.`;
+                }
             } 
-            else if (lower.includes('price') || lower.includes('rate') || lower.includes('cost') || lower.includes('kitna') || lower.includes('page')) {
-                aiBubble.innerHTML = `💰 <b>Printing Rates & Pricing:</b><br>• Black & White: ₹3 per page<br>• Coloured: ₹10 per page<br>• Spiral Binding: +₹30<br>• Orders above ₹99 get <b>FREE Delivery</b>!`;
+            else if (lower.includes('price') || lower.includes('rate') || lower.includes('cost') || lower.includes('kitna') || lower.includes('page') || lower.includes('कीमत')) {
+                if (currentAiLang === 'hi') {
+                    aiBubble.innerHTML = `💰 <b>प्रिंटिंग रेट्स और प्राइसिंग:</b><br>• ब्लैक एंड व्हाइट: ₹3 प्रति पेज<br>• रंगीन (Coloured): ₹10 प्रति पेज<br>• स्पाइरल बाइंडिंग: +₹30<br>• ₹99 से ऊपर के ऑर्डर पर <b>फ्री डिलीवरी</b>!`;
+                } else {
+                    aiBubble.innerHTML = `💰 <b>Printing Rates & Pricing:</b><br>• Black & White: ₹3 per page<br>• Coloured: ₹10 per page<br>• Spiral Binding: +₹30<br>• Orders above ₹99 get <b>FREE Delivery</b>!`;
+                }
             } 
-            else if (lower.includes('delivery') || lower.includes('time') || lower.includes('kitni der')) {
-                aiBubble.innerHTML = `⏱️ <b>Delivery Time:</b><br>Hum Varanasi mein sirf <b>15 minutes</b> ke andar aapke ghar tak print aur store items deliver karte hain!`;
-            } 
-            else if (lower.includes('upload') || lower.includes('pdf') || lower.includes('document')) {
-                aiBubble.innerHTML = `📄 <b>How to upload documents:</b><br>Home screen par <b>'Upload Files'</b> button par click karein, apni PDF ya Images select karein. Iske baad aap A4 Studio mein pages dekh kar apne hisaab se print customize kar sakte hain.`;
+            else if (lower.includes('delivery') || lower.includes('time') || lower.includes('समय') || lower.includes('der')) {
+                if (currentAiLang === 'hi') {
+                    aiBubble.innerHTML = `⏱️ <b>डिलीवरी का समय:</b><br>हम वाराणसी में आपके घर तक प्रिंट और स्टोर के सामान की डिलीवरी मात्र <b>15 मिनट</b> के अंदर करते हैं!`;
+                } else {
+                    aiBubble.innerHTML = `⏱️ <b>Delivery Time:</b><br>We deliver prints and store items right to your doorstep in Varanasi within <b>15 minutes</b>!`;
+                }
             } 
             else {
-                aiBubble.innerHTML = `🤖 Main aapke is sawaal ko samajh nahi paaya. Kya aap iske liye hamare human customer support se baat karna chahenge?<br><br>
-                    <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Support,%20I%20need%20help%20with:%20${encodeURIComponent(userText)}" target="_blank" style="display:inline-block; background:#25D366; color:white; padding:6px 12px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:4px;">💬 Connect to Customer Support</a>`;
+                if (currentAiLang === 'hi') {
+                    aiBubble.innerHTML = `🤖 मुझे आपके इस सवाल का सटीक उत्तर नहीं मिला। क्या आप हमारे ह्यूमन कस्टमर सपोर्ट से बात करना चाहेंगे?<br><br>
+                        <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Support,%20I%20need%20help%20with:%20${encodeURIComponent(userText)}" target="_blank" style="display:inline-block; background:#25D366; color:white; padding:6px 12px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:4px;">💬 कस्टमर सपोर्ट से चैट करें</a>`;
+                } else {
+                    aiBubble.innerHTML = `🤖 I couldn't quite understand your query. Would you like to connect with our human customer support?<br><br>
+                        <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Support,%20I%20need%20help%20with:%20${encodeURIComponent(userText)}" target="_blank" style="display:inline-block; background:#25D366; color:white; padding:6px 12px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:4px;">💬 Connect to Customer Support</a>`;
+                }
             }
 
             msgBox.appendChild(aiBubble);
@@ -1701,26 +1737,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.connectToHumanSupport = function() {
         window.open('https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Print%20From%20Home%20Support,%20I%20need%20assistance.', '_blank');
     };
-
-    // 🔥 TIMEOUT BOOTSTRAP INITIALIZATION
-    setTimeout(() => {
-        if (splashScreen) splashScreen.classList.add('hidden');
-        const sessionActiveUser = localStorage.getItem('printAppUser');
-        if (sessionActiveUser) {
-            if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${sessionActiveUser}</span>`;
-            if(mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
-            loadSavedFilesFromSession();
-            loadUserAddressesFromStorage();
-            loadDynamicStoreProducts();
-            renderOrderHistoryUI(sessionActiveUser);
-            synchronizeWalletInterfaceBalance();
-            checkStoreStatusRealtime();
-        } else {
-            if(authScreen) { authScreen.classList.add('app-hidden'); authScreen.style.display = 'flex'; }
-        }
-        calculateTotal();
-        updateFloatingCartBar();
-    }, 2500);
 
     // --- AUTH FORM (Login & Signup) ---
     if (authForm) {
