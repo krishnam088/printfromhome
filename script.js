@@ -697,7 +697,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.success && Array.isArray(data.products)) {
                 window.storeInventoryProducts = data.products;
                 renderStoreProductsUI();
-                // Refresh cart drawer if open so upselling items appear instantly
                 if (document.getElementById('cartDrawerOverlay') && document.getElementById('cartDrawerOverlay').style.display === 'flex') {
                     renderCartDrawerContents();
                 }
@@ -1183,7 +1182,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Wrapper for vertical list of items in cart
         const verticalListWrapper = document.createElement('div');
         verticalListWrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
 
@@ -1239,7 +1237,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         container.appendChild(verticalListWrapper);
 
-        // 🔥 UPSELLING SECTION: If inventory products are loaded, display them
+        // 🔥 UPSELLING SECTION INSIDE CART DRAWER
         const upsellingSection = document.createElement('div');
         upsellingSection.style.cssText = "margin-top: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;";
         upsellingSection.innerHTML = `
