@@ -973,7 +973,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.addDynamicProductToCart = function(sku, name, price, currentStock, imageUrl = '') {
-        // 🔥 LocalStorage se fresh array load karo taaki items miss na ho
         window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
 
         const matchedProd = window.storeInventoryProducts ? window.storeInventoryProducts.find(p => (p.sku === sku || p.barcode === sku || p.name === name)) : null;
@@ -1085,11 +1084,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const sessionActiveUser = localStorage.getItem('printAppUser');
         const isAuthVisible = document.getElementById('authScreen') && !document.getElementById('authScreen').classList.contains('app-hidden') && document.getElementById('authScreen').style.display !== 'none';
         
-        // 🌟 FIX: Ensure bar shows ONLY on Home/Store Page (`user_section_store` active)
         const storeSection = document.getElementById('user_section_store');
         const isStoreActive = storeSection && storeSection.classList.contains('active');
 
-        // Refresh arrays from localStorage to keep count accurate
         window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
         window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
@@ -1163,7 +1160,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         container.innerHTML = '';
         
-        // 🌟 FIX: Load fresh data from localStorage so drawer always displays added items correctly
         window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
         window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
