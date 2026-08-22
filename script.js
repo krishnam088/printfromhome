@@ -1487,7 +1487,7 @@ window.renderCartDrawerContents = function() {
         alert("✅ Address saved successfully!");
     };
 
-  function renderSavedAddressesUI() {
+ function renderSavedAddressesUI() {
         const listContainer = document.getElementById('cartSavedAddressesList');
         const summaryNode = document.getElementById('cartDrawerAddressSummary');
         if (summaryNode) summaryNode.textContent = selectedActiveAddress || "No delivery address added yet.";
@@ -1516,23 +1516,6 @@ window.renderCartDrawerContents = function() {
         });
     }
 
-        window.savedUserAddresses.forEach((addr, idx) => {
-            const isChecked = addr === selectedActiveAddress ? 'checked' : '';
-            const card = document.createElement('div');
-            
-            // Fixed style assignment with width & box-sizing
-            card.style.cssText = `display:flex; align-items:flex-start; justify-content:space-between; background:${isChecked ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${isChecked ? '#16a34a' : '#cbd5e1'}; padding:10px 12px; border-radius:10px; font-size:0.78rem; font-weight:600; color:#0f172a; margin-bottom:8px; width:100%; box-sizing:border-box;`;
-            
-            card.innerHTML = `
-                <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; flex:1; overflow:hidden;">
-                    <input type="radio" name="selectedDeliveryAddressRadio" value="${idx}" ${isChecked} onchange="selectActiveAddressByIndex(${idx})" style="margin-top:2px; flex-shrink:0;">
-                    <span style="word-break:break-word; white-space:normal; line-height:1.4; flex:1;">📍 ${addr}</span>
-                </label>
-                <button type="button" onclick="deleteSavedAddress(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:3px 8px; font-size:0.7rem; font-weight:700; cursor:pointer; margin-left:8px; flex-shrink:0;" title="Delete Address">Delete</button>
-            `;
-            listContainer.appendChild(card);
-        });
-    }
     window.deleteSavedAddress = function(idx) {
         if (confirm("⚠️ Are you sure you want to delete this address?")) {
             const removedAddr = window.savedUserAddresses[idx];
