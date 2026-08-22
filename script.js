@@ -799,12 +799,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (gridContainers.length === 0) return;
 
         gridContainers.forEach(container => {
-            container.style.display = 'grid';
-            container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(110px, 1fr))';
+            container.style.display = 'flex';
+            container.style.flexWrap = 'nowrap';
+            container.style.overflowX = 'auto';
             container.style.gap = '12px';
-            container.style.overflowX = 'visible';
             container.style.padding = '10px 4px';
             container.style.width = '100%';
+            container.style.scrollbarWidth = 'none';
 
             container.innerHTML = '';
 
@@ -847,6 +848,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     border-radius: 14px; padding: 10px; position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; 
                     display: flex; flex-direction: column; align-items: center; cursor: pointer;
                     box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+                    min-width: 120px; max-width: 120px; flex: 0 0 auto;
                 `;
                 
                 card.onclick = (e) => {
