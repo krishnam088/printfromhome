@@ -751,14 +751,23 @@
             </div>
         </header>
 
-        <div id="rainSurgeBanner" class="hidden" style="background: #0284c7; color: white; padding: 8px 15px; text-align: center; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <span>🌧️ Heavy Rain Detected / Rain Surge Active! A ₹15 fee applies to ensure 15-min safe delivery.</span>
+        <!-- 🔍 Rain Surge Banner ki jagah Search Bar aur Category Chips yahan add kar diye gaye hain -->
+        <div style="padding: 10px 16px; background: #ffffff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 1000;">
+            <div style="margin-bottom: 8px;">
+                <input type="text" id="storeSearchInput" placeholder="🔍 Search chips, munchies, socks, etc..." oninput="filterStoreBySearchInput(this.value)" style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 0.85rem; outline: none; background: #f8fafc; box-sizing: border-box;" />
+            </div>
+            <div style="display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px;">
+                <button type="button" class="store-category-chip" data-category="all" onclick="filterStoreByCategory('all')" style="background:#065f46; color:#ffffff; border:1px solid #065f46; padding:6px 14px; border-radius:20px; font-size:0.75rem; font-weight:700; cursor:pointer; flex-shrink:0;">All Items</button>
+                <button type="button" class="store-category-chip" data-category="munchies" onclick="filterStoreByCategory('munchies')" style="background:#ffffff; color:#0f172a; border:1px solid #cbd5e1; padding:6px 14px; border-radius:20px; font-size:0.75rem; font-weight:700; cursor:pointer; flex-shrink:0;">🍟 Munchies & Chips</button>
+                <button type="button" class="store-category-chip" data-category="snacks" onclick="filterStoreByCategory('snacks')" style="background:#ffffff; color:#0f172a; border:1px solid #cbd5e1; padding:6px 14px; border-radius:20px; font-size:0.75rem; font-weight:700; cursor:pointer; flex-shrink:0;">🍿 Snacks</button>
+                <button type="button" class="store-category-chip" data-category="socks" onclick="filterStoreByCategory('socks')" style="background:#ffffff; color:#0f172a; border:1px solid #cbd5e1; padding:6px 14px; border-radius:20px; font-size:0.75rem; font-weight:700; cursor:pointer; flex-shrink:0;">🧦 Socks & Apparel</button>
+            </div>
         </div>
 
         <div class="container" id="mainLayoutAppContainer">
             <div id="user_section_store" class="view-section active">
                 
-                <div style="background: linear-gradient(90deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); border-bottom: 1px solid #334155; border-top: 1px solid #334155; padding: 10px 0; overflow: hidden; white-space: nowrap; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 14px; border-radius: 12px;">
+                <div style="background: linear-gradient(90deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); border-bottom: 1px solid #334155; border-top: 1px solid #334155; padding: 10px 0; overflow: hidden; white-space: nowrap; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 14px; border-radius: 12px; margin-top: 10px;">
                     <marquee scrollamount="6" style="width: 100%; display: flex; align-items: center; font-family: 'Poppins', sans-serif;">
                         <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #f8fafc;">
                             <span style="font-size: 1rem;">🪔✨</span> 
@@ -771,12 +780,7 @@
                 </div>
 
                 <div id="uploadScreenInitialState" style="width:100%;">
-                    <div class="compact-offers-bar" id="storeOffersTopBanner" style="margin-top:10px;">
-                        <span>📢 <b>Offers:</b></span>
-                        <marquee scrollamount="4" style="width: 100%;">
-                            ⚡ First Order Offer: Print for ₹49 or more & get FREE Delivery! | 🎁 Regular Scheme: FREE Delivery on any regular order above ₹99!
-                        </marquee>
-                    </div>
+                    <!-- ❌ Offer banner poori tarah hata diya gaya hai -->
                     
                     <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border: 1px solid #ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%; display: flex; justify-content: space-between; align-items: center;">
                         <div>
@@ -986,19 +990,16 @@
                 }
 
                 const bodyEl = document.body;
-                const rainBanner = document.getElementById('rainSurgeBanner');
                 const rainSurgeRow = document.getElementById('rainSurgeRow');
 
                 if (isRaining) {
                     bodyEl.classList.add('theme-rainy-season');
-                    if (rainBanner) rainBanner.classList.remove('hidden');
                     if (rainSurgeRow) rainSurgeRow.style.display = 'flex';
                     window.isRainSurgeActive = true;
                     window.rainSurgeFee = 15; 
                     initRealRainAnimation();
                 } else {
                     bodyEl.classList.remove('theme-rainy-season');
-                    if (rainBanner) rainBanner.classList.add('hidden');
                     if (rainSurgeRow) rainSurgeRow.style.display = 'none';
                     window.isRainSurgeActive = false;
                     window.rainSurgeFee = 0;
@@ -1319,44 +1320,74 @@
 
             gridContainers.forEach(container => {
                 if (!container.style.display || container.style.display === "") {
-                    container.style.display = 'flex';
+                    container.style.display = 'grid';
+                    container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(110px, 1fr))';
                     container.style.gap = '12px';
-                    container.style.overflowX = 'auto';
+                    container.style.overflowX = 'visible';
                     container.style.padding = '10px 4px';
                     container.style.width = '100%';
-                    container.style.scrollbarWidth = 'none';
                 }
 
                 container.innerHTML = '';
-                if (window.storeInventoryProducts.length === 0) {
-                    container.innerHTML = `<p style="font-size:0.75rem; color:#64748b; padding:10px;">No store products available currently.</p>`;
+                if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) {
+                    container.innerHTML = `<p style="font-size:0.75rem; color:#64748b; padding:10px; grid-column: 1 / -1; text-align:center;">No store products available currently.</p>`;
                     return;
                 }
 
-                window.storeInventoryProducts.forEach((prod, index) => {
+                let filteredProducts = window.storeInventoryProducts.filter(prod => {
+                    let nameMatch = (prod.name || '').toLowerCase().includes(window.currentStoreSearchQuery || "");
+                    let categoryLower = (prod.category || prod.type || '').toLowerCase();
+                    
+                    let matchesCategory = true;
+                    if (window.currentStoreSelectedCategory === 'munchies') {
+                        matchesCategory = categoryLower.includes('munchies') || categoryLower.includes('chips') || categoryLower.includes('namkeen') || (prod.name || '').toLowerCase().includes('lays') || (prod.name || '').toLowerCase().includes('kurkure');
+                    } else if (window.currentStoreSelectedCategory === 'snacks') {
+                        matchesCategory = categoryLower.includes('snacks') || categoryLower.includes('food') || categoryLower.includes('beverage');
+                    } else if (window.currentStoreSelectedCategory === 'socks') {
+                        matchesCategory = categoryLower.includes('socks') || categoryLower.includes('apparel') || categoryLower.includes('clothing') || (prod.name || '').toLowerCase().includes('sock');
+                    }
+
+                    return nameMatch && matchesCategory;
+                });
+
+                if (filteredProducts.length === 0) {
+                    container.innerHTML = `<p style="font-size:0.78rem; color:#64748b; padding:20px; text-align:center; grid-column: 1 / -1;">No products found matching your search.</p>`;
+                    return;
+                }
+
+                filteredProducts.forEach((prod) => {
+                    let originalIndex = window.storeInventoryProducts.findIndex(p => p.sku === prod.sku || p.name === prod.name);
                     const isOutOfStock = (prod.stockQuantity <= 0);
+                    const isLowStock = !isOutOfStock && prod.stockQuantity <= 5;
                     const finalImgUrl = prod.imageUrl || prod.image || '';
 
                     const card = document.createElement('div');
                     card.className = 'blinkit-cat-card';
                     card.style.cssText = `
-                        min-width: 110px; width: 110px; background: #ffffff;
-                        border: 1px solid #e2e8f0; border-radius: 14px; padding: 10px; position: relative; 
-                        opacity: ${isOutOfStock ? '0.7' : '1'}; display: flex; 
-                        flex-direction: column; align-items: center; cursor: pointer;
-                        box-shadow: 0 2px 6px rgba(0,0,0,0.03); flex-shrink: 0;
+                        background: #ffffff; border: 1px solid ${isLowStock ? '#ef4444' : '#e2e8f0'};
+                        border-radius: 14px; padding: 10px; position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; 
+                        display: flex; flex-direction: column; align-items: center; cursor: pointer;
+                        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
                     `;
                     
                     card.onclick = (e) => {
                         if (e.target.tagName === 'BUTTON') return;
-                        openProductDetailModal(window.storeInventoryProducts[index]);
+                        openProductDetailModal(window.storeInventoryProducts[originalIndex]);
                     };
 
                     const imageHtml = finalImgUrl 
                         ? `<img src="${finalImgUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px; display:block;" />` 
                         : `<div style="font-size:2rem; margin-bottom:6px; height:65px; display:flex; align-items:center; justify-content:center;">📦</div>`;
 
+                    let badgeHtml = '';
+                    if (isOutOfStock) {
+                        badgeHtml = `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.55rem; padding:2px 4px; border-radius:4px; font-weight:800; z-index:5;">OUT</span>`;
+                    } else if (isLowStock) {
+                        badgeHtml = `<span class="low-stock-badge">Only ${prod.stockQuantity} left</span>`;
+                    }
+
                     card.innerHTML = `
+                        ${badgeHtml}
                         ${imageHtml}
                         <div title="${prod.name}" style="font-weight:700; font-size:0.78rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; color:#0f172a;">${prod.name}</div>
                         <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
@@ -1369,6 +1400,27 @@
                 });
             });
         }
+
+        window.filterStoreByCategory = function(categoryName) {
+            window.currentStoreSelectedCategory = categoryName;
+            document.querySelectorAll('.store-category-chip').forEach(btn => {
+                if (btn.getAttribute('data-category') === categoryName) {
+                    btn.style.background = '#065f46';
+                    btn.style.color = '#ffffff';
+                    btn.style.borderColor = '#065f46';
+                } else {
+                    btn.style.background = '#ffffff';
+                    btn.style.color = '#0f172a';
+                    btn.style.borderColor = '#cbd5e1';
+                }
+            });
+            renderStoreProductsUI();
+        };
+
+        window.filterStoreBySearchInput = function(query) {
+            window.currentStoreSearchQuery = (query || "").toLowerCase().trim();
+            renderStoreProductsUI();
+        };
 
         window.openProductDetailModal = function(prod) {
             const modal = document.getElementById('productDetailModal');
