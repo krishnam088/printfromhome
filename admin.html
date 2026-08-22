@@ -298,6 +298,60 @@
         </div>
     </div>
 
+    <!-- 🛠️ ADMIN ADD / EDIT PRODUCT MODAL (NEW UPDATE) -->
+    <div id="adminProductModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:99999; align-items:center; justify-content:center;">
+        <div style="background:var(--surface-card); padding:24px; border-radius:16px; width:90%; max-width:480px; max-height:90vh; overflow-y:auto; border:1px solid var(--border-color); box-shadow:0 10px 25px rgba(0,0,0,0.3);">
+            <h3 id="adminModalTitle" style="font-weight:800; font-size:1.15rem; margin-bottom:16px; color:white;">Add New Store Product</h3>
+            
+            <form id="adminProductForm" onsubmit="submitAdminProductForm(event)">
+                <input type="hidden" id="editProductId" value="">
+                
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">Product Name *</label>
+                    <input type="text" id="adminProdName" placeholder="e.g. Lays Magic Masala" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); background:var(--bg-dark); color:white; border-radius:8px; font-size:0.85rem;" required>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+                    <div>
+                        <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">Selling Price (₹) *</label>
+                        <input type="number" id="adminProdPrice" placeholder="20" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); background:var(--bg-dark); color:white; border-radius:8px; font-size:0.85rem;" required>
+                    </div>
+                    <div>
+                        <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">Stock Qty *</label>
+                        <input type="number" id="adminProdStock" placeholder="50" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); background:var(--bg-dark); color:white; border-radius:8px; font-size:0.85rem;" required>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">Category / Type *</label>
+                    <select id="adminProdCategory" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); background:var(--bg-dark); color:white; border-radius:8px; font-size:0.85rem;">
+                        <option value="munchies">Munchies & Chips</option>
+                        <option value="snacks">Snacks & Beverages</option>
+                        <option value="socks">Socks & Apparel</option>
+                    </select>
+                </div>
+
+                <!-- 📝 Optional Description -->
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">Optional Description</label>
+                    <textarea id="adminProdDesc" placeholder="Enter product ingredients, weight, size, or details..." rows="3" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); background:var(--bg-dark); color:white; border-radius:8px; font-size:0.85rem; resize:none;"></textarea>
+                </div>
+
+                <!-- 🖼️ Multiple Image URLs -->
+                <div style="margin-bottom:16px;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">Product Image URLs (Comma separated for multiple)</label>
+                    <input type="text" id="adminProdImages" placeholder="https://img1.com/a.jpg, https://img2.com/b.jpg" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); background:var(--bg-dark); color:white; border-radius:8px; font-size:0.85rem;">
+                    <span style="font-size:0.65rem; color:var(--text-sub);">You can paste multiple image links separated by commas. First image will be primary.</span>
+                </div>
+
+                <div style="display:flex; gap:10px;">
+                    <button type="submit" style="flex:1; background:var(--accent-green); color:white; border:none; padding:12px; border-radius:8px; font-weight:800; font-size:0.85rem; cursor:pointer;">Save Product</button>
+                    <button type="button" onclick="closeAdminProductModal()" style="background:var(--border-color); color:white; border:none; padding:12px 16px; border-radius:8px; font-weight:700; font-size:0.85rem; cursor:pointer;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <nav class="admin-sidebar">
         <div class="sidebar-brand">
             <h2>Print<span>Admin</span></h2>
@@ -329,7 +383,7 @@
                 <button type="button" class="toggle-badge-btn btn-scanner" onclick="openBarcodeScannerModal()">
                     📷 Scan Barcode
                 </button>
-                <!-- 🌧️ Manual Rain Surge Admin Toggle Button (Strict Override) -->
+                <!-- 🌧️ Manual Rain Surge Admin Toggle Button -->
                 <button type="button" id="rainSurgeToggleBtn" class="toggle-badge-btn btn-rain-off" onclick="toggleAdminRainSurge()">
                     🌧️ Rain Surge: <span id="rainSurgeStateText">OFF</span>
                 </button>
@@ -358,7 +412,6 @@
                     <span class="stat-title">Total Orders (Selected Date)</span>
                     <span class="stat-num" id="statDashTotalOrders">0</span>
                 </div>
-                <!-- 🔥 Total Sales Card Added -->
                 <div class="stat-card">
                     <span class="stat-title">Total Sales</span>
                     <span class="stat-num" id="statDashTotalSales" style="color: #38bdf8;">₹0</span>
@@ -375,12 +428,10 @@
                     <span class="stat-title">Net Profit (Selected Date)</span>
                     <span class="stat-num" id="statDashNetProfit" style="color: var(--accent-green);">₹0</span>
                 </div>
-                <!-- 🔥 Delivery Fees Collected Card Added -->
                 <div class="stat-card">
                     <span class="stat-title">Delivery Fees Coll.</span>
                     <span class="stat-num" id="statDashDeliveryFees" style="color: var(--accent-blue);">₹0</span>
                 </div>
-                <!-- 🔥 Predictive Restock Card -->
                 <div class="stat-card" id="restockSuggestionCard">
                     <span class="stat-title">🚨 Predictive Restock</span>
                     <div id="restockList" style="font-size: 0.75rem; color: var(--accent-red);">Checking sales...</div>
@@ -412,7 +463,10 @@
         <!-- TAB 3: INVENTORY MANAGEMENT SECTION -->
         <div id="section_inventory" class="admin-section">
             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px; margin-bottom: 22px;">
-                <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px;">📊 Store Inventory, UPC Barcode & Restock Tracker</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <h3 style="font-size: 1.15rem; font-weight: 800;">📊 Store Inventory, UPC Barcode & Restock Tracker</h3>
+                    <button type="button" onclick="openAddProductModal()" style="background: var(--accent-blue); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; cursor: pointer;">+ Add New Product (Advanced)</button>
+                </div>
                 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 15px;">
                     <div style="display: flex; gap: 6px;">
@@ -536,6 +590,89 @@
                 loadPermanentDraft();
             }
         }
+
+        // 🛠️ ADMIN ADD & EDIT PRODUCT MODAL LOGIC (NEW UPDATE)
+        window.openAddProductModal = function() {
+            document.getElementById('adminModalTitle').textContent = "Add New Store Product";
+            document.getElementById('editProductId').value = "";
+            document.getElementById('adminProdName').value = "";
+            document.getElementById('adminProdPrice').value = "";
+            document.getElementById('adminProdStock').value = "";
+            document.getElementById('adminProdDesc').value = "";
+            document.getElementById('adminProdImages').value = "";
+            document.getElementById('adminProductModal').style.display = 'flex';
+        };
+
+        window.openEditProductModal = function(productId) {
+            const prod = cachedInventoryList.find(p => p._id === productId || p.sku === productId || p.name === productId);
+            if (!prod) return;
+
+            document.getElementById('adminModalTitle').textContent = "Edit Product Details";
+            document.getElementById('editProductId').value = prod._id || prod.sku;
+            document.getElementById('adminProdName').value = prod.name || "";
+            document.getElementById('adminProdPrice').value = prod.sellingPrice || prod.price || 0;
+            document.getElementById('adminProdStock').value = prod.stockQuantity || 0;
+            document.getElementById('adminProdCategory').value = prod.category || 'munchies';
+            document.getElementById('adminProdDesc').value = prod.description || "";
+            
+            let imgString = "";
+            if (Array.isArray(prod.images) && prod.images.length > 0) {
+                imgString = prod.images.join(', ');
+            } else if (prod.imageUrl) {
+                imgString = prod.imageUrl;
+            }
+            document.getElementById('adminProdImages').value = imgString;
+            document.getElementById('adminProductModal').style.display = 'flex';
+        };
+
+        window.closeAdminProductModal = function() {
+            document.getElementById('adminProductModal').style.display = 'none';
+        };
+
+        window.submitAdminProductForm = async function(e) {
+            e.preventDefault();
+            const idToEdit = document.getElementById('editProductId').value;
+            const name = document.getElementById('adminProdName').value.trim();
+            const price = parseFloat(document.getElementById('adminProdPrice').value) || 0;
+            const stock = parseInt(document.getElementById('adminProdStock').value) || 0;
+            const category = document.getElementById('adminProdCategory').value;
+            const description = document.getElementById('adminProdDesc').value.trim();
+            const imagesRaw = document.getElementById('adminProdImages').value.trim();
+
+            const imagesArray = imagesRaw ? imagesRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+            const primaryImage = imagesArray.length > 0 ? imagesArray[0] : "";
+
+            const payload = {
+                id: idToEdit || undefined,
+                name: name,
+                sellingPrice: price,
+                stockQuantity: stock,
+                category: category,
+                description: description,
+                imageUrl: primaryImage,
+                images: imagesArray
+            };
+
+            try {
+                const endpoint = idToEdit ? '/api/admin/product/update' : '/api/admin/product/add';
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert("✅ Product saved successfully!");
+                    closeAdminProductModal();
+                    fetchInventoryReport();
+                } else {
+                    alert(`⚠️ Error: ${data.message}`);
+                }
+            } catch (err) {
+                alert("❌ Connection error while saving product.");
+            }
+        };
 
         async function loadFestivalTemplatesFromServer() {
             const dropdown = document.getElementById('festivalTemplateDropdown');
@@ -858,7 +995,10 @@
                             <td><span style="background:${p.stockQuantity > 0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; color:${p.stockQuantity > 0 ? '#10b981' : '#ef4444'}; padding:3px 8px; border-radius:6px; font-weight:700;">${p.stockQuantity} units</span></td>
                             <td style="font-weight: 700;">${p.totalSold || 0} sold</td>
                             <td>
-                                <button type="button" onclick="deleteInventoryItem('${p._id}')" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; padding: 4px 10px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">🗑️ Remove</button>
+                                <div style="display:flex; gap:6px;">
+                                    <button type="button" onclick="openEditProductModal('${p._id}')" style="background: rgba(0, 112, 243, 0.15); color: #38bdf8; border: 1px solid #38bdf8; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">✏️ Edit</button>
+                                    <button type="button" onclick="deleteInventoryItem('${p._id}')" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">🗑️ Remove</button>
+                                </div>
                             </td>
                         </tr>
                     `).join('');
@@ -874,7 +1014,6 @@
                 
                 if (list && data.success) {
                     if(data.suggestions && data.suggestions.length > 0) {
-                        // BLINKING RED ALERT STYLE
                         list.style.color = '#ef4444';
                         list.style.fontWeight = 'bold';
                         list.innerHTML = data.suggestions.map(p => 
@@ -1086,7 +1225,6 @@
         }
         updateAutoPrintButtonUI();
 
-        // 🌧️ Admin Rain Surge Toggle Control (Strict Manual Override)
         let adminRainSurgeActive = localStorage.getItem('admin_manual_rain') === 'true';
 
         async function fetchAdminRainSurgeStatus() {
@@ -1134,9 +1272,8 @@
         }
         updateRainSurgeButtonUI();
         fetchAdminRainSurgeStatus();
-        setInterval(fetchAdminRainSurgeStatus, 4000); // Poll status periodically
+        setInterval(fetchAdminRainSurgeStatus, 4000);
 
-        // 🛵 Assign Order to Delivery Boy
         async function assignOrderToDeliveryBoy(orderId) {
             const boyPhone = prompt("Enter Delivery Executive Mobile Number (10 digits):");
             if (!boyPhone || boyPhone.trim().length !== 10) {
@@ -1162,7 +1299,6 @@
             }
         }
 
-        // 🔥 ROBUST FAIL-SAFE PRINT DISPATCHER
         function triggerPrintJob(fileUrl, orderId) {
             let resolvedUrl = fileUrl;
             
