@@ -103,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // 🔥 SAFE FALLBACK HELPER FOR ORDER HISTORY UI
     if (typeof window.renderOrderHistoryUI !== 'function') {
         window.renderOrderHistoryUI = function(username, showRecent = true) {
             const container = document.getElementById('ordersHistoryContainer');
@@ -126,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    // 🔥 PAST ORDER RE-ORDER / LOAD TO CART PREVIEW
     window.openPastOrderInCartPreview = function(orderId) {
         const sessionActiveUser = localStorage.getItem('printAppUser');
         const history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
@@ -197,13 +199,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const LIVE_SERVER_URL = window.location.origin;
     window.globalRawOrdersCache = [];
 
+    // ==========================================
+    // 🧮 BULLETPROOF GRAND TOTAL CALCULATOR ENGINE
+    // ==========================================
     window.calculateTotal = function() {
         try {
             let totalPrintCost = 0; 
             let totalBindingCost = 0;
             
             let snacksTotal = window.cartSnacksArray ? window.cartSnacksArray.reduce((acc, item) => acc + (parseFloat(item.price || 0) * parseInt(item.qty || 1)), 0) : 0;
-            let printJobsTotal = window.cartPrintJobsArray ? window.cartPrintJobsArray.reduce((acc, job) => acc + (parseInt(job.pages || 1) * (job.printType === 'bw' ? 3 : 10) * parseInt(job.copies || 1) + (job.binding === 'spiral' ? 30 * parseInt(job.copies || 1) : 0)), 0) : 0;
+            let printJobsTotal = window.cartPrintJobsArray ? window.cartPrintJobsArray.reduce((acc, job) => acc + (parseInt(job.pages || 1) * (job.printType === 'bw' ? 3 : 10) * parseInt(job.copies || 1) + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0) : 0;
 
             if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
                 masterFilesArray.forEach((item) => {
@@ -277,6 +282,210 @@ document.addEventListener('DOMContentLoaded', () => {
         return Math.max(15, queueLength * 5);
     };
 
+    // 🔥 FIX: SESSION FILE PERSISTENCE ENGINE
+    function loadSavedFilesFromSession() {
+        const raw = sessionStorage.getItem('savedPrintFiles');
+        if (raw) {
+            try {
+                masterFilesArray = JSON.parse(raw).map(i => ({ name: i.name, size: i.size, type: i.type, fileData: null, config: i.config }));
+                if (typeof renderFilesUI === 'function') {
+                    renderFilesUI();
+                }
+            } catch(e) {
+                masterFilesArray = [];
+            }
+        }
+    }
+
+    function saveCurrentFilesToSession() {
+        sessionStorage.setItem('savedPrintFiles', JSON.stringify(masterFilesArray.map(i => ({ name: i.name, size: i.size, type: i.type, config: i.config }))));
+    }
+
+    function renderFilesUI() {
+        if(!multiFilesContainer) return; 
+        multiFilesContainer.innerHTML = ''; 
+        refreshInvoiceTabState();
+        if (masterFilesArray.length === 0) return;
+
+        masterFilesArray.forEach((item, index) => {
+            const fileRow = document.createElement('div');
+            fileRow.className = 'blinkit-file-card';
+            fileRow.style.cssText = "background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);";
+
+            const activeColorBw = item.config.printType === 'bw' ? 'active' : '';
+            const activeColorCol = item.config.printType === 'color' ? 'active' : '';
+            const activeOriPort = item.config.orientation === 'portrait' ? 'active' : '';
+            const activeOriLand = item.config.orientation === 'landscape' ? 'active' : '';
+
+            fileRow.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; padding-bottom: 8px; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; cursor:pointer;" onclick="previewFileInA4Studio(${index})">
+                        <span style="font-size: 1.1rem;">📄</span>
+                        <div>
+                            <h4 style="font-weight: 700; font-size: 0.85rem; color: #1a202c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;" title="${item.name}">${item.name}</h4>
+                            <span style="font-size:0.68rem; color:var(--blinkit-green); font-weight:700;">👁️ Tap to View A4 Preview</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <button type="button" class="add-more-inline-card-btn" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 3px 8px; font-size: 0.7rem; font-weight: 700; border-radius: 6px; cursor: pointer;" onclick="triggerInlineFileUploadClick()">+ Add More</button>
+                        <button type="button" id="removeFile_${index}" style="background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; width: 24px; height: 24px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">&times;</button>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-bottom: 12px; align-items: center;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 0.7rem; font-weight: 700; color: #4a5568;">Total Pages:</label>
+                        <input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 0.8rem; background: #f8fafc; outline: none;" required>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 0.7rem; font-weight: 700; color: #4a5568;">Copies:</label>
+                        <div class="blinkit-stepper" style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 2px 8px; height: 32px;">
+                            <button type="button" id="minusCopy_${index}" class="stepper-btn" style="background: none; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; color: #334155;">-</button>
+                            <span id="copyCountLabel_${index}" style="font-weight: 700; font-size: 0.8rem; color: #0f172a;">${item.config.copies}</span>
+                            <button type="button" id="plusCopy_${index}" class="stepper-btn" style="background: none; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; color: #334155;">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <p style="font-size: 0.7rem; font-weight: 700; color: #4a5568; margin-bottom: 6px;">Print Color</p>
+                    <div class="blinkit-grid-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeColorCol ? '#16a34a' : '#cbd5e1'}; background: ${activeColorCol ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
+                            <div style="font-size: 1rem;">🎨</div>
+                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Coloured</span><span style="font-size: 0.65rem; color: #64748b;">₹10/pg</span></div>
+                        </div>
+                        <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeColorBw ? '#16a34a' : '#cbd5e1'}; background: ${activeColorBw ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
+                            <div style="font-size: 1rem;">🌑</div>
+                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">B & W</span><span style="font-size: 0.65rem; color: #64748b;">₹3/pg</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <p style="font-size: 0.7rem; font-weight: 700; color: #4a5568; margin-bottom: 6px;">Orientation</p>
+                    <div class="blinkit-grid-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeOriPort ? '#16a34a' : '#cbd5e1'}; background: ${activeOriPort ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
+                            <div style="font-size: 1rem;">📱</div>
+                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Portrait</span></div>
+                        </div>
+                        <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeOriLand ? '#16a34a' : '#cbd5e1'}; background: ${activeOriLand ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
+                            <div style="font-size: 1rem;">💻</div>
+                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Landscape</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    <label style="font-size: 0.75rem; font-weight: 700; color: #334155;">Binding Option:</label>
+                    <select id="binding_${index}" style="padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.75rem; font-weight: 600; background: #ffffff; outline: none;">
+                        <option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option>
+                        <option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option>
+                        <option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral (+₹30)</option>
+                    </select>
+                </div>
+            `;
+            multiFilesContainer.appendChild(fileRow);
+
+            document.getElementById(`optColor_${index}`).addEventListener('click', () => { item.config.printType = 'color'; saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`optBw_${index}`).addEventListener('click', () => { item.config.printType = 'bw'; saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`optPort_${index}`).addEventListener('click', () => { item.config.orientation = 'portrait'; saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`optLand_${index}`).addEventListener('click', () => { item.config.orientation = 'landscape'; saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`plusCopy_${index}`).addEventListener('click', () => { item.config.copies++; saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`minusCopy_${index}`).addEventListener('click', () => { if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); renderFilesUI(); } });
+            document.getElementById(`removeFile_${index}`).addEventListener('click', () => { masterFilesArray.splice(index, 1); saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`pages_${index}`).addEventListener('input', (e) => { item.config.pages = parseInt(e.target.value) || 1; saveCurrentFilesToSession(); calculateTotal(); });
+            document.getElementById(`binding_${index}`).addEventListener('change', (e) => { item.config.binding = e.target.value; saveCurrentFilesToSession(); calculateTotal(); });
+        });
+        calculateTotal();
+        updateFloatingCartBar();
+    }
+
+    if(fileUpload) {
+        fileUpload.addEventListener('change', async () => {
+            if (fileUpload.files.length === 0) return;
+            
+            for (const file of Array.from(fileUpload.files)) {
+                if (!masterFilesArray.some(f => f.name === file.name && f.size === file.size)) {
+                    let pageCount = 1;
+                    
+                    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                        try {
+                            const arrayBuffer = await file.arrayBuffer();
+                            const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                            pageCount = pdfDoc.numPages || 1;
+                        } catch (e) {
+                            pageCount = 1;
+                        }
+                    }
+
+                    masterFilesArray.push({ 
+                        name: file.name, 
+                        size: file.size, 
+                        type: file.type, 
+                        fileData: file, 
+                        config: { 
+                            pages: pageCount, 
+                            printType: 'bw', 
+                            orientation: 'portrait', 
+                            binding: 'none', 
+                            copies: 1 
+                        } 
+                    });
+                }
+            }
+            fileUpload.value = ''; 
+            saveCurrentFilesToSession(); 
+            renderFilesUI();
+        });
+    }
+
+    window.triggerInlineFileUploadClick = function() {
+        if(fileUpload) fileUpload.click();
+    };
+
+    window.previewFileInA4Studio = function(index) {
+        if (masterFilesArray[index] && masterFilesArray[index].fileData) {
+            window.openDocumentInA4Studio(masterFilesArray[index].fileData, masterFilesArray[index].name);
+        } else {
+            alert("⚠️ Please re-upload the document to open A4 interactive studio.");
+        }
+    };
+
+    const printForm = document.getElementById('printForm');
+    if(printForm) {
+        printForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (masterFilesArray.length === 0) {
+                alert("⚠️ Please upload at least one valid document to add to cart.");
+                return;
+            }
+
+            masterFilesArray.forEach(item => {
+                window.cartPrintJobsArray.push({
+                    fileName: item.name,
+                    pages: parseInt(item.config.pages) || 1,
+                    printType: item.config.printType,
+                    sides: item.config.orientation === 'portrait' ? 'single' : 'landscape',
+                    binding: item.config.binding,
+                    copies: parseInt(item.config.copies) || 1,
+                    orientation: item.config.orientation,
+                    fileData: item.fileData
+                });
+            });
+
+            persistCartStateData();
+            alert("🎉 Print job(s) successfully added to Cart!");
+            masterFilesArray = [];
+            sessionStorage.removeItem('savedPrintFiles');
+            printForm.reset();
+            if(multiFilesContainer) multiFilesContainer.innerHTML = '';
+            refreshInvoiceTabState();
+            calculateTotal();
+            toggleCartDrawer(true);
+        });
+    }
+
+    // 🔥 A4 STUDIO PREVIEW ENGINE
     let renderedPagesList = [];
     let isLandscapeMode = false;
     let currentStudioActiveFile = null;
@@ -294,7 +503,6 @@ document.addEventListener('DOMContentLoaded', () => {
         currentStudioFileName = originalFileName || 'Document.pdf';
         if (passwordInput) passwordInput.value = '';
         if (passwordBox) passwordBox.classList.add('hidden');
-        isCurrentFileLocked = false;
 
         container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Generating pixel-perfect A4 Sheets...</div>';
         modal.style.display = 'flex';
@@ -310,7 +518,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     await loadPdfIntoStudio(fileSource, undefined);
                 } catch (passErr) {
-                    isCurrentFileLocked = true;
                     if (passwordBox) passwordBox.classList.remove('hidden');
                     container.innerHTML = `<div style="color: #f87171; font-weight: 700; padding: 30px; text-align: center;">🔒 This PDF is password protected!<br><span style="font-size:0.75rem; color:#94a3b8;">Please enter the password in the top red bar above to unlock and preview.</span></div>`;
                 }
@@ -388,127 +595,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleCartDrawer(true);
     };
 
-    window.executeNativeA4Print = function() {
-        const container = document.getElementById('a4PagesContainer');
-        if (!container) {
-            window.print();
-            return;
-        }
-
-        let printFrame = document.getElementById('printIframeHidden');
-        if (!printFrame) {
-            printFrame = document.createElement('iframe');
-            printFrame.id = 'printIframeHidden';
-            printFrame.style.position = 'fixed';
-            printFrame.style.right = '0';
-            printFrame.style.bottom = '0';
-            printFrame.style.width = '0';
-            printFrame.style.height = '0';
-            printFrame.style.border = '0';
-            document.body.appendChild(printFrame);
-        }
-
-        const canvasElements = container.querySelectorAll('canvas, img');
-        let printHtml = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Print Document</title>
-                <style>
-                    @page { size: A4 portrait; margin: 0; }
-                    body { margin: 0; padding: 0; background: #ffffff; }
-                    .print-sheet {
-                        width: 210mm;
-                        height: 297mm;
-                        page-break-after: always;
-                        break-after: page;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        overflow: hidden;
-                    }
-                    .print-sheet img, .print-sheet canvas {
-                        width: 100% !important;
-                        height: 100% !important;
-                        object-fit: contain !important;
-                    }
-                </style>
-            </head>
-            <body>
-        `;
-
-        canvasElements.forEach(el => {
-            let imgSrc = '';
-            if (el.tagName === 'CANVAS') {
-                imgSrc = el.toDataURL('image/png');
-            } else if (el.tagName === 'IMG') {
-                imgSrc = el.src;
-            }
-            if (imgSrc) {
-                printHtml += `<div class="print-sheet"><img src="${imgSrc}" /></div>`;
-            }
-        });
-
-        printHtml += `</body></html>`;
-
-        const doc = printFrame.contentWindow.document;
-        doc.open();
-        doc.write(printHtml);
-        doc.close();
-
-        setTimeout(() => {
-            printFrame.contentWindow.focus();
-            printFrame.contentWindow.print();
-        }, 500);
-    };
-
-    async function requestUserPushNotificationPermission() {
-        try {
-            if (!("Notification" in window)) return;
-            await Notification.requestPermission();
-        } catch (err) {}
-    }
-
-    setTimeout(requestUserPushNotificationPermission, 4000);
-
-    window.subscribeUserToPushNotifications = async function(productName) {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            alert("⚠️ Push notifications are not supported on this browser.");
-            return;
-        }
-
-        try {
-            const registration = await navigator.serviceWorker.ready;
-            const permissionResult = await Notification.requestPermission();
-            if (permissionResult !== 'granted') {
-                alert("⚠️ Please allow notifications to get stock alerts.");
-                return;
-            }
-
-            const subscribeOptions = {
-                userVisibleOnly: true,
-                applicationServerKey: 'BGjNyVdaWFa5xpUhvhCObYnuDWwqEVwcgL_yVKnQH75lF80qNPf-WK5Wa8NM7XV8bRNlN5Vu8Darx98-AkGZ9uA'
-            };
-
-            const pushSubscription = await registration.pushManager.subscribe(subscribeOptions);
-            const sessionUser = localStorage.getItem('printAppUserIdentity') || 'guest';
-            await fetch('/api/notifications/subscribe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    identity: sessionUser,
-                    productName: productName,
-                    subscription: pushSubscription,
-                    type: 'stock_alert'
-                })
-            });
-
-            alert(`✅ Success! We will notify you on this device when "${productName}" is back in stock.`);
-        } catch (err) {
-            alert("⚠️ Failed to enable notifications.");
-        }
-    };
-
+    // 🔥 STORE STATUS & NOTIFICATIONS
     let isStoreCurrentlyOpen = true;
 
     async function checkStoreStatusRealtime() {
@@ -567,6 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.setItem('storeModalDismissed', 'true');
     };
 
+    // 🔥 LIVE TIMELINE STEPPER
     window.executeLiveTimelineStateStepper = function(statusText, assignedDeliveryBoyPhone) {
         const statusBadge = document.getElementById('liveOrderStatusBadge');
         const execName = document.getElementById('deliveryExecutiveName');
@@ -597,8 +685,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (execPhone) execPhone.textContent = "Will be assigned shortly";
             if (callBtn) callBtn.href = "tel:7007626731";
         }
-    }
+    };
 
+    // 🔥 DYNAMIC PRODUCTS, LIVE SEARCH & CATEGORY FILTERING
     async function loadDynamicStoreProducts() {
         try {
             const res = await fetch('/api/store/products');
@@ -612,7 +701,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {}
     }
 
-    // 🔥 CATEGORY & SEARCH FILTER IMPLEMENTATION FOR STORE PRODUCTS
     window.currentStoreSearchQuery = "";
     window.currentStoreSelectedCategory = "all";
 
@@ -641,7 +729,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const gridContainers = document.querySelectorAll('.snacks-horizontal-slider');
         if (gridContainers.length === 0) return;
 
-        // Ensure Search Bar & Category Filter Chips are injected above store products if not present
         let storeParentSection = document.getElementById('user_section_store');
         if (storeParentSection && !document.getElementById('storeSearchAndFilterBox')) {
             const filterWrapper = document.createElement('div');
@@ -746,7 +833,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             alert(`🔔 We have noted your request! You will be notified when "${prodName}" is back in stock.`);
         }
-    }
+    };
 
     window.openProductDetailModal = function(prod) {
         const modal = document.getElementById('productDetailModal');
@@ -861,8 +948,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 name: name, 
                 price: price, 
                 qty: 1, 
-                printType: 'snack',
-                fileName: `Product: ${name}`,
+                printType: 'snack', 
+                fileName: `Product: ${name}`, 
                 imageUrl: finalImg 
             });
         }
@@ -882,7 +969,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 clickedBtn.style.background = "#065f46";
             }, 800);
         }
-    }
+    };
     
     window.adjustSnackQty = function(index, delta) {
         const snack = window.cartSnacksArray[index];
@@ -906,6 +993,7 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
     };
 
+    // 🔥 CART DRAWER & FOOTER BAR UI
     window.toggleCartDrawer = function(open = true) {
         const drawerOverlay = document.getElementById('cartDrawerOverlay');
         const floatingBar = document.getElementById('floatingCartFooterBar');
@@ -1116,6 +1204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateFloatingCartBar();
     };
 
+    // 🔥 ADDRESS MANAGEMENT SYSTEM
     window.loadUserAddressesFromStorage = function() {
         const raw = localStorage.getItem('saved_addresses');
         if (raw) {
@@ -1228,6 +1317,265 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modal) modal.style.display = 'none';
     };
 
+    // ==========================================
+    // 💳 FINAL CART ORDER PLACEMENT
+    // ==========================================
+    window.executeFinalCartOrderPlacement = async function() {
+        if (!isStoreCurrentlyOpen) {
+            alert("🚨 Store is currently CLOSED! Orders cannot be accepted.");
+            const storeClosedModal = document.getElementById('storeClosedPopupModal');
+            if (storeClosedModal) storeClosedModal.style.display = 'flex';
+            return;
+        }
+
+        let totalItemsCount = (window.cartSnacksArray ? window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0) : 0) + 
+                            (window.cartPrintJobsArray ? window.cartPrintJobsArray.length : 0);
+
+        if (totalItemsCount === 0) {
+            alert("⚠️ Your cart is empty! Please add print jobs or store products first.");
+            return;
+        }
+
+        if (!selectedActiveAddress || selectedActiveAddress.trim() === "") {
+            alert("⚠️ Please add and select a delivery address first!");
+            openAddressManagerModal();
+            return;
+        }
+
+        let totalPrintVal = 0;
+        let totalSnacksVal = 0;
+        const finalMetaConfig = [];
+
+        window.cartPrintJobsArray.forEach(job => {
+            const cost = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
+            totalPrintVal += cost;
+            finalMetaConfig.push({ fileName: job.fileName, pages: job.pages, printType: job.printType, binding: job.binding, copies: job.copies });
+        });
+
+        window.cartSnacksArray.forEach(snack => {
+            totalSnacksVal += snack.price * snack.qty;
+            finalMetaConfig.push({ 
+                sku: snack.sku || '',
+                name: snack.name,
+                fileName: `Product: ${snack.name} (Qty: ${snack.qty}, Price: ₹${snack.price} each)`, 
+                copies: snack.qty, 
+                qty: snack.qty,
+                printType: 'snack', 
+                pages: 1 
+            });
+        });
+
+        if (finalMetaConfig.length === 0) {
+            alert("⚠️ Your cart is empty!");
+            return;
+        }
+
+        const hasPrintJobs = window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0;
+        const hasSnacks = window.cartSnacksArray && window.cartSnacksArray.length > 0;
+
+        let initialOrderStatus = "Order Placed & Processing";
+        if (hasPrintJobs && !hasSnacks) {
+            initialOrderStatus = "Ready for Print";
+        } else if (hasPrintJobs && hasSnacks) {
+            initialOrderStatus = "Ready for Print & Processing";
+        } else if (!hasPrintJobs && hasSnacks) {
+            initialOrderStatus = "Order Placed & Picking";
+        }
+
+        let subtotal = totalPrintVal + totalSnacksVal;
+        let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
+        let rainFee = window.isRainSurgeActive ? 15 : 0;
+        let grandTotal = subtotal + delivery + rainFee + (window.currentDeliveryTip || 0);
+
+        const selectedPaymentRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
+        const paymentMode = selectedPaymentRadio ? selectedPaymentRadio.value : 'online';
+        const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+
+        const formData = new FormData();
+        window.cartPrintJobsArray.forEach(job => {
+            if (job.fileData) formData.append('document', job.fileData);
+        });
+
+        formData.append('totalAmount', grandTotal.toFixed(2));
+        formData.append('configDetails', JSON.stringify(finalMetaConfig));
+        formData.append('address', selectedActiveAddress);
+        formData.append('customerName', sessionActiveUser);
+        formData.append('phone', localStorage.getItem('printAppUserIdentity') || 'N/A');
+        formData.append('deliveryTip', window.currentDeliveryTip || 0);
+
+        const finalizeOrderSuccess = async (orderId) => {
+            const historyKey = `history_${sessionActiveUser}`;
+            const currentHistoryArray = JSON.parse(localStorage.getItem(historyKey) || '[]');
+            
+            const newOrderPayload = { 
+                orderId: orderId,
+                date: new Date().toLocaleString(), 
+                amount: grandTotal.toFixed(2), 
+                status: initialOrderStatus, 
+                details: finalMetaConfig, 
+                address: selectedActiveAddress,
+                deliveryTip: window.currentDeliveryTip || 0
+            };
+            
+            currentHistoryArray.push(newOrderPayload);
+            localStorage.setItem(historyKey, JSON.stringify(currentHistoryArray));
+
+            try {
+                await fetch('/api/admin/inventory/decrement', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: finalMetaConfig })
+                });
+            } catch (e) {
+                console.error("Inventory decrement sync error:", e);
+            }
+
+            window.cartPrintJobsArray = [];
+            window.cartSnacksArray = [];
+            window.currentDeliveryTip = 0;
+            persistCartStateData();
+            toggleCartDrawer(false);
+
+            if (typeof renderOrderHistoryUI === 'function') {
+                renderOrderHistoryUI(sessionActiveUser);
+            }
+            if (typeof openOrderDeepTrackingWorkspacePage === 'function') {
+                openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
+            } else if (typeof navigateDrawerSection === 'function') {
+                navigateDrawerSection('order_tracking');
+            }
+            loadDynamicStoreProducts();
+        };
+
+        if (paymentMode === 'wallet') {
+            let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
+            if (currentWalletCash < grandTotal) {
+                alert(`❌ Insufficient wallet balance! You have ₹${currentWalletCash.toFixed(2)}, but grand total is ₹${grandTotal.toFixed(2)}. Please recharge your wallet.`);
+                return;
+            }
+
+            let newBalance = currentWalletCash - grandTotal;
+            localStorage.setItem(`wallet_cash_${sessionActiveUser}`, newBalance.toFixed(2));
+            synchronizeWalletInterfaceBalance();
+            formData.append('paymentMode', 'wallet');
+
+            try {
+                const response = await fetch('/api/create-order', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.success) {
+                    alert('🎉 Order Placed Successfully using Print From Home Wallet!');
+                    await finalizeOrderSuccess(data.order_id);
+                    return;
+                }
+            } catch (err) {
+                alert("❌ Wallet order placement error.");
+                return;
+            }
+        } else {
+            formData.append('paymentMode', paymentMode);
+            try {
+                const response = await fetch('/api/create-order', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (!data.success) {
+                    alert(`⚠️ Error: ${data.message || 'Failed to create order'}`);
+                    return;
+                }
+
+                if (paymentMode === 'cod') {
+                    alert('🎉 Order Placed Successfully via Cash on Delivery!');
+                    await finalizeOrderSuccess(data.order_id);
+                    return;
+                }
+
+                const options = {
+                    key: data.key_id,
+                    amount: data.amount,
+                    currency: 'INR',
+                    name: 'Print From Home',
+                    order_id: data.rzp_order_id,
+                    handler: async function (response) {
+                        try {
+                            const verifyRes = await fetch('/api/verify-payment', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    orderId: data.order_id,
+                                    paymentId: response.razorpay_payment_id
+                                })
+                            });
+                            const verifyData = await verifyRes.json();
+                            if (verifyData.success) {
+                                alert('🎉 Payment Successful!');
+                                await finalizeOrderSuccess(data.order_id);
+                            }
+                        } catch (err) {
+                            alert('🎉 Payment Recorded Successfully!');
+                            await finalizeOrderSuccess(data.order_id);
+                        }
+                    },
+                    theme: { color: '#F4C430' }
+                };
+
+                const rzp1 = new Razorpay(options);
+                rzp1.open();
+            } catch (error) {
+                alert('❌ Connection Breakdown during order placement.');
+            }
+        }
+    };
+
+    function synchronizeWalletInterfaceBalance() {
+        const sessionActiveUser = localStorage.getItem('printAppUser');
+        const balanceDisplayNode = document.getElementById('headerWalletDisplayBalance');
+        const drawerWalletText = document.getElementById('walletDrawerBalanceText');
+        if(!balanceDisplayNode) return;
+        if(!sessionActiveUser) { 
+            balanceDisplayNode.textContent = "₹0.00"; 
+            if(drawerWalletText) drawerWalletText.textContent = "₹0";
+            return; 
+        }
+        let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
+        balanceDisplayNode.textContent = `₹${currentWalletCash.toFixed(2)}`;
+        if(drawerWalletText) drawerWalletText.textContent = `₹${currentWalletCash.toFixed(2)}`;
+    }
+    window.synchronizeWalletInterfaceBalance = synchronizeWalletInterfaceBalance;
+
+    window.refreshInvoiceTabState = function() {
+        const sideInvoicePanel = document.getElementById('sidebarPricingPanel');
+        const layoutContainer = document.getElementById('mainLayoutAppContainer');
+        const uploadInitialScreen = document.getElementById('uploadScreenInitialState');
+        const configWorkspaceScreen = document.getElementById('configurationScreenState');
+        const activeTabStoreNode = document.getElementById('user_section_store');
+
+        const activeTabIsStore = activeTabStoreNode && activeTabStoreNode.classList.contains('active');
+        if (!activeTabIsStore) return;
+
+        if (masterFilesArray && masterFilesArray.length > 0) {
+            if(uploadInitialScreen) uploadInitialScreen.classList.add('hidden');
+            if(configWorkspaceScreen) {
+                configWorkspaceScreen.classList.remove('hidden');
+                history.pushState({ configOpen: true }, '', '');
+            }
+            if(sideInvoicePanel) sideInvoicePanel.classList.remove('hidden');
+            if (window.innerWidth > 992) {
+                if(layoutContainer) { layoutContainer.classList.add('has-invoice'); layoutContainer.style.gridTemplateColumns = '2.5fr 1.2fr'; }
+            } else { if(layoutContainer) layoutContainer.style.gridTemplateColumns = '1fr'; }
+        } else {
+            if(uploadInitialScreen) uploadInitialScreen.classList.remove('hidden');
+            if(configWorkspaceScreen) configWorkspaceScreen.classList.add('hidden');
+            if(sideInvoicePanel) sideInvoicePanel.classList.add('hidden');
+            if(layoutContainer) { layoutContainer.classList.remove('has-invoice'); layoutContainer.style.gridTemplateColumns = '1fr'; }
+        }
+        updateFloatingCartBar();
+    };
+
+    window.forceReturnToUploadView = function() {
+        masterFilesArray = []; sessionStorage.removeItem('savedPrintFiles');
+        if(multiFilesContainer) multiFilesContainer.innerHTML = '';
+        refreshInvoiceTabState(); calculateTotal();
+    };
+
+    // 🔥 TIMEOUT BOOTSTRAP INITIALIZATION
     setTimeout(() => {
         if (splashScreen) splashScreen.classList.add('hidden');
         const sessionActiveUser = localStorage.getItem('printAppUser');
@@ -1247,6 +1595,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateFloatingCartBar();
     }, 2500);
 
+    // --- AUTH FORM (Login & Signup) ---
     if (authForm) {
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
