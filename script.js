@@ -653,60 +653,43 @@ window.addEventListener('DOMContentLoaded', () => {
         if (modal) modal.style.display = 'none';
     };
 
-   window.updateMultiFileStudioUI = function() {
+    window.updateMultiFileStudioUI = function() {
         const files = window.studioMasterFiles;
-        if (!files || files.length === 0) return;
+        if (files.length === 0) return;
 
-        const currentFile = files[window.currentStudioActiveIndex] || files[0];
+        const currentFile = files[window.currentStudioActiveIndex];
 
-        // 1. Render In-Image Horizontal Slider with Grayscale & Landscape Rotation
+        // 1. Render In-Image Horizontal Slider
         const imageSlider = document.getElementById('studioInImageHorizontalSlider');
         if (imageSlider) {
-            imageSlider.innerHTML = files.map((f) => {
-                let isLand = f.orientation === 'landscape';
-                let isBw = f.printType === 'bw';
-                let filterStyle = isBw ? 'filter: grayscale(100%);' : '';
-                let transformStyle = isLand ? 'transform: rotate(90deg); max-width: 75%; max-height: 75%;' : 'max-width: 90%; max-height: 90%;';
-
-                let previewContent = `<span style="font-size:3.5rem; ${filterStyle}">📄</span>`;
-                if (f.fileUrl) {
-                    if (f.fileBlob && f.fileBlob.type && f.fileBlob.type.startsWith('image/')) {
-                        previewContent = `<img src="${f.fileUrl}" style="${transformStyle} object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />`;
-                    } else {
-                        previewContent = `
-                            <div style="display:flex; flex-direction:column; align-items:center; gap:8px; ${filterStyle}">
-                                <span style="font-size:3.5rem;">📄</span>
-                                <span style="font-size:0.75rem; font-weight:700; color:#1e293b; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${f.name}</span>
-                            </div>
-                        `;
+            imageSlider.innerHTML = files.map((f, idx) => `
+                <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; flex-shrink:0; position:relative; background:#f8fafc;">
+                    ${f.fileUrl && (f.fileUrl.startsWith('data:image') || f.fileUrl.startsWith('blob:')) 
+                        ? `<img src="${f.fileUrl}" style="max-width:100%; max-height:100%; object-fit:contain;" />` 
+                        : `<span style="font-size:3.5rem;">📄</span>`
                     }
-                }
+                </div>
+            `).join('');
 
-                return `
-                    <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; flex-shrink:0; position:relative; background:#f8fafc; overflow:hidden;">
-                        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${previewContent}</div>
-                    </div>
-                `;
-            }).join('');
-
+            // Scroll slider to active index smoothly
             let slideWidth = imageSlider.clientWidth || 300;
             imageSlider.scrollTo({ left: slideWidth * window.currentStudioActiveIndex, behavior: 'smooth' });
         }
 
-        // 2. Counter Badge (e.g., 1/2)
+        // Counter Badge (e.g., 1/2)
         const counterBadge = document.getElementById('studioSlideCounterBadge');
         if (counterBadge) {
             counterBadge.textContent = `${window.currentStudioActiveIndex + 1}/${files.length}`;
         }
 
-        // 3. Update Copies & Pages Info
+        // 2. Update Copies & Pages Info
         const copiesText = document.getElementById('studioCopiesCountText');
         if (copiesText) copiesText.textContent = currentFile.copies;
 
         const pagesInfo = document.getElementById('studioFilePagesInfo');
         if (pagesInfo) pagesInfo.textContent = `${currentFile.name} (${currentFile.pages} page${currentFile.pages > 1 ? 's' : ''})`;
 
-        // 4. Highlight Color & Orientation UI
+        // 3. Highlight Color & Orientation UI
         const colColoured = document.getElementById('colorOptionColoured');
         const colBw = document.getElementById('colorOptionBw');
         if (colColoured && colBw) {
@@ -731,20 +714,28 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 5. Calculate Clean Grand Total Price
+        // 4. Calculate Total Pages & Price Breakdown
+        let grandTotalPages = 0;
         let grandTotalPrice = 0;
-        files.forEach((f) => {
+        let breakdownHTML = '';
+
+        files.forEach((f, idx) => {
             let rate = (f.printType === 'bw') ? 3 : 10;
-            grandTotalPrice += f.pages * rate * f.copies;
+            let fileTotalCost = f.pages * rate * f.copies;
+            let fileTotalPages = f.pages * f.copies;
+            grandTotalPages += fileTotalPages;
+            grandTotalPrice += fileTotalCost;
+
+            breakdownHTML += `<div style="font-size:0.65rem; color:#64748b; display:flex; justify-content:space-between; margin-top:2px;"><span>F${idx+1}: ${f.name} (${f.pages}pg x ${f.copies}cp x ₹${rate})</span><span style="font-weight:700; color:#0f172a;">₹${fileTotalCost}</span></div>`;
         });
 
-        const totalPriceText = document.getElementById('studioTotalPriceText');
-        if (totalPriceText) {
-            totalPriceText.textContent = `₹${grandTotalPrice}`;
-        }
-    }; // <--- 🔥 Yeh closing brace zaroor lagana hai function band karne ke liye!
+        const totalPagesText = document.getElementById('studioTotalPagesText');
+        if (totalPagesText) totalPagesText.innerHTML = `Total ${grandTotalPages} pages<br><div style="font-size:0.6rem; max-height:45px; overflow-y:auto; margin-top:2px;">${breakdownHTML}</div>`;
 
-    // Ab iske baad baki functions shuru honge:
+        const totalPriceText = document.getElementById('studioTotalPriceText');
+        if (totalPriceText) totalPriceText.textContent = `₹${grandTotalPrice}`;
+    };
+
     window.updatePrintStudioUI = window.updateMultiFileStudioUI;
 
     window.switchStudioFileIndex = function(index) {
@@ -871,7 +862,7 @@ window.addEventListener('DOMContentLoaded', () => {
             updateMultiFileStudioUI();
         }
     };
-
+    
     // Horizontal slider scroll sync listener (outside DOMContentLoaded block since we are already inside it)
     const slider = document.getElementById('studioInImageHorizontalSlider');
     if (slider) {
@@ -2389,34 +2380,32 @@ window.renderCartDrawerContents = function() {
 
     // 🔥 COMPLETE RENDER CART DRAWER CONTENTS FUNCTION WITH E-52 PANDEYPUR STORE INTEGRATION
     window.renderCartDrawerContents = function() {
-        const container = document.getElementById('cartDrawerItemsList');
-        if (!container) return;
+        const container = document.getElementById('cartDrawerItemsList');
+        if (!container) return;
 
-        container.innerHTML = '';
-        
-        window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
-        window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
+        container.innerHTML = '';
 
-        let hasItems = (window.cartSnacksArray.length > 0) || (window.cartPrintJobsArray.length > 0);
-        
-        if (!hasItems) {
-            container.innerHTML = `<p style="font-size:0.8rem; color:#64748b; text-align:center; padding:15px;">Your cart is empty.</p>`;
-            calculateTotal();
-            toggleCartDrawer(false);
-            return;
-        }
+        window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
+        window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
-        const verticalListWrapper = document.createElement('div');
-        verticalListWrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
+        const hasItems = (window.cartSnacksArray.length > 0) || (window.cartPrintJobsArray.length > 0);
 
-       // Render Store Products / Snacks in Cart
+        if (!hasItems) {
+            container.innerHTML = '<p style="font-size:0.8rem; color:#64748b; text-align:center; padding:15px;">Your cart is empty.</p>';
+            if (typeof calculateTotal === 'function') calculateTotal();
+            if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
+            return;
+        }
+
+        const verticalListWrapper = document.createElement('div');
+        verticalListWrapper.style.cssText = 'display:flex; flex-direction:column; gap:12px; width:100%;';
+
+        // Render Store Products / Snacks in Cart
         window.cartSnacksArray.forEach((snack, idx) => {
             const card = document.createElement('div');
-            // Reduced padding and margin for a compact, neat row
-            card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 3px rgba(0,0,0,0.02); gap:10px; width:100%; box-sizing:border-box;";
-            
-            // Fixed image container with object-fit contain so it doesn't stretch
-            const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:40px; height:40px; object-fit:contain; border-radius:8px;" />` : `<div style="font-size:1.5rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📦</div>`;
+            card.style.cssText = 'background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 3px rgba(0,0,0,0.02); gap:10px; width:100%; box-sizing:border-box;';
+
+            const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:40px; height:40px; object-fit:contain; border-radius:8px;" />` : '<div style="font-size:1.5rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📦</div>';
 
             card.innerHTML = `
                 <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
@@ -2437,65 +2426,67 @@ window.renderCartDrawerContents = function() {
             `;
             verticalListWrapper.appendChild(card);
         });
-        // Render Print Jobs in Cart
-        window.cartPrintJobsArray.forEach((job, idx) => {
-            const card = document.createElement('div');
-            card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.02); gap:12px;";
-            
-            let jobTotal = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
 
-            card.innerHTML = `
-                <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
-                    <div style="font-size:1.8rem; width:45px; height:45px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:10px;">📄</div>
-                    <div style="overflow:hidden;">
-                        <div title="${job.fileName}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
-                        <div style="font-size:0.7rem; color:#64748b; font-weight:600; margin-top:2px;">${job.pages} pgs | ${job.printType.toUpperCase()} | Copies: ${job.copies}</div>
-                    </div>
-                </div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="font-weight:800; font-size:0.82rem; color:#065f46;">₹${jobTotal}</div>
-                    <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:6px; font-size:0.75rem; cursor:pointer;" title="Remove Print Job">🗑️</button>
-                </div>
-            `;
-            verticalListWrapper.appendChild(card);
-        });
+        // Render Print Jobs in Cart
+        window.cartPrintJobsArray.forEach((job, idx) => {
+            const card = document.createElement('div');
+            card.style.cssText = 'background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.02); gap:12px;';
 
-        container.appendChild(verticalListWrapper);
+            const jobTotal = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
 
-        // 🔥 UPSELLING SECTION
-        const upsellingSection = document.createElement('div');
-        upsellingSection.style.cssText = "margin-top: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;";
-        upsellingSection.innerHTML = `
-            <h4 style="font-size:0.8rem; font-weight:800; color:#0f172a; margin-bottom:8px; text-transform:uppercase;">⚡ Quick Add Store Items (Boost Sales)</h4>
-            <div id="cartDrawerUpsellingGrid" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;"></div>
-        `;
-        container.appendChild(upsellingSection);
+            card.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                    <div style="font-size:1.8rem; width:45px; height:45px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:10px;">📄</div>
+                    <div style="overflow:hidden;">
+                        <div title="${job.fileName}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
+                        <div style="font-size:0.7rem; color:#64748b; font-weight:600; margin-top:2px;">${job.pages} pgs | ${job.printType.toUpperCase()} | Copies: ${job.copies}</div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="font-weight:800; font-size:0.82rem; color:#065f46;">₹${jobTotal}</div>
+                    <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:6px; font-size:0.75rem; cursor:pointer;" title="Remove Print Job">🗑️</button>
+                </div>
+            `;
+            verticalListWrapper.appendChild(card);
+        });
 
-        const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
-        if (upsellingGrid) {
-            if (window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
-                upsellingGrid.innerHTML = '';
-                window.storeInventoryProducts.forEach(prod => {
-                    if (prod.stockQuantity > 0) {
-                        const thumb = prod.imageUrl || prod.image || '';
-                        const itemCard = document.createElement('div');
-                        itemCard.style.cssText = "min-width: 90px; width: 90px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);";
-                        itemCard.innerHTML = `
-                            ${thumb ? `<img src="${thumb}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; margin-bottom:4px;" />` : '<div style="font-size:1.5rem; margin-bottom:4px;">📦</div>'}
-                            <div title="${prod.name}" style="font-size:0.68rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name}</div>
-                            <div style="font-size:0.68rem; font-weight:800; color:#065f46; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
-                            <button type="button" style="background:#065f46; color:white; border:none; padding:3px 6px; border-radius:6px; font-size:0.65rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${prod.sku || prod.name}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity}, '${thumb}')">+ Add</button>
-                        `;
-                        upsellingGrid.appendChild(itemCard);
-                    }
-                });
-            } else {
-                upsellingGrid.innerHTML = `<p style="font-size:0.75rem; color:#64748b; text-align:center; padding:10px;">Loading store products...</p>`;
-            }
-        }
-        
-       if (typeof calculateTotal === 'function') {
-            calculateTotal();
+        container.appendChild(verticalListWrapper);
+
+        // 🔥 UPSELLING SECTION
+        const upsellingSection = document.createElement('div');
+        upsellingSection.style.cssText = 'margin-top: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;';
+        upsellingSection.innerHTML = `
+            <h4 style="font-size:0.8rem; font-weight:800; color:#0f172a; margin-bottom:8px; text-transform:uppercase;">⚡ Quick Add Store Items (Boost Sales)</h4>
+            <div id="cartDrawerUpsellingGrid" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;"></div>
+        `;
+        container.appendChild(upsellingSection);
+
+        const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
+        if (upsellingGrid) {
+            if (window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
+                upsellingGrid.innerHTML = '';
+                window.storeInventoryProducts.forEach((prod) => {
+                    if (prod.stockQuantity > 0) {
+                        const thumb = prod.imageUrl || prod.image || '';
+                        const safeSku = String(prod.sku || prod.name || '').replace(/'/g, "\\'");
+                        const safeName = String(prod.name || '').replace(/'/g, "\\'");
+                        const safeThumb = String(thumb || '').replace(/'/g, "\\'");
+                        const itemCard = document.createElement('div');
+                        itemCard.style.cssText = 'min-width: 90px; width: 90px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);';
+                        itemCard.innerHTML = `
+                            ${thumb ? `<img src="${thumb}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; margin-bottom:4px;" />` : '<div style="font-size:1.5rem; margin-bottom:4px;">📦</div>'}
+                            <div title="${prod.name}" style="font-size:0.68rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name}</div>
+                            <div style="font-size:0.68rem; font-weight:800; color:#065f46; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
+                            <button type="button" style="background:#065f46; color:white; border:none; padding:3px 6px; border-radius:6px; font-size:0.65rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${Number(prod.sellingPrice) || 0}, ${Number(prod.stockQuantity) || 0}, '${safeThumb}')">+ Add</button>
+                        `;
+                        upsellingGrid.appendChild(itemCard);
+                    }
+                });
+            } else {
+                upsellingGrid.innerHTML = '<p style="font-size:0.75rem; color:#64748b; text-align:center; padding:10px;">Loading store products...</p>';
+            }
         }
+
+        if (typeof calculateTotal === 'function') calculateTotal();
     };
 
