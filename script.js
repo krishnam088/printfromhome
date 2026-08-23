@@ -1063,11 +1063,28 @@ window.addEventListener('DOMContentLoaded', () => {
 
         overlay.style.display = 'flex';
     };
-    
-    window.closeCategoryDrawer = function() {
-        const overlay = document.getElementById('categoryDrawerOverlay');
-        if (overlay) overlay.style.display = 'none';
-    };
+
+  // 📂 Close Category Drawer & Reset Category Selection to 'All Items'
+window.closeCategoryDrawer = function() {
+    const overlay = document.getElementById('categoryDrawerOverlay');
+    if (overlay) overlay.style.display = 'none';
+
+    // Reset selected category state to 'all'
+    window.currentStoreSelectedCategory = 'all';
+
+    // Reset active chip styling on home page to point back to 'All Items'
+    document.querySelectorAll('.store-category-chip').forEach(btn => {
+        if (btn.getAttribute('data-category') === 'all') {
+            btn.style.background = '#065f46';
+            btn.style.color = '#ffffff';
+            btn.style.borderColor = '#065f46';
+        } else {
+            btn.style.background = '#ffffff';
+            btn.style.color = '#0f172a';
+            btn.style.borderColor = '#cbd5e1';
+        }
+    });
+};
     
 
     window.notifyWhenAvailable = function(prodName) {
