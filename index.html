@@ -254,7 +254,7 @@
     <div id="rainAnimationContainer"></div>
     <div id="appToastContainer"></div>
 
-  <!-- Category Filter Sidebar Slider Drawer -->
+<!-- Category Filter Sidebar Slider Drawer -->
 <div id="categoryDrawerOverlay" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); backdrop-filter:blur(3px); z-index:999999; display:none; justify-content:flex-end;">
     <div style="width:90%; max-width:480px; height:100%; background:#ffffff; display:flex; flex-direction:column; box-shadow:-5px 0 25px rgba(0,0,0,0.15);">
         <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid #e2e8f0;">
@@ -265,8 +265,8 @@
         <!-- Category Items Grid Container -->
         <div id="categoryDrawerItemsGrid" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-wrap:wrap; gap:12px; align-content:start; justify-content:flex-start;"></div>
 
-        <!-- 🔥 Category Drawer Floating Cart Bar (Width reduced to half) -->
-        <div id="categoryDrawerFooterBar" style="display:none; padding:10px 16px; background:#ffffff; border-top:1px solid #e2e8f0; align-items:center; justify-content:space-between; box-shadow:0 -4px 15px rgba(0,0,0,0.08); width: 50%; margin: 0 auto 12px auto; border-radius: 14px; border: 1px solid #cbd5e1;">
+        <!-- 🔥 Category Drawer Floating Cart Bar (Reduced to half width) -->
+        <div id="categoryDrawerFooterBar" style="display:none; padding:10px 16px; background:#ffffff; border-top:1px solid #e2e8f0; align-items:center; justify-content:space-between; box-shadow:0 -4px 15px rgba(0,0,0,0.08); width:50%; margin:0 auto 12px auto; border-radius:14px; border:1px solid #cbd5e1;">
             <div style="display:flex; flex-direction:column;">
                 <span id="categoryCartCountText" style="font-size:0.65rem; font-weight:700; color:#713f12; text-transform:uppercase;">0 items</span>
                 <span id="categoryCartTotalPriceText" style="font-size:0.85rem; font-weight:900; color:#0f172a;">₹0.00</span>
@@ -275,7 +275,8 @@
                 <span>View</span> <span>&rarr;</span>
             </button>
         </div>
-
+    </div>
+</div>
     <script>
         window.showAppToast = function(message, type = 'info') {
             const container = document.getElementById('appToastContainer');
