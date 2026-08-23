@@ -525,15 +525,18 @@ window.addEventListener('DOMContentLoaded', () => {
         updateFloatingCartBar();
     }
 
-   // ==========================================
-    // 📂 SAFE FILE UPLOAD & PREVIEW TRIGGER
+  // ==========================================
+    // 📂 100% SAFE FILE UPLOAD & PREVIEW TRIGGER
     // ==========================================
-    if(fileUpload) {
-        fileUpload.addEventListener('change', async () => {
-            if (fileUpload.files.length === 0) return;
+    if (fileUpload) {
+        fileUpload.addEventListener('change', async (event) => {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
             
             let uploadedFilesList = [];
-            for (const file of Array.from(fileUpload.files)) {
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
                 let pageCount = 1;
                 let fileUrl = '';
                 
@@ -543,17 +546,17 @@ window.addEventListener('DOMContentLoaded', () => {
                     fileUrl = '';
                 }
 
-                // Safe PDF page counting without crashing
+                // Completely safe page estimator (won't white-screen if PDF.js fails)
                 if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
                     try {
-                        const arrayBuffer = await file.arrayBuffer();
-                        if (typeof pdfjsLib !== 'undefined') {
+                        if (typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
+                            const arrayBuffer = await file.arrayBuffer();
                             const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
                             const pdfDoc = await loadingTask.promise;
                             pageCount = pdfDoc.numPages || 1;
                         }
                     } catch (e) {
-                        console.warn("PDF.js render warning, defaulting to 1 page:", e);
+                        console.log("PDF reader fallback active");
                         pageCount = 1;
                     }
                 }
@@ -572,14 +575,17 @@ window.addEventListener('DOMContentLoaded', () => {
             }
 
             fileUpload.value = '';
-            if (uploadedFilesList.length > 0 && typeof openPrintStudioWithFilesArray === 'function') {
-                openPrintStudioWithFilesArray(uploadedFilesList, 0);
+            
+            if (uploadedFilesList.length > 0) {
+                if (typeof openPrintStudioWithFilesArray === 'function') {
+                    openPrintStudioWithFilesArray(uploadedFilesList, 0);
+                }
             }
         });
     }
 
     window.triggerInlineFileUploadClick = function() {
-        if(fileUpload) fileUpload.click();
+        if (fileUpload) fileUpload.click();
     };
 
     window.previewFileInA4Studio = function(index) {
