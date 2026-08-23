@@ -575,8 +575,8 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // ==========================================
-    // 🎨 2. MULTI-FILE HORIZONTAL SLIDER PRINT STUDIO ENGINE
+   // ==========================================
+    // 🎨 IN-IMAGE HORIZONTAL SLIDER PRINT STUDIO ENGINE
     // ==========================================
     window.studioMasterFiles = [];
     window.currentStudioActiveIndex = 0;
@@ -606,7 +606,6 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Backward compatibility wrapper
     window.openPrintStudioWithFile = function(fileObj, fileDataUrl) {
         window.openPrintStudioWithFilesArray([{
             name: fileObj.name || 'Document.pdf',
@@ -638,48 +637,37 @@ window.addEventListener('DOMContentLoaded', () => {
 
         const currentFile = files[window.currentStudioActiveIndex];
 
-        // 1. Render Horizontal Files Slider Bar inside Print Studio Header
-        let sliderContainer = document.getElementById('studioHorizontalFilesSlider');
-        if (!sliderContainer) {
-            const modalHeader = document.querySelector('#printStudioModal > div:first-child');
-            if (modalHeader) {
-                sliderContainer = document.createElement('div');
-                sliderContainer.id = 'studioHorizontalFilesSlider';
-                sliderContainer.style.cssText = "display:flex; gap:10px; overflow-x:auto; padding:10px 16px; background:#f1f5f9; width:100%; box-sizing:border-box; scrollbar-width:none; border-bottom:1px solid #e2e8f0;";
-                modalHeader.after(sliderContainer);
-            }
-        }
-
-        if (sliderContainer) {
-            sliderContainer.innerHTML = files.map((f, idx) => `
-                <div onclick="switchStudioFileIndex(${idx})" style="min-width:100px; padding:8px 10px; background:${idx === window.currentStudioActiveIndex ? '#065f46' : '#ffffff'}; color:${idx === window.currentStudioActiveIndex ? '#ffffff' : '#0f172a'}; border:1px solid ${idx === window.currentStudioActiveIndex ? '#065f46' : '#cbd5e1'}; border-radius:10px; cursor:pointer; display:flex; flex-direction:column; align-items:center; text-align:center; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                    <span style="font-size:1.2rem;">📄</span>
-                    <span style="font-size:0.7rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:85px; margin-top:2px;" title="${f.name}">${f.name}</span>
+        // 1. Render In-Image Horizontal Slider
+        const imageSlider = document.getElementById('studioInImageHorizontalSlider');
+        if (imageSlider) {
+            imageSlider.innerHTML = files.map((f, idx) => `
+                <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; flex-shrink:0; position:relative; background:#f8fafc;">
+                    ${f.fileUrl && (f.fileUrl.startsWith('data:image') || f.fileUrl.startsWith('blob:')) 
+                        ? `<img src="${f.fileUrl}" style="max-width:100%; max-height:100%; object-fit:contain;" />` 
+                        : `<span style="font-size:3.5rem;">📄</span>`
+                    }
                 </div>
             `).join('');
+
+            // Scroll slider to active index smoothly
+            let slideWidth = imageSlider.clientWidth || 300;
+            imageSlider.scrollTo({ left: slideWidth * window.currentStudioActiveIndex, behavior: 'smooth' });
         }
 
-        // 2. Update Active File Preview & Name
-        const nameNode = document.getElementById('studioFileNameText');
-        if (nameNode) nameNode.textContent = currentFile.name;
-
-        const previewContainer = document.getElementById('studioFilePreviewContainer');
-        if (previewContainer) {
-            if (currentFile.fileUrl && (currentFile.fileUrl.startsWith('data:image') || currentFile.fileUrl.startsWith('blob:'))) {
-                previewContainer.innerHTML = `<img src="${currentFile.fileUrl}" style="width:100%; height:100%; object-fit:contain;" />`;
-            } else {
-                previewContainer.innerHTML = `<span style="font-size:3rem;">📄</span>`;
-            }
+        // Counter Badge (e.g., 1/2)
+        const counterBadge = document.getElementById('studioSlideCounterBadge');
+        if (counterBadge) {
+            counterBadge.textContent = `${window.currentStudioActiveIndex + 1}/${files.length}`;
         }
 
-        // 3. Update Copies & Pages Info
+        // 2. Update Copies & Pages Info
         const copiesText = document.getElementById('studioCopiesCountText');
         if (copiesText) copiesText.textContent = currentFile.copies;
 
         const pagesInfo = document.getElementById('studioFilePagesInfo');
-        if (pagesInfo) pagesInfo.textContent = `File ${window.currentStudioActiveIndex + 1} of ${files.length} (${currentFile.pages} page${currentFile.pages > 1 ? 's' : ''})`;
+        if (pagesInfo) pagesInfo.textContent = `${currentFile.name} (${currentFile.pages} page${currentFile.pages > 1 ? 's' : ''})`;
 
-        // 4. Update Color & Orientation UI Highlights
+        // 3. Highlight Color & Orientation UI
         const colColoured = document.getElementById('colorOptionColoured');
         const colBw = document.getElementById('colorOptionBw');
         if (colColoured && colBw) {
@@ -704,7 +692,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 5. Calculate Total Pages & Price Breakdown for ALL files in slider
+        // 4. Calculate Total Pages & Price Breakdown
         let grandTotalPages = 0;
         let grandTotalPrice = 0;
         let breakdownHTML = '';
@@ -716,11 +704,11 @@ window.addEventListener('DOMContentLoaded', () => {
             grandTotalPages += fileTotalPages;
             grandTotalPrice += fileTotalCost;
 
-            breakdownHTML += `<div style="font-size:0.7rem; color:#64748b; display:flex; justify-content:space-between; margin-top:2px;"><span>F${idx+1}: ${f.name} (${f.pages}pg x ${f.copies}cp x ₹${rate})</span><span style="font-weight:700; color:#0f172a;">₹${fileTotalCost}</span></div>`;
+            breakdownHTML += `<div style="font-size:0.65rem; color:#64748b; display:flex; justify-content:space-between; margin-top:2px;"><span>F${idx+1}: ${f.name} (${f.pages}pg x ${f.copies}cp x ₹${rate})</span><span style="font-weight:700; color:#0f172a;">₹${fileTotalCost}</span></div>`;
         });
 
         const totalPagesText = document.getElementById('studioTotalPagesText');
-        if (totalPagesText) totalPagesText.innerHTML = `Total ${grandTotalPages} pages<br><div style="font-size:0.65rem; max-height:50px; overflow-y:auto; margin-top:2px;">${breakdownHTML}</div>`;
+        if (totalPagesText) totalPagesText.innerHTML = `Total ${grandTotalPages} pages<br><div style="font-size:0.6rem; max-height:45px; overflow-y:auto; margin-top:2px;">${breakdownHTML}</div>`;
 
         const totalPriceText = document.getElementById('studioTotalPriceText');
         if (totalPriceText) totalPriceText.textContent = `₹${grandTotalPrice}`;
@@ -755,6 +743,19 @@ window.addEventListener('DOMContentLoaded', () => {
             file.orientation = ori;
             updateMultiFileStudioUI();
         }
+    };
+
+    window.applyCurrentSettingToAllFiles = function() {
+        let currentFile = window.studioMasterFiles[window.currentStudioActiveIndex];
+        if (!currentFile) return;
+
+        window.studioMasterFiles.forEach(f => {
+            f.copies = currentFile.copies;
+            f.printType = currentFile.printType;
+            f.orientation = currentFile.orientation;
+        });
+        updateMultiFileStudioUI();
+        alert("✅ Current settings applied to all files!");
     };
 
     window.handleStudioFilesAdded = function(input) {

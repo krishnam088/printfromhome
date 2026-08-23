@@ -354,97 +354,107 @@
         </div>
     </div>
 
-   <!-- 📄 Clean Mobile-First Print Studio Modal -->
-<div id="printStudioModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#f8fafc; z-index:100000; display:none; flex-direction:column; overflow-y:auto; font-family: 'Poppins', sans-serif;">
+   <!-- 📄 Compact Mobile-Fit Print Studio Modal -->
+<div id="printStudioModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#f8fafc; z-index:100000; display:none; flex-direction:column; overflow-y:auto; font-family:'Poppins', sans-serif;">
+    
     <!-- Top Bar -->
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:10;">
-        <button type="button" onclick="closePrintStudio()" style="background:#f1f5f9; border:none; width:38px; height:38px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.2rem; color:#0f172a;">&larr;</button>
-        <button type="button" onclick="document.getElementById('studioAdditionalFileUpload').click()" style="background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; padding:8px 16px; border-radius:20px; font-weight:800; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; gap:6px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#ffffff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:10;">
+        <button type="button" onclick="closePrintStudio()" style="background:#f1f5f9; border:none; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.1rem; color:#0f172a;">&larr;</button>
+        <button type="button" onclick="document.getElementById('studioAdditionalFileUpload').click()" style="background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; padding:6px 14px; border-radius:18px; font-weight:800; font-size:0.8rem; cursor:pointer; display:flex; align-items:center; gap:4px;">
             <span>+ Add files</span>
         </button>
         <input type="file" id="studioAdditionalFileUpload" style="display:none;" multiple onchange="handleStudioFilesAdded(this)" />
     </div>
 
-    <!-- Main Container -->
-    <div style="flex:1; max-width:500px; width:100%; margin:0 auto; padding:20px; box-sizing:border-box; display:flex; flex-direction:column; gap:16px; padding-bottom:100px;">
+    <!-- Main Container (Compact & Phone-Fit) -->
+    <div style="flex:1; max-width:480px; width:100%; margin:0 auto; padding:12px 16px; box-sizing:border-box; display:flex; flex-direction:column; gap:12px; padding-bottom:90px;">
         
-        <!-- File Preview Card -->
-        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; display:flex; flex-direction:column; align-items:center; position:relative; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-            <button type="button" onclick="removeCurrentStudioFile()" style="position:absolute; top:12px; right:12px; background:#f1f5f9; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:bold; color:#64748b;">&times;</button>
-            <div id="studioFilePreviewContainer" style="width:100%; height:260px; display:flex; align-items:center; justify-content:center; background:#f8fafc; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0;">
-                <span style="font-size:3rem;">📄</span>
+        <!-- File Preview Card with In-Image Horizontal Slider -->
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; flex-direction:column; align-items:center; position:relative; box-shadow:0 2px 6px rgba(0,0,0,0.03);">
+            <button type="button" onclick="removeCurrentStudioFile()" style="position:absolute; top:8px; right:8px; background:#f1f5f9; border:none; width:26px; height:26px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:bold; color:#64748b; font-size:0.85rem;">&times;</button>
+            
+            <!-- Horizontal Sliding Images Container -->
+            <div id="studioInImageHorizontalSlider" style="width:100%; height:200px; display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; border-radius:10px; background:#f8fafc; border:1px solid #e2e8f0; gap:0;">
+                <!-- Dynamically injected slide items -->
             </div>
-            <div id="studioFileNameText" style="margin-top:12px; font-weight:700; font-size:0.85rem; color:#0f172a; text-align:center; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Document.pdf</div>
+
+            <!-- Page Counter / Indicator Badge (e.g., 1/2) -->
+            <div id="studioSlideCounterBadge" style="margin-top:8px; background:#1e293b; color:#ffffff; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:10px;">1/1</div>
         </div>
 
-        <!-- Number of Copies Box -->
-        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+        <!-- Number of Copies Box (Compact) -->
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 4px rgba(0,0,0,0.02);">
             <div>
-                <div style="font-weight:800; font-size:1rem; color:#0f172a;">Number of copies</div>
-                <div id="studioFilePagesInfo" style="font-size:0.75rem; color:#64748b; margin-top:2px;">File 1 (1 page)</div>
+                <div style="font-weight:800; font-size:0.9rem; color:#0f172a;">Number of copies</div>
+                <div id="studioFilePagesInfo" style="font-size:0.7rem; color:#64748b; margin-top:1px;">File 1 (1 page)</div>
             </div>
-            <div style="display:flex; align-items:center; background:#065f46; border-radius:10px; padding:4px 10px; gap:12px;">
-                <button type="button" onclick="adjustStudioCopies(-1)" style="background:none; border:none; color:#ffffff; font-size:1.2rem; font-weight:bold; cursor:pointer;">&minus;</button>
-                <span id="studioCopiesCountText" style="color:#ffffff; font-weight:800; font-size:1rem; min-width:16px; text-align:center;">1</span>
-                <button type="button" onclick="adjustStudioCopies(1)" style="background:none; border:none; color:#ffffff; font-size:1.2rem; font-weight:bold; cursor:pointer;">+</button>
-            </div>
-        </div>
-
-        <!-- Choose Print Color -->
-        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:16px 20px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-            <div style="font-weight:800; font-size:1rem; color:#0f172a; margin-bottom:12px;">Choose print color</div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-                <div id="colorOptionColoured" onclick="setStudioPrintColor('coloured')" style="border:2px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; align-items:center; gap:12px; background:#ffffff; transition:all 0.2s;">
-                    <div style="font-size:1.5rem;">🎨</div>
-                    <div>
-                        <div style="font-weight:800; font-size:0.85rem; color:#0f172a;">Coloured</div>
-                        <div style="font-size:0.7rem; color:#64748b;">₹10/page</div>
-                    </div>
-                </div>
-                <div id="colorOptionBw" onclick="setStudioPrintColor('bw')" style="border:2px solid #065f46; border-radius:12px; padding:12px; cursor:pointer; display:flex; align-items:center; gap:12px; background:#f0fdf4; transition:all 0.2s;">
-                    <div style="font-size:1.5rem;">🖨️</div>
-                    <div>
-                        <div style="font-weight:800; font-size:0.85rem; color:#0f172a;">B & W</div>
-                        <div style="font-size:0.7rem; color:#64748b;">₹3/page</div>
-                    </div>
-                </div>
+            <div style="display:flex; align-items:center; background:#065f46; border-radius:8px; padding:3px 8px; gap:10px;">
+                <button type="button" onclick="adjustStudioCopies(-1)" style="background:none; border:none; color:#ffffff; font-size:1.1rem; font-weight:bold; cursor:pointer;">&minus;</button>
+                <span id="studioCopiesCountText" style="color:#ffffff; font-weight:800; font-size:0.9rem; min-width:14px; text-align:center;">1</span>
+                <button type="button" onclick="adjustStudioCopies(1)" style="background:none; border:none; color:#ffffff; font-size:1.1rem; font-weight:bold; cursor:pointer;">+</button>
             </div>
         </div>
 
-        <!-- Choose Print Orientation -->
-        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:16px 20px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-            <div style="font-weight:800; font-size:1rem; color:#0f172a; margin-bottom:12px;">Choose print orientation</div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-                <div id="orientationPortrait" onclick="setStudioOrientation('portrait')" style="border:2px solid #065f46; border-radius:12px; padding:12px; cursor:pointer; display:flex; align-items:center; gap:12px; background:#f0fdf4; transition:all 0.2s;">
-                    <div style="font-size:1.3rem;">📄</div>
+        <!-- Choose Print Color (Compact Grid) -->
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; box-shadow:0 1px 4px rgba(0,0,0,0.02);">
+            <div style="font-weight:800; font-size:0.9rem; color:#0f172a; margin-bottom:8px;">Choose print color</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div id="colorOptionColoured" onclick="setStudioPrintColor('coloured')" style="border:2px solid #e2e8f0; border-radius:10px; padding:8px 10px; cursor:pointer; display:flex; align-items:center; gap:8px; background:#ffffff; transition:all 0.2s;">
+                    <div style="font-size:1.2rem;">🎨</div>
                     <div>
-                        <div style="font-weight:800; font-size:0.85rem; color:#0f172a;">Portrait</div>
-                        <div style="font-size:0.65rem; color:#64748b;">8.3 x 11.7 in</div>
+                        <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Coloured</div>
+                        <div style="font-size:0.65rem; color:#64748b;">₹10/page</div>
                     </div>
                 </div>
-                <div id="orientationLandscape" onclick="setStudioOrientation('landscape')" style="border:2px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; display:flex; align-items:center; gap:12px; background:#ffffff; transition:all 0.2s;">
-                    <div style="font-size:1.3rem;">🖼️</div>
+                <div id="colorOptionBw" onclick="setStudioPrintColor('bw')" style="border:2px solid #065f46; border-radius:10px; padding:8px 10px; cursor:pointer; display:flex; align-items:center; gap:8px; background:#f0fdf4; transition:all 0.2s;">
+                    <div style="font-size:1.2rem;">🖨️</div>
                     <div>
-                        <div style="font-weight:800; font-size:0.85rem; color:#0f172a;">Landscape</div>
-                        <div style="font-size:0.65rem; color:#64748b;">11.7 x 8.3 in</div>
+                        <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">B & W</div>
+                        <div style="font-size:0.65rem; color:#64748b;">₹3/page</div>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Choose Print Orientation (Compact Grid) -->
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; box-shadow:0 1px 4px rgba(0,0,0,0.02);">
+            <div style="font-weight:800; font-size:0.9rem; color:#0f172a; margin-bottom:8px;">Choose print orientation</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div id="orientationPortrait" onclick="setStudioOrientation('portrait')" style="border:2px solid #065f46; border-radius:10px; padding:8px 10px; cursor:pointer; display:flex; align-items:center; gap:8px; background:#f0fdf4; transition:all 0.2s;">
+                    <div style="font-size:1.1rem;">📄</div>
+                    <div>
+                        <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Portrait</div>
+                        <div style="font-size:0.6rem; color:#64748b;">8.3 x 11.7 in</div>
+                    </div>
+                </div>
+                <div id="orientationLandscape" onclick="setStudioOrientation('landscape')" style="border:2px solid #e2e8f0; border-radius:10px; padding:8px 10px; cursor:pointer; display:flex; align-items:center; gap:8px; background:#ffffff; transition:all 0.2s;">
+                    <div style="font-size:1.1rem;">🖼️</div>
+                    <div>
+                        <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Landscape</div>
+                        <div style="font-size:0.6rem; color:#64748b;">11.7 x 8.3 in</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Apply to All Files Bar -->
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 4px rgba(0,0,0,0.02);">
+            <span style="font-size:0.78rem; font-weight:700; color:#475569;">Apply this setting to all files</span>
+            <button type="button" onclick="applyCurrentSettingToAllFiles()" style="background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; padding:6px 14px; border-radius:8px; font-weight:800; font-size:0.78rem; cursor:pointer;">Apply</button>
         </div>
     </div>
 
     <!-- Bottom Sticky Checkout Bar -->
-    <div style="position:fixed; bottom:0; left:0; width:100%; background:#ffffff; border-top:1px solid #e2e8f0; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; box-sizing:border-box; box-shadow:0 -4px 15px rgba(0,0,0,0.08); z-index:20;">
+    <div style="position:fixed; bottom:0; left:0; width:100%; background:#ffffff; border-top:1px solid #e2e8f0; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; box-sizing:border-box; box-shadow:0 -4px 12px rgba(0,0,0,0.06); z-index:20;">
         <div>
-            <div id="studioTotalPagesText" style="font-size:0.75rem; font-weight:700; color:#64748b;">Total 1 page</div>
-            <div id="studioTotalPriceText" style="font-size:1.2rem; font-weight:900; color:#0f172a;">₹3</div>
+            <div id="studioTotalPagesText" style="font-size:0.7rem; font-weight:700; color:#64748b;">Total 1 page</div>
+            <div id="studioTotalPriceText" style="font-size:1.1rem; font-weight:900; color:#0f172a;">₹3</div>
         </div>
-        <button type="button" onclick="addStudioJobToCart()" style="background:#065f46; color:#ffffff; border:none; padding:14px 28px; border-radius:14px; font-weight:800; font-size:0.95rem; cursor:pointer; box-shadow:0 4px 12px rgba(6,95,70,0.3);">
+        <button type="button" onclick="addStudioJobToCart()" style="background:#065f46; color:#ffffff; border:none; padding:12px 24px; border-radius:12px; font-weight:800; font-size:0.9rem; cursor:pointer; box-shadow:0 4px 10px rgba(6,95,70,0.3);">
             Add to cart
         </button>
     </div>
 </div>
-
     <!-- 💬 NEED HELP & CUSTOMER CARE MODAL -->
     <div id="helpCenterModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 21000; display: none; justify-content: center; align-items: center; padding: 20px;">
         <div style="background: #ffffff; border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
