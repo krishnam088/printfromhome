@@ -593,6 +593,28 @@ window.toggleCouponDrawer = function() {
         updateFloatingCartBar();
     }
 
+// 🔥 PDF Page to Canvas Image URL Converter for Print Studio Previews
+    window.convertPdfPageToImage = async function(pdfDoc, pageNumber) {
+        try {
+            const page = await pdfDoc.getPage(pageNumber);
+            const viewport = page.getViewport({ scale: 1.5 }); // High quality scale
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            await page.render(renderContext).promise;
+            return canvas.toDataURL('image/png'); // Returns data URL image for preview
+        } catch (e) {
+            console.error("PDF Page Render Error:", e);
+            return '';
+        }
+    };
+
   // ==========================================
     // 📂 100% SAFE FILE UPLOAD & PREVIEW TRIGGER
     // ==========================================
