@@ -2494,8 +2494,8 @@ window.renderCartDrawerContents = function() {
             }
         }
         
-        if (typeof calculateTotal === 'function') {
+       if (typeof calculateTotal === 'function') {
             calculateTotal();
-        };
+        }
     };
 
