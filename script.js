@@ -654,7 +654,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
         const currentFile = files[window.currentStudioActiveIndex] || files[0];
 
-        // 1. Render In-Image Horizontal Slider with Real-time B&W/Color & Landscape Rotation
+        // 1. Render In-Image Horizontal Slider safely
         const imageSlider = document.getElementById('studioInImageHorizontalSlider');
         if (imageSlider) {
             imageSlider.innerHTML = files.map((f) => {
@@ -688,20 +688,20 @@ window.addEventListener('DOMContentLoaded', () => {
             imageSlider.scrollTo({ left: slideWidth * window.currentStudioActiveIndex, behavior: 'smooth' });
         }
 
-        // Counter Badge (e.g., 1/2, 2/2)
+        // 2. Counter Badge (e.g., 1/2)
         const counterBadge = document.getElementById('studioSlideCounterBadge');
         if (counterBadge) {
             counterBadge.textContent = `${window.currentStudioActiveIndex + 1}/${files.length}`;
         }
 
-        // 2. Update Copies & Pages Info
+        // 3. Update Copies & Pages Info
         const copiesText = document.getElementById('studioCopiesCountText');
         if (copiesText) copiesText.textContent = currentFile.copies;
 
         const pagesInfo = document.getElementById('studioFilePagesInfo');
         if (pagesInfo) pagesInfo.textContent = `${currentFile.name} (${currentFile.pages} page${currentFile.pages > 1 ? 's' : ''})`;
 
-        // 3. Highlight Color & Orientation UI Highlights
+        // 4. Highlight Color & Orientation UI
         const colColoured = document.getElementById('colorOptionColoured');
         const colBw = document.getElementById('colorOptionBw');
         if (colColoured && colBw) {
@@ -726,7 +726,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 4. Calculate Clean Grand Total Price (Without messy details in bottom bar)
+        // 5. Calculate Clean Grand Total Price
         let grandTotalPrice = 0;
         files.forEach((f) => {
             let rate = (f.printType === 'bw') ? 3 : 10;
@@ -734,7 +734,9 @@ window.addEventListener('DOMContentLoaded', () => {
         });
 
         const totalPriceText = document.getElementById('studioTotalPriceText');
-        if (totalPriceText) totalPriceText.textContent = `₹${grandTotalPrice}`;
+        if (totalPriceText) {
+            totalPriceText.textContent = `₹${grandTotalPrice}`;
+        }
     };
 
     window.updatePrintStudioUI = window.updateMultiFileStudioUI;
