@@ -196,7 +196,6 @@
             font-size: 0.72rem !important;
             margin-bottom: 1px !important;
         }
-        /* Chota size for "in 12 minutes" */
         .delivery-brand-box h2 {
             font-size: 1.05rem !important;
             font-weight: 800 !important;
@@ -207,7 +206,6 @@
         .delivery-brand-box h2 span {
             font-size: 0.95rem !important;
         }
-        /* Chota distance pill badge */
         .delivery-brand-box div[style*="border-radius: 20px"] {
             padding: 1px 6px !important;
             font-size: 0.62rem !important;
@@ -215,12 +213,10 @@
         #storeDistanceBadgeText {
             font-size: 0.62rem !important;
         }
-        /* Address preview chota */
         #headerActiveAddressPreview {
             max-width: 160px !important;
             font-size: 0.62rem !important;
         }
-        /* Right side profile & store status cluster fix */
         .header-profile-cluster {
             display: flex !important;
             flex-direction: column !important;
@@ -257,6 +253,18 @@
 
     <div id="rainAnimationContainer"></div>
     <div id="appToastContainer"></div>
+
+    <!-- 📂 CATEGORY FILTER SIDEBAR SLIDER DRAWER -->
+    <div id="categoryDrawerOverlay" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); backdrop-filter:blur(3px); z-index:999999; display:none; justify-content:flex-end;">
+        <div style="width:320px; max-width:85vw; height:100%; background:#ffffff; display:flex; flex-direction:column; box-shadow:-5px 0 25px rgba(0,0,0,0.15);">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:16px; border-bottom:1px solid #e2e8f0;">
+                <h3 id="categoryDrawerTitle" style="font-size:1rem; font-weight:800; color:#0f172a; margin:0;">Category Items</h3>
+                <button type="button" onclick="closeCategoryDrawer()" style="background:#f1f5f9; border:none; width:32px; height:32px; border-radius:50%; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#64748b;">&times;</button>
+            </div>
+            <div id="categoryDrawerItemsGrid" style="flex:1; overflow-y:auto; padding:16px; display:grid; grid-template-columns:1fr 1fr; gap:12px; align-content:start;"></div>
+        </div>
+    </div>
+
     <script>
         window.showAppToast = function(message, type = 'info') {
             const container = document.getElementById('appToastContainer');
@@ -789,7 +797,7 @@
         <span style="font-size: 0.6rem; color: #0f172a; font-weight: bold;">▼</span>
     </div>
 </div>
-                    <div class="header-profile-cluster">
+                <div class="header-profile-cluster">
                         <div class="status-micro-nav">
                             <span id="userShopStatus" class="shop-status-text-badge open">OPEN 🟢</span>
                             <span class="shop-timing-subtext">7AM - 10PM</span>
@@ -1076,7 +1084,6 @@
             if(sensitiveCheck) sensitiveCheck.checked = hideSensitive;
         });
 
-        // 🔥 COMPLETE & FIXED CART DRAWER CONTENTS RENDERER WITH UPSELLING SLIDER
         window.renderCartDrawerContents = function() {
             const container = document.getElementById('cartDrawerItemsList');
             if (!container) return;
@@ -1098,7 +1105,6 @@
             const verticalListWrapper = document.createElement('div');
             verticalListWrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
 
-            // Render Snacks & Store Products inside Cart
             window.cartSnacksArray.forEach((snack, idx) => {
                 const card = document.createElement('div');
                 card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.02); gap:12px;";
@@ -1125,7 +1131,6 @@
                 verticalListWrapper.appendChild(card);
             });
 
-            // Render Print Jobs inside Cart
             window.cartPrintJobsArray.forEach((job, idx) => {
                 const card = document.createElement('div');
                 card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.02); gap:12px;";
@@ -1150,7 +1155,6 @@
 
             container.appendChild(verticalListWrapper);
 
-            // 🔥 UPSELLING SECTION INSIDE CART DRAWER
             const upsellingSection = document.createElement('div');
             upsellingSection.style.cssText = "margin-top: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;";
             upsellingSection.innerHTML = `
@@ -1502,20 +1506,10 @@
                     return;
                 }
 
+                // Home page will always show all products (ignoring category chips filter on home page)
                 let filteredProducts = window.storeInventoryProducts.filter(prod => {
                     let nameMatch = (prod.name || '').toLowerCase().includes(window.currentStoreSearchQuery || "");
-                    let categoryLower = (prod.category || prod.type || '').toLowerCase();
-                    
-                    let matchesCategory = true;
-                    if (window.currentStoreSelectedCategory === 'munchies') {
-                        matchesCategory = categoryLower.includes('munchies') || categoryLower.includes('chips') || categoryLower.includes('namkeen') || (prod.name || '').toLowerCase().includes('lays') || (prod.name || '').toLowerCase().includes('kurkure');
-                    } else if (window.currentStoreSelectedCategory === 'snacks') {
-                        matchesCategory = categoryLower.includes('snacks') || categoryLower.includes('food') || categoryLower.includes('beverage');
-                    } else if (window.currentStoreSelectedCategory === 'socks') {
-                        matchesCategory = categoryLower.includes('socks') || categoryLower.includes('apparel') || categoryLower.includes('clothing') || (prod.name || '').toLowerCase().includes('sock');
-                    }
-
-                    return nameMatch && matchesCategory;
+                    return nameMatch;
                 });
 
                 if (filteredProducts.length === 0) {
@@ -1570,6 +1564,7 @@
             });
         }
 
+        // 📂 Category Filter Click Handler (Opens side slider drawer, home page remains intact)
         window.filterStoreByCategory = function(categoryName) {
             window.currentStoreSelectedCategory = categoryName;
             document.querySelectorAll('.store-category-chip').forEach(btn => {
@@ -1583,7 +1578,74 @@
                     btn.style.borderColor = '#cbd5e1';
                 }
             });
-            renderStoreProductsUI();
+
+            if (categoryName === 'all') {
+                closeCategoryDrawer();
+            } else {
+                openCategoryDrawer(categoryName);
+            }
+        };
+
+        window.openCategoryDrawer = function(categoryName) {
+            const overlay = document.getElementById('categoryDrawerOverlay');
+            const titleNode = document.getElementById('categoryDrawerTitle');
+            const gridNode = document.getElementById('categoryDrawerItemsGrid');
+            if (!overlay || !gridNode) return;
+
+            if (titleNode) {
+                titleNode.textContent = `${categoryName.toUpperCase()} ITEMS`;
+            }
+
+            gridNode.innerHTML = '';
+
+            let filtered = (window.storeInventoryProducts || []).filter(prod => {
+                let categoryLower = (prod.category || prod.type || '').toLowerCase();
+                let nameLower = (prod.name || '').toLowerCase();
+                
+                if (categoryName === 'munchies') {
+                    return categoryLower.includes('munchies') || categoryLower.includes('chips') || categoryLower.includes('namkeen') || nameLower.includes('lays') || nameLower.includes('kurkure');
+                } else if (categoryName === 'snacks') {
+                    return categoryLower.includes('snacks') || categoryLower.includes('food') || categoryLower.includes('beverage');
+                } else if (categoryName === 'socks') {
+                    return categoryLower.includes('socks') || categoryLower.includes('apparel') || categoryLower.includes('clothing') || nameLower.includes('sock');
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                gridNode.innerHTML = `<p style="grid-column: 1 / -1; text-align:center; color:#64748b; font-size:0.8rem; padding:40px;">No items found in this category.</p>`;
+            } else {
+                filtered.forEach(prod => {
+                    const isOutOfStock = (prod.stockQuantity <= 0);
+                    const finalImgUrl = prod.imageUrl || prod.image || '';
+                    const card = document.createElement('div');
+                    card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.03);";
+                    
+                    const imgHtml = finalImgUrl ? `<img src="${finalImgUrl}" style="width:60px; height:60px; object-fit:contain; border-radius:8px; margin-bottom:6px;" />` : `<div style="font-size:2rem; margin-bottom:6px;">📦</div>`;
+
+                    let safeSku = String(prod.sku || prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    let safeName = String(prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    let safeImg = String(finalImgUrl || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                    card.innerHTML = `
+                        ${imgHtml}
+                        <div style="font-weight:700; font-size:0.75rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; margin-bottom:2px;" title="${prod.name}">${prod.name}</div>
+                        <div style="font-weight:800; font-size:0.75rem; color:#065f46; margin-bottom:8px;">₹${prod.sellingPrice || 0}</div>
+                        ${isOutOfStock 
+                            ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 6px; border-radius:6px; font-size:0.68rem; font-weight:700; width:100%; cursor:pointer;" disabled>Out of Stock</button>`
+                            : `<button type="button" style="background:#065f46; color:white; border:none; padding:5px 8px; border-radius:6px; font-size:0.7rem; font-weight:800; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
+                        }
+                    `;
+                    gridNode.appendChild(card);
+                });
+            }
+
+            overlay.style.display = 'flex';
+        };
+
+        window.closeCategoryDrawer = function() {
+            const overlay = document.getElementById('categoryDrawerOverlay');
+            if (overlay) overlay.style.display = 'none';
         };
 
         window.filterStoreBySearchInput = function(query) {

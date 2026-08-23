@@ -866,77 +866,113 @@ window.addEventListener('DOMContentLoaded', () => {
         grid.appendChild(card);
     });
 };
-    window.filterStoreByCategory = function(categoryName) {
-        window.currentStoreSelectedCategory = categoryName;
-        document.querySelectorAll('.store-category-chip').forEach(btn => {
-            if (btn.getAttribute('data-category') === categoryName) {
-                btn.style.background = '#065f46';
-                btn.style.color = '#ffffff';
-                btn.style.borderColor = '#065f46';
-            } else {
-                btn.style.background = '#ffffff';
-                btn.style.color = '#0f172a';
-                btn.style.borderColor = '#cbd5e1';
-            }
-        });
-        renderStoreProductsUI();
-    };
+   // 📂 Category Click: Highlights chip & opens side slider drawer (Home page remains unchanged)
+    window.filterStoreByCategory = function(categoryName) {
+        window.currentStoreSelectedCategory = categoryName;
+        document.querySelectorAll('.store-category-chip').forEach(btn => {
+            if (btn.getAttribute('data-category') === categoryName) {
+                btn.style.background = '#065f46';
+                btn.style.color = '#ffffff';
+                btn.style.borderColor = '#065f46';
+            } else {
+                btn.style.background = '#ffffff';
+                btn.style.color = '#0f172a';
+                btn.style.borderColor = '#cbd5e1';
+            }
+        });
 
-    window.filterStoreBySearchInput = function(query) {
-        window.currentStoreSearchQuery = query.toLowerCase().trim();
-        renderStoreProductsUI();
-    };
-
-    function renderStoreProductsUI() {
-    const gridContainers = document.querySelectorAll('.snacks-horizontal-slider');
-    if (gridContainers.length === 0) return;
-
-    gridContainers.forEach(container => {
-        container.style.cssText = 'display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 12px; padding: 10px 4px; width: 100%; scrollbar-width: none; align-items: flex-start;';
-        
-        container.innerHTML = '';
-
-        if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) {
-            container.innerHTML = `<p style="font-size:0.75rem; color:#64748b; padding:10px; grid-column: 1 / -1; text-align:center;">No store products available currently.</p>`;
-            return;
+        if (categoryName === 'all') {
+            if (typeof closeCategoryDrawer === 'function') closeCategoryDrawer();
+        } else {
+            if (typeof openCategoryDrawer === 'function') {
+                openCategoryDrawer(categoryName);
+            }
         }
+    };
 
-        let filteredProducts = window.storeInventoryProducts.filter(prod => {
-            let nameMatch = (prod.name || '').toLowerCase().includes(window.currentStoreSearchQuery);
-            let categoryLower = (prod.category || prod.type || '').toLowerCase();
-            
-            let matchesCategory = true;
-            if (window.currentStoreSelectedCategory === 'munchies') {
-                matchesCategory = categoryLower.includes('munchies') || categoryLower.includes('chips') || categoryLower.includes('namkeen') || (prod.name || '').toLowerCase().includes('lays') || (prod.name || '').toLowerCase().includes('kurkure');
-            } else if (window.currentStoreSelectedCategory === 'snacks') {
-                matchesCategory = categoryLower.includes('snacks') || categoryLower.includes('food') || categoryLower.includes('beverage');
-            } else if (window.currentStoreSelectedCategory === 'socks') {
-                matchesCategory = categoryLower.includes('socks') || categoryLower.includes('apparel') || categoryLower.includes('clothing') || (prod.name || '').toLowerCase().includes('sock');
-            }
+    window.filterStoreBySearchInput = function(query) {
+        window.currentStoreSearchQuery = (query || "").toLowerCase().trim();
+        renderStoreProductsUI();
+    };
 
-            return nameMatch && matchesCategory;
-        });
+    function renderStoreProductsUI() {
+        const gridContainers = document.querySelectorAll('.snacks-horizontal-slider');
+        if (gridContainers.length === 0) return;
 
-        if (filteredProducts.length === 0) {
-            container.innerHTML = `<p style="font-size:0.78rem; color:#64748b; padding:20px; text-align:center; grid-column: 1 / -1;">No products found matching your search.</p>`;
-            return;
-        }
+        gridContainers.forEach(container => {
+            if (!container.style.display || container.style.display === "") {
+                container.style.display = 'flex';
+                container.style.flexWrap = 'nowrap';
+                container.style.overflowX = 'auto';
+                container.style.gap = '12px';
+                container.style.padding = '10px 4px';
+                container.style.width = '100%';
+                container.style.scrollbarWidth = 'none';
+            }
 
-       filteredProducts.forEach((prod) => {
-            let originalIndex = window.storeInventoryProducts.findIndex(p => p.sku === prod.sku || p.name === prod.name);
-            const isOutOfStock = (prod.stockQuantity <= 0);
-            const isLowStock = !isOutOfStock && prod.stockQuantity <= 5;
-            const finalImgUrl = prod.imageUrl || prod.image || '';
+            container.innerHTML = '';
+            if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) {
+                container.innerHTML = `<p style="font-size:0.75rem; color:#64748b; padding:10px; grid-column: 1 / -1; text-align:center;">No store products available currently.</p>`;
+                return;
+            }
 
-           const card = document.createElement('div');
-            card.className = 'blinkit-cat-card';
-            card.style.cssText = `
-                background: #ffffff; border: 1px solid ${isLowStock ? '#ef4444' : '#e2e8f0'};
-                border-radius: 14px; padding: 10px; position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; 
-                display: flex; flex-direction: column; align-items: center; cursor: pointer;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-                min-width: 120px; max-width: 120px; flex: 0 0 auto;
-            `;    
+            // Home page will ALWAYS show all products (ignoring category chips filter on home page)
+            let filteredProducts = window.storeInventoryProducts.filter(prod => {
+                let nameMatch = (prod.name || '').toLowerCase().includes(window.currentStoreSearchQuery || "");
+                return nameMatch;
+            });
+
+            if (filteredProducts.length === 0) {
+                container.innerHTML = `<p style="font-size:0.78rem; color:#64748b; padding:20px; text-align:center; grid-column: 1 / -1;">No products found matching your search.</p>`;
+                return;
+            }
+
+            filteredProducts.forEach((prod) => {
+                let originalIndex = window.storeInventoryProducts.findIndex(p => p.sku === prod.sku || p.name === prod.name);
+                const isOutOfStock = (prod.stockQuantity <= 0);
+                const isLowStock = !isOutOfStock && prod.stockQuantity <= 5;
+                const finalImgUrl = prod.imageUrl || prod.image || '';
+
+                const card = document.createElement('div');
+                card.className = 'blinkit-cat-card';
+                card.style.cssText = `
+                    background: #ffffff; border: 1px solid ${isLowStock ? '#ef4444' : '#e2e8f0'};
+                    border-radius: 14px; padding: 10px; position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; 
+                    display: flex; flex-direction: column; align-items: center; cursor: pointer;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+                    min-width: 120px; max-width: 120px; flex: 0 0 auto;
+                `;
+                
+                card.onclick = (e) => {
+                    if (e.target.tagName === 'BUTTON') return;
+                    openProductDetailModal(window.storeInventoryProducts[originalIndex]);
+                };
+
+                const imageHtml = finalImgUrl 
+                    ? `<img src="${finalImgUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px; display:block;" />` 
+                    : `<div style="font-size:2rem; margin-bottom:6px; height:65px; display:flex; align-items:center; justify-content:center;">📦</div>`;
+
+                let badgeHtml = '';
+                if (isOutOfStock) {
+                    badgeHtml = `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.55rem; padding:2px 4px; border-radius:4px; font-weight:800; z-index:5;">OUT</span>`;
+                } else if (isLowStock) {
+                    badgeHtml = `<span class="low-stock-badge">Only ${prod.stockQuantity} left</span>`;
+                }
+
+                card.innerHTML = `
+                    ${badgeHtml}
+                    ${imageHtml}
+                    <div title="${prod.name}" style="font-weight:700; font-size:0.78rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; color:#0f172a;">${prod.name}</div>
+                    <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
+                    ${isOutOfStock 
+                        ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); notifyWhenAvailable('${prod.name}')">Notify</button>`
+                        : `<button type="button" class="btn-quick-add-item" style="background:#065f46; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${prod.sku}', '${prod.name}', ${prod.sellingPrice || 0}, ${prod.stockQuantity})">+ Add</button>`
+                    }
+                `;
+                container.appendChild(card);
+            });
+        });
+    }    
             card.onclick = (e) => {
                 if (e.target.tagName === 'BUTTON') return;
                 if (typeof openProductDetailModal === 'function') {
@@ -972,8 +1008,6 @@ window.addEventListener('DOMContentLoaded', () => {
             `;
             container.appendChild(card);
         });
-    });
-}
 
     window.notifyWhenAvailable = function(prodName) {
         if (typeof subscribeUserToPushNotifications === 'function') {
@@ -2160,4 +2194,3 @@ window.renderCartDrawerContents = function() {
             calculateTotal();
         }
     };
-});
