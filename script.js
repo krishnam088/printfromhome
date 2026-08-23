@@ -298,35 +298,63 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         alert("✅ Past order items loaded into your cart! You can modify quantities or add new items.");
     };
+window.currentDeliveryTip = 0;
 
-    window.currentDeliveryTip = 0;
+    window.setDeliveryTip = function(tipAmount) {
+        if (window.currentDeliveryTip === tipAmount) {
+            window.currentDeliveryTip = 0; 
+        } else {
+            window.currentDeliveryTip = tipAmount;
+        }
 
-    window.setDeliveryTip = function(tipAmount) {
-        if (window.currentDeliveryTip === tipAmount) {
-            window.currentDeliveryTip = 0; 
-        } else {
-            window.currentDeliveryTip = tipAmount;
-        }
+        document.querySelectorAll('.tip-chip-btn').forEach(btn => {
+            btn.style.background = '#ffffff';
+            btn.style.borderColor = '#cbd5e1';
+            btn.style.color = '#0f172a';
+        });
 
-        document.querySelectorAll('.tip-chip-btn').forEach(btn => {
-            btn.style.background = '#ffffff';
-            btn.style.borderColor = '#cbd5e1';
-            btn.style.color = '#0f172a';
-        });
+        if (window.currentDeliveryTip > 0 && event && event.target) {
+            event.target.style.background = '#065f46';
+            event.target.style.borderColor = '#065f46';
+            event.target.style.color = '#ffffff';
+        }
 
-        if (window.currentDeliveryTip > 0 && event && event.target) {
-            event.target.style.background = '#065f46';
-            event.target.style.borderColor = '#065f46';
-            event.target.style.color = '#ffffff';
-        }
+        if (typeof calculateTotal === 'function') {
+            calculateTotal();
+        }
+    };
 
-        if (typeof calculateTotal === 'function') {
-            calculateTotal();
-        }
-    };
+    // 🔥 Blinkit-style Payment Mode Synchronizer for Modern Cart Drawer
+    window.updateCartPaymentMode = function(mode) {
+        const targetRadio = document.querySelector(`input[name="cartPaymentMode"][value="${mode}"]`);
+        if (targetRadio) {
+            targetRadio.checked = true;
+            targetRadio.dispatchEvent(new Event('change'));
+        }
+    };
+
+    // 🔥 Delivery Instructions Selector Helper
+    window.selectDeliveryInstruction = function(element) {
+        document.querySelectorAll('[onclick="selectDeliveryInstruction(this)"]').forEach(el => {
+            el.style.borderColor = '#cbd5e1';
+            el.style.background = '#ffffff';
+            let checkSpan = el.querySelector('span:last-child');
+            if (checkSpan) { 
+                checkSpan.textContent = '☐'; 
+                checkSpan.style.color = '#cbd5e1'; 
+            }
+        });
+        element.style.borderColor = '#16a34a';
+        element.style.background = '#f0fdf4';
+        let check = element.querySelector('span:last-child');
+        if (check) { 
+            check.textContent = '✔'; 
+            check.style.color = '#16a34a'; 
+        }
+    };
 });
 
-    const LIVE_SERVER_URL = window.location.origin;
+    const LIVE_SERVER_URL = window.location.origin;
     window.globalRawOrdersCache = [];
 
     // ==========================================
