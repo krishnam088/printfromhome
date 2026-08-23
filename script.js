@@ -525,122 +525,100 @@ window.addEventListener('DOMContentLoaded', () => {
         updateFloatingCartBar();
     }
 
-    if(fileUpload) {
-        fileUpload.addEventListener('change', async () => {
-            if (fileUpload.files.length === 0) return;
-            
-            for (const file of Array.from(fileUpload.files)) {
-                if (!masterFilesArray.some(f => f.name === file.name && f.size === file.size)) {
-                    let pageCount = 1;
-                    
-                    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-                        try {
-                            const arrayBuffer = await file.arrayBuffer();
-                            const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                            pageCount = pdfDoc.numPages || 1;
-                        } catch (e) {
-                            pageCount = 1;
-                        }
-                    }
-
-                    masterFilesArray.push({ 
-                        name: file.name, 
-                        size: file.size, 
-                        type: file.type, 
-                        fileData: file, 
-                        config: { 
-                            pages: pageCount, 
-                            printType: 'bw', 
-                            orientation: 'portrait', 
-                            binding: 'none', 
-                            copies: 1 
-                        } 
-                    });
-                }
-            }
-            fileUpload.value = ''; 
-            saveCurrentFilesToSession(); 
-            renderFilesUI();
-        });
-    }
-
-    window.triggerInlineFileUploadClick = function() {
-        if(fileUpload) fileUpload.click();
-    };
-
-    window.previewFileInA4Studio = function(index) {
-        if (masterFilesArray[index] && masterFilesArray[index].fileData) {
-            window.openDocumentInA4Studio(masterFilesArray[index].fileData, masterFilesArray[index].name);
-        } else {
-            alert("⚠️ Please re-upload the document to open A4 interactive studio.");
-        }
-    };
-
-    const printForm = document.getElementById('printForm');
-    if(printForm) {
-        printForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (masterFilesArray.length === 0) {
-                alert("⚠️ Please upload at least one valid document to add to cart.");
-                return;
-            }
-
-            masterFilesArray.forEach(item => {
-                window.cartPrintJobsArray.push({
-                    fileName: item.name,
-                    pages: parseInt(item.config.pages) || 1,
-                    printType: item.config.printType,
-                    sides: item.config.orientation === 'portrait' ? 'single' : 'landscape',
-                    binding: item.config.binding,
-                    copies: parseInt(item.config.copies) || 1,
-                    orientation: item.config.orientation,
-                    fileData: item.fileData
-                });
-            });
-
-            persistCartStateData();
-            alert("🎉 Print job(s) successfully added to Cart!");
-            masterFilesArray = [];
-            sessionStorage.removeItem('savedPrintFiles');
-            printForm.reset();
-            if(multiFilesContainer) multiFilesContainer.innerHTML = '';
-            refreshInvoiceTabState();
-            calculateTotal();
-            toggleCartDrawer(true);
-        });
-    }
-
-    // ==========================================
-    // 🎨 BLINKIT-STYLE MOBILE PRINT STUDIO ENGINE
+   // ==========================================
+    // 📂 1. DIRECT FILE UPLOAD TRIGGER (Bypasses Homepage Preview Box)
     // ==========================================
-    window.currentStudioJob = {
-        fileName: 'Document.pdf',
-        fileUrl: '',
-        fileBlob: null,
-        pages: 1,
-        copies: 1,
-        printType: 'bw', // 'bw' or 'coloured'
-        orientation: 'portrait' // 'portrait' or 'landscape'
+    if(fileUpload) {
+        fileUpload.addEventListener('change', async () => {
+            if (fileUpload.files.length === 0) return;
+            
+            let uploadedFilesList = [];
+            for (const file of Array.from(fileUpload.files)) {
+                let pageCount = 1;
+                if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                    try {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                        pageCount = pdfDoc.numPages || 1;
+                    } catch (e) {
+                        pageCount = 1;
+                    }
+                }
+
+                uploadedFilesList.push({
+                    name: file.name,
+                    size: file.size,
+                    fileBlob: file,
+                    fileUrl: URL.createObjectURL(file),
+                    pages: pageCount,
+                    copies: 1,
+                    printType: 'bw',
+                    orientation: 'portrait',
+                    binding: 'none'
+                });
+            }
+
+            fileUpload.value = '';
+            if (typeof openPrintStudioWithFilesArray === 'function') {
+                openPrintStudioWithFilesArray(uploadedFilesList, 0);
+            }
+        });
+    }
+
+    window.triggerInlineFileUploadClick = function() {
+        if(fileUpload) fileUpload.click();
     };
 
-    window.openPrintStudioWithFile = function(fileObj, fileDataUrl) {
-        window.currentStudioJob = {
-            fileName: fileObj.name || 'Document.pdf',
-            fileUrl: fileDataUrl || '',
-            fileBlob: fileObj || null,
-            pages: 1,
-            copies: 1,
-            printType: 'bw',
-            orientation: 'portrait'
-        };
+    window.previewFileInA4Studio = function(index) {
+        if (window.studioMasterFiles && window.studioMasterFiles.length > 0) {
+            openPrintStudioWithFilesArray(window.studioMasterFiles, index);
+        }
+    };
 
-        updatePrintStudioUI();
+    // ==========================================
+    // 🎨 2. MULTI-FILE HORIZONTAL SLIDER PRINT STUDIO ENGINE
+    // ==========================================
+    window.studioMasterFiles = [];
+    window.currentStudioActiveIndex = 0;
+
+    window.openPrintStudioWithFilesArray = function(filesArray, startIndex = 0) {
+        if (!filesArray || filesArray.length === 0) return;
         
+        window.studioMasterFiles = filesArray.map(f => ({
+            name: f.name || 'Document.pdf',
+            size: f.size || 0,
+            fileBlob: f.fileData || f.fileBlob || f,
+            fileUrl: f.fileUrl || (f.fileData ? URL.createObjectURL(f.fileData) : ''),
+            pages: f.pages || f.config?.pages || 1,
+            copies: f.copies || f.config?.copies || 1,
+            printType: f.printType || f.config?.printType || 'bw',
+            orientation: f.orientation || f.config?.orientation || 'portrait',
+            binding: f.binding || f.config?.binding || 'none'
+        }));
+
+        window.currentStudioActiveIndex = Math.min(startIndex, window.studioMasterFiles.length - 1);
+        updateMultiFileStudioUI();
+
         const modal = document.getElementById('printStudioModal');
         if (modal) {
             history.pushState({ modal: 'printStudio' }, '', '');
             modal.style.display = 'flex';
         }
+    };
+
+    // Backward compatibility wrapper
+    window.openPrintStudioWithFile = function(fileObj, fileDataUrl) {
+        window.openPrintStudioWithFilesArray([{
+            name: fileObj.name || 'Document.pdf',
+            size: fileObj.size || 0,
+            fileBlob: fileObj,
+            fileUrl: fileDataUrl,
+            pages: 1,
+            copies: 1,
+            printType: 'bw',
+            orientation: 'portrait',
+            binding: 'none'
+        }], 0);
     };
 
     window.openDocumentInA4Studio = function(fileBlobOrUrl, originalFileName = 'Document') {
@@ -654,120 +632,194 @@ window.addEventListener('DOMContentLoaded', () => {
         if (modal) modal.style.display = 'none';
     };
 
-    window.updatePrintStudioUI = function() {
-        const job = window.currentStudioJob;
-        
+    window.updateMultiFileStudioUI = function() {
+        const files = window.studioMasterFiles;
+        if (files.length === 0) return;
+
+        const currentFile = files[window.currentStudioActiveIndex];
+
+        // 1. Render Horizontal Files Slider Bar inside Print Studio Header
+        let sliderContainer = document.getElementById('studioHorizontalFilesSlider');
+        if (!sliderContainer) {
+            const modalHeader = document.querySelector('#printStudioModal > div:first-child');
+            if (modalHeader) {
+                sliderContainer = document.createElement('div');
+                sliderContainer.id = 'studioHorizontalFilesSlider';
+                sliderContainer.style.cssText = "display:flex; gap:10px; overflow-x:auto; padding:10px 16px; background:#f1f5f9; width:100%; box-sizing:border-box; scrollbar-width:none; border-bottom:1px solid #e2e8f0;";
+                modalHeader.after(sliderContainer);
+            }
+        }
+
+        if (sliderContainer) {
+            sliderContainer.innerHTML = files.map((f, idx) => `
+                <div onclick="switchStudioFileIndex(${idx})" style="min-width:100px; padding:8px 10px; background:${idx === window.currentStudioActiveIndex ? '#065f46' : '#ffffff'}; color:${idx === window.currentStudioActiveIndex ? '#ffffff' : '#0f172a'}; border:1px solid ${idx === window.currentStudioActiveIndex ? '#065f46' : '#cbd5e1'}; border-radius:10px; cursor:pointer; display:flex; flex-direction:column; align-items:center; text-align:center; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                    <span style="font-size:1.2rem;">📄</span>
+                    <span style="font-size:0.7rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:85px; margin-top:2px;" title="${f.name}">${f.name}</span>
+                </div>
+            `).join('');
+        }
+
+        // 2. Update Active File Preview & Name
         const nameNode = document.getElementById('studioFileNameText');
-        if (nameNode) nameNode.textContent = job.fileName;
-        
+        if (nameNode) nameNode.textContent = currentFile.name;
+
         const previewContainer = document.getElementById('studioFilePreviewContainer');
         if (previewContainer) {
-            if (job.fileUrl && (job.fileUrl.startsWith('data:image') || job.fileUrl.startsWith('blob:'))) {
-                previewContainer.innerHTML = `<img src="${job.fileUrl}" style="width:100%; height:100%; object-fit:contain;" />`;
+            if (currentFile.fileUrl && (currentFile.fileUrl.startsWith('data:image') || currentFile.fileUrl.startsWith('blob:'))) {
+                previewContainer.innerHTML = `<img src="${currentFile.fileUrl}" style="width:100%; height:100%; object-fit:contain;" />`;
             } else {
                 previewContainer.innerHTML = `<span style="font-size:3rem;">📄</span>`;
             }
         }
 
+        // 3. Update Copies & Pages Info
         const copiesText = document.getElementById('studioCopiesCountText');
-        if (copiesText) copiesText.textContent = job.copies;
+        if (copiesText) copiesText.textContent = currentFile.copies;
 
         const pagesInfo = document.getElementById('studioFilePagesInfo');
-        if (pagesInfo) pagesInfo.textContent = `File 1 (${job.pages} page${job.pages > 1 ? 's' : ''})`;
+        if (pagesInfo) pagesInfo.textContent = `File ${window.currentStudioActiveIndex + 1} of ${files.length} (${currentFile.pages} page${currentFile.pages > 1 ? 's' : ''})`;
 
+        // 4. Update Color & Orientation UI Highlights
         const colColoured = document.getElementById('colorOptionColoured');
         const colBw = document.getElementById('colorOptionBw');
         if (colColoured && colBw) {
-            if (job.printType === 'coloured' || job.printType === 'color') {
-                colColoured.style.borderColor = '#065f46';
-                colColoured.style.background = '#f0fdf4';
-                colBw.style.borderColor = '#e2e8f0';
-                colBw.style.background = '#ffffff';
+            if (currentFile.printType === 'coloured' || currentFile.printType === 'color') {
+                colColoured.style.borderColor = '#065f46'; colColoured.style.background = '#f0fdf4';
+                colBw.style.borderColor = '#e2e8f0'; colBw.style.background = '#ffffff';
             } else {
-                colBw.style.borderColor = '#065f46';
-                colBw.style.background = '#f0fdf4';
-                colColoured.style.borderColor = '#e2e8f0';
-                colColoured.style.background = '#ffffff';
+                colBw.style.borderColor = '#065f46'; colBw.style.background = '#f0fdf4';
+                colColoured.style.borderColor = '#e2e8f0'; colColoured.style.background = '#ffffff';
             }
         }
 
         const oriPortrait = document.getElementById('orientationPortrait');
         const oriLandscape = document.getElementById('orientationLandscape');
         if (oriPortrait && oriLandscape) {
-            if (job.orientation === 'portrait') {
-                oriPortrait.style.borderColor = '#065f46';
-                oriPortrait.style.background = '#f0fdf4';
-                oriLandscape.style.borderColor = '#e2e8f0';
-                oriLandscape.style.background = '#ffffff';
+            if (currentFile.orientation === 'portrait') {
+                oriPortrait.style.borderColor = '#065f46'; oriPortrait.style.background = '#f0fdf4';
+                oriLandscape.style.borderColor = '#e2e8f0'; oriLandscape.style.background = '#ffffff';
             } else {
-                oriLandscape.style.borderColor = '#065f46';
-                oriLandscape.style.background = '#f0fdf4';
-                oriPortrait.style.borderColor = '#e2e8f0';
-                oriPortrait.style.background = '#ffffff';
+                oriLandscape.style.borderColor = '#065f46'; oriLandscape.style.background = '#f0fdf4';
+                oriPortrait.style.borderColor = '#e2e8f0'; oriPortrait.style.background = '#ffffff';
             }
         }
 
-        let ratePerPage = (job.printType === 'bw') ? 3 : 10;
-        let totalPrice = job.pages * ratePerPage * job.copies;
-        let totalPagesNum = job.pages * job.copies;
+        // 5. Calculate Total Pages & Price Breakdown for ALL files in slider
+        let grandTotalPages = 0;
+        let grandTotalPrice = 0;
+        let breakdownHTML = '';
+
+        files.forEach((f, idx) => {
+            let rate = (f.printType === 'bw') ? 3 : 10;
+            let fileTotalCost = f.pages * rate * f.copies;
+            let fileTotalPages = f.pages * f.copies;
+            grandTotalPages += fileTotalPages;
+            grandTotalPrice += fileTotalCost;
+
+            breakdownHTML += `<div style="font-size:0.7rem; color:#64748b; display:flex; justify-content:space-between; margin-top:2px;"><span>F${idx+1}: ${f.name} (${f.pages}pg x ${f.copies}cp x ₹${rate})</span><span style="font-weight:700; color:#0f172a;">₹${fileTotalCost}</span></div>`;
+        });
 
         const totalPagesText = document.getElementById('studioTotalPagesText');
-        if (totalPagesText) totalPagesText.textContent = `Total ${totalPagesNum} page${totalPagesNum > 1 ? 's' : ''}`;
+        if (totalPagesText) totalPagesText.innerHTML = `Total ${grandTotalPages} pages<br><div style="font-size:0.65rem; max-height:50px; overflow-y:auto; margin-top:2px;">${breakdownHTML}</div>`;
 
         const totalPriceText = document.getElementById('studioTotalPriceText');
-        if (totalPriceText) totalPriceText.textContent = `₹${totalPrice}`;
+        if (totalPriceText) totalPriceText.textContent = `₹${grandTotalPrice}`;
+    };
+
+    window.updatePrintStudioUI = window.updateMultiFileStudioUI;
+
+    window.switchStudioFileIndex = function(index) {
+        window.currentStudioActiveIndex = index;
+        updateMultiFileStudioUI();
     };
 
     window.adjustStudioCopies = function(change) {
-        window.currentStudioJob.copies = Math.max(1, window.currentStudioJob.copies + change);
-        updatePrintStudioUI();
+        let file = window.studioMasterFiles[window.currentStudioActiveIndex];
+        if (file) {
+            file.copies = Math.max(1, file.copies + change);
+            updateMultiFileStudioUI();
+        }
     };
 
     window.setStudioPrintColor = function(type) {
-        window.currentStudioJob.printType = type;
-        updatePrintStudioUI();
+        let file = window.studioMasterFiles[window.currentStudioActiveIndex];
+        if (file) {
+            file.printType = type === 'coloured' ? 'color' : type;
+            updateMultiFileStudioUI();
+        }
     };
 
     window.setStudioOrientation = function(ori) {
-        window.currentStudioJob.orientation = ori;
-        updatePrintStudioUI();
+        let file = window.studioMasterFiles[window.currentStudioActiveIndex];
+        if (file) {
+            file.orientation = ori;
+            updateMultiFileStudioUI();
+        }
     };
 
     window.handleStudioFilesAdded = function(input) {
-        if (input.files && input.files[0]) {
-            let file = input.files[0];
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                window.openPrintStudioWithFile(file, e.target.result);
-            };
-            reader.readAsDataURL(file);
+        if (input.files && input.files.length > 0) {
+            Array.from(input.files).forEach(async (file) => {
+                let pageCount = 1;
+                if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                    try {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                        pageCount = pdfDoc.numPages || 1;
+                    } catch (e) {
+                        pageCount = 1;
+                    }
+                }
+                window.studioMasterFiles.push({
+                    name: file.name,
+                    size: file.size,
+                    fileBlob: file,
+                    fileUrl: URL.createObjectURL(file),
+                    pages: pageCount,
+                    copies: 1,
+                    printType: 'bw',
+                    orientation: 'portrait',
+                    binding: 'none'
+                });
+                updateMultiFileStudioUI();
+            });
+            input.value = '';
         }
     };
 
     window.removeCurrentStudioFile = function() {
-        closePrintStudio();
+        if (window.studioMasterFiles.length > 1) {
+            window.studioMasterFiles.splice(window.currentStudioActiveIndex, 1);
+            window.currentStudioActiveIndex = Math.max(0, window.currentStudioActiveIndex - 1);
+            updateMultiFileStudioUI();
+        } else {
+            closePrintStudio();
+        }
     };
 
     window.addStudioJobToCart = function() {
-        let job = window.currentStudioJob;
-        let rate = (job.printType === 'bw') ? 3 : 10;
-        
-        let printJobItem = {
-            id: 'print_' + Date.now(),
-            fileName: job.fileName,
-            fileUrl: job.fileUrl,
-            fileData: job.fileBlob,
-            pages: job.pages,
-            copies: job.copies,
-            printType: job.printType === 'coloured' ? 'color' : job.printType,
-            orientation: job.orientation,
-            sides: job.orientation === 'portrait' ? 'single' : 'landscape',
-            binding: 'none',
-            price: job.pages * rate * job.copies
-        };
+        if (!window.studioMasterFiles || window.studioMasterFiles.length === 0) return;
 
         window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
-        window.cartPrintJobsArray.push(printJobItem);
+
+        window.studioMasterFiles.forEach(f => {
+            let rate = (f.printType === 'bw') ? 3 : 10;
+            let printJobItem = {
+                id: 'print_' + Date.now() + Math.random(),
+                fileName: f.name,
+                fileUrl: f.fileUrl,
+                fileData: f.fileBlob,
+                pages: f.pages,
+                copies: f.copies,
+                printType: f.printType,
+                orientation: f.orientation,
+                sides: f.orientation === 'portrait' ? 'single' : 'landscape',
+                binding: f.binding || 'none',
+                price: f.pages * rate * f.copies
+            };
+            window.cartPrintJobsArray.push(printJobItem);
+        });
+
         localStorage.setItem('cart_print_jobs', JSON.stringify(window.cartPrintJobsArray));
 
         if (typeof persistCartStateData === 'function') persistCartStateData();
@@ -781,9 +833,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
     window.addStudioDocumentToCartAndRedirect = window.addStudioJobToCart;
     window.toggleGlobalOrientation = function() {
-        let current = window.currentStudioJob.orientation;
-        window.currentStudioJob.orientation = (current === 'portrait') ? 'landscape' : 'portrait';
-        updatePrintStudioUI();
+        let file = window.studioMasterFiles[window.currentStudioActiveIndex];
+        if (file) {
+            file.orientation = (file.orientation === 'portrait') ? 'landscape' : 'portrait';
+            updateMultiFileStudioUI();
+        }
     };
 
     // 🔥 STORE STATUS & NOTIFICATIONS
