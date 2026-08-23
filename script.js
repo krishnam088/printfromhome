@@ -731,7 +731,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 5. Calculate Clean Grand Total Price (Sirf Total Price dikhega bottom bar mein)
+        // 5. Calculate Clean Grand Total Price
         let grandTotalPrice = 0;
         files.forEach((f) => {
             let rate = (f.printType === 'bw') ? 3 : 10;
@@ -742,8 +742,9 @@ window.addEventListener('DOMContentLoaded', () => {
         if (totalPriceText) {
             totalPriceText.textContent = `₹${grandTotalPrice}`;
         }
-    };
+    }; // <--- 🔥 Yeh closing brace zaroor lagana hai function band karne ke liye!
 
+    // Ab iske baad baki functions shuru honge:
     window.updatePrintStudioUI = window.updateMultiFileStudioUI;
 
     window.switchStudioFileIndex = function(index) {
