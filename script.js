@@ -325,13 +325,48 @@ window.currentDeliveryTip = 0;
     };
 
     // 🔥 Blinkit-style Payment Mode Synchronizer for Modern Cart Drawer
-    window.updateCartPaymentMode = function(mode) {
-        const targetRadio = document.querySelector(`input[name="cartPaymentMode"][value="${mode}"]`);
-        if (targetRadio) {
-            targetRadio.checked = true;
-            targetRadio.dispatchEvent(new Event('change'));
-        }
-    };
+window.updateCartPaymentMode = function(mode) {
+    const targetRadio = document.querySelector(`input[name="cartPaymentMode"][value="${mode}"]`);
+    if (targetRadio) {
+        targetRadio.checked = true;
+        targetRadio.dispatchEvent(new Event('change'));
+    }
+};
+
+// 🔥 Interactive Coupon & Offer Drawer Toggle
+window.toggleCouponDrawer = function() {
+    let couponModal = document.getElementById('couponDropdownModal');
+    if (!couponModal) {
+        couponModal = document.createElement('div');
+        couponModal.id = 'couponDropdownModal';
+        couponModal.style.cssText = "position:fixed; bottom:0; left:0; width:100vw; background:#ffffff; border-top-left-radius:20px; border-top-right-radius:20px; box-shadow:0 -10px 30px rgba(0,0,0,0.2); z-index:999999; padding:20px; display:flex; flex-direction:column; gap:12px; font-family:'Poppins', sans-serif; transition: transform 0.3s ease;";
+        couponModal.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                <h3 style="font-size:1rem; font-weight:800; color:#0f172a; margin:0;">Available Offers & Coupons</h3>
+                <span onclick="toggleCouponDrawer()" style="font-size:1.2rem; cursor:pointer; font-weight:bold; color:#64748b;">&times;</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px; max-height:250px; overflow-y:auto;">
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:800; font-size:0.8rem; color:#16a34a;">FREEDEL</div>
+                        <div style="font-size:0.7rem; color:#475569;">Free delivery on orders above ₹99</div>
+                    </div>
+                    <button type="button" onclick="alert('✅ FREEDEL Coupon Applied!')" style="background:#16a34a; color:white; border:none; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">Apply</button>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:800; font-size:0.8rem; color:#0f172a;">PRINT20</div>
+                        <div style="font-size:0.7rem; color:#475569;">Get flat ₹20 off on print orders above ₹150</div>
+                    </div>
+                    <button type="button" onclick="alert('✅ PRINT20 Coupon Applied!')" style="background:#065f46; color:white; border:none; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">Apply</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(couponModal);
+    } else {
+        couponModal.style.display = couponModal.style.display === 'flex' ? 'none' : 'flex';
+    }
+};
 
     // 🔥 Delivery Instructions Selector Helper
     window.selectDeliveryInstruction = function(element) {
@@ -1684,11 +1719,11 @@ window.openProductDetailModal = function(prod) {
             });
         }
     };
-  // 🔥 UNIVERSAL CART RENDERER (Handles all container IDs automatically)
+  // 🔥 UNIVERSAL CART RENDERER (Blinkit-Style Modern Layout Integration)
 window.renderCartDrawerContents = function() {
     const container = document.getElementById('cartDrawerItemsList') || 
-                      document.getElementById('cartItemsListContainer') || 
-                      document.getElementById('cartItemsContainer');
+                        document.getElementById('cartItemsListContainer') || 
+                        document.getElementById('cartItemsContainer');
     
     if (!container) return;
     container.innerHTML = '';
@@ -1699,65 +1734,119 @@ window.renderCartDrawerContents = function() {
     let hasItems = (window.cartSnacksArray.length > 0) || (window.cartPrintJobsArray.length > 0);
     
     if (!hasItems) {
-        container.innerHTML = `<p class="empty-cart-text">Your cart is empty.</p>`;
+        container.innerHTML = `<p style="font-size:0.82rem; color:#64748b; text-align:center; padding:20px;">Your cart is empty.</p>`;
         if (typeof calculateTotal === 'function') calculateTotal();
         if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
         return;
     }
 
     const wrapper = document.createElement('div');
-    wrapper.className = 'cart-items-wrapper';
+    wrapper.style.cssText = "display:flex; flex-direction:column; gap:10px; width:100%;";
 
-    // Snacks Items
-    window.cartSnacksArray.forEach((snack, idx) => {
+    let totalPagesCount = 0;
+    let totalItemsCount = 0;
+
+    // 1. Render Print Jobs Items
+    window.cartPrintJobsArray.forEach((job, idx) => {
+        let rate = (job.printType === 'bw') ? 3 : 10;
+        let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
+        totalPagesCount += job.pages * job.copies;
+        totalItemsCount += 1;
+
         const card = document.createElement('div');
-        card.className = 'cart-item-row'; // Purani original clean class
-        
-        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" class="cart-item-thumb" />` : `<div class="cart-item-placeholder">📦</div>`;
+        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 3px rgba(0,0,0,0.02); gap:10px;";
 
         card.innerHTML = `
-            <div class="cart-item-info">
-                ${thumbImg}
-                <div>
-                    <div class="cart-item-title">${snack.name}</div>
-                    <div class="cart-item-price">₹${snack.price * snack.qty}</div>
+            <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                <div style="font-size:1.5rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📄</div>
+                <div style="overflow:hidden; flex:1;">
+                    <div title="${job.fileName}" style="font-weight:700; font-size:0.8rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
+                    <div style="font-size:0.68rem; color:#64748b; font-weight:600; margin-top:2px;">${job.pages} pgs | ${job.printType.toUpperCase()} | Copies: ${job.copies}</div>
                 </div>
             </div>
-            <div class="cart-item-actions">
-                <div class="blinkit-stepper">
-                    <button type="button" onclick="adjustSnackQty(${idx}, -1)">-</button>
-                    <span>${snack.qty}</span>
-                    <button type="button" onclick="adjustSnackQty(${idx}, 1)">+</button>
-                </div>
-                <button type="button" class="cart-item-delete-btn" onclick="removeSnackItemCompletely(${idx})">🗑️</button>
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                <div style="font-weight:800; font-size:0.8rem; color:#065f46;">₹${jobTotal}</div>
+                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:5px; font-size:0.7rem; cursor:pointer;" title="Remove">🗑️</button>
             </div>
         `;
         wrapper.appendChild(card);
     });
 
-    // Print Jobs Items
-    window.cartPrintJobsArray.forEach((job, idx) => {
+    // 2. Render Snacks / Store Products Items
+    window.cartSnacksArray.forEach((snack, idx) => {
+        totalItemsCount += snack.qty;
         const card = document.createElement('div');
-        card.className = 'cart-item-row';
-        let jobTotal = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
+        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 3px rgba(0,0,0,0.02); gap:10px;";
+        
+        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:40px; height:40px; object-fit:contain; border-radius:8px;" />` : `<div style="font-size:1.4rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📦</div>`;
 
         card.innerHTML = `
-            <div class="cart-item-info">
-                <div class="cart-item-placeholder">📄</div>
-                <div>
-                    <div class="cart-item-title">${job.fileName}</div>
-                    <div class="cart-item-subtitle">${job.pages} pgs | ${job.printType.toUpperCase()}</div>
+            <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                ${thumbImg}
+                <div style="overflow:hidden; flex:1;">
+                    <div title="${snack.name}" style="font-weight:700; font-size:0.8rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</div>
+                    <div style="font-size:0.7rem; color:#059669; font-weight:800; margin-top:2px;">₹${snack.price * snack.qty}</div>
                 </div>
             </div>
-            <div class="cart-item-actions">
-                <div class="cart-item-price">₹${jobTotal}</div>
-                <button type="button" class="cart-item-delete-btn" onclick="removePrintJobFromCart(${idx})">🗑️</button>
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:2px 6px; gap:6px;">
+                    <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; font-size:0.9rem; cursor:pointer; color:#0f172a;">-</button>
+                    <span style="font-weight:800; font-size:0.8rem; color:#0f172a;">${snack.qty}</span>
+                    <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; font-size:0.9rem; cursor:pointer; color:#065f46;">+</button>
+                </div>
+                <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:5px; font-size:0.7rem; cursor:pointer;" title="Remove">🗑️</button>
             </div>
         `;
         wrapper.appendChild(card);
     });
 
     container.appendChild(wrapper);
+
+    // Update shipment info text (e.g., "1 page and 1 item")
+    const shipmentTextNode = document.getElementById('shipmentItemsCountText');
+    if (shipmentTextNode) {
+        shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
+    }
+
+    // Sync User Identity & Active Address Name/Phone
+    const identityNode = document.getElementById('cartUserIdentitySummary');
+    if (identityNode) {
+        let activeAddr = localStorage.getItem('selected_active_address') || "";
+        let activeUser = localStorage.getItem('printAppUser') || "Customer";
+        if (activeAddr.includes('| Contact:')) {
+            identityNode.textContent = `Order for ${activeAddr.split('| Contact:')[1].trim()}`;
+        } else {
+            identityNode.textContent = `Order for ${activeUser}`;
+        }
+    }
+
+    // Render "You Might Also Like" Upselling Slider from Inventory Products
+    const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
+    if (upsellingGrid) {
+        if (window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
+            upsellingGrid.innerHTML = '';
+            window.storeInventoryProducts.forEach((prod) => {
+                if (prod.stockQuantity > 0) {
+                    const thumb = prod.imageUrl || prod.image || '';
+                    const safeSku = String(prod.sku || prod.name || '').replace(/'/g, "\\'");
+                    const safeName = String(prod.name || '').replace(/'/g, "\\'");
+                    const safeThumb = String(thumb || '').replace(/'/g, "\\'");
+                    const itemCard = document.createElement('div');
+                    itemCard.style.cssText = "min-width: 100px; width: 100px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.03);";
+                    itemCard.innerHTML = `
+                        ${thumb ? `<img src="${thumb}" style="width:45px; height:45px; object-fit:cover; border-radius:8px; margin-bottom:4px;" />` : '<div style="font-size:1.5rem; margin-bottom:4px;">📦</div>'}
+                        <div title="${prod.name}" style="font-size:0.7rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name}</div>
+                        <div style="font-size:0.7rem; font-weight:800; color:#065f46; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
+                        <button type="button" style="background:#065f46; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.68rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${Number(prod.sellingPrice) || 0}, ${Number(prod.stockQuantity) || 0}, '${safeThumb}')">+ Add</button>
+                    `;
+                    upsellingGrid.appendChild(itemCard);
+                }
+            });
+        } else {
+            upsellingGrid.innerHTML = '<p style="font-size:0.75rem; color:#64748b; text-align:center; padding:10px;">Loading store products...</p>';
+        }
+    }
+
     if (typeof calculateTotal === 'function') calculateTotal();
 };
     window.removeSnackItemCompletely = function(index) {
