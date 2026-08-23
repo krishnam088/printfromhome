@@ -977,8 +977,7 @@ window.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-
-    // 📂 3-Column Grid Category Slider Drawer Function (With Product Detail Modal Support)
+// 📂 3-Column Grid Category Slider Drawer Function (With Product Detail Modal Support)
     window.openCategoryDrawer = function(categoryName) {
         const overlay = document.getElementById('categoryDrawerOverlay');
         const titleNode = document.getElementById('categoryDrawerTitle');
@@ -1050,6 +1049,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const overlay = document.getElementById('categoryDrawerOverlay');
         if (overlay) overlay.style.display = 'none';
     };
+    
 
     window.notifyWhenAvailable = function(prodName) {
         if (typeof subscribeUserToPushNotifications === 'function') {
