@@ -19,12 +19,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const multiFilesContainer = document.getElementById('multiFilesContainer');
     const ordersHistoryContainer = document.getElementById('ordersHistoryContainer');
 
-    let masterFilesArray = []; 
+  let masterFilesArray = []; 
     window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]'); 
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');    
     window.savedUserAddresses = JSON.parse(localStorage.getItem('saved_addresses') || '[]');  
-    let selectedActiveAddress = localStorage.getItem('selected_active_address') || "";  
-    window.storeInventoryProducts = []; 
+    
+    // 🔥 Make sure this is globally accessible
+    window.selectedActiveAddress = localStorage.getItem('selected_active_address') || "";  
+    let selectedActiveAddress = window.selectedActiveAddress; 
+
+    window.storeInventoryProducts = [];
 
     // 🔙 Global Mobile Back Button Handler for Modals & Drawers
     window.addEventListener('popstate', (event) => {
@@ -1767,16 +1771,21 @@ window.renderCartDrawerContents = function() {
     };
 
     // 🔥 ADDRESS MANAGEMENT SYSTEM
-    window.loadUserAddressesFromStorage = function() {
-        const raw = localStorage.getItem('saved_addresses');
-        if (raw) {
-            try { window.savedUserAddresses = JSON.parse(raw); } catch(e) { window.savedUserAddresses = []; }
-        }
-        if (window.savedUserAddresses.length > 0 && !selectedActiveAddress) {
-            selectedActiveAddress = localStorage.getItem('selected_active_address') || window.savedUserAddresses[0];
-        }
-        renderSavedAddressesUI();
-    };
+  window.loadUserAddressesFromStorage = function() {
+        const raw = localStorage.getItem('saved_addresses');
+        if (raw) {
+            try { window.savedUserAddresses = JSON.parse(raw); } catch(e) { window.savedUserAddresses = []; }
+        }
+        
+        // Use window.selectedActiveAddress safely here
+        if (window.savedUserAddresses.length > 0 && !window.selectedActiveAddress) {
+            window.selectedActiveAddress = localStorage.getItem('selected_active_address') || window.savedUserAddresses[0];
+        }
+        
+        if (typeof renderSavedAddressesUI === 'function') {
+            renderSavedAddressesUI();
+        }
+    };
 
     window.saveFullAddressFormToStorage = function() {
         const flat = document.getElementById('addrFlatBuilding').value.trim();
