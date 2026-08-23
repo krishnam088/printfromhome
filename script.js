@@ -495,35 +495,36 @@ window.toggleCouponDrawer = function() {
     }
 
     function renderFilesUI() {
-        if(!multiFilesContainer) return; 
-        multiFilesContainer.innerHTML = ''; 
-        refreshInvoiceTabState();
-        if (masterFilesArray.length === 0) return;
+        if(!multiFilesContainer) return; 
+        multiFilesContainer.innerHTML = ''; 
+        refreshInvoiceTabState();
+        if (masterFilesArray.length === 0) return;
 
-        masterFilesArray.forEach((item, index) => {
-            const fileRow = document.createElement('div');
-            fileRow.className = 'blinkit-file-card';
-            fileRow.style.cssText = "background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);";
+        masterFilesArray.forEach((item, index) => {
+            const fileRow = document.createElement('div');
+            fileRow.className = 'blinkit-file-card';
+            fileRow.style.cssText = "background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);";
 
-            const activeColorBw = item.config.printType === 'bw' ? 'active' : '';
-            const activeColorCol = item.config.printType === 'color' ? 'active' : '';
-            const activeOriPort = item.config.orientation === 'portrait' ? 'active' : '';
-            const activeOriLand = item.config.orientation === 'landscape' ? 'active' : '';
+            const activeColorBw = item.config.printType === 'bw' ? 'active' : '';
+            const activeColorCol = item.config.printType === 'color' ? 'active' : '';
+            const activeOriPort = item.config.orientation === 'portrait' ? 'active' : '';
+            const activeOriLand = item.config.orientation === 'landscape' ? 'active' : '';
 
-            fileRow.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #edf2f7; padding-bottom: 8px; margin-bottom: 10px;">
-                    <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; cursor:pointer;" onclick="previewFileInA4Studio(${index})">
-                        <span style="font-size: 1.1rem;">📄</span>
-                        <div>
-                            <h4 style="font-weight: 700; font-size: 0.85rem; color: #1a202c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;" title="${item.name}">${item.name}</h4>
-                            <span style="font-size:0.68rem; color:var(--blinkit-green); font-weight:700;">👁️ Tap to View A4 Preview</span>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <button type="button" class="add-more-inline-card-btn" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 3px 8px; font-size: 0.7rem; font-weight: 700; border-radius: 6px; cursor: pointer;" onclick="triggerInlineFileUploadClick()">+ Add More</button>
-                        <button type="button" id="removeFile_${index}" style="background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; width: 24px; height: 24px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">&times;</button>
-                    </div>
-                </div>
+            fileRow.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #edf2f7; padding-bottom: 8px; margin-bottom: 10px; gap: 8px;">
+                    <div style="display: flex; align-items: flex-start; gap: 8px; flex: 1; cursor:pointer;" onclick="previewFileInA4Studio(${index})">
+                        <span style="font-size: 1.1rem; flex-shrink: 0; margin-top: 2px;">📄</span>
+                        <div style="flex: 1; overflow: hidden;">
+                            <!-- 🔥 YAHAN REPLACE KARNA HAI: Wrapped Long File Name -->
+                            <h4 style="font-weight: 700; font-size: 0.85rem; color: #1a202c; white-space: normal; word-break: break-all; overflow-wrap: break-word; line-height: 1.3; margin: 0;" title="${item.name}">${item.name}</h4>
+                            <span style="font-size:0.68rem; color:var(--blinkit-green); font-weight:700; display: block; margin-top: 3px;">👁️ Tap to View A4 Preview</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                        <button type="button" class="add-more-inline-card-btn" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 3px 8px; font-size: 0.7rem; font-weight: 700; border-radius: 6px; cursor: pointer;" onclick="triggerInlineFileUploadClick()">+ Add More</button>
+                        <button type="button" id="removeFile_${index}" style="background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; width: 24px; height: 24px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">&times;</button>
+                    </div>
+                </div>
 
                 <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-bottom: 12px; align-items: center;">
                     <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -636,13 +637,21 @@ window.toggleCouponDrawer = function() {
                     fileUrl = '';
                 }
 
-                if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+               if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
                     try {
                         if (typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
                             const arrayBuffer = await file.arrayBuffer();
                             const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
                             const pdfDoc = await loadingTask.promise;
                             pageCount = pdfDoc.numPages || 1;
+                            
+                            // 🔥 Generate real PDF preview image from page 1 using canvas converter
+                            if (pdfDoc && pdfDoc.numPages > 0) {
+                                let generatedImgUrl = await window.convertPdfPageToImage(pdfDoc, 1);
+                                if (generatedImgUrl) {
+                                    fileUrl = generatedImgUrl;
+                                }
+                            }
                         }
                     } catch (e) {
                         pageCount = 1;
@@ -1835,9 +1844,13 @@ window.renderCartDrawerContents = function() {
     if (identityNode) {
         let activeAddr = localStorage.getItem('selected_active_address') || "";
         let activeUser = localStorage.getItem('printAppUser') || "Customer";
+        let activePhone = localStorage.getItem('printAppUserIdentity') || "";
+        
         if (activeAddr.includes('Contact:')) {
             let contactPart = activeAddr.split('Contact:')[1].trim();
             identityNode.textContent = `Order for ${contactPart}`;
+        } else if (activePhone) {
+            identityNode.textContent = `Order for ${activeUser}, ${activePhone}`;
         } else {
             identityNode.textContent = `Order for ${activeUser}`;
         }
@@ -2397,6 +2410,7 @@ window.renderCartDrawerContents = function() {
             msgBox.scrollTop = msgBox.scrollHeight;
         }, 500);
     };
+
 // 🔥 Admin Configurable Fees & Coupons Sync Engine
 window.loadAdminConfiguredFeesAndCoupons = async function() {
     try {
@@ -2418,6 +2432,110 @@ window.loadAdminConfiguredFeesAndCoupons = async function() {
         ];
     }
 };
+
+// 🔥 Admin Store Settings & Fees Save Engine
+window.saveAdminStoreSettings = async function() {
+    const deliveryField = document.getElementById('adminSettingDeliveryFee');
+    const handlingField = document.getElementById('adminSettingHandlingFee');
+    const rainField = document.getElementById('adminSettingRainFee');
+
+    const deliveryFee = deliveryField ? deliveryField.value : 25;
+    const handlingFee = handlingField ? handlingField.value : 5;
+    const rainFee = rainField ? rainField.value : 15;
+
+    try {
+        const res = await fetch('/api/admin/settings/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ deliveryFee, handlingFee, rainFee })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert('✅ Admin store settings & fees updated successfully!');
+            if (typeof loadAdminConfiguredFeesAndCoupons === 'function') {
+                loadAdminConfiguredFeesAndCoupons();
+            }
+        } else {
+            alert('❌ Failed to update settings.');
+        }
+    } catch(e) {
+        alert('❌ Server connection error.');
+    }
+};
+
+// 🔥 Admin Add New Coupon Engine
+window.adminAddNewCoupon = async function() {
+    const codeInput = document.getElementById('adminNewCouponCode');
+    const descInput = document.getElementById('adminNewCouponDesc');
+    
+    if (!codeInput || !descInput) return;
+    const code = codeInput.value.trim().toUpperCase();
+    const desc = descInput.value.trim();
+
+    if (!code || !desc) {
+        alert("⚠️ Please enter both Coupon Code and Description!");
+        return;
+    }
+
+    if (!window.adminCouponsList) window.adminCouponsList = [];
+    window.adminCouponsList.push({ code: code, desc: desc });
+
+    try {
+        const res = await fetch('/api/admin/settings/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ coupons: window.adminCouponsList })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(`✅ Coupon "${code}" added successfully!`);
+            codeInput.value = '';
+            descInput.value = '';
+        } else {
+            alert('❌ Failed to save coupon on server.');
+        }
+    } catch(e) {
+        alert('❌ Server connection error.');
+    }
+};
+
+
+window.toggleCouponDrawer = function() {
+    let couponModal = document.getElementById('couponDropdownModal');
+    if (!couponModal) {
+        couponModal = document.createElement('div');
+        couponModal.id = 'couponDropdownModal';
+        couponModal.style.cssText = "position:fixed; bottom:0; left:0; width:100vw; background:#ffffff; border-top-left-radius:20px; border-top-right-radius:20px; box-shadow:0 -10px 30px rgba(0,0,0,0.2); z-index:999999; padding:20px; display:flex; flex-direction:column; gap:12px; font-family:'Poppins', sans-serif;";
+        
+        let couponsHTML = (window.adminCouponsList || []).map(c => `
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:800; font-size:0.8rem; color:#16a34a;">${c.code}</div>
+                    <div style="font-size:0.7rem; color:#475569;">${c.desc}</div>
+                </div>
+                <button type="button" onclick="alert('✅ Coupon ${c.code} Applied Successfully!')" style="background:#16a34a; color:white; border:none; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">Apply</button>
+            </div>
+        `).join('');
+
+        couponModal.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                <h3 style="font-size:1rem; font-weight:800; color:#0f172a; margin:0;">Available Offers & Coupons</h3>
+                <span onclick="toggleCouponDrawer()" style="font-size:1.2rem; cursor:pointer; font-weight:bold; color:#64748b;">&times;</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px; max-height:250px; overflow-y:auto;">
+                ${couponsHTML || '<p style="text-align:center; color:#64748b; font-size:0.8rem;">No active coupons available right now.</p>'}
+            </div>
+        `;
+        document.body.appendChild(couponModal);
+    } else {
+        couponModal.style.display = couponModal.style.display === 'flex' ? 'none' : 'flex';
+    }
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+    loadAdminConfiguredFeesAndCoupons();
+});
+
 
 window.toggleCouponDrawer = function() {
     let couponModal = document.getElementById('couponDropdownModal');
