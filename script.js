@@ -576,7 +576,7 @@ window.addEventListener('DOMContentLoaded', () => {
     };
 
    // ==========================================
-    // 🎨 IN-IMAGE HORIZONTAL SLIDER PRINT STUDIO ENGINE
+    // 🎨 DYNAMIC VISUAL PRINT STUDIO ENGINE (B&W/Color Preview & Active Index Fix)
     // ==========================================
     window.studioMasterFiles = [];
     window.currentStudioActiveIndex = 0;
@@ -637,37 +637,46 @@ window.addEventListener('DOMContentLoaded', () => {
 
         const currentFile = files[window.currentStudioActiveIndex];
 
-        // 1. Render In-Image Horizontal Slider
+        // 1. Render In-Image Horizontal Slider & Dynamic Filters/Orientation
         const imageSlider = document.getElementById('studioInImageHorizontalSlider');
         if (imageSlider) {
-            imageSlider.innerHTML = files.map((f, idx) => `
-                <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; flex-shrink:0; position:relative; background:#f8fafc;">
-                    ${f.fileUrl && (f.fileUrl.startsWith('data:image') || f.fileUrl.startsWith('blob:')) 
-                        ? `<img src="${f.fileUrl}" style="max-width:100%; max-height:100%; object-fit:contain;" />` 
-                        : `<span style="font-size:3.5rem;">📄</span>`
-                    }
-                </div>
-            `).join('');
+            imageSlider.innerHTML = files.map((f, idx) => {
+                let isLand = f.orientation === 'landscape';
+                let isBw = f.printType === 'bw';
+                let filterStyle = isBw ? 'filter: grayscale(100%);' : '';
+                let containerAspect = isLand ? 'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;' : 'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;';
+
+                return `
+                    <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; flex-shrink:0; position:relative; background:#f8fafc; overflow:hidden;">
+                        <div style="${containerAspect}">
+                            ${f.fileUrl && (f.fileUrl.startsWith('data:image') || f.fileUrl.startsWith('blob:')) 
+                                ? `<img src="${f.fileUrl}" style="max-width:${isLand ? '95%' : '75%'}; max-height:${isLand ? '75%' : '95%'}; object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />` 
+                                : `<span style="font-size:3.5rem; ${filterStyle}">📄</span>`
+                            }
+                        </div>
+                    </div>
+                `;
+            }).join('');
 
             // Scroll slider to active index smoothly
             let slideWidth = imageSlider.clientWidth || 300;
             imageSlider.scrollTo({ left: slideWidth * window.currentStudioActiveIndex, behavior: 'smooth' });
         }
 
-        // Counter Badge (e.g., 1/2)
+        // Counter Badge (e.g., 1/2, 2/2)
         const counterBadge = document.getElementById('studioSlideCounterBadge');
         if (counterBadge) {
             counterBadge.textContent = `${window.currentStudioActiveIndex + 1}/${files.length}`;
         }
 
-        // 2. Update Copies & Pages Info
+        // 2. Update Copies & Pages Info for Active File
         const copiesText = document.getElementById('studioCopiesCountText');
         if (copiesText) copiesText.textContent = currentFile.copies;
 
         const pagesInfo = document.getElementById('studioFilePagesInfo');
         if (pagesInfo) pagesInfo.textContent = `${currentFile.name} (${currentFile.pages} page${currentFile.pages > 1 ? 's' : ''})`;
 
-        // 3. Highlight Color & Orientation UI
+        // 3. Highlight Color & Orientation UI for Active File
         const colColoured = document.getElementById('colorOptionColoured');
         const colBw = document.getElementById('colorOptionBw');
         if (colColoured && colBw) {
@@ -692,23 +701,12 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 4. Calculate Total Pages & Price Breakdown
-        let grandTotalPages = 0;
+        // 4. Calculate Grand Total Price for Bottom Bar (Clean: Only Total & Add to Cart)
         let grandTotalPrice = 0;
-        let breakdownHTML = '';
-
-        files.forEach((f, idx) => {
+        files.forEach((f) => {
             let rate = (f.printType === 'bw') ? 3 : 10;
-            let fileTotalCost = f.pages * rate * f.copies;
-            let fileTotalPages = f.pages * f.copies;
-            grandTotalPages += fileTotalPages;
-            grandTotalPrice += fileTotalCost;
-
-            breakdownHTML += `<div style="font-size:0.65rem; color:#64748b; display:flex; justify-content:space-between; margin-top:2px;"><span>F${idx+1}: ${f.name} (${f.pages}pg x ${f.copies}cp x ₹${rate})</span><span style="font-weight:700; color:#0f172a;">₹${fileTotalCost}</span></div>`;
+            grandTotalPrice += f.pages * rate * f.copies;
         });
-
-        const totalPagesText = document.getElementById('studioTotalPagesText');
-        if (totalPagesText) totalPagesText.innerHTML = `Total ${grandTotalPages} pages<br><div style="font-size:0.6rem; max-height:45px; overflow-y:auto; margin-top:2px;">${breakdownHTML}</div>`;
 
         const totalPriceText = document.getElementById('studioTotalPriceText');
         if (totalPriceText) totalPriceText.textContent = `₹${grandTotalPrice}`;
@@ -840,6 +838,24 @@ window.addEventListener('DOMContentLoaded', () => {
             updateMultiFileStudioUI();
         }
     };
+
+    // Listen to horizontal scroll on preview container to sync active index (1/2, 2/2)
+    document.addEventListener('DOMContentLoaded', () => {
+        const slider = document.getElementById('studioInImageHorizontalSlider');
+        if (slider) {
+            slider.addEventListener('scroll', () => {
+                let slideWidth = slider.clientWidth || 300;
+                let activeIdx = Math.round(slider.scrollLeft / slideWidth);
+                if (activeIdx >= 0 && activeIdx < window.studioMasterFiles.length && activeIdx !== window.currentStudioActiveIndex) {
+                    window.currentStudioActiveIndex = activeIdx;
+                    const counterBadge = document.getElementById('studioSlideCounterBadge');
+                    if (counterBadge) {
+                        counterBadge.textContent = `${window.currentStudioActiveIndex + 1}/${window.studioMasterFiles.length}`;
+                    }
+                }
+            });
+        }
+    });
 
     // 🔥 STORE STATUS & NOTIFICATIONS
     let isStoreCurrentlyOpen = true;
