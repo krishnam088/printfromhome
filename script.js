@@ -655,41 +655,58 @@ window.addEventListener('DOMContentLoaded', () => {
 
     window.updateMultiFileStudioUI = function() {
         const files = window.studioMasterFiles;
-        if (files.length === 0) return;
+        if (!files || files.length === 0) return;
 
-        const currentFile = files[window.currentStudioActiveIndex];
+        const currentFile = files[window.currentStudioActiveIndex] || files[0];
 
-        // 1. Render In-Image Horizontal Slider
+        // 1. Render In-Image Horizontal Slider with Grayscale & Landscape Rotation
         const imageSlider = document.getElementById('studioInImageHorizontalSlider');
         if (imageSlider) {
-            imageSlider.innerHTML = files.map((f, idx) => `
-                <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; flex-shrink:0; position:relative; background:#f8fafc;">
-                    ${f.fileUrl && (f.fileUrl.startsWith('data:image') || f.fileUrl.startsWith('blob:')) 
-                        ? `<img src="${f.fileUrl}" style="max-width:100%; max-height:100%; object-fit:contain;" />` 
-                        : `<span style="font-size:3.5rem;">📄</span>`
-                    }
-                </div>
-            `).join('');
+            imageSlider.innerHTML = files.map((f) => {
+                let isLand = f.orientation === 'landscape';
+                let isBw = f.printType === 'bw';
+                let filterStyle = isBw ? 'filter: grayscale(100%);' : '';
+                let transformStyle = isLand ? 'transform: rotate(90deg); max-width: 75%; max-height: 75%;' : 'max-width: 90%; max-height: 90%;';
 
-            // Scroll slider to active index smoothly
+                let previewContent = `<span style="font-size:3.5rem; ${filterStyle}">📄</span>`;
+                if (f.fileUrl) {
+                    if (f.fileBlob && f.fileBlob.type && f.fileBlob.type.startsWith('image/')) {
+                        previewContent = `<img src="${f.fileUrl}" style="${transformStyle} object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />`;
+                    } else {
+                        previewContent = `
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:8px; ${filterStyle}">
+                                <span style="font-size:3.5rem;">📄</span>
+                                <span style="font-size:0.75rem; font-weight:700; color:#1e293b; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${f.name}</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                return `
+                    <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; flex-shrink:0; position:relative; background:#f8fafc; overflow:hidden;">
+                        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${previewContent}</div>
+                    </div>
+                `;
+            }).join('');
+
             let slideWidth = imageSlider.clientWidth || 300;
             imageSlider.scrollTo({ left: slideWidth * window.currentStudioActiveIndex, behavior: 'smooth' });
         }
 
-        // Counter Badge (e.g., 1/2)
+        // 2. Counter Badge (e.g., 1/2)
         const counterBadge = document.getElementById('studioSlideCounterBadge');
         if (counterBadge) {
             counterBadge.textContent = `${window.currentStudioActiveIndex + 1}/${files.length}`;
         }
 
-        // 2. Update Copies & Pages Info
+        // 3. Update Copies & Pages Info
         const copiesText = document.getElementById('studioCopiesCountText');
         if (copiesText) copiesText.textContent = currentFile.copies;
 
         const pagesInfo = document.getElementById('studioFilePagesInfo');
         if (pagesInfo) pagesInfo.textContent = `${currentFile.name} (${currentFile.pages} page${currentFile.pages > 1 ? 's' : ''})`;
 
-        // 3. Highlight Color & Orientation UI
+        // 4. Highlight Color & Orientation UI
         const colColoured = document.getElementById('colorOptionColoured');
         const colBw = document.getElementById('colorOptionBw');
         if (colColoured && colBw) {
@@ -714,26 +731,17 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 4. Calculate Total Pages & Price Breakdown
-        let grandTotalPages = 0;
+        // 5. Calculate Clean Grand Total Price (Sirf Total Price dikhega, koi lamba breakdown text nahi)
         let grandTotalPrice = 0;
-        let breakdownHTML = '';
-
-        files.forEach((f, idx) => {
+        files.forEach((f) => {
             let rate = (f.printType === 'bw') ? 3 : 10;
-            let fileTotalCost = f.pages * rate * f.copies;
-            let fileTotalPages = f.pages * f.copies;
-            grandTotalPages += fileTotalPages;
-            grandTotalPrice += fileTotalCost;
-
-            breakdownHTML += `<div style="font-size:0.65rem; color:#64748b; display:flex; justify-content:space-between; margin-top:2px;"><span>F${idx+1}: ${f.name} (${f.pages}pg x ${f.copies}cp x ₹${rate})</span><span style="font-weight:700; color:#0f172a;">₹${fileTotalCost}</span></div>`;
+            grandTotalPrice += f.pages * rate * f.copies;
         });
 
-        const totalPagesText = document.getElementById('studioTotalPagesText');
-        if (totalPagesText) totalPagesText.innerHTML = `Total ${grandTotalPages} pages<br><div style="font-size:0.6rem; max-height:45px; overflow-y:auto; margin-top:2px;">${breakdownHTML}</div>`;
-
         const totalPriceText = document.getElementById('studioTotalPriceText');
-        if (totalPriceText) totalPriceText.textContent = `₹${grandTotalPrice}`;
+        if (totalPriceText) {
+            totalPriceText.textContent = `₹${grandTotalPrice}`;
+        }
     };
 
     window.updatePrintStudioUI = window.updateMultiFileStudioUI;
@@ -862,7 +870,7 @@ window.addEventListener('DOMContentLoaded', () => {
             updateMultiFileStudioUI();
         }
     };
-    
+
     // Horizontal slider scroll sync listener (outside DOMContentLoaded block since we are already inside it)
     const slider = document.getElementById('studioInImageHorizontalSlider');
     if (slider) {
