@@ -784,13 +784,17 @@
                     <div id="cartDrawerUpsellingGrid" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;"></div>
                 </div>
 
-                <!-- 🖼️ Image 4: Free Delivery & Bill Summary Box -->
-                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:14px;" id="freeDeliveryProgressBarBox">
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                        <span style="font-size:1.2rem; background:#eff6ff; color:#3b82f6; padding:4px; border-radius:50%;">✓</span>
-                        <span id="freeDeliveryMessageText" style="font-size:0.82rem; font-weight:800; color:#1d4ed8;">Yay! You got FREE Delivery</span>
+               <!-- 🖼️ Image 4: Free Delivery & Bill Summary Box (Clickable for Coupons) -->
+                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:14px; cursor:pointer;" onclick="toggleCouponDrawer()" id="freeDeliveryProgressBarBox">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="font-size:1.2rem; background:#eff6ff; color:#3b82f6; padding:4px; border-radius:50%;">✓</span>
+                            <span id="freeDeliveryMessageText" style="font-size:0.82rem; font-weight:800; color:#1d4ed8;">Yay! You got FREE Delivery</span>
+                        </div>
+                        <span style="font-size:0.75rem; font-weight:700; color:#16a34a;">See offers &gt;</span>
                     </div>
-                    <div style="font-size:0.7rem; color:#64748b; font-weight:600;">No coupon needed</div>
+                    
+                    <div style="font-size:0.7rem; color:#64748b; font-weight:600;">Tap to view available coupons & discounts</div>
                 </div>
 
                 <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
