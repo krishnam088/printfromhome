@@ -928,16 +928,15 @@ window.addEventListener('DOMContentLoaded', () => {
             const isLowStock = !isOutOfStock && prod.stockQuantity <= 5;
             const finalImgUrl = prod.imageUrl || prod.image || '';
 
-            const card = document.createElement('div');
+           const card = document.createElement('div');
             card.className = 'blinkit-cat-card';
             card.style.cssText = `
                 background: #ffffff; border: 1px solid ${isLowStock ? '#ef4444' : '#e2e8f0'};
                 border-radius: 14px; padding: 10px; position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; 
-                display: flex; flex-direction: column; align-items: center; justify-content: space-between; cursor: pointer;
+                display: flex; flex-direction: column; align-items: center; cursor: pointer;
                 box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-                width: 130px; min-width: 130px; max-width: 130px; height: 190px;
-                box-sizing: border-box; flex: 0 0 auto;
-            `;     
+                min-width: 120px; max-width: 120px; flex: 0 0 auto;
+            `;    
             card.onclick = (e) => {
                 if (e.target.tagName === 'BUTTON') return;
                 if (typeof openProductDetailModal === 'function') {
@@ -961,16 +960,16 @@ window.addEventListener('DOMContentLoaded', () => {
             let safeName = String(prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             let safeImg = String(finalImgUrl || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-            card.innerHTML = `
-                ${badgeHtml}
-                ${imageHtml}
-                <div title="${prod.name}" style="font-weight:700; font-size:0.78rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; color:#0f172a;">${prod.name}</div>
-                <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
-                ${isOutOfStock 
-                    ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); notifyWhenAvailable('${safeName}')">Notify Me</button>`
-                    : `<button type="button" style="background:var(--blinkit-green, #10b981); color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${safeSku}', '${safeName}', ${prod.sellingPrice || 0}, ${prod.stockQuantity}, '${safeImg}')">+ Add</button>`
-                }
-            `;
+           card.innerHTML = `
+                ${badgeHtml}
+                ${imageHtml}
+                <div title="${prod.name}" style="font-weight:700; font-size:0.78rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; color:#0f172a;">${prod.name}</div>
+                <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
+                ${isOutOfStock 
+                    ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); notifyWhenAvailable('${safeName}')">Notify Me</button>`
+                    : `<button type="button" style="background:var(--blinkit-green, #10b981); color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${safeSku}', '${safeName}', ${prod.sellingPrice || 0}, ${prod.stockQuantity}, '${safeImg}')">+ Add</button>`
+                }
+            `;
             container.appendChild(card);
         });
     });
