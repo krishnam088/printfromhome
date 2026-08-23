@@ -610,115 +610,181 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 🔥 A4 STUDIO PREVIEW ENGINE
-    let renderedPagesList = [];
-    let isLandscapeMode = false;
-    let currentStudioActiveFile = null;
-    let currentStudioFileName = 'Document.pdf';
+    // ==========================================
+    // 🎨 BLINKIT-STYLE MOBILE PRINT STUDIO ENGINE
+    // ==========================================
+    window.currentStudioJob = {
+        fileName: 'Document.pdf',
+        fileUrl: '',
+        fileBlob: null,
+        pages: 1,
+        copies: 1,
+        printType: 'bw', // 'bw' or 'coloured'
+        orientation: 'portrait' // 'portrait' or 'landscape'
+    };
 
-    window.openDocumentInA4Studio = async function(fileBlobOrUrl, originalFileName = 'Document') {
-        const container = document.getElementById('a4PagesContainer');
-        const modal = document.getElementById('printStudioModal');
-        const passwordBox = document.getElementById('studioPasswordValidationBox');
-        const passwordInput = document.getElementById('studioRequiredPdfPassword');
-        
-        if (!container || !modal) return;
+    window.openPrintStudioWithFile = function(fileObj, fileDataUrl) {
+        window.currentStudioJob = {
+            fileName: fileObj.name || 'Document.pdf',
+            fileUrl: fileDataUrl || '',
+            fileBlob: fileObj || null,
+            pages: 1,
+            copies: 1,
+            printType: 'bw',
+            orientation: 'portrait'
+        };
 
-        currentStudioActiveFile = fileBlobOrUrl;
-        currentStudioFileName = originalFileName || 'Document.pdf';
-        if (passwordInput) passwordInput.value = '';
-        if (passwordBox) passwordBox.classList.add('hidden');
+        updatePrintStudioUI();
+        
+        const modal = document.getElementById('printStudioModal');
+        if (modal) {
+            history.pushState({ modal: 'printStudio' }, '', '');
+            modal.style.display = 'flex';
+        }
+    };
 
-        container.innerHTML = '<div style="color: #38bdf8; font-weight: 700; font-size: 1rem; padding: 40px; text-align:center;">⏳ Generating pixel-perfect A4 Sheets...</div>';
-        modal.style.display = 'flex';
-        renderedPagesList = [];
+    window.openDocumentInA4Studio = function(fileBlobOrUrl, originalFileName = 'Document') {
+        let fakeFile = { name: originalFileName, type: 'application/pdf' };
+        let url = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
+        window.openPrintStudioWithFile(fakeFile, url);
+    };
 
-        try {
-            const isPdf = (typeof fileBlobOrUrl === 'string' && fileBlobOrUrl.toLowerCase().includes('.pdf')) || 
-                        (fileBlobOrUrl.type === 'application/pdf') || 
-                        (fileBlobOrUrl.name && fileBlobOrUrl.name.toLowerCase().endsWith('.pdf'));
+    window.closePrintStudio = function() {
+        const modal = document.getElementById('printStudioModal');
+        if (modal) modal.style.display = 'none';
+    };
 
-            if (isPdf) {
-                const fileSource = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
-                try {
-                    await loadPdfIntoStudio(fileSource, undefined);
-                } catch (passErr) {
-                    if (passwordBox) passwordBox.classList.remove('hidden');
-                    container.innerHTML = `<div style="color: #f87171; font-weight: 700; padding: 30px; text-align: center;">🔒 This PDF is password protected!<br><span style="font-size:0.75rem; color:#94a3b8;">Please enter the password in the top red bar above to unlock and preview.</span></div>`;
-                }
-            } else {
-                const imgSourceUrl = typeof fileBlobOrUrl === 'string' ? fileBlobOrUrl : URL.createObjectURL(fileBlobOrUrl);
-                container.innerHTML = '';
+    window.updatePrintStudioUI = function() {
+        const job = window.currentStudioJob;
+        
+        const nameNode = document.getElementById('studioFileNameText');
+        if (nameNode) nameNode.textContent = job.fileName;
+        
+        const previewContainer = document.getElementById('studioFilePreviewContainer');
+        if (previewContainer) {
+            if (job.fileUrl && (job.fileUrl.startsWith('data:image') || job.fileUrl.startsWith('blob:'))) {
+                previewContainer.innerHTML = `<img src="${job.fileUrl}" style="width:100%; height:100%; object-fit:contain;" />`;
+            } else {
+                previewContainer.innerHTML = `<span style="font-size:3rem;">📄</span>`;
+            }
+        }
 
-                const pageWrapper = document.createElement('div');
-                pageWrapper.className = `a4-page-wrapper ${isLandscapeMode ? 'landscape' : ''}`;
-                pageWrapper.id = `a4_sheet_element_1`;
+        const copiesText = document.getElementById('studioCopiesCountText');
+        if (copiesText) copiesText.textContent = job.copies;
 
-                pageWrapper.innerHTML = `
-                    <div class="page-badge-toolbar">
-                        <span style="color: #38bdf8; font-size: 0.75rem; font-weight: 800;">Page 1 of 1</span>
-                    </div>
-                    <img src="${imgSourceUrl}" class="a4-page-canvas" style="width: 100%; height: 100%; object-fit: contain;" />
-                `;
-                container.appendChild(pageWrapper);
-                renderedPagesList.push({ pageNum: 1, elementId: `a4_sheet_element_1` });
-                updateStudioPageCountBadge();
-            }
-        } catch (err) {
-            console.error("A4 Studio Error:", err);
-            container.innerHTML = `<div style="color: #ef4444; font-weight: 700; padding: 30px; text-align: center;">❌ Failed to render document: ${err.message}</div>`;
-        }
-    };
+        const pagesInfo = document.getElementById('studioFilePagesInfo');
+        if (pagesInfo) pagesInfo.textContent = `File 1 (${job.pages} page${job.pages > 1 ? 's' : ''})`;
 
-    window.updateStudioPageCountBadge = function() {
-        const badge = document.getElementById('totalActivePagesCount');
-        if (badge) badge.textContent = renderedPagesList.length;
-    };
+        const colColoured = document.getElementById('colorOptionColoured');
+        const colBw = document.getElementById('colorOptionBw');
+        if (colColoured && colBw) {
+            if (job.printType === 'coloured' || job.printType === 'color') {
+                colColoured.style.borderColor = '#065f46';
+                colColoured.style.background = '#f0fdf4';
+                colBw.style.borderColor = '#e2e8f0';
+                colBw.style.background = '#ffffff';
+            } else {
+                colBw.style.borderColor = '#065f46';
+                colBw.style.background = '#f0fdf4';
+                colColoured.style.borderColor = '#e2e8f0';
+                colColoured.style.background = '#ffffff';
+            }
+        }
 
-    window.removeA4StudioPage = function(pageNum) {
-        const index = renderedPagesList.findIndex(p => p.pageNum === pageNum);
-        if (index !== -1) {
-            const item = renderedPagesList[index];
-            const el = document.getElementById(item.elementId);
-            if (el) el.remove();
-            renderedPagesList.splice(index, 1);
-            window.updateStudioPageCountBadge();
-            calculateTotal();
-        }
-    };
+        const oriPortrait = document.getElementById('orientationPortrait');
+        const oriLandscape = document.getElementById('orientationLandscape');
+        if (oriPortrait && oriLandscape) {
+            if (job.orientation === 'portrait') {
+                oriPortrait.style.borderColor = '#065f46';
+                oriPortrait.style.background = '#f0fdf4';
+                oriLandscape.style.borderColor = '#e2e8f0';
+                oriLandscape.style.background = '#ffffff';
+            } else {
+                oriLandscape.style.borderColor = '#065f46';
+                oriLandscape.style.background = '#f0fdf4';
+                oriPortrait.style.borderColor = '#e2e8f0';
+                oriPortrait.style.background = '#ffffff';
+            }
+        }
 
-    window.toggleGlobalOrientation = function() {
-        isLandscapeMode = !isLandscapeMode;
-        document.querySelectorAll('.a4-page-wrapper').forEach(sheet => {
-            sheet.classList.toggle('landscape', isLandscapeMode);
-        });
-    };
+        let ratePerPage = (job.printType === 'bw') ? 3 : 10;
+        let totalPrice = job.pages * ratePerPage * job.copies;
+        let totalPagesNum = job.pages * job.copies;
 
-    window.closePrintStudio = function() {
-        const modal = document.getElementById('printStudioModal');
-        if (modal) modal.style.display = 'none';
-    };
+        const totalPagesText = document.getElementById('studioTotalPagesText');
+        if (totalPagesText) totalPagesText.textContent = `Total ${totalPagesNum} page${totalPagesNum > 1 ? 's' : ''}`;
 
-    window.addStudioDocumentToCartAndRedirect = function() {
-        const totalPages = renderedPagesList.length > 0 ? renderedPagesList.length : 1;
+        const totalPriceText = document.getElementById('studioTotalPriceText');
+        if (totalPriceText) totalPriceText.textContent = `₹${totalPrice}`;
+    };
 
-        window.cartPrintJobsArray.push({
-            fileName: currentStudioFileName,
-            pages: totalPages,
-            printType: 'bw',
-            sides: isLandscapeMode ? 'landscape' : 'single',
-            binding: 'none',
-            copies: 1,
-            orientation: isLandscapeMode ? 'landscape' : 'portrait',
-            fileData: currentStudioActiveFile
-        });
+    window.adjustStudioCopies = function(change) {
+        window.currentStudioJob.copies = Math.max(1, window.currentStudioJob.copies + change);
+        updatePrintStudioUI();
+    };
 
-        if (typeof persistCartStateData === 'function') persistCartStateData();
-        if (typeof calculateTotal === 'function') calculateTotal();
-        
-        closePrintStudio();
-        toggleCartDrawer(true);
-    };
+    window.setStudioPrintColor = function(type) {
+        window.currentStudioJob.printType = type;
+        updatePrintStudioUI();
+    };
+
+    window.setStudioOrientation = function(ori) {
+        window.currentStudioJob.orientation = ori;
+        updatePrintStudioUI();
+    };
+
+    window.handleStudioFilesAdded = function(input) {
+        if (input.files && input.files[0]) {
+            let file = input.files[0];
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                window.openPrintStudioWithFile(file, e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    window.removeCurrentStudioFile = function() {
+        closePrintStudio();
+    };
+
+    window.addStudioJobToCart = function() {
+        let job = window.currentStudioJob;
+        let rate = (job.printType === 'bw') ? 3 : 10;
+        
+        let printJobItem = {
+            id: 'print_' + Date.now(),
+            fileName: job.fileName,
+            fileUrl: job.fileUrl,
+            fileData: job.fileBlob,
+            pages: job.pages,
+            copies: job.copies,
+            printType: job.printType === 'coloured' ? 'color' : job.printType,
+            orientation: job.orientation,
+            sides: job.orientation === 'portrait' ? 'single' : 'landscape',
+            binding: 'none',
+            price: job.pages * rate * job.copies
+        };
+
+        window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
+        window.cartPrintJobsArray.push(printJobItem);
+        localStorage.setItem('cart_print_jobs', JSON.stringify(window.cartPrintJobsArray));
+
+        if (typeof persistCartStateData === 'function') persistCartStateData();
+        if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
+
+        closePrintStudio();
+        if (typeof toggleCartDrawer === 'function') {
+            toggleCartDrawer(true);
+        }
+    };
+
+    window.addStudioDocumentToCartAndRedirect = window.addStudioJobToCart;
+    window.toggleGlobalOrientation = function() {
+        let current = window.currentStudioJob.orientation;
+        window.currentStudioJob.orientation = (current === 'portrait') ? 'landscape' : 'portrait';
+        updatePrintStudioUI();
+    };
 
     // 🔥 STORE STATUS & NOTIFICATIONS
     let isStoreCurrentlyOpen = true;
