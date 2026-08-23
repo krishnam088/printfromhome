@@ -546,7 +546,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     fileUrl = '';
                 }
 
-                // Completely safe page estimator (won't white-screen if PDF.js fails)
                 if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
                     try {
                         if (typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
@@ -556,7 +555,6 @@ window.addEventListener('DOMContentLoaded', () => {
                             pageCount = pdfDoc.numPages || 1;
                         }
                     } catch (e) {
-                        console.log("PDF reader fallback active");
                         pageCount = 1;
                     }
                 }
@@ -595,7 +593,7 @@ window.addEventListener('DOMContentLoaded', () => {
     };
 
    // ==========================================
-    // 🎨 DYNAMIC VISUAL PRINT STUDIO ENGINE (B&W/Color Preview & Active Index Fix)
+    // 🎨 BLINKIT-STYLE MULTI-FILE HORIZONTAL SLIDER PRINT STUDIO ENGINE
     // ==========================================
     window.studioMasterFiles = [];
     window.currentStudioActiveIndex = 0;
@@ -606,7 +604,7 @@ window.addEventListener('DOMContentLoaded', () => {
         window.studioMasterFiles = filesArray.map(f => ({
             name: f.name || 'Document.pdf',
             size: f.size || 0,
-            fileBlob: f.fileData || f.fileBlob || f,
+            fileBlob: f.fileBlob || f.fileData || f,
             fileUrl: f.fileUrl || (f.fileData ? URL.createObjectURL(f.fileData) : ''),
             pages: f.pages || f.config?.pages || 1,
             copies: f.copies || f.config?.copies || 1,
@@ -650,26 +648,26 @@ window.addEventListener('DOMContentLoaded', () => {
         if (modal) modal.style.display = 'none';
     };
 
- window.updateMultiFileStudioUI = function() {
+    window.updateMultiFileStudioUI = function() {
         const files = window.studioMasterFiles;
         if (!files || files.length === 0) return;
 
         const currentFile = files[window.currentStudioActiveIndex] || files[0];
 
-        // 1. Render In-Image Horizontal Slider safely
+        // 1. Render In-Image Horizontal Slider with Dynamic Filters & Orientation
         const imageSlider = document.getElementById('studioInImageHorizontalSlider');
         if (imageSlider) {
-            imageSlider.innerHTML = files.map((f, idx) => {
+            imageSlider.innerHTML = files.map((f) => {
                 let isLand = f.orientation === 'landscape';
                 let isBw = f.printType === 'bw';
                 let filterStyle = isBw ? 'filter: grayscale(100%);' : '';
+                let transformStyle = isLand ? 'transform: rotate(90deg); max-width: 75%; max-height: 75%;' : 'max-width: 90%; max-height: 90%;';
 
                 let previewContent = `<span style="font-size:3.5rem; ${filterStyle}">📄</span>`;
                 if (f.fileUrl) {
                     if (f.fileBlob && f.fileBlob.type && f.fileBlob.type.startsWith('image/')) {
-                        previewContent = `<img src="${f.fileUrl}" style="max-width:90%; max-height:90%; object-fit:contain; ${filterStyle}" />`;
+                        previewContent = `<img src="${f.fileUrl}" style="${transformStyle} object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />`;
                     } else {
-                        // For PDFs or other files, show clean document icon with name badge
                         previewContent = `
                             <div style="display:flex; flex-direction:column; align-items:center; gap:8px; ${filterStyle}">
                                 <span style="font-size:3.5rem;">📄</span>
@@ -864,24 +862,19 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Listen to horizontal scroll on preview container to sync active index (1/2, 2/2)
-    document.addEventListener('DOMContentLoaded', () => {
-        const slider = document.getElementById('studioInImageHorizontalSlider');
-        if (slider) {
-            slider.addEventListener('scroll', () => {
-                let slideWidth = slider.clientWidth || 300;
-                let activeIdx = Math.round(slider.scrollLeft / slideWidth);
-                if (activeIdx >= 0 && activeIdx < window.studioMasterFiles.length && activeIdx !== window.currentStudioActiveIndex) {
-                    window.currentStudioActiveIndex = activeIdx;
-                    const counterBadge = document.getElementById('studioSlideCounterBadge');
-                    if (counterBadge) {
-                        counterBadge.textContent = `${window.currentStudioActiveIndex + 1}/${window.studioMasterFiles.length}`;
-                    }
-                }
-            });
-        }
-    });
-
+    // Horizontal slider scroll sync listener (outside DOMContentLoaded block since we are already inside it)
+    const slider = document.getElementById('studioInImageHorizontalSlider');
+    if (slider) {
+        slider.addEventListener('scroll', () => {
+            let slideWidth = slider.clientWidth || 300;
+            let activeIdx = Math.round(slider.scrollLeft / slideWidth);
+            if (activeIdx >= 0 && activeIdx < window.studioMasterFiles.length && activeIdx !== window.currentStudioActiveIndex) {
+                window.currentStudioActiveIndex = activeIdx;
+                updateMultiFileStudioUI();
+            }
+        });
+    }
+    
     // 🔥 STORE STATUS & NOTIFICATIONS
     let isStoreCurrentlyOpen = true;
 
