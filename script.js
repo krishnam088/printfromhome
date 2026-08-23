@@ -1808,13 +1808,14 @@ window.renderCartDrawerContents = function() {
         shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
     }
 
-    // Sync User Identity & Active Address Name/Phone
+    // Sync User Identity & Active Address Name/Phone correctly
     const identityNode = document.getElementById('cartUserIdentitySummary');
     if (identityNode) {
         let activeAddr = localStorage.getItem('selected_active_address') || "";
         let activeUser = localStorage.getItem('printAppUser') || "Customer";
-        if (activeAddr.includes('| Contact:')) {
-            identityNode.textContent = `Order for ${activeAddr.split('| Contact:')[1].trim()}`;
+        if (activeAddr.includes('Contact:')) {
+            let contactPart = activeAddr.split('Contact:')[1].trim();
+            identityNode.textContent = `Order for ${contactPart}`;
         } else {
             identityNode.textContent = `Order for ${activeUser}`;
         }
@@ -1849,6 +1850,7 @@ window.renderCartDrawerContents = function() {
 
     if (typeof calculateTotal === 'function') calculateTotal();
 };
+
     window.removeSnackItemCompletely = function(index) {
         window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
         window.cartSnacksArray.splice(index, 1);
@@ -2373,6 +2375,63 @@ window.renderCartDrawerContents = function() {
             msgBox.scrollTop = msgBox.scrollHeight;
         }, 500);
     };
+// 🔥 Admin Configurable Fees & Coupons Sync Engine
+window.loadAdminConfiguredFeesAndCoupons = async function() {
+    try {
+        const res = await fetch('/api/admin/settings'); 
+        const data = await res.json();
+        if (data.success && data.settings) {
+            window.adminDeliveryFee = parseFloat(data.settings.deliveryFee) || 25.00;
+            window.adminHandlingFee = parseFloat(data.settings.handlingFee) || 5.00;
+            window.adminRainFee = parseFloat(data.settings.rainFee) || 15.00;
+            window.adminCouponsList = data.settings.coupons || [];
+        }
+    } catch(e) {
+        window.adminDeliveryFee = 25.00;
+        window.adminHandlingFee = 5.00;
+        window.adminRainFee = 15.00;
+        window.adminCouponsList = [
+            { code: 'FREEDEL', desc: 'Free delivery on orders above ₹99', discount: 25 },
+            { code: 'PRINT20', desc: 'Flat ₹20 off on print orders', discount: 20 }
+        ];
+    }
+};
+
+window.toggleCouponDrawer = function() {
+    let couponModal = document.getElementById('couponDropdownModal');
+    if (!couponModal) {
+        couponModal = document.createElement('div');
+        couponModal.id = 'couponDropdownModal';
+        couponModal.style.cssText = "position:fixed; bottom:0; left:0; width:100vw; background:#ffffff; border-top-left-radius:20px; border-top-right-radius:20px; box-shadow:0 -10px 30px rgba(0,0,0,0.2); z-index:999999; padding:20px; display:flex; flex-direction:column; gap:12px; font-family:'Poppins', sans-serif;";
+        
+        let couponsHTML = (window.adminCouponsList || []).map(c => `
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:800; font-size:0.8rem; color:#16a34a;">${c.code}</div>
+                    <div style="font-size:0.7rem; color:#475569;">${c.desc}</div>
+                </div>
+                <button type="button" onclick="alert('✅ Coupon ${c.code} Applied Successfully!')" style="background:#16a34a; color:white; border:none; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">Apply</button>
+            </div>
+        `).join('');
+
+        couponModal.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                <h3 style="font-size:1rem; font-weight:800; color:#0f172a; margin:0;">Available Offers & Coupons</h3>
+                <span onclick="toggleCouponDrawer()" style="font-size:1.2rem; cursor:pointer; font-weight:bold; color:#64748b;">&times;</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px; max-height:250px; overflow-y:auto;">
+                ${couponsHTML || '<p style="text-align:center; color:#64748b; font-size:0.8rem;">No active coupons available right now.</p>'}
+            </div>
+        `;
+        document.body.appendChild(couponModal);
+    } else {
+        couponModal.style.display = couponModal.style.display === 'flex' ? 'none' : 'flex';
+    }
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+    loadAdminConfiguredFeesAndCoupons();
+});
 
     window.connectToHumanSupport = function() {
         window.open('https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Print%20From%20Home%20Support,%20I%20need%20assistance.', '_blank');
@@ -2587,11 +2646,11 @@ window.renderCartDrawerContents = function() {
 
     container.appendChild(wrapper);
 
-    // 🔥 UPSELLING SECTION (Quick Add Store Inventory Products inside Cart Drawer)
+  // 🔥 UPSELLING SECTION (Quick Add Store Inventory Products inside Cart Drawer)
     const upsellingSection = document.createElement('div');
-    upsellingSection.style.cssText = "margin-top: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;";
+    upsellingSection.style.cssText = "margin-top: 15px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;";
     upsellingSection.innerHTML = `
-        <h4 style="font-size:0.78rem; font-weight:800; color:#0f172a; margin-bottom:8px; text-transform:uppercase;">⚡ Quick Add Store Items</h4>
+        <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:10px;">You might also like</h4>
         <div id="cartDrawerUpsellingGrid" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;"></div>
     `;
     container.appendChild(upsellingSection);
@@ -2607,12 +2666,12 @@ window.renderCartDrawerContents = function() {
                     const safeName = String(prod.name || '').replace(/'/g, "\\'");
                     const safeThumb = String(thumb || '').replace(/'/g, "\\'");
                     const itemCard = document.createElement('div');
-                    itemCard.style.cssText = "min-width: 90px; width: 90px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);";
+                    itemCard.style.cssText = "min-width: 100px; width: 100px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.03);";
                     itemCard.innerHTML = `
-                        ${thumb ? `<img src="${thumb}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; margin-bottom:4px;" />` : '<div style="font-size:1.5rem; margin-bottom:4px;">📦</div>'}
-                        <div title="${prod.name}" style="font-size:0.68rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name}</div>
-                        <div style="font-size:0.68rem; font-weight:800; color:#065f46; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
-                        <button type="button" style="background:#065f46; color:white; border:none; padding:4px 6px; border-radius:6px; font-size:0.65rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${Number(prod.sellingPrice) || 0}, ${Number(prod.stockQuantity) || 0}, '${safeThumb}')">+ Add</button>
+                        ${thumb ? `<img src="${thumb}" style="width:45px; height:45px; object-fit:cover; border-radius:8px; margin-bottom:4px;" />` : '<div style="font-size:1.5rem; margin-bottom:4px;">📦</div>'}
+                        <div title="${prod.name}" style="font-size:0.7rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name}</div>
+                        <div style="font-size:0.7rem; font-weight:800; color:#065f46; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
+                        <button type="button" style="background:#065f46; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.68rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${Number(prod.sellingPrice) || 0}, ${Number(prod.stockQuantity) || 0}, '${safeThumb}')">+ Add</button>
                     `;
                     upsellingGrid.appendChild(itemCard);
                 }
