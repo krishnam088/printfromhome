@@ -526,7 +526,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
    // ==========================================
-    // 📂 1. DIRECT FILE UPLOAD TRIGGER (Bypasses Homepage Preview Box)
+    // 📂 SAFE FILE UPLOAD & PREVIEW TRIGGER
     // ==========================================
     if(fileUpload) {
         fileUpload.addEventListener('change', async () => {
@@ -535,21 +535,34 @@ window.addEventListener('DOMContentLoaded', () => {
             let uploadedFilesList = [];
             for (const file of Array.from(fileUpload.files)) {
                 let pageCount = 1;
+                let fileUrl = '';
+                
+                try {
+                    fileUrl = URL.createObjectURL(file);
+                } catch(e) {
+                    fileUrl = '';
+                }
+
+                // Safe PDF page counting without crashing
                 if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
                     try {
                         const arrayBuffer = await file.arrayBuffer();
-                        const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                        pageCount = pdfDoc.numPages || 1;
+                        if (typeof pdfjsLib !== 'undefined') {
+                            const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                            const pdfDoc = await loadingTask.promise;
+                            pageCount = pdfDoc.numPages || 1;
+                        }
                     } catch (e) {
+                        console.warn("PDF.js render warning, defaulting to 1 page:", e);
                         pageCount = 1;
                     }
                 }
 
                 uploadedFilesList.push({
-                    name: file.name,
-                    size: file.size,
+                    name: file.name || 'Document.pdf',
+                    size: file.size || 0,
                     fileBlob: file,
-                    fileUrl: URL.createObjectURL(file),
+                    fileUrl: fileUrl,
                     pages: pageCount,
                     copies: 1,
                     printType: 'bw',
@@ -559,7 +572,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
 
             fileUpload.value = '';
-            if (typeof openPrintStudioWithFilesArray === 'function') {
+            if (uploadedFilesList.length > 0 && typeof openPrintStudioWithFilesArray === 'function') {
                 openPrintStudioWithFilesArray(uploadedFilesList, 0);
             }
         });
@@ -631,52 +644,59 @@ window.addEventListener('DOMContentLoaded', () => {
         if (modal) modal.style.display = 'none';
     };
 
-    window.updateMultiFileStudioUI = function() {
+ window.updateMultiFileStudioUI = function() {
         const files = window.studioMasterFiles;
-        if (files.length === 0) return;
+        if (!files || files.length === 0) return;
 
-        const currentFile = files[window.currentStudioActiveIndex];
+        const currentFile = files[window.currentStudioActiveIndex] || files[0];
 
-        // 1. Render In-Image Horizontal Slider & Dynamic Filters/Orientation
+        // 1. Render In-Image Horizontal Slider safely
         const imageSlider = document.getElementById('studioInImageHorizontalSlider');
         if (imageSlider) {
             imageSlider.innerHTML = files.map((f, idx) => {
                 let isLand = f.orientation === 'landscape';
                 let isBw = f.printType === 'bw';
                 let filterStyle = isBw ? 'filter: grayscale(100%);' : '';
-                let containerAspect = isLand ? 'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;' : 'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;';
+
+                let previewContent = `<span style="font-size:3.5rem; ${filterStyle}">📄</span>`;
+                if (f.fileUrl) {
+                    if (f.fileBlob && f.fileBlob.type && f.fileBlob.type.startsWith('image/')) {
+                        previewContent = `<img src="${f.fileUrl}" style="max-width:90%; max-height:90%; object-fit:contain; ${filterStyle}" />`;
+                    } else {
+                        // For PDFs or other files, show clean document icon with name badge
+                        previewContent = `
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:8px; ${filterStyle}">
+                                <span style="font-size:3.5rem;">📄</span>
+                                <span style="font-size:0.75rem; font-weight:700; color:#1e293b; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${f.name}</span>
+                            </div>
+                        `;
+                    }
+                }
 
                 return `
                     <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; flex-shrink:0; position:relative; background:#f8fafc; overflow:hidden;">
-                        <div style="${containerAspect}">
-                            ${f.fileUrl && (f.fileUrl.startsWith('data:image') || f.fileUrl.startsWith('blob:')) 
-                                ? `<img src="${f.fileUrl}" style="max-width:${isLand ? '95%' : '75%'}; max-height:${isLand ? '75%' : '95%'}; object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />` 
-                                : `<span style="font-size:3.5rem; ${filterStyle}">📄</span>`
-                            }
+                        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                            ${previewContent}
                         </div>
                     </div>
                 `;
             }).join('');
 
-            // Scroll slider to active index smoothly
             let slideWidth = imageSlider.clientWidth || 300;
             imageSlider.scrollTo({ left: slideWidth * window.currentStudioActiveIndex, behavior: 'smooth' });
         }
 
-        // Counter Badge (e.g., 1/2, 2/2)
         const counterBadge = document.getElementById('studioSlideCounterBadge');
         if (counterBadge) {
             counterBadge.textContent = `${window.currentStudioActiveIndex + 1}/${files.length}`;
         }
 
-        // 2. Update Copies & Pages Info for Active File
         const copiesText = document.getElementById('studioCopiesCountText');
         if (copiesText) copiesText.textContent = currentFile.copies;
 
         const pagesInfo = document.getElementById('studioFilePagesInfo');
         if (pagesInfo) pagesInfo.textContent = `${currentFile.name} (${currentFile.pages} page${currentFile.pages > 1 ? 's' : ''})`;
 
-        // 3. Highlight Color & Orientation UI for Active File
         const colColoured = document.getElementById('colorOptionColoured');
         const colBw = document.getElementById('colorOptionBw');
         if (colColoured && colBw) {
@@ -701,7 +721,6 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 4. Calculate Grand Total Price for Bottom Bar (Clean: Only Total & Add to Cart)
         let grandTotalPrice = 0;
         files.forEach((f) => {
             let rate = (f.printType === 'bw') ? 3 : 10;
