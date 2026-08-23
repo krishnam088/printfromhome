@@ -977,75 +977,93 @@ window.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-// 📂 3-Column Grid Category Slider Drawer Function (With Product Detail Modal Support)
-  window.openCategoryDrawer = function(categoryName) {
-    const overlay = document.getElementById('categoryDrawerOverlay');
-    const titleNode = document.getElementById('categoryDrawerTitle');
-    const gridNode = document.getElementById('categoryDrawerItemsGrid');
-    if (!overlay || !gridNode) return;
+    // 📂 Category Slider Drawer Function (Fixed compact card sizing to prevent stretching)
+    window.openCategoryDrawer = function(categoryName) {
+        const overlay = document.getElementById('categoryDrawerOverlay');
+        const titleNode = document.getElementById('categoryDrawerTitle');
+        const gridNode = document.getElementById('categoryDrawerItemsGrid');
+        if (!overlay || !gridNode) return;
 
-    if (titleNode) {
-        titleNode.textContent = `${categoryName.toUpperCase()} ITEMS`;
-    }
-
-    // 💡 Force strict 3-column grid layout so cards don't stretch wide
-    gridNode.style.cssText = "flex:1; overflow-y:auto; padding:16px; display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; align-content:start;";
-    gridNode.innerHTML = '';
-
-    let filtered = (window.storeInventoryProducts || []).filter(prod => {
-        let categoryLower = (prod.category || prod.type || '').toLowerCase();
-        let nameLower = (prod.name || '').toLowerCase();
-        
-        if (categoryName === 'munchies') {
-            return categoryLower.includes('munchies') || categoryLower.includes('chips') || categoryLower.includes('namkeen') || nameLower.includes('lays') || nameLower.includes('kurkure');
-        } else if (categoryName === 'snacks') {
-            return categoryLower.includes('snacks') || categoryLower.includes('food') || categoryLower.includes('beverage');
-        } else if (categoryName === 'socks') {
-            return categoryLower.includes('socks') || categoryLower.includes('apparel') || categoryLower.includes('clothing') || nameLower.includes('sock');
+        if (titleNode) {
+            titleNode.textContent = `${categoryName.toUpperCase()} ITEMS`;
         }
-        return true;
-    });
 
-    if (filtered.length === 0) {
-        gridNode.innerHTML = `<p style="grid-column: 1 / -1; text-align:center; color:#64748b; font-size:0.8rem; padding:40px;">No items found in this category.</p>`;
-    } else {
-        filtered.forEach(prod => {
-            let originalIndex = window.storeInventoryProducts.findIndex(p => p.sku === prod.sku || p.name === prod.name);
-            const isOutOfStock = (prod.stockQuantity <= 0);
-            const finalImgUrl = prod.imageUrl || prod.image || '';
-            const card = document.createElement('div');
+        // Use Flexbox wrap with left alignment so cards never stretch wide even if items are few
+        gridNode.style.cssText = "flex:1; overflow-y:auto; padding:16px; display:flex; flex-wrap:wrap; gap:12px; align-content:start; justify-content:flex-start;";
+        gridNode.innerHTML = '';
+
+        let filtered = (window.storeInventoryProducts || []).filter(prod => {
+            let categoryLower = (prod.category || prod.type || '').toLowerCase();
+            let nameLower = (prod.name || '').toLowerCase();
             
-            // 💡 Compact fixed card styling to match original Blinkit proportion
-            card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.03); box-sizing:border-box; cursor:pointer;";
-            
-            card.onclick = (e) => {
-                if (e.target.tagName === 'BUTTON') return;
-                if (typeof openProductDetailModal === 'function' && originalIndex !== -1) {
-                    openProductDetailModal(window.storeInventoryProducts[originalIndex]);
-                }
-            };
-
-            const imgHtml = finalImgUrl ? `<img src="${finalImgUrl}" style="width:60px; height:60px; object-fit:contain; border-radius:8px; margin-bottom:6px; display:block;" />` : `<div style="font-size:2rem; margin-bottom:6px; height:60px; display:flex; align-items:center; justify-content:center;">📦</div>`;
-
-            let safeSku = String(prod.sku || prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            let safeName = String(prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            let safeImg = String(finalImgUrl || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-
-            card.innerHTML = `
-                ${imgHtml}
-                <div title="${prod.name}" style="font-weight:700; font-size:0.75rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; margin-bottom:2px;">${prod.name}</div>
-                <div style="font-weight:800; font-size:0.75rem; color:#065f46; margin-bottom:8px;">₹${prod.sellingPrice || 0}</div>
-                ${isOutOfStock 
-                    ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 6px; border-radius:6px; font-size:0.68rem; font-weight:700; width:100%; cursor:pointer;" disabled>Out of Stock</button>`
-                    : `<button type="button" style="background:#065f46; color:white; border:none; padding:5px 8px; border-radius:6px; font-size:0.7rem; font-weight:800; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${safeSku}', '${safeName}', ${prod.sellingPrice || 0}, ${prod.stockQuantity}, '${safeImg}')">+ Add</button>`
-                }
-            `;
-            gridNode.appendChild(card);
+            if (categoryName === 'munchies') {
+                return categoryLower.includes('munchies') || categoryLower.includes('chips') || categoryLower.includes('namkeen') || nameLower.includes('lays') || nameLower.includes('kurkure');
+            } else if (categoryName === 'snacks') {
+                return categoryLower.includes('snacks') || categoryLower.includes('food') || categoryLower.includes('beverage');
+            } else if (categoryName === 'socks') {
+                return categoryLower.includes('socks') || categoryLower.includes('apparel') || categoryLower.includes('clothing') || nameLower.includes('sock');
+            }
+            return true;
         });
-    }
 
-    overlay.style.display = 'flex';
-};
+        if (filtered.length === 0) {
+            gridNode.innerHTML = `<p style="width:100%; text-align:center; color:#64748b; font-size:0.8rem; padding:40px;">No items found in this category.</p>`;
+        } else {
+            filtered.forEach(prod => {
+                let originalIndex = window.storeInventoryProducts.findIndex(p => p.sku === prod.sku || p.name === prod.name);
+                const isOutOfStock = (prod.stockQuantity <= 0);
+                const isLowStock = !isOutOfStock && prod.stockQuantity <= 5;
+                const finalImgUrl = prod.imageUrl || prod.image || '';
+                const card = document.createElement('div');
+                
+                // Fixed compact width (~120px) matching home page cards perfectly
+                card.style.cssText = `
+                    background: #ffffff; border: 1px solid ${isLowStock ? '#ef4444' : '#e2e8f0'};
+                    border-radius: 14px; padding: 10px; position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; 
+                    display: flex; flex-direction: column; align-items: center; cursor: pointer;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+                    width: 120px; min-width: 120px; max-width: 120px; flex: 0 0 auto; box-sizing: border-box;
+                `;
+                
+                card.onclick = (e) => {
+                    if (e.target.tagName === 'BUTTON') return;
+                    if (typeof openProductDetailModal === 'function' && originalIndex !== -1) {
+                        openProductDetailModal(window.storeInventoryProducts[originalIndex]);
+                    }
+                };
+
+                const imageHtml = finalImgUrl 
+                    ? `<img src="${finalImgUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px; display:block;" />` 
+                    : `<div style="font-size:2rem; margin-bottom:6px; height:65px; display:flex; align-items:center; justify-content:center;">📦</div>`;
+
+                let badgeHtml = '';
+                if (isOutOfStock) {
+                    badgeHtml = `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.55rem; padding:2px 4px; border-radius:4px; font-weight:800; z-index:5;">OUT</span>`;
+                } else if (isLowStock) {
+                    badgeHtml = `<span class="low-stock-badge">Only ${prod.stockQuantity} left</span>`;
+                }
+
+                let safeSku = String(prod.sku || prod.barcode || prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                let safeName = String(prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                let safeImg = String(finalImgUrl || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                card.innerHTML = `
+                    ${badgeHtml}
+                    ${imageHtml}
+                    <div title="${prod.name}" style="font-weight:700; font-size:0.78rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; color:#0f172a;">${prod.name}</div>
+                    <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
+                    ${isOutOfStock 
+                        ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); notifyWhenAvailable('${safeName}')">Notify</button>`
+                        : `<button type="button" class="btn-quick-add-item" style="background:var(--blinkit-green, #10b981); color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${safeSku}', '${safeName}', ${prod.sellingPrice || 0}, ${prod.stockQuantity}, '${safeImg}')">+ Add</button>`
+                    }
+                `;
+                gridNode.appendChild(card);
+            });
+        }
+
+        overlay.style.display = 'flex';
+    };
+    
     window.closeCategoryDrawer = function() {
         const overlay = document.getElementById('categoryDrawerOverlay');
         if (overlay) overlay.style.display = 'none';
