@@ -1349,93 +1349,108 @@ window.openProductDetailModal = function(prod) {
         }
     };
 
-    window.updateFloatingCartBar = function() {
-        const bar = document.getElementById('floatingCartFooterBar');
-        const countText = document.getElementById('floatingCartCountText');
-        const priceText = document.getElementById('floatingCartTotalPriceText');
-        const stackContainer = document.getElementById('floatingCartImagesStack');
-        const drawerOverlay = document.getElementById('cartDrawerOverlay');
-        
-        if (!bar) return;
+   window.updateFloatingCartBar = function() {
+        const bar = document.getElementById('floatingCartFooterBar');
+        const countText = document.getElementById('floatingCartCountText');
+        const priceText = document.getElementById('floatingCartTotalPriceText');
+        const stackContainer = document.getElementById('floatingCartImagesStack');
+        const drawerOverlay = document.getElementById('cartDrawerOverlay');
+        
+        // Category Drawer Cart Elements
+        const catBar = document.getElementById('categoryDrawerFooterBar');
+        const catCountText = document.getElementById('categoryCartCountText');
+        const catPriceText = document.getElementById('categoryCartTotalPriceText');
+        
+        if (!bar) return;
 
-        const sessionActiveUser = localStorage.getItem('printAppUser');
-        const isAuthVisible = document.getElementById('authScreen') && !document.getElementById('authScreen').classList.contains('app-hidden') && document.getElementById('authScreen').style.display !== 'none';
-        
-        const storeSection = document.getElementById('user_section_store');
-        const isStoreActive = storeSection && storeSection.classList.contains('active');
+        const sessionActiveUser = localStorage.getItem('printAppUser');
+        const isAuthVisible = document.getElementById('authScreen') && !document.getElementById('authScreen').classList.contains('app-hidden') && document.getElementById('authScreen').style.display !== 'none';
+        
+        const storeSection = document.getElementById('user_section_store');
+        const isStoreActive = storeSection && storeSection.classList.contains('active');
 
-        window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
-        window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
+        window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
+        window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
-        let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0);
-        let totalPrintCount = window.cartPrintJobsArray.length;
-        let totalCount = totalSnacksCount + totalPrintCount;
+        let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0);
+        let totalPrintCount = window.cartPrintJobsArray.length;
+        let totalCount = totalSnacksCount + totalPrintCount;
 
-        // Auto-close cart drawer if empty
-        if (totalCount === 0 && drawerOverlay && drawerOverlay.style.display === 'flex') {
-            toggleCartDrawer(false);
-        }
+        let totalSnacksPrice = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
+        let totalPrintPrice = window.cartPrintJobsArray.reduce((acc, job) => acc + (job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0);
+        
+        let subtotalCalc = totalSnacksPrice + totalPrintPrice;
+        let delFee = (subtotalCalc >= 99.00 || subtotalCalc === 0) ? 0.00 : 25.00;
+        let rainFee = window.isRainSurgeActive ? 15 : 0;
+        let totalPrice = subtotalCalc + delFee + rainFee + (window.currentDeliveryTip || 0);
 
-        if (!sessionActiveUser || isAuthVisible || !isStoreActive || totalCount === 0 || (drawerOverlay && drawerOverlay.style.display === 'flex')) {
-            bar.classList.add('hidden');
-            bar.style.display = 'none';
-            return;
-        }
+        // Update Category Drawer Footer Cart Bar if items exist
+        if (catBar) {
+            if (totalCount > 0) {
+                catBar.style.display = 'flex';
+                if (catCountText) catCountText.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
+                if (catPriceText) catPriceText.textContent = `₹${totalPrice.toFixed(2)}`;
+            } else {
+                catBar.style.display = 'none';
+            }
+        }
 
-        let totalSnacksPrice = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
-        let totalPrintPrice = window.cartPrintJobsArray.reduce((acc, job) => acc + (job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0);
-        
-        let subtotalCalc = totalSnacksPrice + totalPrintPrice;
-        let delFee = (subtotalCalc >= 99.00 || subtotalCalc === 0) ? 0.00 : 25.00;
-        let rainFee = window.isRainSurgeActive ? 15 : 0;
-        let totalPrice = subtotalCalc + delFee + rainFee + (window.currentDeliveryTip || 0);
+        // Auto-close cart drawer if empty
+        if (totalCount === 0 && drawerOverlay && drawerOverlay.style.display === 'flex') {
+            toggleCartDrawer(false);
+        }
 
-        bar.classList.remove('hidden');
-        bar.style.display = 'flex';
-        if (countText) countText.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
-        if (priceText) priceText.textContent = `₹${totalPrice.toFixed(2)}`;
+        if (!sessionActiveUser || isAuthVisible || !isStoreActive || totalCount === 0 || (drawerOverlay && drawerOverlay.style.display === 'flex')) {
+            bar.classList.add('hidden');
+            bar.style.display = 'none';
+            return;
+        }
 
-        if (stackContainer) {
-            stackContainer.innerHTML = '';
-            stackContainer.style.cssText = "position:relative; width:45px; height:34px; display:flex; align-items:center;";
+        bar.classList.remove('hidden');
+        bar.style.display = 'flex';
+        if (countText) countText.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
+        if (priceText) priceText.textContent = `₹${totalPrice.toFixed(2)}`;
 
-            let allVisualItems = [];
-            window.cartSnacksArray.forEach(s => {
-                for(let i=0; i<s.qty; i++) {
-                    allVisualItems.push({ type: 'snack', img: s.imageUrl || '', name: s.name });
-                }
-            });
-            window.cartPrintJobsArray.forEach(p => allVisualItems.push({ type: 'print', img: '', name: p.fileName }));
+        if (stackContainer) {
+            stackContainer.innerHTML = '';
+            stackContainer.style.cssText = "position:relative; width:45px; height:34px; display:flex; align-items:center;";
 
-            let displayItems = allVisualItems.slice(0, 3);
-            displayItems.forEach((item, sIdx) => {
-                const iconBox = document.createElement('div');
-                iconBox.style.cssText = `
-                    position: absolute;
-                    left: ${sIdx * 12}px;
-                    width: 30px;
-                    height: 30px;
-                    border-radius: 8px;
-                    background: #ffffff;
-                    border: 2px solid #f59e0b;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 0.85rem;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-                    overflow: hidden;
-                    z-index: ${10 - sIdx};
-                `;
-                if (item.type === 'snack' && item.img) {
-                    iconBox.innerHTML = `<img src="${item.img}" style="width:100%; height:100%; object-fit:cover;" />`;
-                } else {
-                    iconBox.innerHTML = item.type === 'print' ? '📄' : '📦';
-                }
-                stackContainer.appendChild(iconBox);
-            });
-        }
-    };
+            let allVisualItems = [];
+            window.cartSnacksArray.forEach(s => {
+                for(let i=0; i<s.qty; i++) {
+                    allVisualItems.push({ type: 'snack', img: s.imageUrl || '', name: s.name });
+                }
+            });
+            window.cartPrintJobsArray.forEach(p => allVisualItems.push({ type: 'print', img: '', name: p.fileName }));
 
+            let displayItems = allVisualItems.slice(0, 3);
+            displayItems.forEach((item, sIdx) => {
+                const iconBox = document.createElement('div');
+                iconBox.style.cssText = `
+                    position: absolute;
+                    left: ${sIdx * 12}px;
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 8px;
+                    background: #ffffff;
+                    border: 2px solid #f59e0b;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 0.85rem;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+                    overflow: hidden;
+                    z-index: ${10 - sIdx};
+                `;
+                if (item.type === 'snack' && item.img) {
+                    iconBox.innerHTML = `<img src="${item.img}" style="width:100%; height:100%; object-fit:cover;" />`;
+                } else {
+                    iconBox.innerHTML = item.type === 'print' ? '📄' : '📦';
+                }
+                stackContainer.appendChild(iconBox);
+            });
+        }
+    };
   // 🔥 UNIVERSAL CART RENDERER (Handles all container IDs automatically)
 window.renderCartDrawerContents = function() {
     const container = document.getElementById('cartDrawerItemsList') || 
