@@ -65,11 +65,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
     });
-   // 🌍 STORE EXACT LOCATION CONFIG (Pandeypur, Varanasi - Hidden from public address text)
+
 const STORE_LOCATION = {
-    lat: 25.3451, 
-    lng: 83.0012,
-    name: "Store" // Store name display fix (No address shown)
+    lat: 25.3451,
+    lng: 83.0012,
+    name: "Store" // Store name display fix (No address shown)
 };
 
 // ⏱️ CALCULATE REAL-TIME DISTANCE & ETA FROM STORE TO USER (Home & Cart)
@@ -320,6 +320,7 @@ window.addEventListener('DOMContentLoaded', () => {
             calculateTotal();
         }
     };
+});
 
     const LIVE_SERVER_URL = window.location.origin;
     window.globalRawOrdersCache = [];
@@ -648,13 +649,13 @@ window.addEventListener('DOMContentLoaded', () => {
         if (modal) modal.style.display = 'none';
     };
 
-    window.updateMultiFileStudioUI = function() {
+   window.updateMultiFileStudioUI = function() {
         const files = window.studioMasterFiles;
         if (!files || files.length === 0) return;
 
         const currentFile = files[window.currentStudioActiveIndex] || files[0];
 
-        // 1. Render In-Image Horizontal Slider safely
+        // 1. Render In-Image Horizontal Slider with Grayscale & Landscape Rotation
         const imageSlider = document.getElementById('studioInImageHorizontalSlider');
         if (imageSlider) {
             imageSlider.innerHTML = files.map((f) => {
@@ -726,7 +727,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 5. Calculate Clean Grand Total Price
+        // 5. Calculate Clean Grand Total Price (Sirf Total Price dikhega bottom bar mein)
         let grandTotalPrice = 0;
         files.forEach((f) => {
             let rate = (f.printType === 'bw') ? 3 : 10;
@@ -2483,8 +2484,8 @@ window.renderCartDrawerContents = function() {
             }
         }
         
-        if (typeof calculateTotal === 'function') {
-            calculateTotal();
-        }
+        if (typeof calculateTotal === 'function') {
+            calculateTotal();
+        };
     };
-});
+
