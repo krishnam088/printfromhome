@@ -1,31 +1,70 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const splashScreen = document.getElementById('splashScreen');
-    const authScreen = document.getElementById('authScreen');
-    const mainApp = document.getElementById('mainApp');
+    const splashScreen = document.getElementById('splashScreen');
+    const authScreen = document.getElementById('authScreen');
+    const mainApp = document.getElementById('mainApp');
 
-    const authForm = document.getElementById('authForm');
-    const authTitle = document.getElementById('authTitle');
-    const authBtn = document.getElementById('authBtn');
-    const toggleAuthLink = document.getElementById('toggleAuthLink');
-    const signupOnlyFields = document.querySelectorAll('.signup-only');
+    const authForm = document.getElementById('authForm');
+    const authTitle = document.getElementById('authTitle');
+    const authBtn = document.getElementById('authBtn');
+    const toggleAuthLink = document.getElementById('toggleAuthLink');
+    const signupOnlyFields = document.querySelectorAll('.signup-only');
 
-    const authName = document.getElementById('authName');
-    const authIdentity = document.getElementById('authIdentity');
-    const authPassword = document.getElementById('authPassword');
-    const userGreeting = document.getElementById('userGreeting');
-    const logoutBtn = document.getElementById('logoutBtn');
+    const authName = document.getElementById('authName');
+    const authIdentity = document.getElementById('authIdentity');
+    const authPassword = document.getElementById('authPassword');
+    const userGreeting = document.getElementById('userGreeting');
+    const logoutBtn = document.getElementById('logoutBtn');
 
-    const fileUpload = document.getElementById('fileUpload');
-    const multiFilesContainer = document.getElementById('multiFilesContainer');
-    const ordersHistoryContainer = document.getElementById('ordersHistoryContainer');
+    const fileUpload = document.getElementById('fileUpload');
+    const multiFilesContainer = document.getElementById('multiFilesContainer');
+    const ordersHistoryContainer = document.getElementById('ordersHistoryContainer');
 
-    let masterFilesArray = []; 
-    window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]'); 
-    window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');    
-    window.savedUserAddresses = JSON.parse(localStorage.getItem('saved_addresses') || '[]');  
-    let selectedActiveAddress = localStorage.getItem('selected_active_address') || "";  
-    window.storeInventoryProducts = []; 
+    let masterFilesArray = []; 
+    window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]'); 
+    window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');    
+    window.savedUserAddresses = JSON.parse(localStorage.getItem('saved_addresses') || '[]');  
+    let selectedActiveAddress = localStorage.getItem('selected_active_address') || "";  
+    window.storeInventoryProducts = []; 
 
+    // 🔙 Global Mobile Back Button Handler for Modals & Drawers
+    window.addEventListener('popstate', (event) => {
+        const categoryOverlay = document.getElementById('categoryDrawerOverlay');
+        const cartOverlay = document.getElementById('cartDrawerOverlay');
+        const addressModal = document.getElementById('addressManagerModal');
+        const productModal = document.getElementById('productDetailModal');
+        const studioModal = document.getElementById('printStudioModal');
+        const searchOverlay = document.getElementById('blinkitSearchOverlayModal');
+        const aiModal = document.getElementById('aiChatModal');
+
+        if (categoryOverlay && categoryOverlay.style.display === 'flex') {
+            if (typeof closeCategoryDrawer === 'function') closeCategoryDrawer();
+            return;
+        }
+        if (cartOverlay && cartOverlay.style.display === 'flex') {
+            if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
+            return;
+        }
+        if (addressModal && addressModal.style.display === 'flex') {
+            if (typeof closeAddressManagerModal === 'function') closeAddressManagerModal();
+            return;
+        }
+        if (productModal && productModal.style.display === 'flex') {
+            if (typeof closeProductDetailModal === 'function') closeProductDetailModal();
+            return;
+        }
+        if (studioModal && studioModal.style.display === 'flex') {
+            if (typeof closePrintStudio === 'function') closePrintStudio();
+            return;
+        }
+        if (searchOverlay && searchOverlay.style.display === 'flex') {
+            if (typeof closeSearchOverlay === 'function') closeSearchOverlay();
+            return;
+        }
+        if (aiModal && aiModal.style.display === 'flex') {
+            if (typeof toggleAiChatModal === 'function') toggleAiChatModal(false);
+            return;
+        }
+    });
    // 🌍 STORE EXACT LOCATION CONFIG (Pandeypur, Varanasi - Hidden from public address text)
 const STORE_LOCATION = {
     lat: 25.3451, 
@@ -977,7 +1016,7 @@ window.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-    // 📂 Category Slider Drawer Function (Fixed compact card sizing to prevent stretching)
+   // 📂 Category Slider Drawer Function (Fixed compact card sizing & Mobile Back Button support)
     window.openCategoryDrawer = function(categoryName) {
         const overlay = document.getElementById('categoryDrawerOverlay');
         const titleNode = document.getElementById('categoryDrawerTitle');
@@ -1061,6 +1100,8 @@ window.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Push history state so mobile back button can close the category drawer
+        history.pushState({ drawer: 'category' }, '', '');
         overlay.style.display = 'flex';
     };
 
