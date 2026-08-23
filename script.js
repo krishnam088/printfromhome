@@ -978,73 +978,74 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 // 📂 3-Column Grid Category Slider Drawer Function (With Product Detail Modal Support)
-    window.openCategoryDrawer = function(categoryName) {
-        const overlay = document.getElementById('categoryDrawerOverlay');
-        const titleNode = document.getElementById('categoryDrawerTitle');
-        const gridNode = document.getElementById('categoryDrawerItemsGrid');
-        if (!overlay || !gridNode) return;
+  window.openCategoryDrawer = function(categoryName) {
+    const overlay = document.getElementById('categoryDrawerOverlay');
+    const titleNode = document.getElementById('categoryDrawerTitle');
+    const gridNode = document.getElementById('categoryDrawerItemsGrid');
+    if (!overlay || !gridNode) return;
 
-        if (titleNode) {
-            titleNode.textContent = `${categoryName.toUpperCase()} ITEMS`;
+    if (titleNode) {
+        titleNode.textContent = `${categoryName.toUpperCase()} ITEMS`;
+    }
+
+    // 💡 Force strict 3-column grid layout so cards don't stretch wide
+    gridNode.style.cssText = "flex:1; overflow-y:auto; padding:16px; display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; align-content:start;";
+    gridNode.innerHTML = '';
+
+    let filtered = (window.storeInventoryProducts || []).filter(prod => {
+        let categoryLower = (prod.category || prod.type || '').toLowerCase();
+        let nameLower = (prod.name || '').toLowerCase();
+        
+        if (categoryName === 'munchies') {
+            return categoryLower.includes('munchies') || categoryLower.includes('chips') || categoryLower.includes('namkeen') || nameLower.includes('lays') || nameLower.includes('kurkure');
+        } else if (categoryName === 'snacks') {
+            return categoryLower.includes('snacks') || categoryLower.includes('food') || categoryLower.includes('beverage');
+        } else if (categoryName === 'socks') {
+            return categoryLower.includes('socks') || categoryLower.includes('apparel') || categoryLower.includes('clothing') || nameLower.includes('sock');
         }
+        return true;
+    });
 
-        gridNode.innerHTML = '';
-
-        let filtered = (window.storeInventoryProducts || []).filter(prod => {
-            let categoryLower = (prod.category || prod.type || '').toLowerCase();
-            let nameLower = (prod.name || '').toLowerCase();
+    if (filtered.length === 0) {
+        gridNode.innerHTML = `<p style="grid-column: 1 / -1; text-align:center; color:#64748b; font-size:0.8rem; padding:40px;">No items found in this category.</p>`;
+    } else {
+        filtered.forEach(prod => {
+            let originalIndex = window.storeInventoryProducts.findIndex(p => p.sku === prod.sku || p.name === prod.name);
+            const isOutOfStock = (prod.stockQuantity <= 0);
+            const finalImgUrl = prod.imageUrl || prod.image || '';
+            const card = document.createElement('div');
             
-            if (categoryName === 'munchies') {
-                return categoryLower.includes('munchies') || categoryLower.includes('chips') || categoryLower.includes('namkeen') || nameLower.includes('lays') || nameLower.includes('kurkure');
-            } else if (categoryName === 'snacks') {
-                return categoryLower.includes('snacks') || categoryLower.includes('food') || categoryLower.includes('beverage');
-            } else if (categoryName === 'socks') {
-                return categoryLower.includes('socks') || categoryLower.includes('apparel') || categoryLower.includes('clothing') || nameLower.includes('sock');
-            }
-            return true;
+            // 💡 Compact fixed card styling to match original Blinkit proportion
+            card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.03); box-sizing:border-box; cursor:pointer;";
+            
+            card.onclick = (e) => {
+                if (e.target.tagName === 'BUTTON') return;
+                if (typeof openProductDetailModal === 'function' && originalIndex !== -1) {
+                    openProductDetailModal(window.storeInventoryProducts[originalIndex]);
+                }
+            };
+
+            const imgHtml = finalImgUrl ? `<img src="${finalImgUrl}" style="width:60px; height:60px; object-fit:contain; border-radius:8px; margin-bottom:6px; display:block;" />` : `<div style="font-size:2rem; margin-bottom:6px; height:60px; display:flex; align-items:center; justify-content:center;">📦</div>`;
+
+            let safeSku = String(prod.sku || prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            let safeName = String(prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            let safeImg = String(finalImgUrl || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+            card.innerHTML = `
+                ${imgHtml}
+                <div title="${prod.name}" style="font-weight:700; font-size:0.75rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; margin-bottom:2px;">${prod.name}</div>
+                <div style="font-weight:800; font-size:0.75rem; color:#065f46; margin-bottom:8px;">₹${prod.sellingPrice || 0}</div>
+                ${isOutOfStock 
+                    ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 6px; border-radius:6px; font-size:0.68rem; font-weight:700; width:100%; cursor:pointer;" disabled>Out of Stock</button>`
+                    : `<button type="button" style="background:#065f46; color:white; border:none; padding:5px 8px; border-radius:6px; font-size:0.7rem; font-weight:800; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${safeSku}', '${safeName}', ${prod.sellingPrice || 0}, ${prod.stockQuantity}, '${safeImg}')">+ Add</button>`
+                }
+            `;
+            gridNode.appendChild(card);
         });
+    }
 
-        if (filtered.length === 0) {
-            gridNode.innerHTML = `<p style="grid-column: 1 / -1; text-align:center; color:#64748b; font-size:0.8rem; padding:40px;">No items found in this category.</p>`;
-        } else {
-            filtered.forEach(prod => {
-                let originalIndex = window.storeInventoryProducts.findIndex(p => p.sku === prod.sku || p.name === prod.name);
-                const isOutOfStock = (prod.stockQuantity <= 0);
-                const finalImgUrl = prod.imageUrl || prod.image || '';
-                const card = document.createElement('div');
-                
-                card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:8px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.03); box-sizing:border-box; cursor:pointer;";
-                
-                // Tap on card opens the exact product detail modal just like home page
-                card.onclick = (e) => {
-                    if (e.target.tagName === 'BUTTON') return;
-                    if (typeof openProductDetailModal === 'function' && originalIndex !== -1) {
-                        openProductDetailModal(window.storeInventoryProducts[originalIndex]);
-                    }
-                };
-
-                const imgHtml = finalImgUrl ? `<img src="${finalImgUrl}" style="width:55px; height:55px; object-fit:contain; border-radius:6px; margin-bottom:4px; display:block;" />` : `<div style="font-size:1.8rem; margin-bottom:4px; height:55px; display:flex; align-items:center; justify-content:center;">📦</div>`;
-
-                let safeSku = String(prod.sku || prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                let safeName = String(prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                let safeImg = String(finalImgUrl || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-
-                card.innerHTML = `
-                    ${imgHtml}
-                    <div title="${prod.name}" style="font-weight:700; font-size:0.7rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; margin-bottom:2px;">${prod.name}</div>
-                    <div style="font-weight:800; font-size:0.72rem; color:#065f46; margin-bottom:6px;">₹${prod.sellingPrice || 0}</div>
-                    ${isOutOfStock 
-                        ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:3px 4px; border-radius:4px; font-size:0.6rem; font-weight:700; width:100%; cursor:pointer;" disabled>Out of Stock</button>`
-                        : `<button type="button" style="background:#065f46; color:white; border:none; padding:4px 6px; border-radius:6px; font-size:0.65rem; font-weight:800; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${safeSku}', '${safeName}', ${prod.sellingPrice || 0}, ${prod.stockQuantity}, '${safeImg}')">+ Add</button>`
-                    }
-                `;
-                gridNode.appendChild(card);
-            });
-        }
-
-        overlay.style.display = 'flex';
-    };
-
+    overlay.style.display = 'flex';
+};
     window.closeCategoryDrawer = function() {
         const overlay = document.getElementById('categoryDrawerOverlay');
         if (overlay) overlay.style.display = 'none';
