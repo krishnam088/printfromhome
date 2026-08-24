@@ -192,6 +192,16 @@ app.get('/api/admin/live-store-qr', (req, res) => {
     res.json({ success: true, qrToken: currentStoreQrToken, validTill: qrTokenExpiry });
 });
 
+// 🔥 Added missing /api/admin/orders endpoint to fix the 404 error on admin panel
+app.get('/api/admin/orders', async (req, res) => {
+    try {
+        const orders = await Order.find({}).sort({ timestamp: -1 });
+        res.json(orders);
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 app.post('/api/delivery/scan-store-qr', async (req, res) => {
     try {
         const { phone, scannedToken } = req.body;
@@ -262,12 +272,34 @@ app.get('/manifest-delivery.json', (req, res) => {
 app.get('/sw-admin.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw-admin.js')); });
 app.get('/sw.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw.js')); });
 
+// 🔥 Fully completed /api/store-status route (Fixed truncation)
 app.get('/api/store-status', async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
         if (!config) {
             config = await StoreConfig.create({ isOpen: true, rainSurgeActive: false, updatedAt: new Date().toISOString() });
         }
+
+        const now = new Date();
+        const utcHours = now.getUTCHours();
+        const utcMinutes = now.getUTCMinutes();
+        const istTotalMinutes = (utcHours * 60 + utcMinutes) + (5 * 60 + 30);
+        const istHours = Math.floor(istTotalMinutes / 60) % 24;
+
+        const isTimeWithinOperatingHours = istHours >= 7 && istHours < 22;
+        const finalIsOpen = isTimeWithinOperatingHours && config.isOpen;
+
+        res.json({ 
+            success: true, 
+            isOpen: finalIsOpen, 
+            manualOverride: config.isOpen, 
+            rainSurgeActive: config.rainSurgeActive, 
+            currentIstHour: istHours 
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, isOpen: true, error: err.message });
+    }
+});
 
         const now = new Date();
         const utcHours = now.getUTCHours();
