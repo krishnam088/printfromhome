@@ -301,27 +301,6 @@ app.get('/api/store-status', async (req, res) => {
     }
 });
 
-        const now = new Date();
-        const utcHours = now.getUTCHours();
-        const utcMinutes = now.getUTCMinutes();
-        const istTotalMinutes = (utcHours * 60 + utcMinutes) + (5 * 60 + 30);
-        const istHours = Math.floor(istTotalMinutes / 60) % 24;
-
-        const isTimeWithinOperatingHours = istHours >= 7 && istHours < 22;
-        const finalIsOpen = isTimeWithinOperatingHours && config.isOpen;
-
-        res.json({ 
-            success: true, 
-            isOpen: finalIsOpen, 
-            manualOverride: config.isOpen, 
-            rainSurgeActive: config.rainSurgeActive, 
-            currentIstHour: istHours 
-        });
-    } catch (err) {
-        res.status(500).json({ success: false, isOpen: true });
-    }
-});
-
 const handleStoreToggle = async (req, res) => {
     try {
         const { isOpen } = req.body;
