@@ -2256,7 +2256,7 @@ let subtotal = totalPrintVal + totalSnacksVal;
     }
     window.synchronizeWalletInterfaceBalance = synchronizeWalletInterfaceBalance;
 
-   window.refreshInvoiceTabState = function() {
+  window.refreshInvoiceTabState = function() {
     const sideInvoicePanel = document.getElementById('sidebarPricingPanel');
     const layoutContainer = document.getElementById('mainLayoutAppContainer');
     const uploadInitialScreen = document.getElementById('uploadScreenInitialState');
@@ -2267,15 +2267,14 @@ let subtotal = totalPrintVal + totalSnacksVal;
     if (!activeTabIsStore) return;
 
     if (masterFilesArray && masterFilesArray.length > 0) {
-        // 🔥 File upload ho chuki hai: Upload screen chupao, Configuration screen dikhao
+        // 📄 File upload ho chuki hai: Upload screen ko hide karo, Configuration screen ko dikhao
         if (uploadInitialScreen) {
             uploadInitialScreen.classList.add('hidden');
-            uploadInitialScreen.style.display = 'none';
+            uploadInitialScreen.style.setProperty('display', 'none', 'important');
         }
         if (configWorkspaceScreen) {
             configWorkspaceScreen.classList.remove('hidden');
-            configWorkspaceScreen.style.display = 'block'; // Button ab sirf yahin dikhega!
-            // history.pushState({ configOpen: true }, '', ''); // Optional: history clutter se bachne ke liye hata bhi sakte hain
+            configWorkspaceScreen.style.setProperty('display', 'block', 'important');
         }
         if (sideInvoicePanel) sideInvoicePanel.classList.remove('hidden');
 
@@ -2288,14 +2287,14 @@ let subtotal = totalPrintVal + totalSnacksVal;
             if (layoutContainer) layoutContainer.style.gridTemplateColumns = '1fr'; 
         }
     } else {
-        // 🔥 Koi file nahi hai: Sirf Upload screen dikhao, Configuration screen chupao
+        // ❌ Koi file nahi hai: Sirf Upload screen dikhegi, Configuration screen ko FORCEFULLY hide karo
         if (uploadInitialScreen) {
             uploadInitialScreen.classList.remove('hidden');
-            uploadInitialScreen.style.display = 'block';
+            uploadInitialScreen.style.setProperty('display', 'block', 'important');
         }
         if (configWorkspaceScreen) {
             configWorkspaceScreen.classList.add('hidden');
-            configWorkspaceScreen.style.display = 'none'; // Button home page se 100% gayab rahega!
+            configWorkspaceScreen.style.setProperty('display', 'none', 'important'); // Yeh button ko home page se 100% gayab rakhega!
         }
         if (sideInvoicePanel) sideInvoicePanel.classList.add('hidden');
         if (layoutContainer) { 
