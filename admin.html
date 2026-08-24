@@ -552,6 +552,37 @@
 
     </div>
 
+    <!-- ⚙️ ADMIN FEES & COUPONS MANAGEMENT PANEL -->
+    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; max-width:600px; margin:20px auto; font-family:'Poppins', sans-serif; box-shadow:0 4px 15px rgba(0,0,0,0.05);">
+        <h3 style="font-size:1.1rem; font-weight:900; color:#0f172a; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">⚙️ Store Fees & Coupons Control</h3>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+            <div>
+                <label style="font-size:0.75rem; font-weight:800; color:#475569;">Delivery Fee (₹)</label>
+                <input type="number" id="adminSettingDeliveryFee" value="25" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; font-weight:700; font-size:0.9rem; margin-top:4px;" />
+            </div>
+            <div>
+                <label style="font-size:0.75rem; font-weight:800; color:#475569;">Handling Fee (₹)</label>
+                <input type="number" id="adminSettingHandlingFee" value="5" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; font-weight:700; font-size:0.9rem; margin-top:4px;" />
+            </div>
+            <div>
+                <label style="font-size:0.75rem; font-weight:800; color:#475569;">Rain Surge Fee (₹)</label>
+                <input type="number" id="adminSettingRainFee" value="15" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; font-weight:700; font-size:0.9rem; margin-top:4px;" />
+            </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <label style="font-size:0.75rem; font-weight:800; color:#475569;">Add New Coupon (Code & Description)</label>
+            <div style="display:flex; gap:8px; margin-top:4px;">
+                <input type="text" id="adminNewCouponCode" placeholder="e.g. SAVE50" style="flex:1; padding:10px; border:1px solid #cbd5e1; border-radius:10px; font-size:0.85rem;" />
+                <input type="text" id="adminNewCouponDesc" placeholder="e.g. Flat ₹50 off" style="flex:2; padding:10px; border:1px solid #cbd5e1; border-radius:10px; font-size:0.85rem;" />
+                <button type="button" onclick="adminAddNewCoupon()" style="background:#065f46; color:white; border:none; padding:10px 16px; border-radius:10px; font-weight:800; cursor:pointer;">Add</button>
+            </div>
+        </div>
+
+        <button type="button" onclick="saveAdminStoreSettings()" style="width:100%; padding:12px; background:#16a34a; color:white; border:none; border-radius:12px; font-weight:900; font-size:0.95rem; cursor:pointer; box-shadow:0 4px 12px rgba(22,163,74,0.3);">Save Store Settings & Fees</button>
+    </div>
+
     <script>
         let cachedInventoryList = [];
         let html5QrCodeScanner = null;
