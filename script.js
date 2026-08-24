@@ -495,104 +495,65 @@ window.toggleCouponDrawer = function() {
     }
 
   function renderFilesUI() {
-        if(!multiFilesContainer) return; 
-        multiFilesContainer.innerHTML = ''; 
-        refreshInvoiceTabState();
-        if (masterFilesArray.length === 0) return;
+    if(!multiFilesContainer) return; 
+    multiFilesContainer.innerHTML = ''; 
+    refreshInvoiceTabState();
+    if (masterFilesArray.length === 0) return;
 
-        masterFilesArray.forEach((item, index) => {
-            const fileRow = document.createElement('div');
-            fileRow.className = 'blinkit-file-card';
-            fileRow.style.cssText = "background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);";
+    masterFilesArray.forEach((item, index) => {
+        const fileRow = document.createElement('div');
+        fileRow.style.cssText = "background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 10px;";
 
-            const activeColorBw = item.config.printType === 'bw' ? 'active' : '';
-            const activeColorCol = item.config.printType === 'color' ? 'active' : '';
-            const activeOriPort = item.config.orientation === 'portrait' ? 'active' : '';
-            const activeOriLand = item.config.orientation === 'landscape' ? 'active' : '';
+        const activeColorBw = item.config.printType === 'bw' ? '#16a34a' : '#cbd5e1';
+        const activeColorCol = item.config.printType === 'color' ? '#16a34a' : '#cbd5e1';
+        const activeOriPort = item.config.orientation === 'portrait' ? '#16a34a' : '#cbd5e1';
+        const activeOriLand = item.config.orientation === 'landscape' ? '#16a34a' : '#cbd5e1';
 
-            fileRow.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #edf2f7; padding-bottom: 8px; margin-bottom: 10px; gap: 8px;">
-                    <div style="display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0; cursor:pointer;" onclick="previewFileInA4Studio(${index})">
-                        <span style="font-size: 1.1rem; flex-shrink: 0; margin-top: 2px;">📄</span>
-                        <div style="flex: 1; min-width: 0; overflow: hidden;">
-                            <!-- 🔥 FIXED: min-width: 0 & word-break ensures long filenames wrap nicely -->
-                            <h4 style="font-weight: 700; font-size: 0.82rem; color: #1a202c; white-space: normal; word-break: break-all; overflow-wrap: break-word; line-height: 1.3; margin: 0;" title="${item.name}">${item.name}</h4>
-                            <span style="font-size:0.68rem; color:#059669; font-weight:700; display: block; margin-top: 3px;">👁️ Tap to View A4 Preview</span>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
-                        <button type="button" class="add-more-inline-card-btn" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 3px 8px; font-size: 0.7rem; font-weight: 700; border-radius: 6px; cursor: pointer;" onclick="triggerInlineFileUploadClick()">+ Add More</button>
-                        <button type="button" id="removeFile_${index}" style="background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; width: 24px; height: 24px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">&times;</button>
-                    </div>
-                </div>
+        // Check if fileUrl is a rendered canvas image or PDF blob
+        let previewThumbnail = `<div style="font-size: 1.8rem;">📄</div>`;
+        if (item.fileUrl && item.fileUrl.startsWith('data:image')) {
+            previewThumbnail = `<img src="${item.fileUrl}" style="width: 45px; height: 55px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;" />`;
+        }
 
-                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-bottom: 12px; align-items: center;">
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <label style="font-size: 0.7rem; font-weight: 700; color: #4a5568;">Total Pages:</label>
-                        <input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 0.8rem; background: #f8fafc; outline: none;" required>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <label style="font-size: 0.7rem; font-weight: 700; color: #4a5568;">Copies:</label>
-                        <div class="blinkit-stepper" style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 2px 8px; height: 32px;">
-                            <button type="button" id="minusCopy_${index}" class="stepper-btn" style="background: none; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; color: #334155;">-</button>
-                            <span id="copyCountLabel_${index}" style="font-weight: 700; font-size: 0.8rem; color: #0f172a;">${item.config.copies}</span>
-                            <button type="button" id="plusCopy_${index}" class="stepper-btn" style="background: none; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; color: #334155;">+</button>
-                        </div>
+        fileRow.innerHTML = `
+            <!-- Top Row: Thumbnail, Wrapped Filename & Delete Button -->
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; border-bottom: 1px solid #edf2f7; padding-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; cursor: pointer;" onclick="previewFileInA4Studio(${index})">
+                    ${previewThumbnail}
+                    <div style="flex: 1; min-width: 0; overflow: hidden;">
+                        <h4 style="font-weight: 700; font-size: 0.82rem; color: #0f172a; word-break: break-all; white-space: normal; line-height: 1.3; margin: 0;" title="${item.name}">${item.name}</h4>
+                        <span style="font-size: 0.68rem; color: #059669; font-weight: 700;">👁️ Tap to View A4 Preview</span>
                     </div>
                 </div>
+                <button type="button" id="removeFile_${index}" style="background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; width: 26px; height: 26px; border-radius: 50%; font-weight: bold; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">&times;</button>
+            </div>
 
-                <div style="margin-bottom: 10px;">
-                    <p style="font-size: 0.7rem; font-weight: 700; color: #4a5568; margin-bottom: 6px;">Print Color</p>
-                    <div class="blinkit-grid-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                        <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeColorCol ? '#16a34a' : '#cbd5e1'}; background: ${activeColorCol ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
-                            <div style="font-size: 1rem;">🎨</div>
-                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Coloured</span><span style="font-size: 0.65rem; color: #64748b;">₹10/pg</span></div>
-                        </div>
-                        <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeColorBw ? '#16a34a' : '#cbd5e1'}; background: ${activeColorBw ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
-                            <div style="font-size: 1rem;">🌑</div>
-                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">B & W</span><span style="font-size: 0.65rem; color: #64748b;">₹3/pg</span></div>
-                        </div>
+            <!-- Bottom Row: Pages & Safe Compact Copies Stepper -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <label style="font-size: 0.7rem; font-weight: 700; color: #64748b;">Pages:</label>
+                    <input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 0.8rem; background: #f8fafc; outline: none;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <label style="font-size: 0.7rem; font-weight: 700; color: #64748b;">Copies:</label>
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 4px 10px; height: 34px;">
+                        <button type="button" id="minusCopy_${index}" style="background: none; border: none; font-weight: bold; font-size: 1.1rem; cursor: pointer; color: #334155;">-</button>
+                        <span id="copyCountLabel_${index}" style="font-weight: 800; font-size: 0.85rem; color: #0f172a;">${item.config.copies}</span>
+                        <button type="button" id="plusCopy_${index}" style="background: none; border: none; font-weight: bold; font-size: 1.1rem; cursor: pointer; color: #065f46;">+</button>
                     </div>
                 </div>
+            </div>
+        `;
+        multiFilesContainer.appendChild(fileRow);
 
-                <div style="margin-bottom: 10px;">
-                    <p style="font-size: 0.7rem; font-weight: 700; color: #4a5568; margin-bottom: 6px;">Orientation</p>
-                    <div class="blinkit-grid-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                        <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeOriPort ? '#16a34a' : '#cbd5e1'}; background: ${activeOriPort ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
-                            <div style="font-size: 1rem;">📱</div>
-                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Portrait</span></div>
-                        </div>
-                        <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeOriLand ? '#16a34a' : '#cbd5e1'}; background: ${activeOriLand ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
-                            <div style="font-size: 1rem;">💻</div>
-                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Landscape</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
-                    <label style="font-size: 0.75rem; font-weight: 700; color: #334155;">Binding Option:</label>
-                    <select id="binding_${index}" style="padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.75rem; font-weight: 600; background: #ffffff; outline: none;">
-                        <option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option>
-                        <option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option>
-                        <option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral (+₹30)</option>
-                    </select>
-                </div>
-            `;
-            multiFilesContainer.appendChild(fileRow);
-
-            document.getElementById(`optColor_${index}`).addEventListener('click', () => { item.config.printType = 'color'; saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`optBw_${index}`).addEventListener('click', () => { item.config.printType = 'bw'; saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`optPort_${index}`).addEventListener('click', () => { item.config.orientation = 'portrait'; saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`optLand_${index}`).addEventListener('click', () => { item.config.orientation = 'landscape'; saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`plusCopy_${index}`).addEventListener('click', () => { item.config.copies++; saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`minusCopy_${index}`).addEventListener('click', () => { if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); renderFilesUI(); } });
-            document.getElementById(`removeFile_${index}`).addEventListener('click', () => { masterFilesArray.splice(index, 1); saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`pages_${index}`).addEventListener('input', (e) => { item.config.pages = parseInt(e.target.value) || 1; saveCurrentFilesToSession(); calculateTotal(); });
-            document.getElementById(`binding_${index}`).addEventListener('change', (e) => { item.config.binding = e.target.value; saveCurrentFilesToSession(); calculateTotal(); });
-        });
-        calculateTotal();
-        updateFloatingCartBar();
-    }
+        document.getElementById(`plusCopy_${index}`).addEventListener('click', () => { item.config.copies++; saveCurrentFilesToSession(); renderFilesUI(); });
+        document.getElementById(`minusCopy_${index}`).addEventListener('click', () => { if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); renderFilesUI(); } });
+        document.getElementById(`removeFile_${index}`).addEventListener('click', () => { masterFilesArray.splice(index, 1); saveCurrentFilesToSession(); renderFilesUI(); });
+        document.getElementById(`pages_${index}`).addEventListener('input', (e) => { item.config.pages = parseInt(e.target.value) || 1; saveCurrentFilesToSession(); calculateTotal(); });
+    });
+    calculateTotal();
+    updateFloatingCartBar();
+}
 
 // 🔥 PDF Page to Canvas Image URL Converter for Print Studio Previews
     window.convertPdfPageToImage = async function(pdfDoc, pageNumber) {
@@ -637,7 +598,7 @@ window.toggleCouponDrawer = function() {
                     fileUrl = '';
                 }
 
-               if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+              if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
                     try {
                         if (typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
                             const arrayBuffer = await file.arrayBuffer();
@@ -645,8 +606,8 @@ window.toggleCouponDrawer = function() {
                             const pdfDoc = await loadingTask.promise;
                             pageCount = pdfDoc.numPages || 1;
                             
-                            // 🔥 Generate real PDF preview image from page 1 using canvas converter
-                            if (pdfDoc && pdfDoc.numPages > 0) {
+                            // Generate real canvas preview image for the first page
+                            if (pdfDoc && typeof window.convertPdfPageToImage === 'function') {
                                 let generatedImgUrl = await window.convertPdfPageToImage(pdfDoc, 1);
                                 if (generatedImgUrl) {
                                     fileUrl = generatedImgUrl;
@@ -656,7 +617,8 @@ window.toggleCouponDrawer = function() {
                     } catch (e) {
                         pageCount = 1;
                     }
-                }
+                }              
+                 
 
                 uploadedFilesList.push({
                     name: file.name || 'Document.pdf',
@@ -1753,11 +1715,23 @@ window.openProductDetailModal = function(prod) {
   // 🔥 UNIVERSAL CART RENDERER (Blinkit-Style Modern Layout Integration)
 
 window.renderCartDrawerContents = function() {
-    const container = document.getElementById('cartDrawerItemsList') || 
-                        document.getElementById('cartItemsListContainer') || 
-                        document.getElementById('cartItemsContainer');
+    let container = document.getElementById('cartDrawerItemsList') || 
+                    document.getElementById('cartItemsListContainer') || 
+                    document.getElementById('cartItemsContainer');
     
-    if (!container) return;
+    // 🔥 Self-Healing Container Fallback so items never fail to render
+    if (!container) {
+        const cartDrawerBody = document.getElementById('cartDrawer') || document.querySelector('.cart-drawer') || document.querySelector('[id*="cart"]');
+        if (cartDrawerBody) {
+            container = document.createElement('div');
+            container.id = 'cartDrawerItemsList';
+            container.style.cssText = "margin-bottom: 15px; width: 100%;";
+            cartDrawerBody.prepend(container);
+        } else {
+            return;
+        }
+    }
+    
     container.innerHTML = '';
     
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
@@ -1768,7 +1742,6 @@ window.renderCartDrawerContents = function() {
     if (!hasItems) {
         container.innerHTML = `<p style="font-size:0.82rem; color:#64748b; text-align:center; padding:20px;">Your cart is empty.</p>`;
         if (typeof calculateTotal === 'function') calculateTotal();
-        if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
         return;
     }
 
