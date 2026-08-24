@@ -567,7 +567,7 @@
         </div>
 
     </div>
-    
+
     <!-- ⚙️ ADMIN FEES & COUPONS MANAGEMENT PANEL -->
     <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; max-width:600px; margin:20px auto; font-family:'Poppins', sans-serif; box-shadow:0 4px 15px rgba(0,0,0,0.05);">
         <h3 style="font-size:1.1rem; font-weight:900; color:#0f172a; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">⚙️ Store Fees & Coupons Control</h3>
@@ -640,7 +640,72 @@
                 document.getElementById('section_fees').classList.add('active');
             }
         }
+// 🔥 Admin Store Settings & Fees Save Engine
+        window.saveAdminStoreSettings = async function() {
+            const deliveryField = document.getElementById('adminSettingDeliveryFee');
+            const handlingField = document.getElementById('adminSettingHandlingFee');
+            const rainField = document.getElementById('adminSettingRainFee');
 
+            const deliveryFee = deliveryField ? deliveryField.value : 25;
+            const handlingFee = handlingField ? handlingField.value : 5;
+            const rainFee = rainField ? rainField.value : 15;
+
+            try {
+                const res = await fetch('/api/admin/settings/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deliveryFee, handlingFee, rainFee })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ Admin store settings & fees updated successfully!');
+                    if (typeof loadAdminConfiguredFeesAndCoupons === 'function') {
+                        loadAdminConfiguredFeesAndCoupons();
+                    }
+                } else {
+                    alert('❌ Failed to update settings.');
+                }
+            } catch(e) {
+                alert('❌ Server connection error.');
+            }
+        };
+
+        // 🔥 Admin Add New Coupon Engine
+        window.adminAddNewCoupon = async function() {
+            const codeInput = document.getElementById('adminNewCouponCode');
+            const descInput = document.getElementById('adminNewCouponDesc');
+            
+            if (!codeInput || !descInput) return;
+            const code = codeInput.value.trim().toUpperCase();
+            const desc = descInput.value.trim();
+
+            if (!code || !desc) {
+                alert("⚠️ Please enter both Coupon Code and Description!");
+                return;
+            }
+
+            if (!window.adminCouponsList) window.adminCouponsList = [];
+            window.adminCouponsList.push({ code: code, desc: desc });
+
+            try {
+                const res = await fetch('/api/admin/settings/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ coupons: window.adminCouponsList })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(`✅ Coupon "${code}" added successfully!`);
+                    codeInput.value = '';
+                    descInput.value = '';
+                } else {
+                    alert('❌ Failed to save coupon on server.');
+                }
+            } catch(e) {
+                alert('❌ Server connection error.');
+            }
+        };
+        
         // 🛠️ ADMIN ADD & EDIT PRODUCT MODAL LOGIC (NEW UPDATE)
         window.openAddProductModal = function() {
             document.getElementById('adminModalTitle').textContent = "Add New Store Product";
