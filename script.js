@@ -436,10 +436,14 @@ let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || fina
         }
 
 
-        // 🔥 Dynamic Admin Rain Surge Fee Sync
+       // 🔥 Strictly Admin Controlled Fees Engine in calculateTotal
         let activeRainFee = window.adminRainFee !== undefined ? window.adminRainFee : 0;
         let rainFee = window.isRainSurgeActive ? activeRainFee : 0;
-        let grandTotalCombined = finalDocumentCost + accurateDeliveryCharge + rainFee + (window.currentDeliveryTip || 0);
+
+        let activeHandlingFee = window.adminHandlingFee !== undefined ? window.adminHandlingFee : 0;
+
+        // 🔥 Grand Total mein ab delivery, rain fee, aur admin handling fee properly add honge
+        let grandTotalCombined = finalDocumentCost + accurateDeliveryCharge + rainFee + activeHandlingFee + (window.currentDeliveryTip || 0);
 
         const updateUI = (id, val) => {
             const el = document.getElementById(id);
@@ -449,13 +453,17 @@ let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || fina
         updateUI('summaryPrint', `₹${(totalPrintCost + printJobsTotal).toFixed(2)}`);
         updateUI('summaryBinding', `₹${(totalBindingCost + snacksTotal).toFixed(2)}`);
         updateUI('summaryDelivery', accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`);
-        updateUI('summaryTotal', `₹${grandTotalCombined.toFixed(2)}`);
+        
+        // Update Rain Surge UI text dynamically if element exists
+        const rainFeeSpan = document.getElementById('cartRainFee');
+        if (rainFeeSpan) rainFeeSpan.textContent = `₹${activeRainFee.toFixed(2)}`;
 
+        updateUI('summaryTotal', `₹${grandTotalCombined.toFixed(2)}`);
         updateUI('cartItemSubtotal', `₹${finalDocumentCost.toFixed(2)}`);
         updateUI('cartDeliveryFee', accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`);
         updateUI('cartGrandTotalSummary', `₹${grandTotalCombined.toFixed(2)}`);
         updateUI('cartDrawerGrandTotal', `₹${grandTotalCombined.toFixed(2)}`);
-        
+
         let totalQtyCount = (window.cartSnacksArray ? window.cartSnacksArray.reduce((a, b) => a + b.qty, 0) : 0) + (window.cartPrintJobsArray ? window.cartPrintJobsArray.length : 0);
         updateUI('shipmentItemsCountText', `Shipment of ${totalQtyCount} item${totalQtyCount > 1 ? 's' : ''}`);
 
