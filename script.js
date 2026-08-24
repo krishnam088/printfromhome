@@ -494,7 +494,7 @@ window.toggleCouponDrawer = function() {
         sessionStorage.setItem('savedPrintFiles', JSON.stringify(masterFilesArray.map(i => ({ name: i.name, size: i.size, type: i.type, config: i.config }))));
     }
 
-    function renderFilesUI() {
+  function renderFilesUI() {
         if(!multiFilesContainer) return; 
         multiFilesContainer.innerHTML = ''; 
         refreshInvoiceTabState();
@@ -512,12 +512,12 @@ window.toggleCouponDrawer = function() {
 
             fileRow.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #edf2f7; padding-bottom: 8px; margin-bottom: 10px; gap: 8px;">
-                    <div style="display: flex; align-items: flex-start; gap: 8px; flex: 1; cursor:pointer;" onclick="previewFileInA4Studio(${index})">
+                    <div style="display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0; cursor:pointer;" onclick="previewFileInA4Studio(${index})">
                         <span style="font-size: 1.1rem; flex-shrink: 0; margin-top: 2px;">📄</span>
-                        <div style="flex: 1; overflow: hidden;">
-                            <!-- 🔥 YAHAN REPLACE KARNA HAI: Wrapped Long File Name -->
-                            <h4 style="font-weight: 700; font-size: 0.85rem; color: #1a202c; white-space: normal; word-break: break-all; overflow-wrap: break-word; line-height: 1.3; margin: 0;" title="${item.name}">${item.name}</h4>
-                            <span style="font-size:0.68rem; color:var(--blinkit-green); font-weight:700; display: block; margin-top: 3px;">👁️ Tap to View A4 Preview</span>
+                        <div style="flex: 1; min-width: 0; overflow: hidden;">
+                            <!-- 🔥 FIXED: min-width: 0 & word-break ensures long filenames wrap nicely -->
+                            <h4 style="font-weight: 700; font-size: 0.82rem; color: #1a202c; white-space: normal; word-break: break-all; overflow-wrap: break-word; line-height: 1.3; margin: 0;" title="${item.name}">${item.name}</h4>
+                            <span style="font-size:0.68rem; color:#059669; font-weight:700; display: block; margin-top: 3px;">👁️ Tap to View A4 Preview</span>
                         </div>
                     </div>
                     <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
@@ -526,73 +526,73 @@ window.toggleCouponDrawer = function() {
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-bottom: 12px; align-items: center;">
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <label style="font-size: 0.7rem; font-weight: 700; color: #4a5568;">Total Pages:</label>
-                        <input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 0.8rem; background: #f8fafc; outline: none;" required>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <label style="font-size: 0.7rem; font-weight: 700; color: #4a5568;">Copies:</label>
-                        <div class="blinkit-stepper" style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 2px 8px; height: 32px;">
-                            <button type="button" id="minusCopy_${index}" class="stepper-btn" style="background: none; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; color: #334155;">-</button>
-                            <span id="copyCountLabel_${index}" style="font-weight: 700; font-size: 0.8rem; color: #0f172a;">${item.config.copies}</span>
-                            <button type="button" id="plusCopy_${index}" class="stepper-btn" style="background: none; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; color: #334155;">+</button>
-                        </div>
-                    </div>
-                </div>
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-bottom: 12px; align-items: center;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 0.7rem; font-weight: 700; color: #4a5568;">Total Pages:</label>
+                        <input type="number" id="pages_${index}" min="1" value="${item.config.pages}" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 0.8rem; background: #f8fafc; outline: none;" required>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 0.7rem; font-weight: 700; color: #4a5568;">Copies:</label>
+                        <div class="blinkit-stepper" style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 2px 8px; height: 32px;">
+                            <button type="button" id="minusCopy_${index}" class="stepper-btn" style="background: none; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; color: #334155;">-</button>
+                            <span id="copyCountLabel_${index}" style="font-weight: 700; font-size: 0.8rem; color: #0f172a;">${item.config.copies}</span>
+                            <button type="button" id="plusCopy_${index}" class="stepper-btn" style="background: none; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; color: #334155;">+</button>
+                        </div>
+                    </div>
+                </div>
 
-                <div style="margin-bottom: 10px;">
-                    <p style="font-size: 0.7rem; font-weight: 700; color: #4a5568; margin-bottom: 6px;">Print Color</p>
-                    <div class="blinkit-grid-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                        <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeColorCol ? '#16a34a' : '#cbd5e1'}; background: ${activeColorCol ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
-                            <div style="font-size: 1rem;">🎨</div>
-                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Coloured</span><span style="font-size: 0.65rem; color: #64748b;">₹10/pg</span></div>
-                        </div>
-                        <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeColorBw ? '#16a34a' : '#cbd5e1'}; background: ${activeColorBw ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
-                            <div style="font-size: 1rem;">🌑</div>
-                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">B & W</span><span style="font-size: 0.65rem; color: #64748b;">₹3/pg</span></div>
-                        </div>
-                    </div>
-                </div>
+                <div style="margin-bottom: 10px;">
+                    <p style="font-size: 0.7rem; font-weight: 700; color: #4a5568; margin-bottom: 6px;">Print Color</p>
+                    <div class="blinkit-grid-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="blinkit-option-box ${activeColorCol}" id="optColor_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeColorCol ? '#16a34a' : '#cbd5e1'}; background: ${activeColorCol ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
+                            <div style="font-size: 1rem;">🎨</div>
+                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Coloured</span><span style="font-size: 0.65rem; color: #64748b;">₹10/pg</span></div>
+                        </div>
+                        <div class="blinkit-option-box ${activeColorBw}" id="optBw_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeColorBw ? '#16a34a' : '#cbd5e1'}; background: ${activeColorBw ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
+                            <div style="font-size: 1rem;">🌑</div>
+                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">B & W</span><span style="font-size: 0.65rem; color: #64748b;">₹3/pg</span></div>
+                        </div>
+                    </div>
+                </div>
 
-                <div style="margin-bottom: 10px;">
-                    <p style="font-size: 0.7rem; font-weight: 700; color: #4a5568; margin-bottom: 6px;">Orientation</p>
-                    <div class="blinkit-grid-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                        <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeOriPort ? '#16a34a' : '#cbd5e1'}; background: ${activeOriPort ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
-                            <div style="font-size: 1rem;">📱</div>
-                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Portrait</span></div>
-                        </div>
-                        <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeOriLand ? '#16a34a' : '#cbd5e1'}; background: ${activeOriLand ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
-                            <div style="font-size: 1rem;">💻</div>
-                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Landscape</span></div>
-                        </div>
-                    </div>
-                </div>
+                <div style="margin-bottom: 10px;">
+                    <p style="font-size: 0.7rem; font-weight: 700; color: #4a5568; margin-bottom: 6px;">Orientation</p>
+                    <div class="blinkit-grid-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="blinkit-option-box ${activeOriPort}" id="optPort_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeOriPort ? '#16a34a' : '#cbd5e1'}; background: ${activeOriPort ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
+                            <div style="font-size: 1rem;">📱</div>
+                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Portrait</span></div>
+                        </div>
+                        <div class="blinkit-option-box ${activeOriLand}" id="optLand_${index}" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid ${activeOriLand ? '#16a34a' : '#cbd5e1'}; background: ${activeOriLand ? '#f0fdf4' : '#f8fafc'}; border-radius: 8px; cursor: pointer;">
+                            <div style="font-size: 1rem;">💻</div>
+                            <div style="display: flex; flex-direction: column;"><span style="font-size: 0.75rem; font-weight: 700; color: #1e293b;">Landscape</span></div>
+                        </div>
+                    </div>
+                </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
-                    <label style="font-size: 0.75rem; font-weight: 700; color: #334155;">Binding Option:</label>
-                    <select id="binding_${index}" style="padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.75rem; font-weight: 600; background: #ffffff; outline: none;">
-                        <option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option>
-                        <option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option>
-                        <option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral (+₹30)</option>
-                    </select>
-                </div>
-            `;
-            multiFilesContainer.appendChild(fileRow);
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    <label style="font-size: 0.75rem; font-weight: 700; color: #334155;">Binding Option:</label>
+                    <select id="binding_${index}" style="padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.75rem; font-weight: 600; background: #ffffff; outline: none;">
+                        <option value="none" ${item.config.binding === 'none' ? 'selected' : ''}>No Binding</option>
+                        <option value="staple" ${item.config.binding === 'staple' ? 'selected' : ''}>Stapled (Free)</option>
+                        <option value="spiral" ${item.config.binding === 'spiral' ? 'selected' : ''}>Spiral (+₹30)</option>
+                    </select>
+                </div>
+            `;
+            multiFilesContainer.appendChild(fileRow);
 
-            document.getElementById(`optColor_${index}`).addEventListener('click', () => { item.config.printType = 'color'; saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`optBw_${index}`).addEventListener('click', () => { item.config.printType = 'bw'; saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`optPort_${index}`).addEventListener('click', () => { item.config.orientation = 'portrait'; saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`optLand_${index}`).addEventListener('click', () => { item.config.orientation = 'landscape'; saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`plusCopy_${index}`).addEventListener('click', () => { item.config.copies++; saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`minusCopy_${index}`).addEventListener('click', () => { if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); renderFilesUI(); } });
-            document.getElementById(`removeFile_${index}`).addEventListener('click', () => { masterFilesArray.splice(index, 1); saveCurrentFilesToSession(); renderFilesUI(); });
-            document.getElementById(`pages_${index}`).addEventListener('input', (e) => { item.config.pages = parseInt(e.target.value) || 1; saveCurrentFilesToSession(); calculateTotal(); });
-            document.getElementById(`binding_${index}`).addEventListener('change', (e) => { item.config.binding = e.target.value; saveCurrentFilesToSession(); calculateTotal(); });
-        });
-        calculateTotal();
-        updateFloatingCartBar();
-    }
+            document.getElementById(`optColor_${index}`).addEventListener('click', () => { item.config.printType = 'color'; saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`optBw_${index}`).addEventListener('click', () => { item.config.printType = 'bw'; saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`optPort_${index}`).addEventListener('click', () => { item.config.orientation = 'portrait'; saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`optLand_${index}`).addEventListener('click', () => { item.config.orientation = 'landscape'; saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`plusCopy_${index}`).addEventListener('click', () => { item.config.copies++; saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`minusCopy_${index}`).addEventListener('click', () => { if (item.config.copies > 1) { item.config.copies--; saveCurrentFilesToSession(); renderFilesUI(); } });
+            document.getElementById(`removeFile_${index}`).addEventListener('click', () => { masterFilesArray.splice(index, 1); saveCurrentFilesToSession(); renderFilesUI(); });
+            document.getElementById(`pages_${index}`).addEventListener('input', (e) => { item.config.pages = parseInt(e.target.value) || 1; saveCurrentFilesToSession(); calculateTotal(); });
+            document.getElementById(`binding_${index}`).addEventListener('change', (e) => { item.config.binding = e.target.value; saveCurrentFilesToSession(); calculateTotal(); });
+        });
+        calculateTotal();
+        updateFloatingCartBar();
+    }
 
 // 🔥 PDF Page to Canvas Image URL Converter for Print Studio Previews
     window.convertPdfPageToImage = async function(pdfDoc, pageNumber) {
@@ -1751,6 +1751,7 @@ window.openProductDetailModal = function(prod) {
         }
     };
   // 🔥 UNIVERSAL CART RENDERER (Blinkit-Style Modern Layout Integration)
+
 window.renderCartDrawerContents = function() {
     const container = document.getElementById('cartDrawerItemsList') || 
                         document.getElementById('cartItemsListContainer') || 
@@ -1788,10 +1789,10 @@ window.renderCartDrawerContents = function() {
         card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 3px rgba(0,0,0,0.02); gap:10px;";
 
         card.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
-                <div style="font-size:1.5rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📄</div>
-                <div style="overflow:hidden; flex:1;">
-                    <div title="${job.fileName}" style="font-weight:700; font-size:0.8rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
+            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0; overflow:hidden;">
+                <div style="font-size:1.5rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px; flex-shrink:0;">📄</div>
+                <div style="overflow:hidden; flex:1; min-width:0;">
+                    <div title="${job.fileName}" style="font-weight:700; font-size:0.78rem; color:#0f172a; word-break:break-all; white-space:normal; line-height:1.3;">${job.fileName}</div>
                     <div style="font-size:0.68rem; color:#64748b; font-weight:600; margin-top:2px;">${job.pages} pgs | ${job.printType.toUpperCase()} | Copies: ${job.copies}</div>
                 </div>
             </div>
@@ -1809,13 +1810,13 @@ window.renderCartDrawerContents = function() {
         const card = document.createElement('div');
         card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 3px rgba(0,0,0,0.02); gap:10px;";
         
-        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:40px; height:40px; object-fit:contain; border-radius:8px;" />` : `<div style="font-size:1.4rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📦</div>`;
+        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; flex-shrink:0;" />` : `<div style="font-size:1.4rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px; flex-shrink:0;">📦</div>`;
 
         card.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0; overflow:hidden;">
                 ${thumbImg}
-                <div style="overflow:hidden; flex:1;">
-                    <div title="${snack.name}" style="font-weight:700; font-size:0.8rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</div>
+                <div style="overflow:hidden; flex:1; min-width:0;">
+                    <div title="${snack.name}" style="font-weight:700; font-size:0.78rem; color:#0f172a; word-break:break-all; white-space:normal; line-height:1.3;">${snack.name}</div>
                     <div style="font-size:0.7rem; color:#059669; font-weight:800; margin-top:2px;">₹${snack.price * snack.qty}</div>
                 </div>
             </div>
@@ -1833,7 +1834,7 @@ window.renderCartDrawerContents = function() {
 
     container.appendChild(wrapper);
 
-    // Update shipment info text (e.g., "1 page and 1 item")
+    // Update shipment info text
     const shipmentTextNode = document.getElementById('shipmentItemsCountText');
     if (shipmentTextNode) {
         shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
@@ -2108,70 +2109,91 @@ window.renderCartDrawerContents = function() {
             initialOrderStatus = "Order Placed & Picking";
         }
 
-        let subtotal = totalPrintVal + totalSnacksVal;
-        let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
-        let rainFee = window.isRainSurgeActive ? 15 : 0;
-        let grandTotal = subtotal + delivery + rainFee + (window.currentDeliveryTip || 0);
+    let subtotal = totalPrintVal + totalSnacksVal;
+    let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
+    let rainFee = window.isRainSurgeActive ? 15 : 0;
+    let grandTotal = subtotal + delivery + rainFee + (window.currentDeliveryTip || 0);
 
-        const selectedPaymentRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
-        const paymentMode = selectedPaymentRadio ? selectedPaymentRadio.value : 'online';
-        const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+    const selectedPaymentRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
+    const paymentMode = selectedPaymentRadio ? selectedPaymentRadio.value.toLowerCase() : 'online';
+    const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
 
-        const formData = new FormData();
-        window.cartPrintJobsArray.forEach(job => {
-            if (job.fileData) formData.append('document', job.fileData);
-        });
+    const formData = new FormData();
+    window.cartPrintJobsArray.forEach(job => {
+        if (job.fileData) formData.append('document', job.fileData);
+    });
 
-        formData.append('totalAmount', grandTotal.toFixed(2));
-        formData.append('configDetails', JSON.stringify(finalMetaConfig));
-        formData.append('address', selectedActiveAddress);
-        formData.append('customerName', sessionActiveUser);
-        formData.append('phone', localStorage.getItem('printAppUserIdentity') || 'N/A');
-        formData.append('deliveryTip', window.currentDeliveryTip || 0);
+    formData.append('totalAmount', grandTotal.toFixed(2));
+    formData.append('configDetails', JSON.stringify(finalMetaConfig));
+    formData.append('address', selectedActiveAddress);
+    formData.append('customerName', sessionActiveUser);
+    formData.append('phone', localStorage.getItem('printAppUserIdentity') || 'N/A');
+    formData.append('deliveryTip', window.currentDeliveryTip || 0);
+    formData.append('paymentMode', paymentMode);
 
-        const finalizeOrderSuccess = async (orderId) => {
-            const historyKey = `history_${sessionActiveUser}`;
-            const currentHistoryArray = JSON.parse(localStorage.getItem(historyKey) || '[]');
-            
-            const newOrderPayload = { 
-                orderId: orderId,
-                date: new Date().toLocaleString(), 
-                amount: grandTotal.toFixed(2), 
-                status: initialOrderStatus, 
-                details: finalMetaConfig, 
-                address: selectedActiveAddress,
-                deliveryTip: window.currentDeliveryTip || 0
-            };
-            
-            currentHistoryArray.push(newOrderPayload);
-            localStorage.setItem(historyKey, JSON.stringify(currentHistoryArray));
+    // 🔥 1. Pehle helper function declare karo taaki hoisting error na aaye
+    const finalizeOrderSuccess = async (orderId) => {
+        const historyKey = `history_${sessionActiveUser}`;
+        const currentHistoryArray = JSON.parse(localStorage.getItem(historyKey) || '[]');
+        
+        const newOrderPayload = { 
+            orderId: orderId,
+            date: new Date().toLocaleString(), 
+            amount: grandTotal.toFixed(2), 
+            status: initialOrderStatus, 
+            details: finalMetaConfig, 
+            address: selectedActiveAddress,
+            deliveryTip: window.currentDeliveryTip || 0
+        };
+        
+        currentHistoryArray.push(newOrderPayload);
+        localStorage.setItem(historyKey, JSON.stringify(currentHistoryArray));
 
-            try {
-                await fetch('/api/admin/inventory/decrement', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ items: finalMetaConfig })
-                });
-            } catch (e) {
-                console.error("Inventory decrement sync error:", e);
-            }
+        try {
+            await fetch('/api/admin/inventory/decrement', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: finalMetaConfig })
+            });
+        } catch (e) {
+            console.error("Inventory decrement sync error:", e);
+        }
+    };
 
-            window.cartPrintJobsArray = [];
-            window.cartSnacksArray = [];
-            window.currentDeliveryTip = 0;
-            persistCartStateData();
-            toggleCartDrawer(false);
+    // 🔥 2. Ab COD / Cash check yahan run karo
+    if (paymentMode === 'cod' || paymentMode === 'cash') {
+        try {
+            const response = await fetch('/api/create-order', { method: 'POST', body: formData });
+            const data = await response.json();
+            if (data.success) {
+                alert('🎉 Order Placed Successfully via Cash on Delivery!');
+                await finalizeOrderSuccess(data.order_id);
+                
+                window.cartPrintJobsArray = [];
+                window.cartSnacksArray = [];
+                window.currentDeliveryTip = 0;
+                persistCartStateData();
+                toggleCartDrawer(false);
 
-            if (typeof renderOrderHistoryUI === 'function') {
-                renderOrderHistoryUI(sessionActiveUser);
-            }
-            if (typeof openOrderDeepTrackingWorkspacePage === 'function') {
-                openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
-            } else if (typeof navigateDrawerSection === 'function') {
-                navigateDrawerSection('order_tracking');
-            }
-            loadDynamicStoreProducts();
-        };
+                if (typeof renderOrderHistoryUI === 'function') {
+                    renderOrderHistoryUI(sessionActiveUser);
+                }
+                if (typeof openOrderDeepTrackingWorkspacePage === 'function') {
+                    openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
+                } else if (typeof navigateDrawerSection === 'function') {
+                    navigateDrawerSection('order_tracking');
+                }
+                loadDynamicStoreProducts();
+                return;
+            } else {
+                alert(`⚠️ Error: ${data.message || 'Failed to create order'}`);
+                return;
+            }
+        } catch (err) {
+            alert("❌ Connection error during COD order placement.");
+            return;
+        }
+    }
 
         if (paymentMode === 'wallet') {
             let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
