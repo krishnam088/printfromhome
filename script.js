@@ -1712,14 +1712,13 @@ window.openProductDetailModal = function(prod) {
             });
         }
     };
-  // 🔥 UNIVERSAL CART RENDERER (Blinkit-Style Modern Layout Integration)
-
+// 🔥 BULLETPROOF UNIVERSAL CART DRAWER & ITEMS RENDERER
 window.renderCartDrawerContents = function() {
     let container = document.getElementById('cartDrawerItemsList') || 
                     document.getElementById('cartItemsListContainer') || 
                     document.getElementById('cartItemsContainer');
     
-    // 🔥 Self-Healing Container Fallback so items never fail to render
+    // Self-healing fallback if DOM container ID is missing
     if (!container) {
         const cartDrawerBody = document.getElementById('cartDrawer') || document.querySelector('.cart-drawer') || document.querySelector('[id*="cart"]');
         if (cartDrawerBody) {
