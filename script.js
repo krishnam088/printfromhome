@@ -414,10 +414,11 @@ window.toggleCouponDrawer = function() {
         let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal + printJobsTotal;
         const freeDeliveryThreshold = 99.00;
         
-        // 🔥 Dynamic Admin Delivery Fee Sync
-        let activeDeliveryFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 25.00;
-        let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || finalDocumentCost === 0) ? 0.00 : activeDeliveryFee;
         
+       // 🔥 Strictly Admin Controlled Delivery Fee (No fallback to 25)
+let activeDeliveryFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 0;
+let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || finalDocumentCost === 0) ? 0.00 : activeDeliveryFee; 
+     
         const progressBarBox = document.getElementById('freeDeliveryProgressBarBox');
         const messageText = document.getElementById('freeDeliveryMessageText');
         const fillBar = document.getElementById('freeDeliveryFillBar');
@@ -476,31 +477,31 @@ window.toggleCouponDrawer = function() {
         alert("✅ 50 points redeemed for ₹20 discount!");
     };
 
-    window.calculateETA = function() {
-        const queueLength = window.globalRawOrdersCache.length;
-        return Math.max(15, queueLength * 5);
-    };
+   window.calculateETA = function() {
+        const queueLength = window.globalRawOrdersCache.length;
+        return Math.max(15, queueLength * 5);
+    };
 
-    // 🔥 FIX: SESSION FILE PERSISTENCE ENGINE
-    function loadSavedFilesFromSession() {
-        const raw = sessionStorage.getItem('savedPrintFiles');
-        if (raw) {
-            try {
-                masterFilesArray = JSON.parse(raw).map(i => ({ name: i.name, size: i.size, type: i.type, fileData: null, config: i.config }));
-                if (typeof renderFilesUI === 'function') {
-                    renderFilesUI();
-                }
-            } catch(e) {
-                masterFilesArray = [];
-            }
-        }
-    }
+    // 🔥 FIX: SESSION FILE PERSISTENCE ENGINE
+    function loadSavedFilesFromSession() {
+        const raw = sessionStorage.getItem('savedPrintFiles');
+        if (raw) {
+            try {
+                masterFilesArray = JSON.parse(raw).map(i => ({ name: i.name, size: i.size, type: i.type, fileData: null, config: i.config }));
+                if (typeof renderFilesUI === 'function') {
+                    renderFilesUI();
+                }
+            } catch(e) {
+                masterFilesArray = [];
+            }
+        }
+    }
 
-    function saveCurrentFilesToSession() {
-        sessionStorage.setItem('savedPrintFiles', JSON.stringify(masterFilesArray.map(i => ({ name: i.name, size: i.size, type: i.type, config: i.config }))));
-    }
+    function saveCurrentFilesToSession() {
+        sessionStorage.setItem('savedPrintFiles', JSON.stringify(masterFilesArray.map(i => ({ name: i.name, size: i.size, type: i.type, config: i.config }))));
+    }
 
-  function renderFilesUI() {
+  function renderFilesUI() {
     if(!multiFilesContainer) return; 
     multiFilesContainer.innerHTML = ''; 
     refreshInvoiceTabState();
@@ -510,19 +511,12 @@ window.toggleCouponDrawer = function() {
         const fileRow = document.createElement('div');
         fileRow.style.cssText = "background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 10px;";
 
-        const activeColorBw = item.config.printType === 'bw' ? '#16a34a' : '#cbd5e1';
-        const activeColorCol = item.config.printType === 'color' ? '#16a34a' : '#cbd5e1';
-        const activeOriPort = item.config.orientation === 'portrait' ? '#16a34a' : '#cbd5e1';
-        const activeOriLand = item.config.orientation === 'landscape' ? '#16a34a' : '#cbd5e1';
-
-        // Check if fileUrl is a rendered canvas image or PDF blob
         let previewThumbnail = `<div style="font-size: 1.8rem;">📄</div>`;
         if (item.fileUrl && item.fileUrl.startsWith('data:image')) {
             previewThumbnail = `<img src="${item.fileUrl}" style="width: 45px; height: 55px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;" />`;
         }
 
         fileRow.innerHTML = `
-            <!-- Top Row: Thumbnail, Wrapped Filename & Delete Button -->
             <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; border-bottom: 1px solid #edf2f7; padding-bottom: 8px;">
                 <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; cursor: pointer;" onclick="previewFileInA4Studio(${index})">
                     ${previewThumbnail}
@@ -534,7 +528,6 @@ window.toggleCouponDrawer = function() {
                 <button type="button" id="removeFile_${index}" style="background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; width: 26px; height: 26px; border-radius: 50%; font-weight: bold; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">&times;</button>
             </div>
 
-            <!-- Bottom Row: Pages & Safe Compact Copies Stepper -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
                 <div style="display: flex; flex-direction: column; gap: 2px;">
                     <label style="font-size: 0.7rem; font-weight: 700; color: #64748b;">Pages:</label>
@@ -565,7 +558,7 @@ window.toggleCouponDrawer = function() {
     window.convertPdfPageToImage = async function(pdfDoc, pageNumber) {
         try {
             const page = await pdfDoc.getPage(pageNumber);
-            const viewport = page.getViewport({ scale: 1.5 }); // High quality scale
+            const viewport = page.getViewport({ scale: 1.5 });
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             canvas.height = viewport.height;
@@ -576,14 +569,13 @@ window.toggleCouponDrawer = function() {
                 viewport: viewport
             };
             await page.render(renderContext).promise;
-            return canvas.toDataURL('image/png'); // Returns data URL image for preview
+            return canvas.toDataURL('image/png');
         } catch (e) {
-            console.error("PDF Page Render Error:", e);
             return '';
         }
     };
 
-  // ==========================================
+    // ==========================================
     // 📂 100% SAFE FILE UPLOAD & PREVIEW TRIGGER
     // ==========================================
     if (fileUpload) {
@@ -612,7 +604,6 @@ window.toggleCouponDrawer = function() {
                             const pdfDoc = await loadingTask.promise;
                             pageCount = pdfDoc.numPages || 1;
                             
-                            // Generate real canvas preview image for the first page
                             if (pdfDoc && typeof window.convertPdfPageToImage === 'function') {
                                 let generatedImgUrl = await window.convertPdfPageToImage(pdfDoc, 1);
                                 if (generatedImgUrl) {
@@ -623,8 +614,7 @@ window.toggleCouponDrawer = function() {
                     } catch (e) {
                         pageCount = 1;
                     }
-                }              
-                 
+                } 
 
                 uploadedFilesList.push({
                     name: file.name || 'Document.pdf',
@@ -659,7 +649,7 @@ window.toggleCouponDrawer = function() {
         }
     };
 
-  // ==========================================
+    // ==========================================
     // 🎨 IN-IMAGE HORIZONTAL SLIDER PRINT STUDIO ENGINE
     // ==========================================
     window.studioMasterFiles = [];
@@ -721,7 +711,6 @@ window.toggleCouponDrawer = function() {
 
         const currentFile = files[window.currentStudioActiveIndex] || files[0];
 
-        // 1. Render In-Image Horizontal Slider with Grayscale & Landscape Rotation
         const imageSlider = document.getElementById('studioInImageHorizontalSlider');
         if (imageSlider) {
             imageSlider.innerHTML = files.map((f) => {
@@ -755,20 +744,17 @@ window.toggleCouponDrawer = function() {
             imageSlider.scrollTo({ left: slideWidth * window.currentStudioActiveIndex, behavior: 'smooth' });
         }
 
-        // 2. Counter Badge (e.g., 1/2)
         const counterBadge = document.getElementById('studioSlideCounterBadge');
         if (counterBadge) {
             counterBadge.textContent = `${window.currentStudioActiveIndex + 1}/${files.length}`;
         }
 
-        // 3. Update Copies & Pages Info
         const copiesText = document.getElementById('studioCopiesCountText');
         if (copiesText) copiesText.textContent = currentFile.copies;
 
         const pagesInfo = document.getElementById('studioFilePagesInfo');
         if (pagesInfo) pagesInfo.textContent = `${currentFile.name} (${currentFile.pages} page${currentFile.pages > 1 ? 's' : ''})`;
 
-        // 4. Highlight Color & Orientation UI
         const colColoured = document.getElementById('colorOptionColoured');
         const colBw = document.getElementById('colorOptionBw');
         if (colColoured && colBw) {
@@ -793,7 +779,6 @@ window.toggleCouponDrawer = function() {
             }
         }
 
-        // 5. Calculate Clean Grand Total Price (Sirf Total Price dikhega, koi lamba breakdown text nahi)
         let grandTotalPrice = 0;
         files.forEach((f) => {
             let rate = (f.printType === 'bw') ? 3 : 10;
@@ -933,7 +918,6 @@ window.toggleCouponDrawer = function() {
         }
     };
 
-    // Horizontal slider scroll sync listener (outside DOMContentLoaded block since we are already inside it)
     const slider = document.getElementById('studioInImageHorizontalSlider');
     if (slider) {
         slider.addEventListener('scroll', () => {
@@ -2272,34 +2256,55 @@ let subtotal = totalPrintVal + totalSnacksVal;
     }
     window.synchronizeWalletInterfaceBalance = synchronizeWalletInterfaceBalance;
 
-    window.refreshInvoiceTabState = function() {
-        const sideInvoicePanel = document.getElementById('sidebarPricingPanel');
-        const layoutContainer = document.getElementById('mainLayoutAppContainer');
-        const uploadInitialScreen = document.getElementById('uploadScreenInitialState');
-        const configWorkspaceScreen = document.getElementById('configurationScreenState');
-        const activeTabStoreNode = document.getElementById('user_section_store');
+   window.refreshInvoiceTabState = function() {
+    const sideInvoicePanel = document.getElementById('sidebarPricingPanel');
+    const layoutContainer = document.getElementById('mainLayoutAppContainer');
+    const uploadInitialScreen = document.getElementById('uploadScreenInitialState');
+    const configWorkspaceScreen = document.getElementById('configurationScreenState');
+    const activeTabStoreNode = document.getElementById('user_section_store');
 
-        const activeTabIsStore = activeTabStoreNode && activeTabStoreNode.classList.contains('active');
-        if (!activeTabIsStore) return;
+    const activeTabIsStore = activeTabStoreNode && activeTabStoreNode.classList.contains('active');
+    if (!activeTabIsStore) return;
 
-        if (masterFilesArray && masterFilesArray.length > 0) {
-            if(uploadInitialScreen) uploadInitialScreen.classList.add('hidden');
-            if(configWorkspaceScreen) {
-                configWorkspaceScreen.classList.remove('hidden');
-                history.pushState({ configOpen: true }, '', '');
-            }
-            if(sideInvoicePanel) sideInvoicePanel.classList.remove('hidden');
-            if (window.innerWidth > 992) {
-                if(layoutContainer) { layoutContainer.classList.add('has-invoice'); layoutContainer.style.gridTemplateColumns = '2.5fr 1.2fr'; }
-            } else { if(layoutContainer) layoutContainer.style.gridTemplateColumns = '1fr'; }
-        } else {
-            if(uploadInitialScreen) uploadInitialScreen.classList.remove('hidden');
-            if(configWorkspaceScreen) configWorkspaceScreen.classList.add('hidden');
-            if(sideInvoicePanel) sideInvoicePanel.classList.add('hidden');
-            if(layoutContainer) { layoutContainer.classList.remove('has-invoice'); layoutContainer.style.gridTemplateColumns = '1fr'; }
-        }
-        updateFloatingCartBar();
-    };
+    if (masterFilesArray && masterFilesArray.length > 0) {
+        // 🔥 File upload ho chuki hai: Upload screen chupao, Configuration screen dikhao
+        if (uploadInitialScreen) {
+            uploadInitialScreen.classList.add('hidden');
+            uploadInitialScreen.style.display = 'none';
+        }
+        if (configWorkspaceScreen) {
+            configWorkspaceScreen.classList.remove('hidden');
+            configWorkspaceScreen.style.display = 'block'; // Button ab sirf yahin dikhega!
+            // history.pushState({ configOpen: true }, '', ''); // Optional: history clutter se bachne ke liye hata bhi sakte hain
+        }
+        if (sideInvoicePanel) sideInvoicePanel.classList.remove('hidden');
+
+        if (window.innerWidth > 992) {
+            if (layoutContainer) { 
+                layoutContainer.classList.add('has-invoice'); 
+                layoutContainer.style.gridTemplateColumns = '2.5fr 1.2fr'; 
+            }
+        } else { 
+            if (layoutContainer) layoutContainer.style.gridTemplateColumns = '1fr'; 
+        }
+    } else {
+        // 🔥 Koi file nahi hai: Sirf Upload screen dikhao, Configuration screen chupao
+        if (uploadInitialScreen) {
+            uploadInitialScreen.classList.remove('hidden');
+            uploadInitialScreen.style.display = 'block';
+        }
+        if (configWorkspaceScreen) {
+            configWorkspaceScreen.classList.add('hidden');
+            configWorkspaceScreen.style.display = 'none'; // Button home page se 100% gayab rahega!
+        }
+        if (sideInvoicePanel) sideInvoicePanel.classList.add('hidden');
+        if (layoutContainer) { 
+            layoutContainer.classList.remove('has-invoice'); 
+            layoutContainer.style.gridTemplateColumns = '1fr'; 
+        }
+    }
+    updateFloatingCartBar();
+};
 
     window.forceReturnToUploadView = function() {
         masterFilesArray = []; sessionStorage.removeItem('savedPrintFiles');
