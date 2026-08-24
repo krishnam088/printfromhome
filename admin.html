@@ -360,9 +360,11 @@
             <li class="sidebar-item active" id="nav_dashboard" onclick="switchAdminTab('dashboard')">📊 Dashboard</li>
             <li class="sidebar-item" id="nav_orders" onclick="switchAdminTab('orders')">📦 Orders Queue</li>
             <li class="sidebar-item" id="nav_inventory" onclick="switchAdminTab('inventory')">📦 Inventory</li>
-           <li class="sidebar-item" id="nav_fees" onclick="switchAdminTab('fees')">⚙️ Fee & Coupons Setup</li>
             <li class="sidebar-item" id="nav_marketing" onclick="switchAdminTab('marketing')">📢 Marketing & Alerts</li>
+            <li class="sidebar-item" id="nav_fees" onclick="switchAdminTab('fees')">⚙️ Fee & Coupons Setup</li>
         </ul>
+
+
     </nav>
 
     <div class="admin-main-content">
@@ -447,7 +449,6 @@
                     <canvas id="storeProfitTrendChart" style="width: 100%; max-height: 250px;"></canvas>
                  </div>
                  </div>
-                 </div>
 
         <!-- TAB 2: ORDERS SECTION -->
         <div id="section_orders" class="admin-section">
@@ -514,39 +515,8 @@
                 </div>
             </div>
         </div>
-<!-- TAB 5: DEDICATED STORE FEES & COUPONS SETUP PANEL -->
-<div id="section_fees" class="admin-section">
-    <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 28px; max-width: 650px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-        <h3 style="font-size: 1.25rem; font-weight: 900; color: white; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">⚙️ Store Fees & Live Coupons Management</h3>
-        <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 22px;">Configure instant delivery charges, platform fees, rain surge surcharges, and active customer discount codes.</p>
 
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px;">
-            <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
-                <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Delivery Fee (₹)</label>
-                <input type="number" id="adminSettingDeliveryFee" value="25" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
-            </div>
-            <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
-                <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Handling Fee (₹)</label>
-                <input type="number" id="adminSettingHandlingFee" value="5" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
-            </div>
-            <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
-                <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Rain Surge (₹)</label>
-                <input type="number" id="adminSettingRainFee" value="15" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
-            </div>
-        </div>
-
-        <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
-            <label style="font-size: 0.78rem; font-weight: 800; color: var(--text-main); display: block; margin-bottom: 8px;">🎫 Add New Discount Coupon</label>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="adminNewCouponCode" placeholder="Code (e.g. SAVE50)" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; outline: none;" />
-                <input type="text" id="adminNewCouponDesc" placeholder="Description (e.g. Flat ₹50 off)" style="flex: 2; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-size: 0.85rem; outline: none;" />
-                <button type="button" onclick="adminAddNewCoupon()" style="background: var(--accent-green); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 800; cursor: pointer;">Add</button>
-            </div>
-        </div>
-
-        <button type="button" onclick="saveAdminStoreSettings()" style="width: 100%; padding: 14px; background: var(--accent-green); color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">Save Store Settings & Fees</button>
-    </div>
- 
+                     <!-- TAB 4: marketing and broadcast SECTION -->
         <div id="section_marketing" class="admin-section">
             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; max-width: 750px;">
                 <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 8px;">📢 Broadcast Gmail Notifications</h3>
@@ -583,6 +553,38 @@
                 </div>
             </div>
         </div>
+                  <!-- TAB 5: DEDICATED STORE FEES & COUPONS SETUP PANEL -->
+                       <div id="section_fees" class="admin-section">
+                      <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 28px; max-width: 650px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                     <h3 style="font-size: 1.25rem; font-weight: 900; color: white; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">⚙️ Store Fees & Live Coupons Management</h3>
+                   <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 22px;">Configure instant delivery charges, platform fees, rain surge surcharges, and active customer discount codes.</p>
+
+                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px;">
+                 <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
+                 <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Delivery Fee (₹)</label>
+                 <input type="number" id="adminSettingDeliveryFee" value="25" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
+                 </div>
+                 <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
+                 <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Handling Fee (₹)</label>
+                 <input type="number" id="adminSettingHandlingFee" value="5" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
+                 </div>
+                 <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
+                 <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Rain Surge (₹)</label>
+                 <input type="number" id="adminSettingRainFee" value="15" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
+                 </div>
+              </div>
+
+        <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+            <label style="font-size: 0.78rem; font-weight: 800; color: var(--text-main); display: block; margin-bottom: 8px;">🎫 Add New Discount Coupon</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="adminNewCouponCode" placeholder="Code (e.g. SAVE50)" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; outline: none;" />
+                <input type="text" id="adminNewCouponDesc" placeholder="Description (e.g. Flat ₹50 off)" style="flex: 2; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-size: 0.85rem; outline: none;" />
+                <button type="button" onclick="adminAddNewCoupon()" style="background: var(--accent-green); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 800; cursor: pointer;">Add</button>
+            </div>
+        </div>
+
+        <button type="button" onclick="saveAdminStoreSettings()" style="width: 100%; padding: 14px; background: var(--accent-green); color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">Save Store Settings & Fees</button>
+    </div>
 
     </div>
 
@@ -648,14 +650,14 @@
                 document.getElementById('nav_inventory').classList.add('active');
                 document.getElementById('section_inventory').classList.add('active');
                 fetchInventoryReport();
-            } else if (tabName === 'fees') {
-                document.getElementById('nav_fees').classList.add('active');
-                document.getElementById('section_fees').classList.add('active');
             } else if (tabName === 'marketing') {
                 document.getElementById('nav_marketing').classList.add('active');
                 document.getElementById('section_marketing').classList.add('active');
                 loadFestivalTemplatesFromServer();
                 loadPermanentDraft();
+                } else if (tabName === 'fees') {
+                document.getElementById('nav_fees').classList.add('active');
+                document.getElementById('section_fees').classList.add('active');
             }
         }
 
