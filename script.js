@@ -2081,14 +2081,22 @@ window.renderCartDrawerContents = function() {
         } else if (!hasPrintJobs && hasSnacks) {
             initialOrderStatus = "Order Placed & Picking";
         }
-
 let subtotal = totalPrintVal + totalSnacksVal;
     let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
     let rainFee = window.isRainSurgeActive ? 15 : 0;
     let grandTotal = subtotal + delivery + rainFee + (window.currentDeliveryTip || 0);
 
+    // 🔥 FIXED: Bulletproof Payment Mode Detection (Checks both radio buttons and dropdown)
     const selectedPaymentRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
-    const paymentMode = selectedPaymentRadio ? selectedPaymentRadio.value.toLowerCase() : 'online';
+    const paymentDropdown = document.getElementById('cartDrawerPaymentSelect');
+    
+    let paymentMode = 'online';
+    if (selectedPaymentRadio) {
+        paymentMode = selectedPaymentRadio.value.toLowerCase();
+    } else if (paymentDropdown) {
+        paymentMode = paymentDropdown.value.toLowerCase();
+    }
+
     const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
 
     const formData = new FormData();
@@ -2104,7 +2112,7 @@ let subtotal = totalPrintVal + totalSnacksVal;
     formData.append('deliveryTip', window.currentDeliveryTip || 0);
     formData.append('paymentMode', paymentMode);
 
-    // 🔥 1. Pehle helper function declare karo taaki hoisting error na aaye
+    // 🔥 Helper function for order success sync
     const finalizeOrderSuccess = async (orderId) => {
         const historyKey = `history_${sessionActiveUser}`;
         const currentHistoryArray = JSON.parse(localStorage.getItem(historyKey) || '[]');
@@ -2133,7 +2141,7 @@ let subtotal = totalPrintVal + totalSnacksVal;
         }
     };
 
-    // 🔥 2. Ab COD / Cash check yahan run karo
+    // 🔥 If Cash on Delivery (COD) is selected, bypass Razorpay completely
     if (paymentMode === 'cod' || paymentMode === 'cash') {
         try {
             const response = await fetch('/api/create-order', { method: 'POST', body: formData });
@@ -2151,9 +2159,7 @@ let subtotal = totalPrintVal + totalSnacksVal;
                 if (typeof renderOrderHistoryUI === 'function') {
                     renderOrderHistoryUI(sessionActiveUser);
                 }
-                if (typeof openOrderDeepTrackingWorkspacePage === 'function') {
-                    openOrderDeepTrackingWorkspacePage(encodeURIComponent(JSON.stringify(newOrderPayload)));
-                } else if (typeof navigateDrawerSection === 'function') {
+                if (typeof navigateDrawerSection === 'function') {
                     navigateDrawerSection('order_tracking');
                 }
                 loadDynamicStoreProducts();
@@ -2166,7 +2172,7 @@ let subtotal = totalPrintVal + totalSnacksVal;
             alert("❌ Connection error during COD order placement.");
             return;
         }
-    }   
+    }
 
         if (paymentMode === 'wallet') {
             let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;

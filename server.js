@@ -1244,15 +1244,6 @@ app.post('/api/orders/cancel', async (req, res) => {
     }
 });
 
-app.get('/api/admin/orders', async (req, res) => { 
-    try {
-        const orders = await Order.find({ status: { $ne: 'Pending Payment' } }).sort({ timestamp: -1 });
-        res.json(orders); 
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
-
 const handleStatusUpdate = async (req, res) => {
     try {
         const orderId = req.params.orderId || req.body.orderId;
@@ -1283,6 +1274,35 @@ const handleStatusUpdate = async (req, res) => {
 
 app.post('/api/admin/orders/update-status', handleStatusUpdate);
 app.post('/api/admin/orders/:orderId/status', handleStatusUpdate);
+
+// 🔥 ADD HERE: Admin Store Settings & Fees Sync & Update Endpoints
+let memoryAdminSettings = {
+    deliveryFee: 25.00,
+    handlingFee: 5.00,
+    rainFee: 15.00,
+    coupons: [
+        { code: 'FREEDEL', desc: 'Free delivery on orders above ₹99', discount: 25 },
+        { code: 'PRINT20', desc: 'Flat ₹20 off on print orders', discount: 20 }
+    ]
+};
+
+app.get('/api/admin/settings', (req, res) => {
+    res.json({ success: true, settings: memoryAdminSettings });
+});
+
+app.post('/api/admin/settings/update', (req, res) => {
+    try {
+        const { deliveryFee, handlingFee, rainFee, coupons } = req.body;
+        if (deliveryFee !== undefined) memoryAdminSettings.deliveryFee = parseFloat(deliveryFee) || 25;
+        if (handlingFee !== undefined) memoryAdminSettings.handlingFee = parseFloat(handlingFee) || 5;
+        if (rainFee !== undefined) memoryAdminSettings.rainFee = parseFloat(rainFee) || 15;
+        if (coupons !== undefined && Array.isArray(coupons)) memoryAdminSettings.coupons = coupons;
+        
+        res.json({ success: true, message: "Settings updated successfully!", settings: memoryAdminSettings });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
