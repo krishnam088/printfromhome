@@ -970,18 +970,22 @@
                         <button type="button" onclick="forceReturnToUploadView()" style="background:none; border:none; color:#065f46; font-weight:700; cursor:pointer; font-size:0.85rem;">&larr; Back to Upload</button>
                     </div>
 
-                    <div style="background:var(--surface); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:15px;">
-                        <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:10px; color:#1e293b;">⚡ Hungry while waiting? Add Store Products</h4>
-                        <div class="snacks-horizontal-slider" id="configSnacksGrid"></div>
-                    </div>
+              <div id="configurationScreenState" class="hidden" style="width:100%;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="font-size:1.1rem; font-weight:800;">Configure Print & Add to Cart</h3>
+            <button type="button" onclick="forceReturnToUploadView()" style="background:none; border:none; color:#065f46; font-weight:700; cursor:pointer; font-size:0.85rem;">&larr; Back to Upload</button>
+        </div>
 
-                    <form id="printForm" enctype="multipart/form-data" style="width:100%;">
-                        <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
-                        <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: #065f46; font-weight: 700; width: 100%;">Add Print Job to Cart</button>
-                    </form>
-                </div>
-            </div>
+        <div style="background:var(--surface); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:15px;">
+            <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:10px; color:#1e293b;">⚡ Hungry while waiting? Add Store Products</h4>
+            <div class="snacks-horizontal-slider" id="configSnacksGrid"></div>
+        </div>
 
+        <form id="printForm" enctype="multipart/form-data" style="width:100%;">
+            <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
+            <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: #065f46; font-weight: 700; width: 100%;">Add Print Job to Cart</button>
+        </form>
+    </div>
             <div id="user_section_history" class="view-section">
                 <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
                     <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
