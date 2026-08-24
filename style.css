@@ -32,10 +32,15 @@ body {
     padding-bottom: 120px;
     transition: background-color 0.5s ease;
 }
-
-/* 🔒 VISIBILITY & APP GUARDS */
+/* 🔒 VISIBILITY & APP GUARDS (Strict Hide Override) */
 .hidden { display: none !important; }
 .app-hidden { display: none !important; }
+
+/* 🔥 Force Configuration Screen & Upload Screen to respect hidden state completely */
+#configurationScreenState.hidden,
+#uploadScreenInitialState.hidden {
+    display: none !important;
+}
 
 /* 🍞 MODERN TOAST NOTIFICATION CONTAINER */
 #appToastContainer {
