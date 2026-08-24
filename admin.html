@@ -398,73 +398,75 @@
             </div>
         </header>
 
-        <!-- TAB 1: DASHBOARD & PROFIT GRAPH SECTION -->
-      .6  <div id="section_dashboard" class="admin-section">
-   ..         <div class="section-heading-bar" style="margin-bottom: 16px;">
-     .           <h2>📊 Dashboard Analytics</h2>
-      ..          <div style="display: flex; align-items: center; gap: 8px;">
-        .            <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-sub);">Filter Date:</label>
-         .           <input type="date" id="dashboardDateFilter" onchange="fetchDashboardStats()" style="padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-card); color: white; font-size: 0.78rem; font-weight: 700; outline: none;">
-          .      </div>
-           . </div>
-..
- ....           <div class="stats-grid">
-    .            <div class="stat-card">
+           <!-- TAB 1: DASHBOARD & PROFIT GRAPH SECTION -->
+       
+           <div id="section_dashboard" class="admin-section">
+             <div class="section-heading-bar" style="margin-bottom: 16px;">
+                 <h2>📊 Dashboard Analytics</h2>
+                 <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-sub);">Filter Date:</label>
+                    <input type="date" id="dashboardDateFilter" onchange="fetchDashboardStats()" style="padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-card); color: white; font-size: 0.78rem; font-weight: 700; outline: none;">
+                 </div>
+                 </div>
+ 
+                 <div class="stats-grid">
+                 <div class="stat-card">
                     <span class="stat-title">Total Orders (Selected Date)</span>
                     <span class="stat-num" id="statDashTotalOrders">0</span>
-     .           </div>
-      ..          <div class="stat-card">
-        .            <span class="stat-title">Total Sales</span>
-         .           <span class="stat-num" id="statDashTotalSales" style="color: #38bdf8;">₹0</span>
-          .      </div>
-                <div class="stat-card">
+                 </div>
+                 <div class="stat-card">
+                    <span class="stat-title">Total Sales</span>
+                    <span class="stat-num" id="statDashTotalSales" style="color: #38bdf8;">₹0</span>
+                 </div>
+                 <div class="stat-card">
                     <span class="stat-title">Store Varieties</span>
-           .         <span class="stat-num" id="statDashVarieties" style="color: #38bdf8;">0</span>
-                </div>
-            .    <div class="stat-card">
+                    <span class="stat-num" id="statDashVarieties" style="color: #38bdf8;">0</span>
+                  </div>
+                 <div class="stat-card">
                     <span class="stat-title">Stock Valuation</span>
                     <span class="stat-num" id="statDashStockVal" style="color: var(--accent-yellow);">₹0</span>
-                </div>
-             ..   <div class="stat-card">
-               .     <span class="stat-title">Net Profit (Selected Date)</span>
-                .    <span class="stat-num" id="statDashNetProfit" style="color: var(--accent-green);">₹0</span>
-                </div>
-                <div class="stat-card">
-                 .   <span class="stat-title">Delivery Fees Coll.</span>
+                  </div>
+               
+                 <div class="stat-card">
+                    <span class="stat-title">Net Profit (Selected Date)</span>
+                 <span class="stat-num" id="statDashNetProfit" style="color: var(--accent-green);">₹0</span>
+                 </div>
+                 <div class="stat-card">
+                    <span class="stat-title">Delivery Fees Coll.</span>
                     <span class="stat-num" id="statDashDeliveryFees" style="color: var(--accent-blue);">₹0</span>
-                </div>
-                <d.iv class="stat-card" id="restockSuggestionCard">
-                   . <span class="stat-title">🚨 Predictive Restock</span>
-                    .<div id="restockList" style="font-size: 0.75rem; color: var(--accent-red);">Checking sales...</div>
-                </div.>
-            </div>
-.
-            <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px;">
- ..               <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px;">📈 Store Financial & Profit/Loss Overview</h3>
-   .             <div style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
-    .                <canvas id="storeProfitTrendChart" style="width: 100%; max-height: 250px;"></canvas>
-                </div>
-            </div>
-        </div>
-.
+                 </div>
+                 <div class="stat-card" id="restockSuggestionCard">
+                    <span class="stat-title">🚨 Predictive Restock</span>
+                    <div id="restockList" style="font-size: 0.75rem; color: var(--accent-red);">Checking sales...</div>
+                  </div.>
+                 </div>
+
+                 <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px;">
+                   <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px;">📈 Store Financial & Profit/Loss Overview</h3>
+                 <div style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
+                    <canvas id="storeProfitTrendChart" style="width: 100%; max-height: 250px;"></canvas>
+                 </div>
+                 </div>
+                 </div>
+
         <!-- TAB 2: ORDERS SECTION -->
- .       <div id="section_orders" class="admin-section">
-  ..          <div class="section-heading-bar">
-    .            <h2>📦 Today's Live Print & Product Queue (Newest First)</h2>
+        <div id="section_orders" class="admin-section">
+            <div class="section-heading-bar">
+                <h2>📦 Today's Live Print & Product Queue (Newest First)</h2>
                 <button type="button" class="audio-test-btn" onclick="playLoudOrderChime()">🔔 Test Sound Alert</button>
             </div>
-.
+
             <div class="order-queue-list" id="adminOrderQueue">
- .               <div style="text-align: center; padding: 40px; color: var(--text-sub);">
-  .....                  ⏳ Connecting to live orders stream...
-       .         </div>
-        ..    </div>
-        </.div>
-.
- .       <!-- TAB 3: INVENTORY MANAGEMENT SECTION -->
-  .      <div id="section_inventory" class="admin-section">
-   .         <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px; margin-bottom: 22px;">
-    .            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <div style="text-align: center; padding: 40px; color: var(--text-sub);">
+                    ⏳ Connecting to live orders stream...
+                </div>
+                </div>
+               </div>
+
+             <!-- TAB 3: INVENTORY MANAGEMENT SECTION -->
+             <div id="section_inventory" class="admin-section">
+             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px; margin-bottom: 22px;">
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                     <h3 style="font-size: 1.15rem; font-weight: 800;">📊 Store Inventory, UPC Barcode & Restock Tracker</h3>
                     <button type="button" onclick="openAddProductModal()" style="background: var(--accent-blue); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; cursor: pointer;">+ Add New Product (Advanced)</button>
                 </div>
@@ -481,7 +483,7 @@
                     
                     <div style="grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; background: var(--bg-dark); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
                         <label style="font-size: 0.75rem; color: var(--text-sub); font-weight:700;">HD Product Image (Optional):</label>
-     .                   <input type="file" id="invImageFile" accept="image/*" style="color: white; font-size: 0.8rem;">
+                        <input type="file" id="invImageFile" accept="image/*" style="color: white; font-size: 0.8rem;">
                     </div>
 
                     <button type="button" onclick="addNewStockItem()" style="background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; padding: 12px; grid-column: 1 / -1;">+ Save / Restock Product</button>
@@ -490,7 +492,7 @@
 
             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px;">
                 <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 10px;">📋 Live Store Stock Register</h3>
-      .          <div style="overflow-x: auto;">
+                <div style="overflow-x: auto;">
                     <table class="inventory-table">
                         <thead>
                             <tr>
@@ -544,7 +546,7 @@
 
         <button type="button" onclick="saveAdminStoreSettings()" style="width: 100%; padding: 14px; background: var(--accent-green); color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">Save Store Settings & Fees</button>
     </div>
-i 
+ 
         <div id="section_marketing" class="admin-section">
             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; max-width: 750px;">
                 <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 8px;">📢 Broadcast Gmail Notifications</h3>
