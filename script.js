@@ -1600,108 +1600,118 @@ window.openProductDetailModal = function(prod) {
         }
     };
 
-   window.updateFloatingCartBar = function() {
-        const bar = document.getElementById('floatingCartFooterBar');
-        const countText = document.getElementById('floatingCartCountText');
-        const priceText = document.getElementById('floatingCartTotalPriceText');
-        const stackContainer = document.getElementById('floatingCartImagesStack');
-        const drawerOverlay = document.getElementById('cartDrawerOverlay');
-        
-        // Category Drawer Cart Elements
-        const catBar = document.getElementById('categoryDrawerFooterBar');
-        const catCountText = document.getElementById('categoryCartCountText');
-        const catPriceText = document.getElementById('categoryCartTotalPriceText');
-        
-        if (!bar) return;
+window.updateFloatingCartBar = function() {
+    const bar = document.getElementById('floatingCartFooterBar');
+    const countText = document.getElementById('floatingCartCountText');
+    const priceText = document.getElementById('floatingCartTotalPriceText');
+    const stackContainer = document.getElementById('floatingCartImagesStack');
+    const drawerOverlay = document.getElementById('cartDrawerOverlay');
+    
+    // Category Drawer Cart Elements
+    const catBar = document.getElementById('categoryDrawerFooterBar');
+    const catCountText = document.getElementById('categoryCartCountText');
+    const catPriceText = document.getElementById('categoryCartTotalPriceText');
+    
+    if (!bar) return;
 
-        const sessionActiveUser = localStorage.getItem('printAppUser');
-        const isAuthVisible = document.getElementById('authScreen') && !document.getElementById('authScreen').classList.contains('app-hidden') && document.getElementById('authScreen').style.display !== 'none';
-        
-        const storeSection = document.getElementById('user_section_store');
-        const isStoreActive = storeSection && storeSection.classList.contains('active');
+    const sessionActiveUser = localStorage.getItem('printAppUser');
+    const isAuthVisible = document.getElementById('authScreen') && !document.getElementById('authScreen').classList.contains('app-hidden') && document.getElementById('authScreen').style.display !== 'none';
+    
+    const storeSection = document.getElementById('user_section_store');
+    const isStoreActive = storeSection && storeSection.classList.contains('active');
 
-        window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
-        window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
+    window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
+    window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
-        let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0);
-        let totalPrintCount = window.cartPrintJobsArray.length;
-        let totalCount = totalSnacksCount + totalPrintCount;
+    let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0);
+    let totalPrintCount = window.cartPrintJobsArray.length;
+    let totalCount = totalSnacksCount + totalPrintCount;
 
-        let totalSnacksPrice = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
-        let totalPrintPrice = window.cartPrintJobsArray.reduce((acc, job) => acc + (job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0);
-        
-        let subtotalCalc = totalSnacksPrice + totalPrintPrice;
-        let delFee = (subtotalCalc >= 99.00 || subtotalCalc === 0) ? 0.00 : 25.00;
-        let rainFee = window.isRainSurgeActive ? 15 : 0;
-        let totalPrice = subtotalCalc + delFee + rainFee + (window.currentDeliveryTip || 0);
+    let totalSnacksPrice = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
+    let totalPrintPrice = window.cartPrintJobsArray.reduce((acc, job) => acc + (job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0);
+    
+    let subtotalCalc = totalSnacksPrice + totalPrintPrice;
+    const freeDeliveryThreshold = 99.00;
 
-        // Update Category Drawer Footer Cart Bar if items exist
-        if (catBar) {
-            if (totalCount > 0) {
-                catBar.style.display = 'flex';
-                if (catCountText) catCountText.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
-                if (catPriceText) catPriceText.textContent = `₹${totalPrice.toFixed(2)}`;
-            } else {
-                catBar.style.display = 'none';
+    // 🔥 Strictly Admin Controlled Dynamic Fees (No Hardcoded 25 or 15)
+    let activeDelFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 0;
+    let delFee = (subtotalCalc >= freeDeliveryThreshold || subtotalCalc === 0) ? 0.00 : activeDelFee;
+    
+    let activeRainFee = window.adminRainFee !== undefined ? window.adminRainFee : 0;
+    let rainFee = window.isRainSurgeActive ? activeRainFee : 0;
+    
+    let activeHandlingFee = window.adminHandlingFee !== undefined ? window.adminHandlingFee : 0;
+
+    let totalPrice = subtotalCalc + delFee + rainFee + activeHandlingFee + (window.currentDeliveryTip || 0);
+
+    // Update Category Drawer Footer Cart Bar if items exist
+    if (catBar) {
+        if (totalCount > 0) {
+            catBar.style.display = 'flex';
+            if (catCountText) catCountText.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
+            if (catPriceText) catPriceText.textContent = `₹${totalPrice.toFixed(2)}`;
+        } else {
+            catBar.style.display = 'none';
+        }
+    }
+
+    // Auto-close cart drawer if empty
+    if (totalCount === 0 && drawerOverlay && drawerOverlay.style.display === 'flex') {
+        toggleCartDrawer(false);
+    }
+
+    if (!sessionActiveUser || isAuthVisible || !isStoreActive || totalCount === 0 || (drawerOverlay && drawerOverlay.style.display === 'flex')) {
+        bar.classList.add('hidden');
+        bar.style.display = 'none';
+        return;
+    }
+
+    bar.classList.remove('hidden');
+    bar.style.display = 'flex';
+    if (countText) countText.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
+    if (priceText) priceText.textContent = `₹${totalPrice.toFixed(2)}`;
+
+    if (stackContainer) {
+        stackContainer.innerHTML = '';
+        stackContainer.style.cssText = "position:relative; width:45px; height:34px; display:flex; align-items:center;";
+
+        let allVisualItems = [];
+        window.cartSnacksArray.forEach(s => {
+            for(let i=0; i<s.qty; i++) {
+                allVisualItems.push({ type: 'snack', img: s.imageUrl || '', name: s.name });
             }
-        }
+        });
+        window.cartPrintJobsArray.forEach(p => allVisualItems.push({ type: 'print', img: '', name: p.fileName }));
 
-        // Auto-close cart drawer if empty
-        if (totalCount === 0 && drawerOverlay && drawerOverlay.style.display === 'flex') {
-            toggleCartDrawer(false);
-        }
+        let displayItems = allVisualItems.slice(0, 3);
+        displayItems.forEach((item, sIdx) => {
+            const iconBox = document.createElement('div');
+            iconBox.style.cssText = `
+                position: absolute;
+                left: ${sIdx * 12}px;
+                width: 30px;
+                height: 30px;
+                border-radius: 8px;
+                background: #ffffff;
+                border: 2px solid #f59e0b;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.85rem;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+                overflow: hidden;
+                z-index: ${10 - sIdx};
+            `;
+            if (item.type === 'snack' && item.img) {
+                iconBox.innerHTML = `<img src="${item.img}" style="width:100%; height:100%; object-fit:cover;" />`;
+            } else {
+                iconBox.innerHTML = item.type === 'print' ? '📄' : '📦';
+            }
+            stackContainer.appendChild(iconBox);
+        });
+    }
+};
 
-        if (!sessionActiveUser || isAuthVisible || !isStoreActive || totalCount === 0 || (drawerOverlay && drawerOverlay.style.display === 'flex')) {
-            bar.classList.add('hidden');
-            bar.style.display = 'none';
-            return;
-        }
-
-        bar.classList.remove('hidden');
-        bar.style.display = 'flex';
-        if (countText) countText.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
-        if (priceText) priceText.textContent = `₹${totalPrice.toFixed(2)}`;
-
-        if (stackContainer) {
-            stackContainer.innerHTML = '';
-            stackContainer.style.cssText = "position:relative; width:45px; height:34px; display:flex; align-items:center;";
-
-            let allVisualItems = [];
-            window.cartSnacksArray.forEach(s => {
-                for(let i=0; i<s.qty; i++) {
-                    allVisualItems.push({ type: 'snack', img: s.imageUrl || '', name: s.name });
-                }
-            });
-            window.cartPrintJobsArray.forEach(p => allVisualItems.push({ type: 'print', img: '', name: p.fileName }));
-
-            let displayItems = allVisualItems.slice(0, 3);
-            displayItems.forEach((item, sIdx) => {
-                const iconBox = document.createElement('div');
-                iconBox.style.cssText = `
-                    position: absolute;
-                    left: ${sIdx * 12}px;
-                    width: 30px;
-                    height: 30px;
-                    border-radius: 8px;
-                    background: #ffffff;
-                    border: 2px solid #f59e0b;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 0.85rem;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-                    overflow: hidden;
-                    z-index: ${10 - sIdx};
-                `;
-                if (item.type === 'snack' && item.img) {
-                    iconBox.innerHTML = `<img src="${item.img}" style="width:100%; height:100%; object-fit:cover;" />`;
-                } else {
-                    iconBox.innerHTML = item.type === 'print' ? '📄' : '📦';
-                }
-                stackContainer.appendChild(iconBox);
-            });
-        }
-    };
 // ==========================================
 // 🔥 BULLETPROOF UNIVERSAL CART DRAWER & ITEMS RENDERER
 // ==========================================
@@ -1710,7 +1720,6 @@ window.renderCartDrawerContents = function() {
                     document.getElementById('cartItemsListContainer') || 
                     document.getElementById('cartItemsContainer');
     
-    // Self-healing fallback if DOM container ID is missing
     if (!container) {
         const cartDrawerBody = document.getElementById('cartDrawer') || document.querySelector('.cart-drawer') || document.querySelector('[id*="cart"]');
         if (cartDrawerBody) {
@@ -1743,7 +1752,6 @@ window.renderCartDrawerContents = function() {
     let totalPagesCount = 0;
     let totalItemsCount = 0;
 
-    // 1. Render Print Jobs Items
     window.cartPrintJobsArray.forEach((job, idx) => {
         let rate = (job.printType === 'bw') ? 3 : 10;
         let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
@@ -1775,7 +1783,6 @@ window.renderCartDrawerContents = function() {
         wrapper.appendChild(card);
     });
 
-    // 2. Render Snacks / Store Products Items
     window.cartSnacksArray.forEach((snack, idx) => {
         totalItemsCount += snack.qty;
         const card = document.createElement('div');
@@ -1805,13 +1812,11 @@ window.renderCartDrawerContents = function() {
 
     container.appendChild(wrapper);
 
-    // Update shipment info text
     const shipmentTextNode = document.getElementById('shipmentItemsCountText');
     if (shipmentTextNode) {
         shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
     }
 
-    // Render "You Might Also Like" Upselling Slider
     const upsellingSection = document.createElement('div');
     upsellingSection.style.cssText = "margin-top: 15px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;";
     upsellingSection.innerHTML = `
@@ -1849,414 +1854,162 @@ window.renderCartDrawerContents = function() {
     if (typeof calculateTotal === 'function') calculateTotal();
 };
 
-    window.removeSnackItemCompletely = function(index) {
-        window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
-        window.cartSnacksArray.splice(index, 1);
-        persistCartStateData();
-        renderCartDrawerContents();
-        updateFloatingCartBar();
-        calculateTotal();
-    };
+window.removeSnackItemCompletely = function(index) {
+    window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
+    window.cartSnacksArray.splice(index, 1);
+    persistCartStateData();
+    renderCartDrawerContents();
+    updateFloatingCartBar();
+    calculateTotal();
+};
 
-    window.removePrintJobFromCart = function(index) {
-        if (window.cartPrintJobsArray) {
-            window.cartPrintJobsArray.splice(index, 1);
-            persistCartStateData();
-            renderCartDrawerContents();
-            updateFloatingCartBar();
-            calculateTotal();
-        }
-    };
-
-    window.clearEntireCartData = function() {
-        if (!confirm("⚠️ Are you sure you want to clear your cart?")) return;
-        window.cartPrintJobsArray = [];
-        window.cartSnacksArray = [];
-        window.currentDeliveryTip = 0;
-        persistCartStateData();
-        renderCartDrawerContents();
-        calculateTotal();
-        updateFloatingCartBar();
-        toggleCartDrawer(false);
-        alert("✅ Cart cleared successfully!");
-    };
-
-    window.persistCartStateData = function() {
-        localStorage.setItem('cart_print_jobs', JSON.stringify(window.cartPrintJobsArray));
-        localStorage.setItem('cart_snacks', JSON.stringify(window.cartSnacksArray));
-        updateFloatingCartBar();
-    };
-
-    // 🔥 ADDRESS MANAGEMENT SYSTEM
-  window.loadUserAddressesFromStorage = function() {
-        const raw = localStorage.getItem('saved_addresses');
-        if (raw) {
-            try { window.savedUserAddresses = JSON.parse(raw); } catch(e) { window.savedUserAddresses = []; }
-        }
-        
-        // Use window.selectedActiveAddress safely here
-        if (window.savedUserAddresses.length > 0 && !window.selectedActiveAddress) {
-            window.selectedActiveAddress = localStorage.getItem('selected_active_address') || window.savedUserAddresses[0];
-        }
-        
-        if (typeof renderSavedAddressesUI === 'function') {
-            renderSavedAddressesUI();
-        }
-    };
-
-    window.saveFullAddressFormToStorage = function() {
-        const flat = document.getElementById('addrFlatBuilding').value.trim();
-        const floor = document.getElementById('addrFloor').value.trim();
-        const landmark = document.getElementById('addrLandmark').value.trim();
-        const name = document.getElementById('addrContactName').value.trim();
-        const mobile = document.getElementById('addrContactMobile').value.trim();
-        const fullGeo = document.getElementById('mapSelectedAddressInput').value.trim();
-
-        if (!flat || !name || !mobile) {
-            alert("⚠️ Please enter Building/Flat number, Contact Name, and Mobile Number!");
-            return;
-        }
-
-        const formattedAddress = `${flat}${floor ? ', Floor: ' + floor : ''}${landmark ? ', Landmark: ' + landmark : ''} | Area: ${fullGeo || 'Varanasi'} | Contact: ${name} (${mobile})`;
-        
-        if (!window.savedUserAddresses.includes(formattedAddress)) {
-            window.savedUserAddresses.push(formattedAddress);
-        }
-        selectedActiveAddress = formattedAddress;
-        localStorage.setItem('saved_addresses', JSON.stringify(window.savedUserAddresses));
-        localStorage.setItem('selected_active_address', selectedActiveAddress);
-        
-        closeAddressManagerModal();
-        renderSavedAddressesUI();
-        if (document.getElementById('cartDrawerOverlay').style.display === 'flex') {
-            renderCartDrawerContents();
-        }
-        alert("✅ Address saved successfully!");
-    };
-
- function renderSavedAddressesUI() {
-        const listContainer = document.getElementById('cartSavedAddressesList');
-        const summaryNode = document.getElementById('cartDrawerAddressSummary');
-        if (summaryNode) summaryNode.textContent = selectedActiveAddress || "No delivery address added yet.";
-        if (!listContainer) return;
-
-        listContainer.innerHTML = '';
-        if (window.savedUserAddresses.length === 0) {
-            listContainer.innerHTML = `<p style="font-size:0.75rem; color:#ef4444; font-weight:600;">⚠️ No address saved. Tap '+ Add New Address' to add one.</p>`;
-            return;
-        }
-
-        window.savedUserAddresses.forEach((addr, idx) => {
-            const isChecked = addr === selectedActiveAddress ? 'checked' : '';
-            const card = document.createElement('div');
-            
-            card.style.cssText = `display:flex; align-items:flex-start; justify-content:space-between; background:${isChecked ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${isChecked ? '#16a34a' : '#cbd5e1'}; padding:10px 12px; border-radius:10px; font-size:0.78rem; font-weight:600; color:#0f172a; margin-bottom:8px; width:100%; box-sizing:border-box;`;
-            
-            card.innerHTML = `
-                <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; flex:1; overflow:hidden;">
-                    <input type="radio" name="selectedDeliveryAddressRadio" value="${idx}" ${isChecked} onchange="selectActiveAddressByIndex(${idx})" style="margin-top:2px; flex-shrink:0;">
-                    <span style="word-break:break-word; white-space:normal; line-height:1.4; flex:1;">📍 ${addr}</span>
-                </label>
-                <button type="button" onclick="deleteSavedAddress(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:3px 8px; font-size:0.7rem; font-weight:700; cursor:pointer; margin-left:8px; flex-shrink:0;" title="Delete Address">Delete</button>
-            `;
-            listContainer.appendChild(card);
-        });
+window.removePrintJobFromCart = function(index) {
+    if (window.cartPrintJobsArray) {
+        window.cartPrintJobsArray.splice(index, 1);
+        persistCartStateData();
+        renderCartDrawerContents();
+        updateFloatingCartBar();
+        calculateTotal();
     }
+};
 
-    window.deleteSavedAddress = function(idx) {
-        if (confirm("⚠️ Are you sure you want to delete this address?")) {
-            const removedAddr = window.savedUserAddresses[idx];
-            window.savedUserAddresses.splice(idx, 1);
-            localStorage.setItem('saved_addresses', JSON.stringify(window.savedUserAddresses));
-            
-            if (selectedActiveAddress === removedAddr) {
-                selectedActiveAddress = window.savedUserAddresses.length > 0 ? window.savedUserAddresses[0] : "";
-                localStorage.setItem('selected_active_address', selectedActiveAddress);
-            }
-            renderSavedAddressesUI();
-            alert("✅ Address deleted successfully!");
-        }
-    };
+window.clearEntireCartData = function() {
+    if (!confirm("⚠️ Are you sure you want to clear your cart?")) return;
+    window.cartPrintJobsArray = [];
+    window.cartSnacksArray = [];
+    window.currentDeliveryTip = 0;
+    persistCartStateData();
+    renderCartDrawerContents();
+    calculateTotal();
+    updateFloatingCartBar();
+    toggleCartDrawer(false);
+    alert("✅ Cart cleared successfully!");
+};
 
-    window.selectActiveAddressByIndex = function(idx) {
-        if (window.savedUserAddresses[idx]) {
-            selectedActiveAddress = window.savedUserAddresses[idx];
-            localStorage.setItem('selected_active_address', selectedActiveAddress);
-            renderSavedAddressesUI();
-        }
-    };
+window.persistCartStateData = function() {
+    localStorage.setItem('cart_print_jobs', JSON.stringify(window.cartPrintJobsArray));
+    localStorage.setItem('cart_snacks', JSON.stringify(window.cartSnacksArray));
+    updateFloatingCartBar();
+};
 
-    window.openAddressManagerModal = function() {
-        const modal = document.getElementById('addressManagerModal');
-        if (modal) {
-            modal.style.display = 'flex';
-            history.pushState({ addressModalOpen: true }, '', '');
-            setTimeout(() => { 
-                if (typeof initRealGoogleMap === 'function') {
-                    initRealGoogleMap(); 
-                } else if (googleDeliveryMap) {
-                    google.maps.event.trigger(googleDeliveryMap, 'resize');
-                }
-            }, 300);
-        }
-    };
-
-    window.closeAddressManagerModal = function() {
-        const modal = document.getElementById('addressManagerModal');
-        if (modal) modal.style.display = 'none';
-    };
-
-    // ==========================================
-    // 💳 FINAL CART ORDER PLACEMENT
-    // ==========================================
-    window.executeFinalCartOrderPlacement = async function() {
-        if (!isStoreCurrentlyOpen) {
-            alert("🚨 Store is currently CLOSED! Orders cannot be accepted.");
-            const storeClosedModal = document.getElementById('storeClosedPopupModal');
-            if (storeClosedModal) storeClosedModal.style.display = 'flex';
-            return;
-        }
-
-        let totalItemsCount = (window.cartSnacksArray ? window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0) : 0) + 
-                            (window.cartPrintJobsArray ? window.cartPrintJobsArray.length : 0);
-
-        if (totalItemsCount === 0) {
-            alert("⚠️ Your cart is empty! Please add print jobs or store products first.");
-            return;
-        }
-
-        if (!selectedActiveAddress || selectedActiveAddress.trim() === "") {
-            alert("⚠️ Please add and select a delivery address first!");
-            openAddressManagerModal();
-            return;
-        }
-
-        let totalPrintVal = 0;
-        let totalSnacksVal = 0;
-        const finalMetaConfig = [];
-
-        window.cartPrintJobsArray.forEach(job => {
-            const cost = job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
-            totalPrintVal += cost;
-            finalMetaConfig.push({ fileName: job.fileName, pages: job.pages, printType: job.printType, binding: job.binding, copies: job.copies });
-        });
-
-        window.cartSnacksArray.forEach(snack => {
-            totalSnacksVal += snack.price * snack.qty;
-            finalMetaConfig.push({ 
-                sku: snack.sku || '',
-                name: snack.name,
-                fileName: `Product: ${snack.name} (Qty: ${snack.qty}, Price: ₹${snack.price} each)`, 
-                copies: snack.qty, 
-                qty: snack.qty,
-                printType: 'snack', 
-                pages: 1 
-            });
-        });
-
-        if (finalMetaConfig.length === 0) {
-            alert("⚠️ Your cart is empty!");
-            return;
-        }
-
-        const hasPrintJobs = window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0;
-        const hasSnacks = window.cartSnacksArray && window.cartSnacksArray.length > 0;
-
-        let initialOrderStatus = "Order Placed & Processing";
-        if (hasPrintJobs && !hasSnacks) {
-            initialOrderStatus = "Ready for Print";
-        } else if (hasPrintJobs && hasSnacks) {
-            initialOrderStatus = "Ready for Print & Processing";
-        } else if (!hasPrintJobs && hasSnacks) {
-            initialOrderStatus = "Order Placed & Picking";
-        }
-let subtotal = totalPrintVal + totalSnacksVal;
-    let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
-    let rainFee = window.isRainSurgeActive ? 15 : 0;
-    let grandTotal = subtotal + delivery + rainFee + (window.currentDeliveryTip || 0);
-
-    // 🔥 FIXED: Bulletproof Payment Mode Detection (Checks both radio buttons and dropdown)
-    const selectedPaymentRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
-    const paymentDropdown = document.getElementById('cartDrawerPaymentSelect');
+window.loadUserAddressesFromStorage = function() {
+    const raw = localStorage.getItem('saved_addresses');
+    if (raw) {
+        try { window.savedUserAddresses = JSON.parse(raw); } catch(e) { window.savedUserAddresses = []; }
+    }
     
-    let paymentMode = 'online';
-    if (selectedPaymentRadio) {
-        paymentMode = selectedPaymentRadio.value.toLowerCase();
-    } else if (paymentDropdown) {
-        paymentMode = paymentDropdown.value.toLowerCase();
+    if (window.savedUserAddresses.length > 0 && !window.selectedActiveAddress) {
+        window.selectedActiveAddress = localStorage.getItem('selected_active_address') || window.savedUserAddresses[0];
+    }
+    
+    if (typeof renderSavedAddressesUI === 'function') {
+        renderSavedAddressesUI();
+    }
+};
+
+window.saveFullAddressFormToStorage = function() {
+    const flat = document.getElementById('addrFlatBuilding').value.trim();
+    const floor = document.getElementById('addrFloor').value.trim();
+    const landmark = document.getElementById('addrLandmark').value.trim();
+    const name = document.getElementById('addrContactName').value.trim();
+    const mobile = document.getElementById('addrContactMobile').value.trim();
+    const fullGeo = document.getElementById('mapSelectedAddressInput').value.trim();
+
+    if (!flat || !name || !mobile) {
+        alert("⚠️ Please enter Building/Flat number, Contact Name, and Mobile Number!");
+        return;
     }
 
-    const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+    const formattedAddress = `${flat}${floor ? ', Floor: ' + floor : ''}${landmark ? ', Landmark: ' + landmark : ''} | Area: ${fullGeo || 'Varanasi'} | Contact: ${name} (${mobile})`;
+    
+    if (!window.savedUserAddresses.includes(formattedAddress)) {
+        window.savedUserAddresses.push(formattedAddress);
+    }
+    selectedActiveAddress = formattedAddress;
+    localStorage.setItem('saved_addresses', JSON.stringify(window.savedUserAddresses));
+    localStorage.setItem('selected_active_address', selectedActiveAddress);
+    
+    closeAddressManagerModal();
+    renderSavedAddressesUI();
+    if (document.getElementById('cartDrawerOverlay').style.display === 'flex') {
+        renderCartDrawerContents();
+    }
+    alert("✅ Address saved successfully!");
+};
 
-    const formData = new FormData();
-    window.cartPrintJobsArray.forEach(job => {
-        if (job.fileData) formData.append('document', job.fileData);
+function renderSavedAddressesUI() {
+    const listContainer = document.getElementById('cartSavedAddressesList');
+    const summaryNode = document.getElementById('cartDrawerAddressSummary');
+    if (summaryNode) summaryNode.textContent = selectedActiveAddress || "No delivery address added yet.";
+    if (!listContainer) return;
+
+    listContainer.innerHTML = '';
+    if (window.savedUserAddresses.length === 0) {
+        listContainer.innerHTML = `<p style="font-size:0.75rem; color:#ef4444; font-weight:600;">⚠️ No address saved. Tap '+ Add New Address' to add one.</p>`;
+        return;
+    }
+
+    window.savedUserAddresses.forEach((addr, idx) => {
+        const isChecked = addr === selectedActiveAddress ? 'checked' : '';
+        const card = document.createElement('div');
+        
+        card.style.cssText = `display:flex; align-items:flex-start; justify-content:space-between; background:${isChecked ? '#f0fdf4' : '#f8fafc'}; border:1px solid ${isChecked ? '#16a34a' : '#cbd5e1'}; padding:10px 12px; border-radius:10px; font-size:0.78rem; font-weight:600; color:#0f172a; margin-bottom:8px; width:100%; box-sizing:border-box;`;
+        
+        card.innerHTML = `
+            <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; flex:1; overflow:hidden;">
+                <input type="radio" name="selectedDeliveryAddressRadio" value="${idx}" ${isChecked} onchange="selectActiveAddressByIndex(${idx})" style="margin-top:2px; flex-shrink:0;">
+                <span style="word-break:break-word; white-space:normal; line-height:1.4; flex:1;">📍 ${addr}</span>
+            </label>
+            <button type="button" onclick="deleteSavedAddress(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:3px 8px; font-size:0.7rem; font-weight:700; cursor:pointer; margin-left:8px; flex-shrink:0;" title="Delete Address">Delete</button>
+        `;
+        listContainer.appendChild(card);
     });
+}
 
-    formData.append('totalAmount', grandTotal.toFixed(2));
-    formData.append('configDetails', JSON.stringify(finalMetaConfig));
-    formData.append('address', selectedActiveAddress);
-    formData.append('customerName', sessionActiveUser);
-    formData.append('phone', localStorage.getItem('printAppUserIdentity') || 'N/A');
-    formData.append('deliveryTip', window.currentDeliveryTip || 0);
-    formData.append('paymentMode', paymentMode);
-
-    // 🔥 Helper function for order success sync
-    const finalizeOrderSuccess = async (orderId) => {
-        const historyKey = `history_${sessionActiveUser}`;
-        const currentHistoryArray = JSON.parse(localStorage.getItem(historyKey) || '[]');
+window.deleteSavedAddress = function(idx) {
+    if (confirm("⚠️ Are you sure you want to delete this address?")) {
+        const removedAddr = window.savedUserAddresses[idx];
+        window.savedUserAddresses.splice(idx, 1);
+        localStorage.setItem('saved_addresses', JSON.stringify(window.savedUserAddresses));
         
-        const newOrderPayload = { 
-            orderId: orderId,
-            date: new Date().toLocaleString(), 
-            amount: grandTotal.toFixed(2), 
-            status: initialOrderStatus, 
-            details: finalMetaConfig, 
-            address: selectedActiveAddress,
-            deliveryTip: window.currentDeliveryTip || 0
-        };
-        
-        currentHistoryArray.push(newOrderPayload);
-        localStorage.setItem(historyKey, JSON.stringify(currentHistoryArray));
-
-        try {
-            await fetch('/api/admin/inventory/decrement', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ items: finalMetaConfig })
-            });
-        } catch (e) {
-            console.error("Inventory decrement sync error:", e);
+        if (selectedActiveAddress === removedAddr) {
+            selectedActiveAddress = window.savedUserAddresses.length > 0 ? window.savedUserAddresses[0] : "";
+            localStorage.setItem('selected_active_address', selectedActiveAddress);
         }
-    };
-
-    // 🔥 If Cash on Delivery (COD) is selected, bypass Razorpay completely
-    if (paymentMode === 'cod' || paymentMode === 'cash') {
-        try {
-            const response = await fetch('/api/create-order', { method: 'POST', body: formData });
-            const data = await response.json();
-            if (data.success) {
-                alert('🎉 Order Placed Successfully via Cash on Delivery!');
-                await finalizeOrderSuccess(data.order_id);
-                
-                window.cartPrintJobsArray = [];
-                window.cartSnacksArray = [];
-                window.currentDeliveryTip = 0;
-                persistCartStateData();
-                toggleCartDrawer(false);
-
-                if (typeof renderOrderHistoryUI === 'function') {
-                    renderOrderHistoryUI(sessionActiveUser);
-                }
-                if (typeof navigateDrawerSection === 'function') {
-                    navigateDrawerSection('order_tracking');
-                }
-                loadDynamicStoreProducts();
-                return;
-            } else {
-                alert(`⚠️ Error: ${data.message || 'Failed to create order'}`);
-                return;
-            }
-        } catch (err) {
-            alert("❌ Connection error during COD order placement.");
-            return;
-        }
+        renderSavedAddressesUI();
+        alert("✅ Address deleted successfully!");
     }
+};
 
-        if (paymentMode === 'wallet') {
-            let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
-            if (currentWalletCash < grandTotal) {
-                alert(`❌ Insufficient wallet balance! You have ₹${currentWalletCash.toFixed(2)}, but grand total is ₹${grandTotal.toFixed(2)}. Please recharge your wallet.`);
-                return;
-            }
+window.selectActiveAddressByIndex = function(idx) {
+    if (window.savedUserAddresses[idx]) {
+        selectedActiveAddress = window.savedUserAddresses[idx];
+        localStorage.setItem('selected_active_address', selectedActiveAddress);
+        renderSavedAddressesUI();
+    }
+};
 
-            let newBalance = currentWalletCash - grandTotal;
-            localStorage.setItem(`wallet_cash_${sessionActiveUser}`, newBalance.toFixed(2));
-            synchronizeWalletInterfaceBalance();
-            formData.append('paymentMode', 'wallet');
+window.openAddressManagerModal = function() {
+    const modal = document.getElementById('addressManagerModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        history.pushState({ addressModalOpen: true }, '', '');
+        setTimeout(() => { 
+            if (typeof initRealGoogleMap === 'function') {
+                initRealGoogleMap(); 
+            } else if (googleDeliveryMap) {
+                google.maps.event.trigger(googleDeliveryMap, 'resize');
+            }
+        }, 300);
+    }
+};
 
-            try {
-                const response = await fetch('/api/create-order', { method: 'POST', body: formData });
-                const data = await response.json();
-                if (data.success) {
-                    alert('🎉 Order Placed Successfully using Print From Home Wallet!');
-                    await finalizeOrderSuccess(data.order_id);
-                    return;
-                }
-            } catch (err) {
-                alert("❌ Wallet order placement error.");
-                return;
-            }
-        } else {
-            formData.append('paymentMode', paymentMode);
-            try {
-                const response = await fetch('/api/create-order', { method: 'POST', body: formData });
-                const data = await response.json();
-                if (!data.success) {
-                    alert(`⚠️ Error: ${data.message || 'Failed to create order'}`);
-                    return;
-                }
+window.closeAddressManagerModal = function() {
+    const modal = document.getElementById('addressManagerModal');
+    if (modal) modal.style.display = 'none';
+};
 
-                if (paymentMode === 'cod') {
-                    alert('🎉 Order Placed Successfully via Cash on Delivery!');
-                    await finalizeOrderSuccess(data.order_id);
-                    return;
-                }
-
-                const options = {
-                    key: data.key_id,
-                    amount: data.amount,
-                    currency: 'INR',
-                    name: 'Print From Home',
-                    order_id: data.rzp_order_id,
-                    handler: async function (response) {
-                        try {
-                            const verifyRes = await fetch('/api/verify-payment', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    orderId: data.order_id,
-                                    paymentId: response.razorpay_payment_id
-                                })
-                            });
-                            const verifyData = await verifyRes.json();
-                            if (verifyData.success) {
-                                alert('🎉 Payment Successful!');
-                                await finalizeOrderSuccess(data.order_id);
-                            }
-                        } catch (err) {
-                            alert('🎉 Payment Recorded Successfully!');
-                            await finalizeOrderSuccess(data.order_id);
-                        }
-                    },
-                    theme: { color: '#F4C430' }
-                };
-
-                const rzp1 = new Razorpay(options);
-                rzp1.open();
-            } catch (error) {
-                alert('❌ Connection Breakdown during order placement.');
-            }
-        }
-    };
-
-    function synchronizeWalletInterfaceBalance() {
-        const sessionActiveUser = localStorage.getItem('printAppUser');
-        const balanceDisplayNode = document.getElementById('headerWalletDisplayBalance');
-        const drawerWalletText = document.getElementById('walletDrawerBalanceText');
-        if(!balanceDisplayNode) return;
-        if(!sessionActiveUser) { 
-            balanceDisplayNode.textContent = "₹0.00"; 
-            if(drawerWalletText) drawerWalletText.textContent = "₹0";
-            return; 
-        }
-        let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
-        balanceDisplayNode.textContent = `₹${currentWalletCash.toFixed(2)}`;
-        if(drawerWalletText) drawerWalletText.textContent = `₹${currentWalletCash.toFixed(2)}`;
-    }
-    window.synchronizeWalletInterfaceBalance = synchronizeWalletInterfaceBalance;
-
-  window.refreshInvoiceTabState = function() {
+window.refreshInvoiceTabState = function() {
     const sideInvoicePanel = document.getElementById('sidebarPricingPanel');
     const layoutContainer = document.getElementById('mainLayoutAppContainer');
     const uploadInitialScreen = document.getElementById('uploadScreenInitialState');
@@ -2267,7 +2020,6 @@ let subtotal = totalPrintVal + totalSnacksVal;
     if (!activeTabIsStore) return;
 
     if (masterFilesArray && masterFilesArray.length > 0) {
-        // 📄 File upload ho chuki hai: Upload screen ko hide karo, Configuration screen ko dikhao
         if (uploadInitialScreen) {
             uploadInitialScreen.classList.add('hidden');
             uploadInitialScreen.style.setProperty('display', 'none', 'important');
@@ -2287,14 +2039,13 @@ let subtotal = totalPrintVal + totalSnacksVal;
             if (layoutContainer) layoutContainer.style.gridTemplateColumns = '1fr'; 
         }
     } else {
-        // ❌ Koi file nahi hai: Sirf Upload screen dikhegi, Configuration screen ko FORCEFULLY hide karo
         if (uploadInitialScreen) {
             uploadInitialScreen.classList.remove('hidden');
             uploadInitialScreen.style.setProperty('display', 'block', 'important');
         }
         if (configWorkspaceScreen) {
             configWorkspaceScreen.classList.add('hidden');
-            configWorkspaceScreen.style.setProperty('display', 'none', 'important'); // Yeh button ko home page se 100% gayab rakhega!
+            configWorkspaceScreen.style.setProperty('display', 'none', 'important');
         }
         if (sideInvoicePanel) sideInvoicePanel.classList.add('hidden');
         if (layoutContainer) { 
@@ -2305,12 +2056,11 @@ let subtotal = totalPrintVal + totalSnacksVal;
     updateFloatingCartBar();
 };
 
-    window.forceReturnToUploadView = function() {
-        masterFilesArray = []; sessionStorage.removeItem('savedPrintFiles');
-        if(multiFilesContainer) multiFilesContainer.innerHTML = '';
-        refreshInvoiceTabState(); calculateTotal();
-    };
-
+window.forceReturnToUploadView = function() {
+    masterFilesArray = []; sessionStorage.removeItem('savedPrintFiles');
+    if(multiFilesContainer) multiFilesContainer.innerHTML = '';
+    refreshInvoiceTabState(); calculateTotal();
+};
     // 🤖 BILINGUAL AI ASSISTANT & SUPPORT LOGIC (ENGLISH & HINDI)
     let currentAiLang = 'en'; // Default English
 
