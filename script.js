@@ -2109,7 +2109,7 @@ window.renderCartDrawerContents = function() {
             initialOrderStatus = "Order Placed & Picking";
         }
 
-    let subtotal = totalPrintVal + totalSnacksVal;
+let subtotal = totalPrintVal + totalSnacksVal;
     let delivery = (subtotal >= 99 || subtotal === 0) ? 0 : 25;
     let rainFee = window.isRainSurgeActive ? 15 : 0;
     let grandTotal = subtotal + delivery + rainFee + (window.currentDeliveryTip || 0);
@@ -2193,7 +2193,7 @@ window.renderCartDrawerContents = function() {
             alert("❌ Connection error during COD order placement.");
             return;
         }
-    }
+    }   
 
         if (paymentMode === 'wallet') {
             let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
