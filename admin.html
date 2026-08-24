@@ -363,8 +363,6 @@
             <li class="sidebar-item" id="nav_marketing" onclick="switchAdminTab('marketing')">📢 Marketing & Alerts</li>
             <li class="sidebar-item" id="nav_fees" onclick="switchAdminTab('fees')">⚙️ Fee & Coupons Setup</li>
         </ul>
-
-
     </nav>
 
     <div class="admin-main-content">
@@ -376,79 +374,64 @@
             </div>
 
             <div class="header-action-group">
-                <!-- 🏪 Store QR Screen Link -->
-                <a href="/store-qr" target="_blank" class="toggle-badge-btn btn-storeqr">
-                    📱 Store QR Screen
-                </a>
-                <button type="button" class="toggle-badge-btn btn-history" onclick="toggleOldOrdersArchiveModal(true)">
-                    📁 Order History
-                </button>
-                <button type="button" class="toggle-badge-btn btn-scanner" onclick="openBarcodeScannerModal()">
-                    📷 Scan Barcode
-                </button>
-                <!-- 🌧️ Manual Rain Surge Admin Toggle Button -->
-                <button type="button" id="rainSurgeToggleBtn" class="toggle-badge-btn btn-rain-off" onclick="toggleAdminRainSurge()">
-                    🌧️ Rain Surge: <span id="rainSurgeStateText">OFF</span>
-                </button>
-                <button type="button" id="autoPrintToggleBtn" class="toggle-badge-btn btn-autoprint-on" onclick="toggleAutoPrintEngine()">
-                    🖨️ Auto-Print: <span id="autoPrintStatusText">ON</span>
-                </button>
-                <button type="button" id="storeStatusToggleBtn" class="toggle-badge-btn btn-store-open" onclick="toggleStoreStatus()">
-                    🏪 Store: <span id="storeStatusStateText">OPEN</span>
-                </button>
+                <a href="/store-qr" target="_blank" class="toggle-badge-btn btn-storeqr">📱 Store QR Screen</a>
+                <button type="button" class="toggle-badge-btn btn-history" onclick="toggleOldOrdersArchiveModal(true)">📁 Order History</button>
+                <button type="button" class="toggle-badge-btn btn-scanner" onclick="openBarcodeScannerModal()">📷 Scan Barcode</button>
+                <button type="button" id="rainSurgeToggleBtn" class="toggle-badge-btn btn-rain-off" onclick="toggleAdminRainSurge()">🌧️ Rain Surge: <span id="rainSurgeStateText">OFF</span></button>
+                <button type="button" id="autoPrintToggleBtn" class="toggle-badge-btn btn-autoprint-on" onclick="toggleAutoPrintEngine()">🖨️ Auto-Print: <span id="autoPrintStatusText">ON</span></button>
+                <button type="button" id="storeStatusToggleBtn" class="toggle-badge-btn btn-store-open" onclick="toggleStoreStatus()">🏪 Store: <span id="storeStatusStateText">OPEN</span></button>
                 <button type="button" id="btnInstallAdmin">📥 Install Admin App</button>
             </div>
         </header>
 
-           <!-- TAB 1: DASHBOARD & PROFIT GRAPH SECTION -->
-       
-           <div id="section_dashboard" class="admin-section">
-             <div class="section-heading-bar" style="margin-bottom: 16px;">
-                 <h2>📊 Dashboard Analytics</h2>
-                 <div style="display: flex; align-items: center; gap: 8px;">
+        <!-- TAB 1: DASHBOARD -->
+        <div id="section_dashboard" class="admin-section active">
+            <div class="section-heading-bar" style="margin-bottom: 16px;">
+                <h2>📊 Dashboard Analytics</h2>
+                <div style="display: flex; align-items: center; gap: 8px;">
                     <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-sub);">Filter Date:</label>
                     <input type="date" id="dashboardDateFilter" onchange="fetchDashboardStats()" style="padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-card); color: white; font-size: 0.78rem; font-weight: 700; outline: none;">
-                 </div>
-                 </div>
- 
-                 <div class="stats-grid">
-                 <div class="stat-card">
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
                     <span class="stat-title">Total Orders (Selected Date)</span>
                     <span class="stat-num" id="statDashTotalOrders">0</span>
-                 </div>
-                 <div class="stat-card">
+                </div>
+                <div class="stat-card">
                     <span class="stat-title">Total Sales</span>
                     <span class="stat-num" id="statDashTotalSales" style="color: #38bdf8;">₹0</span>
-                 </div>
-                 <div class="stat-card">
+                </div>
+                <div class="stat-card">
                     <span class="stat-title">Store Varieties</span>
                     <span class="stat-num" id="statDashVarieties" style="color: #38bdf8;">0</span>
-                  </div>
-                 <div class="stat-card">
+                </div>
+                <div class="stat-card">
                     <span class="stat-title">Stock Valuation</span>
                     <span class="stat-num" id="statDashStockVal" style="color: var(--accent-yellow);">₹0</span>
-                  </div>
-               
-                 <div class="stat-card">
+                </div>
+                <div class="stat-card">
                     <span class="stat-title">Net Profit (Selected Date)</span>
-                 <span class="stat-num" id="statDashNetProfit" style="color: var(--accent-green);">₹0</span>
-                 </div>
-                 <div class="stat-card">
+                    <span class="stat-num" id="statDashNetProfit" style="color: var(--accent-green);">₹0</span>
+                </div>
+                <div class="stat-card">
                     <span class="stat-title">Delivery Fees Coll.</span>
                     <span class="stat-num" id="statDashDeliveryFees" style="color: var(--accent-blue);">₹0</span>
-                 </div>
-                 <div class="stat-card" id="restockSuggestionCard">
+                </div>
+                <div class="stat-card" id="restockSuggestionCard">
                     <span class="stat-title">🚨 Predictive Restock</span>
                     <div id="restockList" style="font-size: 0.75rem; color: var(--accent-red);">Checking sales...</div>
-                  </div.>
-                 </div>
+                </div>
+            </div>
 
-                 <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px;">
-                   <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px;">📈 Store Financial & Profit/Loss Overview</h3>
-                 <div style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
+            <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px;">
+                <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px;">📈 Store Financial & Profit/Loss Overview</h3>
+                <div style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
                     <canvas id="storeProfitTrendChart" style="width: 100%; max-height: 250px;"></canvas>
-                 </div>
-                 </div>
+                </div>
+            </div>
+        </div>
 
         <!-- TAB 2: ORDERS SECTION -->
         <div id="section_orders" class="admin-section">
@@ -456,18 +439,15 @@
                 <h2>📦 Today's Live Print & Product Queue (Newest First)</h2>
                 <button type="button" class="audio-test-btn" onclick="playLoudOrderChime()">🔔 Test Sound Alert</button>
             </div>
-
             <div class="order-queue-list" id="adminOrderQueue">
-                <div style="text-align: center; padding: 40px; color: var(--text-sub);">
-                    ⏳ Connecting to live orders stream...
-                </div>
-                </div>
-               </div>
+                <div style="text-align: center; padding: 40px; color: var(--text-sub);">⏳ Connecting to live orders stream...</div>
+            </div>
+        </div>
 
-             <!-- TAB 3: INVENTORY MANAGEMENT SECTION -->
-             <div id="section_inventory" class="admin-section">
-             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px; margin-bottom: 22px;">
-             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <!-- TAB 3: INVENTORY MANAGEMENT SECTION -->
+        <div id="section_inventory" class="admin-section">
+            <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px; margin-bottom: 22px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                     <h3 style="font-size: 1.15rem; font-weight: 800;">📊 Store Inventory, UPC Barcode & Restock Tracker</h3>
                     <button type="button" onclick="openAddProductModal()" style="background: var(--accent-blue); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; cursor: pointer;">+ Add New Product (Advanced)</button>
                 </div>
@@ -486,7 +466,6 @@
                         <label style="font-size: 0.75rem; color: var(--text-sub); font-weight:700;">HD Product Image (Optional):</label>
                         <input type="file" id="invImageFile" accept="image/*" style="color: white; font-size: 0.8rem;">
                     </div>
-
                     <button type="button" onclick="addNewStockItem()" style="background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; padding: 12px; grid-column: 1 / -1;">+ Save / Restock Product</button>
                 </div>
             </div>
@@ -516,14 +495,13 @@
             </div>
         </div>
 
-                     <!-- TAB 4: marketing and broadcast SECTION -->
+        <!-- TAB 4: MARKETING SECTION -->
         <div id="section_marketing" class="admin-section">
             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; max-width: 750px;">
                 <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 8px;">📢 Broadcast Gmail Notifications</h3>
                 <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 20px;">Send personalized 2026 festive offers, deals, or stock alerts directly to all registered users' Gmail inboxes.</p>
                 
                 <div style="display: flex; flex-direction: column; gap: 14px;">
-                    
                     <div style="background: rgba(0, 112, 243, 0.08); border: 1px solid rgba(0, 112, 243, 0.3); border-radius: 12px; padding: 14px;">
                         <label style="font-size: 0.8rem; font-weight: 800; color: #38bdf8; display: block; margin-bottom: 6px;">⚡ Quick Festival / Holiday Template (2026):</label>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -544,7 +522,7 @@
                             <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-sub);">Message Body (Personalized Greeting Added Automatically):</label>
                             <button type="button" onclick="saveCurrentDraftAsPermanent()" style="background: transparent; border: none; color: #38bdf8; font-size: 0.72rem; font-weight: 700; cursor: pointer;">💾 Save as Default</button>
                         </div>
-                        <textarea id="broadcastMessageInput" rows="6" placeholder="We are excited to share our latest festive calendar deals with you! As a valued member of Print From Home, we are offering you an exclusive discount on all your printing requirements. Visit our store to check out the new offers and place your order today." style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.85rem; outline: none; resize: vertical;"></textarea>
+                        <textarea id="broadcastMessageInput" rows="6" placeholder="We are excited to share our latest festive calendar deals with you..." style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.85rem; outline: none; resize: vertical;"></textarea>
                     </div>
 
                     <button type="button" onclick="sendBroadcastNotification(event)" style="background: var(--accent-blue); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 800; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
@@ -553,41 +531,43 @@
                 </div>
             </div>
         </div>
-                  <!-- TAB 5: DEDICATED STORE FEES & COUPONS SETUP PANEL -->
-                       <div id="section_fees" class="admin-section">
-                      <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 28px; max-width: 650px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-                     <h3 style="font-size: 1.25rem; font-weight: 900; color: white; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">⚙️ Store Fees & Live Coupons Management</h3>
-                   <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 22px;">Configure instant delivery charges, platform fees, rain surge surcharges, and active customer discount codes.</p>
 
-                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px;">
-                 <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
-                 <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Delivery Fee (₹)</label>
-                 <input type="number" id="adminSettingDeliveryFee" value="25" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
-                 </div>
-                 <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
-                 <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Handling Fee (₹)</label>
-                 <input type="number" id="adminSettingHandlingFee" value="5" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
-                 </div>
-                 <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
-                 <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Rain Surge (₹)</label>
-                 <input type="number" id="adminSettingRainFee" value="15" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
-                 </div>
-              </div>
+        <!-- TAB 5: DEDICATED STORE FEES & COUPONS SETUP PANEL -->
+        <div id="section_fees" class="admin-section">
+            <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 28px; max-width: 650px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                <h3 style="font-size: 1.25rem; font-weight: 900; color: white; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">⚙️ Store Fees & Live Coupons Management</h3>
+                <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 22px;">Configure instant delivery charges, platform fees, rain surge surcharges, and active customer discount codes.</p>
 
-        <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
-            <label style="font-size: 0.78rem; font-weight: 800; color: var(--text-main); display: block; margin-bottom: 8px;">🎫 Add New Discount Coupon</label>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="adminNewCouponCode" placeholder="Code (e.g. SAVE50)" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; outline: none;" />
-                <input type="text" id="adminNewCouponDesc" placeholder="Description (e.g. Flat ₹50 off)" style="flex: 2; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-size: 0.85rem; outline: none;" />
-                <button type="button" onclick="adminAddNewCoupon()" style="background: var(--accent-green); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 800; cursor: pointer;">Add</button>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px;">
+                    <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
+                        <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Delivery Fee (₹)</label>
+                        <input type="number" id="adminSettingDeliveryFee" value="25" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
+                    </div>
+                    <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
+                        <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Handling Fee (₹)</label>
+                        <input type="number" id="adminSettingHandlingFee" value="5" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
+                    </div>
+                    <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
+                        <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Rain Surge (₹)</label>
+                        <input type="number" id="adminSettingRainFee" value="15" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
+                    </div>
+                </div>
+
+                <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+                    <label style="font-size: 0.78rem; font-weight: 800; color: var(--text-main); display: block; margin-bottom: 8px;">🎫 Add New Discount Coupon</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="adminNewCouponCode" placeholder="Code (e.g. SAVE50)" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; outline: none;" />
+                        <input type="text" id="adminNewCouponDesc" placeholder="Description (e.g. Flat ₹50 off)" style="flex: 2; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-size: 0.85rem; outline: none;" />
+                        <button type="button" onclick="adminAddNewCoupon()" style="background: var(--accent-green); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 800; cursor: pointer;">Add</button>
+                    </div>
+                </div>
+
+                <button type="button" onclick="saveAdminStoreSettings()" style="width: 100%; padding: 14px; background: var(--accent-green); color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">Save Store Settings & Fees</button>
             </div>
         </div>
 
-        <button type="button" onclick="saveAdminStoreSettings()" style="width: 100%; padding: 14px; background: var(--accent-green); color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">Save Store Settings & Fees</button>
     </div>
-
-    </div>
-
+    
     <!-- ⚙️ ADMIN FEES & COUPONS MANAGEMENT PANEL -->
     <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:20px; max-width:600px; margin:20px auto; font-family:'Poppins', sans-serif; box-shadow:0 4px 15px rgba(0,0,0,0.05);">
         <h3 style="font-size:1.1rem; font-weight:900; color:#0f172a; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">⚙️ Store Fees & Coupons Control</h3>
