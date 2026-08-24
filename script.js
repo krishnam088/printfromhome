@@ -2416,28 +2416,43 @@ let subtotal = totalPrintVal + totalSnacksVal;
         }, 500);
     };
 
-// 🔥 Fully Safe Admin Fees Sync (Stops 404 console errors completely)
-// 🔥 User-Facing Fees & Coupons Sync Engine (Client-Side)
+// 🔥 Live Admin Settings Sync Engine (No Hardcoded Defaults - Strictly Admin Controlled)
+window.adminDeliveryFee = parseFloat(localStorage.getItem('cached_delivery_fee')) || 0;
+window.adminHandlingFee = parseFloat(localStorage.getItem('cached_handling_fee')) || 0;
+window.adminRainFee = parseFloat(localStorage.getItem('cached_rain_fee')) || 0;
+window.adminCouponsList = JSON.parse(localStorage.getItem('cached_coupons') || '[]');
+
 window.loadAdminConfiguredFeesAndCoupons = async function() {
-    try {
-        const res = await fetch('/api/admin/settings');
-        if (res && res.ok) {
-            const data = await res.json();
-            if (data && data.success && data.settings) {
-                window.adminDeliveryFee = parseFloat(data.settings.deliveryFee) || 25.00;
-                window.adminHandlingFee = parseFloat(data.settings.handlingFee) || 5.00;
-                window.adminRainFee = parseFloat(data.settings.rainFee) || 15.00;
-                window.adminCouponsList = data.settings.coupons || window.adminCouponsList;
-            }
-        }
-    } catch (e) {
-        // Fallback to defaults silently if offline
-    }
+    try {
+        const res = await fetch('/api/admin/settings');
+        if (res && res.ok) {
+            const data = await res.json();
+            if (data && data.success && data.settings) {
+                window.adminDeliveryFee = parseFloat(data.settings.deliveryFee) || 0;
+                window.adminHandlingFee = parseFloat(data.settings.handlingFee) || 0;
+                window.adminRainFee = parseFloat(data.settings.rainFee) || 0;
+                window.adminCouponsList = data.settings.coupons || [];
+
+                // 💾 Save to localStorage so refresh shows it instantly without waiting
+                localStorage.setItem('cached_delivery_fee', window.adminDeliveryFee);
+                localStorage.setItem('cached_handling_fee', window.adminHandlingFee);
+                localStorage.setItem('cached_rain_fee', window.adminRainFee);
+                localStorage.setItem('cached_coupons', JSON.stringify(window.adminCouponsList));
+
+                // 🔄 Recalculate bill instantly with live admin values
+                if (typeof calculateTotal === 'function') {
+                    calculateTotal();
+                }
+            }
+        }
+    } catch (e) {
+        console.warn("Could not sync live settings from server.");
+    }
 };
 
 // Automatically load fees and coupons when client app starts
 document.addEventListener('DOMContentLoaded', () => {
-    loadAdminConfiguredFeesAndCoupons();
+    loadAdminConfiguredFeesAndCoupons();
 });
 
 
