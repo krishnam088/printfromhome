@@ -434,8 +434,9 @@ window.toggleCouponDrawer = function() {
             }
         }
 
+
         // 🔥 Dynamic Admin Rain Surge Fee Sync
-        let activeRainFee = window.adminRainFee !== undefined ? window.adminRainFee : 15.00;
+        let activeRainFee = window.adminRainFee !== undefined ? window.adminRainFee : 0;
         let rainFee = window.isRainSurgeActive ? activeRainFee : 0;
         let grandTotalCombined = finalDocumentCost + accurateDeliveryCharge + rainFee + (window.currentDeliveryTip || 0);
 
