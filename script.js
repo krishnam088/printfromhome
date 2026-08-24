@@ -1731,22 +1731,8 @@ window.updateFloatingCartBar = function() {
 // 🔥 BULLETPROOF UNIVERSAL CART DRAWER & ITEMS RENDERER
 // ==========================================
 window.renderCartDrawerContents = function() {
-    let container = document.getElementById('cartDrawerItemsList') || 
-                    document.getElementById('cartItemsListContainer') || 
-                    document.getElementById('cartItemsContainer');
-    
-    if (!container) {
-        const cartDrawerBody = document.getElementById('cartDrawer') || document.querySelector('.cart-drawer') || document.querySelector('[id*="cart"]');
-        if (cartDrawerBody) {
-            container = document.createElement('div');
-            container.id = 'cartDrawerItemsList';
-            container.style.cssText = "margin-bottom: 15px; width: 100%;";
-            cartDrawerBody.prepend(container);
-        } else {
-            return;
-        }
-    }
-    
+    const container = document.getElementById('cartDrawerItemsList');
+    if (!container) return;
     container.innerHTML = '';
     
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
@@ -1757,16 +1743,16 @@ window.renderCartDrawerContents = function() {
     if (!hasItems) {
         container.innerHTML = `<p style="font-size:0.82rem; color:#64748b; text-align:center; padding:20px;">Your cart is empty.</p>`;
         if (typeof calculateTotal === 'function') calculateTotal();
-        if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
         return;
     }
 
     const wrapper = document.createElement('div');
-    wrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
+    wrapper.style.cssText = "display:flex; flex-direction:column; gap:10px; width:100%;";
 
     let totalPagesCount = 0;
     let totalItemsCount = 0;
 
+    // 1. Render Print Jobs in Cart
     window.cartPrintJobsArray.forEach((job, idx) => {
         let rate = (job.printType === 'bw') ? 3 : 10;
         let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
@@ -1774,52 +1760,47 @@ window.renderCartDrawerContents = function() {
         totalItemsCount += 1;
 
         const card = document.createElement('div');
-        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02);";
+        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 3px rgba(0,0,0,0.02); gap:10px;";
 
         card.innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
-                    <div style="font-size:1.6rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px; flex-shrink:0;">📄</div>
-                    <div style="overflow:hidden; flex:1;">
-                        <div title="${job.fileName}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
-                        <div style="font-size:0.68rem; color:#64748b; font-weight:600; margin-top:2px;">${job.pages} pgs | ${job.printType.toUpperCase()} | Copies: ${job.copies}</div>
-                    </div>
-                </div>
-                <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
-                    <div style="font-weight:900; font-size:0.85rem; color:#065f46;">₹${jobTotal}</div>
-                    <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:5px 8px; font-size:0.7rem; cursor:pointer;" title="Remove Print Job">🗑️</button>
+            <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                <div style="font-size:1.5rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📄</div>
+                <div style="overflow:hidden; flex:1;">
+                    <div title="${job.fileName}" style="font-weight:700; font-size:0.8rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
+                    <div style="font-size:0.68rem; color:#64748b; font-weight:600; margin-top:2px;">${job.pages} pgs | ${job.printType.toUpperCase()} | Copies: ${job.copies}</div>
                 </div>
             </div>
-            <div style="background:#f8fafc; border:1px solid #edf2f7; border-radius:8px; padding:6px 10px; font-size:0.68rem; color:#64748b; display:flex; justify-content:space-between; align-items:center;">
-                <span>F${idx+1}: ${job.fileName} (${job.pages}pg x ${job.copies}cp x ₹${rate})</span>
-                <span style="font-weight:700; color:#0f172a;">₹${jobTotal}</span>
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                <div style="font-weight:800; font-size:0.8rem; color:#065f46;">₹${jobTotal}</div>
+                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:5px; font-size:0.7rem; cursor:pointer;" title="Remove">🗑️</button>
             </div>
         `;
         wrapper.appendChild(card);
     });
 
+    // 2. Render Snacks / Store Products in Cart
     window.cartSnacksArray.forEach((snack, idx) => {
         totalItemsCount += snack.qty;
         const card = document.createElement('div');
-        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.02); gap:10px;";
+        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 3px rgba(0,0,0,0.02); gap:10px;";
         
-        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:42px; height:42px; object-fit:contain; border-radius:8px;" />` : `<div style="font-size:1.5rem; width:42px; height:42px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📦</div>`;
+        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:40px; height:40px; object-fit:contain; border-radius:8px;" />` : `<div style="font-size:1.4rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📦</div>`;
 
         card.innerHTML = `
             <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
                 ${thumbImg}
                 <div style="overflow:hidden; flex:1;">
-                    <div title="${snack.name}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</div>
-                    <div style="font-size:0.72rem; color:#059669; font-weight:800; margin-top:2px;">₹${snack.price * snack.qty} <span style="color:#64748b; font-weight:500; font-size:0.65rem;">(₹${snack.price} ea)</span></div>
+                    <div title="${snack.name}" style="font-weight:700; font-size:0.8rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</div>
+                    <div style="font-size:0.7rem; color:#059669; font-weight:800; margin-top:2px;">₹${snack.price * snack.qty}</div>
                 </div>
             </div>
-            <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
-                <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:2px 6px; gap:8px;">
-                    <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; font-size:0.95rem; cursor:pointer; color:#0f172a;">-</button>
-                    <span style="font-weight:800; font-size:0.82rem; color:#0f172a;">${snack.qty}</span>
-                    <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; font-size:0.95rem; cursor:pointer; color:#065f46;">+</button>
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:2px 6px; gap:6px;">
+                    <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; font-size:0.9rem; cursor:pointer; color:#0f172a;">-</button>
+                    <span style="font-weight:800; font-size:0.8rem; color:#0f172a;">${snack.qty}</span>
+                    <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; font-size:0.9rem; cursor:pointer; color:#065f46;">+</button>
                 </div>
-                <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:6px 8px; font-size:0.7rem; cursor:pointer;" title="Remove Item">🗑️</button>
+                <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:5px; font-size:0.7rem; cursor:pointer;" title="Remove">🗑️</button>
             </div>
         `;
         wrapper.appendChild(card);
@@ -1827,19 +1808,26 @@ window.renderCartDrawerContents = function() {
 
     container.appendChild(wrapper);
 
+    // Update shipment count text
     const shipmentTextNode = document.getElementById('shipmentItemsCountText');
     if (shipmentTextNode) {
         shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
     }
 
-    const upsellingSection = document.createElement('div');
-    upsellingSection.style.cssText = "margin-top: 15px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;";
-    upsellingSection.innerHTML = `
-        <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:10px;">You might also like</h4>
-        <div id="cartDrawerUpsellingGrid" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;"></div>
-    `;
-    container.appendChild(upsellingSection);
+    // Sync User Name & Mobile from Saved Delivery Address
+    const identityNode = document.getElementById('cartUserIdentitySummary');
+    if (identityNode) {
+        let activeAddr = localStorage.getItem('selected_active_address') || "";
+        let activeUser = localStorage.getItem('printAppUser') || "Customer";
+        if (activeAddr.includes('Contact:')) {
+            let contactPart = activeAddr.split('Contact:')[1].trim();
+            identityNode.textContent = `Order for ${contactPart}`;
+        } else {
+            identityNode.textContent = `Order for ${activeUser}`;
+        }
+    }
 
+    // Render Inventory Products in "You Might Also Like" Slider
     const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
     if (upsellingGrid) {
         if (window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
