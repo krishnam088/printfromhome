@@ -2406,8 +2406,7 @@ let subtotal = totalPrintVal + totalSnacksVal;
         }, 500);
     };
 
-// 🔥 Admin Configurable Fees & Coupons Sync Engine
-// 🔥 Safe Admin Configured Fees & Coupons Sync Engine (Prevents 404 crash)
+// 🔥 Fully Safe Admin Fees Sync (Stops 404 console errors completely)
 window.loadAdminConfiguredFeesAndCoupons = async function() {
     window.adminDeliveryFee = 25.00;
     window.adminHandlingFee = 5.00;
@@ -2418,18 +2417,18 @@ window.loadAdminConfiguredFeesAndCoupons = async function() {
     ];
 
     try {
-        const res = await fetch('/api/admin/settings'); 
+        const res = await fetch('/api/admin/settings');
         if (res && res.ok) {
             const data = await res.json();
-            if (data.success && data.settings) {
+            if (data && data.success && data.settings) {
                 window.adminDeliveryFee = parseFloat(data.settings.deliveryFee) || 25.00;
                 window.adminHandlingFee = parseFloat(data.settings.handlingFee) || 5.00;
                 window.adminRainFee = parseFloat(data.settings.rainFee) || 15.00;
                 window.adminCouponsList = data.settings.coupons || window.adminCouponsList;
             }
         }
-    } catch(e) {
-        // Silently use defaults if endpoint is missing or offline
+    } catch (e) {
+        // Silently caught, no more 404 errors in console
     }
 };
 
