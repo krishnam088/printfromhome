@@ -2426,6 +2426,15 @@ window.adminCouponsList = [
     { code: 'PRINT20', desc: 'Flat ₹20 off on print orders', discount: 20 }
 ];
 
+// 🔥 User-Facing Fees & Coupons Sync Engine (Client-Side)
+window.adminDeliveryFee = 25.00;
+window.adminHandlingFee = 5.00;
+window.adminRainFee = 15.00;
+window.adminCouponsList = [
+    { code: 'FREEDEL', desc: 'Free delivery on orders above ₹99', discount: 25 },
+    { code: 'PRINT20', desc: 'Flat ₹20 off on print orders', discount: 20 }
+];
+
 window.loadAdminConfiguredFeesAndCoupons = async function() {
     try {
         const res = await fetch('/api/admin/settings');
@@ -2436,6 +2445,11 @@ window.loadAdminConfiguredFeesAndCoupons = async function() {
                 window.adminHandlingFee = parseFloat(data.settings.handlingFee) || 5.00;
                 window.adminRainFee = parseFloat(data.settings.rainFee) || 15.00;
                 window.adminCouponsList = data.settings.coupons || window.adminCouponsList;
+
+                // 🔥 Server se data aate hi bill ko dobara calculate karo taaki live fees reflect ho jaye!
+                if (typeof calculateTotal === 'function') {
+                    calculateTotal();
+                }
             }
         }
     } catch (e) {
