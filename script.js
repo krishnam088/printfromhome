@@ -509,32 +509,39 @@ let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || fina
         sessionStorage.setItem('savedPrintFiles', JSON.stringify(masterFilesArray.map(i => ({ name: i.name, size: i.size, type: i.type, config: i.config }))));
     }
 
-  function renderFilesUI() {
-    if(!multiFilesContainer) return; 
-    multiFilesContainer.innerHTML = ''; 
-    refreshInvoiceTabState();
-    if (masterFilesArray.length === 0) return;
+ function renderFilesUI() {
+        if(!multiFilesContainer) return; 
+        multiFilesContainer.innerHTML = ''; 
+        refreshInvoiceTabState();
+        if (masterFilesArray.length === 0) return;
 
-    masterFilesArray.forEach((item, index) => {
-        const fileRow = document.createElement('div');
-        fileRow.style.cssText = "background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 10px;";
+        masterFilesArray.forEach((item, index) => {
+            const fileRow = document.createElement('div');
+            fileRow.className = 'blinkit-file-card';
+            fileRow.style.cssText = "background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);";
 
-        let previewThumbnail = `<div style="font-size: 1.8rem;">📄</div>`;
-        if (item.fileUrl && item.fileUrl.startsWith('data:image')) {
-            previewThumbnail = `<img src="${item.fileUrl}" style="width: 45px; height: 55px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;" />`;
-        }
+            const activeColorBw = item.config.printType === 'bw' ? 'active' : '';
+            const activeColorCol = item.config.printType === 'color' ? 'active' : '';
+            const activeOriPort = item.config.orientation === 'portrait' ? 'active' : '';
+            const activeOriLand = item.config.orientation === 'landscape' ? 'active' : '';
 
-        fileRow.innerHTML = `
-            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; border-bottom: 1px solid #edf2f7; padding-bottom: 8px;">
-                <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; cursor: pointer;" onclick="previewFileInA4Studio(${index})">
-                    ${previewThumbnail}
-                    <div style="flex: 1; min-width: 0; overflow: hidden;">
-                        <h4 style="font-weight: 700; font-size: 0.82rem; color: #0f172a; word-break: break-all; white-space: normal; line-height: 1.3; margin: 0;" title="${item.name}">${item.name}</h4>
-                        <span style="font-size: 0.68rem; color: #059669; font-weight: 700;">👁️ Tap to View A4 Preview</span>
+            fileRow.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #edf2f7; padding-bottom: 8px; margin-bottom: 10px; gap: 8px;">
+                    <div style="display: flex; align-items: flex-start; gap: 8px; flex: 1; cursor:pointer;" onclick="previewFileInA4Studio(${index})">
+                        <span style="font-size: 1.1rem; flex-shrink: 0; margin-top: 2px;">📄</span>
+                        <div style="flex: 1; overflow: hidden;">
+                            <!-- 🔥 YAHAN REPLACE KARNA HAI: Wrapped Long File Name -->
+                            <h4 style="font-weight: 700; font-size: 0.85rem; color: #1a202c; white-space: normal; word-break: break-all; overflow-wrap: break-word; line-height: 1.3; margin: 0;" title="${item.name}">${item.name}</h4>
+                            <span style="font-size:0.68rem; color:var(--blinkit-green); font-weight:700; display: block; margin-top: 3px;">👁️ Tap to View A4 Preview</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                        <button type="button" class="add-more-inline-card-btn" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 3px 8px; font-size: 0.7rem; font-weight: 700; border-radius: 6px; cursor: pointer;" onclick="triggerInlineFileUploadClick()">+ Add More</button>
+                        <button type="button" id="removeFile_${index}" style="background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; width: 24px; height: 24px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">&times;</button>
                     </div>
                 </div>
-                <button type="button" id="removeFile_${index}" style="background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; width: 26px; height: 26px; border-radius: 50%; font-weight: bold; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">&times;</button>
-            </div>
+
+                <!-- (Baaki ka options wala hissa waise hi rahega) -->
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
                 <div style="display: flex; flex-direction: column; gap: 2px;">
@@ -2225,9 +2232,9 @@ window.saveAdminStoreSettings = async function() {
     const handlingField = document.getElementById('adminSettingHandlingFee');
     const rainField = document.getElementById('adminSettingRainFee');
 
-    const deliveryFee = deliveryField ? deliveryField.value : 25;
-    const handlingFee = handlingField ? handlingField.value : 5;
-    const rainFee = rainField ? rainField.value : 15;
+    const deliveryFee = deliveryField ? deliveryField.value : 0;
+    const handlingFee = handlingField ? handlingField.value : 0;
+    const rainFee = rainField ? rainField.value : 0;
 
     try {
         const res = await fetch('/api/admin/settings/update', {
