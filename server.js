@@ -1275,30 +1275,47 @@ const handleStatusUpdate = async (req, res) => {
 app.post('/api/admin/orders/update-status', handleStatusUpdate);
 app.post('/api/admin/orders/:orderId/status', handleStatusUpdate);
 
-// 🔥 ADD HERE: Admin Store Settings & Fees Sync & Update Endpoints
-let memoryAdminSettings = {
-    deliveryFee: 25.00,
-    handlingFee: 5.00,
-    rainFee: 15.00,
-    coupons: [
+// 🔥 Persistent Database-Backed Admin Store Settings & Fees Schema
+const storeSettingsSchema = new mongoose.Schema({
+    key: { type: String, unique: true, default: 'global_settings' },
+    deliveryFee: { type: Number, default: 25.00 },
+    handlingFee: { type: Number, default: 5.00 },
+    rainFee: { type: Number, default: 15.00 },
+    coupons: { type: Array, default: [
         { code: 'FREEDEL', desc: 'Free delivery on orders above ₹99', discount: 25 },
         { code: 'PRINT20', desc: 'Flat ₹20 off on print orders', discount: 20 }
-    ]
-};
+    ]}
+});
+const StoreSetting = mongoose.model('StoreSetting', storeSettingsSchema);
 
-app.get('/api/admin/settings', (req, res) => {
-    res.json({ success: true, settings: memoryAdminSettings });
+app.get('/api/admin/settings', async (req, res) => {
+    try {
+        let settings = await StoreSetting.findOne({ key: 'global_settings' });
+        if (!settings) {
+            settings = await StoreSetting.create({ key: 'global_settings' });
+        }
+        res.json({ success: true, settings });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
-app.post('/api/admin/settings/update', (req, res) => {
+app.post('/api/admin/settings/update', async (req, res) => {
     try {
         const { deliveryFee, handlingFee, rainFee, coupons } = req.body;
-        if (deliveryFee !== undefined) memoryAdminSettings.deliveryFee = parseFloat(deliveryFee) || 25;
-        if (handlingFee !== undefined) memoryAdminSettings.handlingFee = parseFloat(handlingFee) || 5;
-        if (rainFee !== undefined) memoryAdminSettings.rainFee = parseFloat(rainFee) || 15;
-        if (coupons !== undefined && Array.isArray(coupons)) memoryAdminSettings.coupons = coupons;
         
-        res.json({ success: true, message: "Settings updated successfully!", settings: memoryAdminSettings });
+        let settings = await StoreSetting.findOne({ key: 'global_settings' });
+        if (!settings) {
+            settings = new StoreSetting({ key: 'global_settings' });
+        }
+
+        if (deliveryFee !== undefined) settings.deliveryFee = parseFloat(deliveryFee) || 25;
+        if (handlingFee !== undefined) settings.handlingFee = parseFloat(handlingFee) || 5;
+        if (rainFee !== undefined) settings.rainFee = parseFloat(rainFee) || 15;
+        if (coupons !== undefined && Array.isArray(coupons)) settings.coupons = coupons;
+        
+        await settings.save();
+        res.json({ success: true, message: "Settings saved permanently to database!", settings });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
