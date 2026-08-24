@@ -395,70 +395,75 @@ window.toggleCouponDrawer = function() {
     // ==========================================
     // 🧮 BULLETPROOF GRAND TOTAL CALCULATOR ENGINE
     // ==========================================
-    window.calculateTotal = function() {
-        try {
-            let totalPrintCost = 0; 
-            let totalBindingCost = 0;
-            
-            let snacksTotal = window.cartSnacksArray ? window.cartSnacksArray.reduce((acc, item) => acc + (parseFloat(item.price || 0) * parseInt(item.qty || 1)), 0) : 0;
-            let printJobsTotal = window.cartPrintJobsArray ? window.cartPrintJobsArray.reduce((acc, job) => acc + (parseInt(job.pages || 1) * (job.printType === 'bw' ? 3 : 10) * parseInt(job.copies || 1) + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0) : 0;
+   window.calculateTotal = function() {
+    try {
+        let totalPrintCost = 0; 
+        let totalBindingCost = 0;
+        
+        let snacksTotal = window.cartSnacksArray ? window.cartSnacksArray.reduce((acc, item) => acc + (parseFloat(item.price || 0) * parseInt(item.qty || 1)), 0) : 0;
+        let printJobsTotal = window.cartPrintJobsArray ? window.cartPrintJobsArray.reduce((acc, job) => acc + (parseInt(job.pages || 1) * (job.printType === 'bw' ? 3 : 10) * parseInt(job.copies || 1) + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0) : 0;
 
-            if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
-                masterFilesArray.forEach((item) => {
-                    const pages = parseInt(item.config.pages) || 1; 
-                    totalPrintCost += (pages * ((item.config.printType === 'bw') ? 3.00 : 10.00)) * item.config.copies;
-                    if (item.config.binding === 'spiral') totalBindingCost += 30.00 * item.config.copies;
-                });
-            }
+        if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
+            masterFilesArray.forEach((item) => {
+                const pages = parseInt(item.config.pages) || 1; 
+                totalPrintCost += (pages * ((item.config.printType === 'bw') ? 3.00 : 10.00)) * item.config.copies;
+                if (item.config.binding === 'spiral') totalBindingCost += 30.00 * item.config.copies;
+            });
+        }
 
-            let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal + printJobsTotal;
-            const freeDeliveryThreshold = 99.00;
-            let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || finalDocumentCost === 0) ? 0.00 : 25.00;
-            
-            const progressBarBox = document.getElementById('freeDeliveryProgressBarBox');
-            const messageText = document.getElementById('freeDeliveryMessageText');
-            const fillBar = document.getElementById('freeDeliveryFillBar');
+        let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal + printJobsTotal;
+        const freeDeliveryThreshold = 99.00;
+        
+        // 🔥 Dynamic Admin Delivery Fee Sync
+        let activeDeliveryFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 25.00;
+        let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || finalDocumentCost === 0) ? 0.00 : activeDeliveryFee;
+        
+        const progressBarBox = document.getElementById('freeDeliveryProgressBarBox');
+        const messageText = document.getElementById('freeDeliveryMessageText');
+        const fillBar = document.getElementById('freeDeliveryFillBar');
 
-            if (progressBarBox && messageText && fillBar) {
-                if (finalDocumentCost >= freeDeliveryThreshold) {
-                    messageText.innerHTML = "🎉 Yay! You have unlocked <b>FREE Delivery</b>!";
-                    fillBar.style.width = "100%";
-                } else {
-                    let neededMore = freeDeliveryThreshold - finalDocumentCost;
-                    let progressPercent = Math.min(100, (finalDocumentCost / freeDeliveryThreshold) * 100);
-                    messageText.innerHTML = `🎉 Add items worth <b>₹${neededMore.toFixed(2)}</b> more for FREE delivery!`;
-                    fillBar.style.width = `${progressPercent}%`;
-                }
-            }
+        if (progressBarBox && messageText && fillBar) {
+            if (finalDocumentCost >= freeDeliveryThreshold) {
+                messageText.innerHTML = "🎉 Yay! You have unlocked <b>FREE Delivery</b>!";
+                fillBar.style.width = "100%";
+            } else {
+                let neededMore = freeDeliveryThreshold - finalDocumentCost;
+                let progressPercent = Math.min(100, (finalDocumentCost / freeDeliveryThreshold) * 100);
+                messageText.innerHTML = `🎉 Add items worth <b>₹${neededMore.toFixed(2)}</b> more for FREE delivery!`;
+                fillBar.style.width = `${progressPercent}%`;
+            }
+        }
 
-            let rainFee = window.isRainSurgeActive ? 15 : 0;
-            let grandTotalCombined = finalDocumentCost + accurateDeliveryCharge + rainFee + (window.currentDeliveryTip || 0);
+        // 🔥 Dynamic Admin Rain Surge Fee Sync
+        let activeRainFee = window.adminRainFee !== undefined ? window.adminRainFee : 15.00;
+        let rainFee = window.isRainSurgeActive ? activeRainFee : 0;
+        let grandTotalCombined = finalDocumentCost + accurateDeliveryCharge + rainFee + (window.currentDeliveryTip || 0);
 
-            const updateUI = (id, val) => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = val;
-            };
+        const updateUI = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val;
+        };
 
-            updateUI('summaryPrint', `₹${(totalPrintCost + printJobsTotal).toFixed(2)}`);
-            updateUI('summaryBinding', `₹${(totalBindingCost + snacksTotal).toFixed(2)}`);
-            updateUI('summaryDelivery', accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`);
-            updateUI('summaryTotal', `₹${grandTotalCombined.toFixed(2)}`);
+        updateUI('summaryPrint', `₹${(totalPrintCost + printJobsTotal).toFixed(2)}`);
+        updateUI('summaryBinding', `₹${(totalBindingCost + snacksTotal).toFixed(2)}`);
+        updateUI('summaryDelivery', accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`);
+        updateUI('summaryTotal', `₹${grandTotalCombined.toFixed(2)}`);
 
-            updateUI('cartItemSubtotal', `₹${finalDocumentCost.toFixed(2)}`);
-            updateUI('cartDeliveryFee', accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`);
-            updateUI('cartGrandTotalSummary', `₹${grandTotalCombined.toFixed(2)}`);
-            updateUI('cartDrawerGrandTotal', `₹${grandTotalCombined.toFixed(2)}`);
-            
-            let totalQtyCount = (window.cartSnacksArray ? window.cartSnacksArray.reduce((a, b) => a + b.qty, 0) : 0) + (window.cartPrintJobsArray ? window.cartPrintJobsArray.length : 0);
-            updateUI('shipmentItemsCountText', `Shipment of ${totalQtyCount} item${totalQtyCount > 1 ? 's' : ''}`);
+        updateUI('cartItemSubtotal', `₹${finalDocumentCost.toFixed(2)}`);
+        updateUI('cartDeliveryFee', accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`);
+        updateUI('cartGrandTotalSummary', `₹${grandTotalCombined.toFixed(2)}`);
+        updateUI('cartDrawerGrandTotal', `₹${grandTotalCombined.toFixed(2)}`);
+        
+        let totalQtyCount = (window.cartSnacksArray ? window.cartSnacksArray.reduce((a, b) => a + b.qty, 0) : 0) + (window.cartPrintJobsArray ? window.cartPrintJobsArray.length : 0);
+        updateUI('shipmentItemsCountText', `Shipment of ${totalQtyCount} item${totalQtyCount > 1 ? 's' : ''}`);
 
-            if (typeof updateFloatingCartBar === 'function') {
-                updateFloatingCartBar();
-            }
-        } catch (err) {
-            console.error("Calculate Total Error:", err);
-        }
-    };
+        if (typeof updateFloatingCartBar === 'function') {
+            updateFloatingCartBar();
+        }
+    } catch (err) {
+        console.error("Calculate Total Error:", err);
+    }
+};
 
     window.redeemPoints = async function() {
         let currentPoints = parseInt(localStorage.getItem('user_loyalty_points') || 0);
@@ -1712,7 +1717,9 @@ window.openProductDetailModal = function(prod) {
             });
         }
     };
+// ==========================================
 // 🔥 BULLETPROOF UNIVERSAL CART DRAWER & ITEMS RENDERER
+// ==========================================
 window.renderCartDrawerContents = function() {
     let container = document.getElementById('cartDrawerItemsList') || 
                     document.getElementById('cartItemsListContainer') || 
@@ -1741,11 +1748,12 @@ window.renderCartDrawerContents = function() {
     if (!hasItems) {
         container.innerHTML = `<p style="font-size:0.82rem; color:#64748b; text-align:center; padding:20px;">Your cart is empty.</p>`;
         if (typeof calculateTotal === 'function') calculateTotal();
+        if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
         return;
     }
 
     const wrapper = document.createElement('div');
-    wrapper.style.cssText = "display:flex; flex-direction:column; gap:10px; width:100%;";
+    wrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
 
     let totalPagesCount = 0;
     let totalItemsCount = 0;
@@ -1758,19 +1766,25 @@ window.renderCartDrawerContents = function() {
         totalItemsCount += 1;
 
         const card = document.createElement('div');
-        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 3px rgba(0,0,0,0.02); gap:10px;";
+        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02);";
 
         card.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0; overflow:hidden;">
-                <div style="font-size:1.5rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px; flex-shrink:0;">📄</div>
-                <div style="overflow:hidden; flex:1; min-width:0;">
-                    <div title="${job.fileName}" style="font-weight:700; font-size:0.78rem; color:#0f172a; word-break:break-all; white-space:normal; line-height:1.3;">${job.fileName}</div>
-                    <div style="font-size:0.68rem; color:#64748b; font-weight:600; margin-top:2px;">${job.pages} pgs | ${job.printType.toUpperCase()} | Copies: ${job.copies}</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                    <div style="font-size:1.6rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px; flex-shrink:0;">📄</div>
+                    <div style="overflow:hidden; flex:1;">
+                        <div title="${job.fileName}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
+                        <div style="font-size:0.68rem; color:#64748b; font-weight:600; margin-top:2px;">${job.pages} pgs | ${job.printType.toUpperCase()} | Copies: ${job.copies}</div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+                    <div style="font-weight:900; font-size:0.85rem; color:#065f46;">₹${jobTotal}</div>
+                    <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:5px 8px; font-size:0.7rem; cursor:pointer;" title="Remove Print Job">🗑️</button>
                 </div>
             </div>
-            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-                <div style="font-weight:800; font-size:0.8rem; color:#065f46;">₹${jobTotal}</div>
-                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:5px; font-size:0.7rem; cursor:pointer;" title="Remove">🗑️</button>
+            <div style="background:#f8fafc; border:1px solid #edf2f7; border-radius:8px; padding:6px 10px; font-size:0.68rem; color:#64748b; display:flex; justify-content:space-between; align-items:center;">
+                <span>F${idx+1}: ${job.fileName} (${job.pages}pg x ${job.copies}cp x ₹${rate})</span>
+                <span style="font-weight:700; color:#0f172a;">₹${jobTotal}</span>
             </div>
         `;
         wrapper.appendChild(card);
@@ -1780,25 +1794,25 @@ window.renderCartDrawerContents = function() {
     window.cartSnacksArray.forEach((snack, idx) => {
         totalItemsCount += snack.qty;
         const card = document.createElement('div');
-        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 3px rgba(0,0,0,0.02); gap:10px;";
+        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.02); gap:10px;";
         
-        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; flex-shrink:0;" />` : `<div style="font-size:1.4rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px; flex-shrink:0;">📦</div>`;
+        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:42px; height:42px; object-fit:contain; border-radius:8px;" />` : `<div style="font-size:1.5rem; width:42px; height:42px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📦</div>`;
 
         card.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0; overflow:hidden;">
+            <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
                 ${thumbImg}
-                <div style="overflow:hidden; flex:1; min-width:0;">
-                    <div title="${snack.name}" style="font-weight:700; font-size:0.78rem; color:#0f172a; word-break:break-all; white-space:normal; line-height:1.3;">${snack.name}</div>
-                    <div style="font-size:0.7rem; color:#059669; font-weight:800; margin-top:2px;">₹${snack.price * snack.qty}</div>
+                <div style="overflow:hidden; flex:1;">
+                    <div title="${snack.name}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</div>
+                    <div style="font-size:0.72rem; color:#059669; font-weight:800; margin-top:2px;">₹${snack.price * snack.qty} <span style="color:#64748b; font-weight:500; font-size:0.65rem;">(₹${snack.price} ea)</span></div>
                 </div>
             </div>
-            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-                <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:2px 6px; gap:6px;">
-                    <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; font-size:0.9rem; cursor:pointer; color:#0f172a;">-</button>
-                    <span style="font-weight:800; font-size:0.8rem; color:#0f172a;">${snack.qty}</span>
-                    <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; font-size:0.9rem; cursor:pointer; color:#065f46;">+</button>
+            <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+                <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:2px 6px; gap:8px;">
+                    <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; font-size:0.95rem; cursor:pointer; color:#0f172a;">-</button>
+                    <span style="font-weight:800; font-size:0.82rem; color:#0f172a;">${snack.qty}</span>
+                    <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; font-size:0.95rem; cursor:pointer; color:#065f46;">+</button>
                 </div>
-                <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:5px; font-size:0.7rem; cursor:pointer;" title="Remove">🗑️</button>
+                <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:6px 8px; font-size:0.7rem; cursor:pointer;" title="Remove Item">🗑️</button>
             </div>
         `;
         wrapper.appendChild(card);
@@ -1812,24 +1826,15 @@ window.renderCartDrawerContents = function() {
         shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
     }
 
-    // Sync User Identity & Active Address Name/Phone correctly
-    const identityNode = document.getElementById('cartUserIdentitySummary');
-    if (identityNode) {
-        let activeAddr = localStorage.getItem('selected_active_address') || "";
-        let activeUser = localStorage.getItem('printAppUser') || "Customer";
-        let activePhone = localStorage.getItem('printAppUserIdentity') || "";
-        
-        if (activeAddr.includes('Contact:')) {
-            let contactPart = activeAddr.split('Contact:')[1].trim();
-            identityNode.textContent = `Order for ${contactPart}`;
-        } else if (activePhone) {
-            identityNode.textContent = `Order for ${activeUser}, ${activePhone}`;
-        } else {
-            identityNode.textContent = `Order for ${activeUser}`;
-        }
-    }
+    // Render "You Might Also Like" Upselling Slider
+    const upsellingSection = document.createElement('div');
+    upsellingSection.style.cssText = "margin-top: 15px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;";
+    upsellingSection.innerHTML = `
+        <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:10px;">You might also like</h4>
+        <div id="cartDrawerUpsellingGrid" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;"></div>
+    `;
+    container.appendChild(upsellingSection);
 
-    // Render "You Might Also Like" Upselling Slider from Inventory Products
     const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
     if (upsellingGrid) {
         if (window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
@@ -2412,15 +2417,16 @@ let subtotal = totalPrintVal + totalSnacksVal;
     };
 
 // 🔥 Fully Safe Admin Fees Sync (Stops 404 console errors completely)
-window.loadAdminConfiguredFeesAndCoupons = async function() {
-    window.adminDeliveryFee = 25.00;
-    window.adminHandlingFee = 5.00;
-    window.adminRainFee = 15.00;
-    window.adminCouponsList = [
-        { code: 'FREEDEL', desc: 'Free delivery on orders above ₹99', discount: 25 },
-        { code: 'PRINT20', desc: 'Flat ₹20 off on print orders', discount: 20 }
-    ];
+// 🔥 User-Facing Fees & Coupons Sync Engine (Client-Side)
+window.adminDeliveryFee = 25.00;
+window.adminHandlingFee = 5.00;
+window.adminRainFee = 15.00;
+window.adminCouponsList = [
+    { code: 'FREEDEL', desc: 'Free delivery on orders above ₹99', discount: 25 },
+    { code: 'PRINT20', desc: 'Flat ₹20 off on print orders', discount: 20 }
+];
 
+window.loadAdminConfiguredFeesAndCoupons = async function() {
     try {
         const res = await fetch('/api/admin/settings');
         if (res && res.ok) {
@@ -2433,9 +2439,14 @@ window.loadAdminConfiguredFeesAndCoupons = async function() {
             }
         }
     } catch (e) {
-        // Silently caught, no more 404 errors in console
+        // Fallback to defaults silently if offline
     }
 };
+
+// Automatically load fees and coupons when client app starts
+document.addEventListener('DOMContentLoaded', () => {
+    loadAdminConfiguredFeesAndCoupons();
+});
 
 // 🔥 Admin Store Settings & Fees Save Engine
 window.saveAdminStoreSettings = async function() {
