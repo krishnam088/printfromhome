@@ -1997,7 +1997,7 @@ window.renderCartDrawerContents = function() {
     if (typeof calculateTotal === 'function') calculateTotal();
 };
 
-// 🔥 Bulletproof Upselling Grid Render for "You Might Also Like" Box
+// 🔥 Bulletproof Upselling Grid Render for "You Might Also Like" Box (Bada Size)
 function renderUpsellingGridSafely() {
     const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
     if (!upsellingGrid) return;
@@ -2022,14 +2022,14 @@ function renderUpsellingGridSafely() {
                 const stockVal = Number(prod.stockQuantity || prod.stock || 0);
 
                 const itemCard = document.createElement('div');
-                // Added items ke cards ke exact size (min-width: 125px) jaisa match kiya hai
-                itemCard.style.cssText = "min-width:125px; max-width:125px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
+                // 📦 Bada Size Card (min-width badha kar 140px aur padding 12px kar di hai)
+                itemCard.style.cssText = "min-width:140px; max-width:140px; background:#ffffff; border:1px solid #cbd5e1; border-radius:16px; padding:12px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 3px 10px rgba(0,0,0,0.04); flex-shrink:0;";
                 
                 itemCard.innerHTML = `
-                    ${thumb ? `<img src="${thumb}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; margin-bottom:4px;" />` : '<div style="font-size:1.8rem; margin-bottom:4px;">📦</div>'}
-                    <div title="${prod.name || ''}" style="font-weight:700; font-size:0.72rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name || ''}</div>
-                    <div style="font-size:0.68rem; color:#065f46; font-weight:800; margin-bottom:6px;">₹${priceVal}</div>
-                    <button type="button" style="background:#065f46; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.68rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
+                    ${thumb ? `<img src="${thumb}" style="width:55px; height:55px; object-fit:cover; border-radius:10px; margin-bottom:6px;" />` : '<div style="font-size:2rem; margin-bottom:6px;">📦</div>'}
+                    <div title="${prod.name || ''}" style="font-weight:800; font-size:0.78rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; margin-bottom:2px;">${prod.name || ''}</div>
+                    <div style="font-size:0.75rem; font-weight:900; color:#065f46; margin-bottom:8px;">₹${priceVal}</div>
+                    <button type="button" style="background:#065f46; color:white; border:none; padding:6px 10px; border-radius:8px; font-size:0.72rem; font-weight:800; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
                 `;
                 upsellingGrid.appendChild(itemCard);
             }
