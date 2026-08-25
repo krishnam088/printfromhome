@@ -2519,7 +2519,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }, 1500);
 
 // ==========================================
-// 🔥 FINAL CART ORDER PLACEMENT ENGINE (GLOBAL)
+// 🔥 SMART PAYMENT-AWARE ORDER PLACEMENT ENGINE
 // ==========================================
 window.executeFinalCartOrderPlacement = function() {
     const activeAddress = localStorage.getItem('selected_active_address');
@@ -2539,13 +2539,18 @@ window.executeFinalCartOrderPlacement = function() {
         return;
     }
 
+    // Get selected payment mode from dropdown/radio
+    const paymentSelect = document.getElementById('cartDrawerPaymentSelect');
+    const selectedMode = paymentSelect ? paymentSelect.value : 'online';
+
     const orderId = 'ORD_' + Math.floor(100000 + Math.random() * 900000);
     const finalAmountText = document.getElementById('cartDrawerGrandTotal')?.textContent || '₹0.00';
     
     const orderData = {
         orderId: orderId,
         date: new Date().toLocaleString(),
-        status: 'Order Placed & Confirmed 🟢',
+        status: selectedMode === 'cod' ? 'Order Placed (COD) 🟢' : 'Payment Pending / Processing 🟡',
+        paymentMode: selectedMode.toUpperCase(),
         address: activeAddress,
         details: [...snacks, ...prints],
         amount: finalAmountText.replace('₹', '').trim()
@@ -2556,22 +2561,56 @@ window.executeFinalCartOrderPlacement = function() {
     userHistory.unshift(orderData);
     localStorage.setItem(`history_${sessionActiveUser}`, JSON.stringify(userHistory));
 
-    // Clear cart data after successful order placement
+    // Clear cart data after initiating order
     localStorage.removeItem('cart_snacks');
     localStorage.removeItem('cart_print_jobs');
     window.cartSnacksArray = [];
     window.cartPrintJobsArray = [];
 
-    alert(`🎉 Order Placed Successfully! Order ID: ${orderId}`);
-    
+    // Close the cart drawer cleanly
     if (typeof toggleCartDrawer === 'function') {
         toggleCartDrawer(false);
     }
-    
-    if (typeof renderOrderHistoryUI === 'function') {
-        renderOrderHistoryUI(sessionActiveUser);
+
+    // 🔥 SMART ROUTING BASED ON PAYMENT MODE
+    if (selectedMode === 'online') {
+        // Redirect to Online Payment Gateway simulation / screen
+        alert(`⚡ Redirecting to Secure Payment Gateway for Order #${orderId}...`);
+        
+        // Agar aapke paas payment gateway modal ya function hai toh yahan call karein, 
+        // warna simulate karke seedhe tracking/status view par bhej sakte hain:
+        setTimeout(() => {
+            orderData.status = 'Paid & Confirmed 🟢';
+            userHistory[0] = orderData;
+            localStorage.setItem(`history_${sessionActiveUser}`, JSON.stringify(userHistory));
+            
+            alert(`🎉 Payment Successful! Order #${orderId} confirmed.`);
+            if (typeof navigateDrawerSection === 'function') {
+                navigateDrawerSection('orders'); // Redirect to 'Your Orders' live tracking view
+            } else {
+                window.location.reload();
+            }
+        }, 1500);
+
+    } else if (selectedMode === 'wallet') {
+        alert(`💰 Deducting amount from Print Wallet for Order #${orderId}...`);
+        setTimeout(() => {
+            if (typeof navigateDrawerSection === 'function') {
+                navigateDrawerSection('orders');
+            } else {
+                window.location.reload();
+            }
+        }, 1000);
+
+    } else {
+        // COD (Cash on Delivery) -> Direct to Order Status / Tracking Page
+        alert(`✅ Cash on Delivery Order Placed Successfully! Order ID: ${orderId}`);
+        if (typeof navigateDrawerSection === 'function') {
+            navigateDrawerSection('orders'); // Direct redirect to order status section
+        } else {
+            window.location.reload();
+        }
     }
-    window.location.reload();
 };
 
     // --- AUTH FORM (Login & Signup) ---
