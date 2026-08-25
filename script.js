@@ -2045,6 +2045,7 @@ window.renderCartDrawerContents = function() {
         shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
     }
 
+    // ⚡ Sirf upselling grid ko call karo, naya div create mat karo kyunki wo index.html mein pehle se hai
     if (typeof renderUpsellingGridSafely === 'function') {
         renderUpsellingGridSafely();
     }
@@ -3125,15 +3126,7 @@ window.navigateDrawerSection = function(targetId) {
 
     container.appendChild(wrapper);
 
-  // 🔥 UPSELLING SECTION (Quick Add Store Inventory Products inside Cart Drawer)
-    const upsellingSection = document.createElement('div');
-    upsellingSection.style.cssText = "margin-top: 15px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px;";
-    upsellingSection.innerHTML = `
-        <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:10px;">You might also like</h4>
-        <div id="cartDrawerUpsellingGrid" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;"></div>
-    `;
-    container.appendChild(upsellingSection);
-
+  
 const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
     if (upsellingGrid) {
         if (window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
