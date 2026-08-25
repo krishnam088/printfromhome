@@ -732,119 +732,149 @@ if (fileUpload) {
     };
 
     window.updateMultiFileStudioUI = function() {
-        const files = window.studioMasterFiles;
-        if (!files || files.length === 0) return;
+        const files = window.studioMasterFiles;
+        if (!files || files.length === 0) return;
 
-        const currentFile = files[window.currentStudioActiveIndex] || files[0];
+        const currentFile = files[window.currentStudioActiveIndex] || files[0];
 
-        const imageSlider = document.getElementById('studioInImageHorizontalSlider');
-    if (imageSlider) {
-        imageSlider.innerHTML = files.map((f, fIdx) => {
-            let isLand = f.orientation === 'landscape';
-            let isBw = f.printType === 'bw';
-            let filterStyle = isBw ? 'filter: grayscale(100%);' : '';
-            let transformStyle = isLand ? 'transform: rotate(90deg); max-width: 75%; max-height: 75%;' : 'max-width: 90%; max-height: 90%;';
+        const imageSlider = document.getElementById('studioInImageHorizontalSlider');
+        if (imageSlider) {
+            imageSlider.innerHTML = files.map((f, fIdx) => {
+                let isLand = f.orientation === 'landscape';
+                let isBw = f.printType === 'bw';
+                let filterStyle = isBw ? 'filter: grayscale(100%);' : '';
+                let transformStyle = isLand ? 'transform: rotate(90deg); max-width: 75%; max-height: 75%;' : 'max-width: 90%; max-height: 90%;';
 
-            let previewContent = '';
+                let previewContent = '';
 
-            // 🔥 AGAR MULTI-PAGE PDF HAI TOH SAHRE PAGES VERTICAL SCROLL (UP/DOWN) MEIN DIKHENGE
-            if (f.pageImages && f.pageImages.length > 1) {
-                let verticalPagesHtml = f.pageImages.map((imgSrc, pIdx) => `
-                    <div style="width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:12px; background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:10px; box-sizing:border-box;">
-                        <img src="${imgSrc}" style="${transformStyle} object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />
-                        <div style="margin-top:6px; background:#1e293b; color:white; font-size:0.65rem; font-weight:700; padding:2px 8px; border-radius:6px;">
-                            Page ${pIdx + 1} of ${f.pageImages.length}
-                        </div>
-                    </div>
-                `).join('');
+                // 🔥 MULTI-PAGE PDF CHECK (Agar 1 se zyada page images hain)
+                if (f.pageImages && f.pageImages.length > 1) {
+                    let verticalPagesHtml = f.pageImages.map((imgSrc, pIdx) => `
+                        <div class="pdf-preview-page-item" data-page-idx="${pIdx}" style="width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:14px; background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:12px; box-sizing:border-box;">
+                            <img src="${imgSrc}" style="${transformStyle} object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />
+                            <div style="margin-top:8px; background:#1e293b; color:white; font-size:0.7rem; font-weight:700; padding:3px 10px; border-radius:6px;">
+                                Page ${pIdx + 1} of ${f.pageImages.length}
+                            </div>
+                        </div>
+                    `).join('');
 
-                previewContent = `
-                    <div style="width:100%; height:100%; display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; padding:10px; box-sizing:border-box; scrollbar-width:thin;">
-                        ${verticalPagesHtml}
-                    </div>
-                `;
-            } else {
-                // 🔥 SINGLE PAGE FILE YA NORMAL IMAGE KE LIYE STANDARD VIEW
-                let singleImgSrc = (f.pageImages && f.pageImages.length > 0) ? f.pageImages[0] : f.fileUrl;
-                
-                if (singleImgSrc) {
-                    const isImageFile = (f.fileBlob && f.fileBlob.type && f.fileBlob.type.startsWith('image/')) || 
-                                        singleImgSrc.startsWith('data:image/') || 
-                                        singleImgSrc.startsWith('blob:');
+                    previewContent = `
+                        <div class="vertical-pdf-scroll-box" data-file-index="${fIdx}" style="width:100%; height:100%; display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; padding:12px; box-sizing:border-box; scrollbar-width:thin;">
+                            ${verticalPagesHtml}
+                        </div>
+                    `;
+                } else {
+                    // 🔥 SINGLE PAGE OR IMAGE OR DOCUMENT CHECK
+                    let singleImgSrc = (f.pageImages && f.pageImages.length > 0) ? f.pageImages[0] : f.fileUrl;
+                    
+                    if (singleImgSrc) {
+                        // Strict check: Sirf tabhi img tag banega jab wo actual converted image ho (data:image/ ya image type)
+                        const isActualImage = (f.fileBlob && f.fileBlob.type && f.fileBlob.type.startsWith('image/')) || 
+                                              singleImgSrc.startsWith('data:image/');
 
-                    if (isImageFile) {
-                        previewContent = `<img src="${singleImgSrc}" style="${transformStyle} object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />`;
-                    } else {
-                        previewContent = `
-                            <div style="display:flex; flex-direction:column; align-items:center; gap:8px; ${filterStyle}; max-width: 90%; padding: 0 10px; box-sizing: border-box;">
-                                <span style="font-size:3.5rem;">📄</span>
-                                <span style="font-size:0.75rem; font-weight:700; color:#1e293b; max-width:100%; white-space:normal; word-break:break-all; overflow-wrap:break-word; text-align:center; line-height:1.3;">${f.name}</span>
-                            </div>
-                        `;
-                    }
-                } else {
-                    previewContent = `<span style="font-size:3.5rem; ${filterStyle}">📄</span>`;
-                }
-            }
+                        if (isActualImage) {
+                            previewContent = `<img src="${singleImgSrc}" style="${transformStyle} object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />`;
+                        } else {
+                            // Document files (.doc, .docx, etc.) ke liye clean file icon & name card
+                            previewContent = `
+                                <div style="display:flex; flex-direction:column; align-items:center; gap:8px; ${filterStyle}; max-width: 90%; padding: 0 10px; box-sizing: border-box;">
+                                    <span style="font-size:3.5rem;">📄</span>
+                                    <span style="font-size:0.75rem; font-weight:700; color:#1e293b; max-width:100%; white-space:normal; word-break:break-all; overflow-wrap:break-word; text-align:center; line-height:1.3;">${f.name}</span>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        previewContent = `<span style="font-size:3.5rem; ${filterStyle}">📄</span>`;
+                    }
+                }
 
-            return `
-                <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; flex-shrink:0; position:relative; background:#f8fafc; overflow:hidden;">
-                    <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${previewContent}</div>
-                </div>
-            `;
-        }).join('');
+                return `
+                    <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; flex-shrink:0; position:relative; background:#f8fafc; overflow:hidden;">
+                        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${previewContent}</div>
+                    </div>
+                `;
+            }).join('');
 
-        let slideWidth = imageSlider.clientWidth || 300;
-        imageSlider.scrollTo({ left: slideWidth * window.currentStudioActiveIndex, behavior: 'smooth' });
-    }
+            let slideWidth = imageSlider.clientWidth || 300;
+            imageSlider.scrollTo({ left: slideWidth * window.currentStudioActiveIndex, behavior: 'smooth' });
 
-    const counterBadge = document.getElementById('studioSlideCounterBadge');
-    if (counterBadge) {
-        counterBadge.textContent = `${window.currentStudioActiveIndex + 1}/${files.length}`;
-    }
+            // 🔥 DYNAMIC COUNTER UPDATE ON VERTICAL SCROLL
+            setTimeout(() => {
+                const verticalBoxes = imageSlider.querySelectorAll('.vertical-pdf-scroll-box');
+                verticalBoxes.forEach(box => {
+                    box.addEventListener('scroll', () => {
+                        const pages = box.querySelectorAll('.pdf-preview-page-item');
+                        let visiblePageIndex = 0;
+                        pages.forEach((page, idx) => {
+                            const rect = page.getBoundingClientRect();
+                            const boxRect = box.getBoundingClientRect();
+                            if (rect.top >= boxRect.top - 120 && rect.top <= boxRect.bottom - 50) {
+                                visiblePageIndex = idx;
+                            }
+                        });
+                        const counterBadge = document.getElementById('studioSlideCounterBadge');
+                        if (counterBadge) {
+                            const fIndex = parseInt(box.getAttribute('data-file-index')) || 0;
+                            const fileObj = files[fIndex];
+                            if (fileObj && fileObj.pageImages) {
+                                counterBadge.textContent = `Page ${visiblePageIndex + 1} of ${fileObj.pageImages.length}`;
+                            }
+                        }
+                    });
+                });
+            }, 60);
+        }
 
-    const copiesText = document.getElementById('studioCopiesCountText');
-    if (copiesText) copiesText.textContent = currentFile.copies;
+        const counterBadge = document.getElementById('studioSlideCounterBadge');
+        if (counterBadge) {
+            if (currentFile.pageImages && currentFile.pageImages.length > 1) {
+                counterBadge.textContent = `Page 1 of ${currentFile.pageImages.length}`;
+            } else {
+                counterBadge.textContent = `File ${window.currentStudioActiveIndex + 1}/${files.length}`;
+            }
+        }
 
-    const pagesInfo = document.getElementById('studioFilePagesInfo');
-    if (pagesInfo) pagesInfo.textContent = `${currentFile.name} (${currentFile.pages} page${currentFile.pages > 1 ? 's' : ''})`;
+        const copiesText = document.getElementById('studioCopiesCountText');
+        if (copiesText) copiesText.textContent = currentFile.copies;
 
-    const colColoured = document.getElementById('colorOptionColoured');
-    const colBw = document.getElementById('colorOptionBw');
-    if (colColoured && colBw) {
-        if (currentFile.printType === 'coloured' || currentFile.printType === 'color') {
-            colColoured.style.borderColor = '#065f46'; colColoured.style.background = '#f0fdf4';
-            colBw.style.borderColor = '#e2e8f0'; colBw.style.background = '#ffffff';
-        } else {
-            colBw.style.borderColor = '#065f46'; colBw.style.background = '#f0fdf4';
-            colColoured.style.borderColor = '#e2e8f0'; colColoured.style.background = '#ffffff';
-        }
-    }
+        const pagesInfo = document.getElementById('studioFilePagesInfo');
+        if (pagesInfo) pagesInfo.textContent = `${currentFile.name} (${currentFile.pages} page${currentFile.pages > 1 ? 's' : ''})`;
 
-    const oriPortrait = document.getElementById('orientationPortrait');
-    const oriLandscape = document.getElementById('orientationLandscape');
-    if (oriPortrait && oriLandscape) {
-        if (currentFile.orientation === 'portrait') {
-            oriPortrait.style.borderColor = '#065f46'; oriPortrait.style.background = '#f0fdf4';
-            oriLandscape.style.borderColor = '#e2e8f0'; oriLandscape.style.background = '#ffffff';
-        } else {
-            oriLandscape.style.borderColor = '#065f46'; oriLandscape.style.background = '#f0fdf4';
-            oriPortrait.style.borderColor = '#e2e8f0'; oriPortrait.style.background = '#ffffff';
-        }
-    }
+        const colColoured = document.getElementById('colorOptionColoured');
+        const colBw = document.getElementById('colorOptionBw');
+        if (colColoured && colBw) {
+            if (currentFile.printType === 'coloured' || currentFile.printType === 'color') {
+                colColoured.style.borderColor = '#065f46'; colColoured.style.background = '#f0fdf4';
+                colBw.style.borderColor = '#e2e8f0'; colBw.style.background = '#ffffff';
+            } else {
+                colBw.style.borderColor = '#065f46'; colBw.style.background = '#f0fdf4';
+                colColoured.style.borderColor = '#e2e8f0'; colColoured.style.background = '#ffffff';
+            }
+        }
 
-    let grandTotalPrice = 0;
-    files.forEach((f) => {
-        let rate = (f.printType === 'bw') ? 3 : 10;
-        grandTotalPrice += f.pages * rate * f.copies;
-    });
+        const oriPortrait = document.getElementById('orientationPortrait');
+        const oriLandscape = document.getElementById('orientationLandscape');
+        if (oriPortrait && oriLandscape) {
+            if (currentFile.orientation === 'portrait') {
+                oriPortrait.style.borderColor = '#065f46'; oriPortrait.style.background = '#f0fdf4';
+                oriLandscape.style.borderColor = '#e2e8f0'; oriLandscape.style.background = '#ffffff';
+            } else {
+                oriLandscape.style.borderColor = '#065f46'; oriLandscape.style.background = '#f0fdf4';
+                oriPortrait.style.borderColor = '#e2e8f0'; oriPortrait.style.background = '#ffffff';
+            }
+        }
 
-    const totalPriceText = document.getElementById('studioTotalPriceText');
-    if (totalPriceText) {
-        totalPriceText.textContent = `₹${grandTotalPrice}`;
-    }
-};
+        let grandTotalPrice = 0;
+        files.forEach((f) => {
+            let rate = (f.printType === 'bw') ? 3 : 10;
+            grandTotalPrice += f.pages * rate * f.copies;
+        });
 
+        const totalPriceText = document.getElementById('studioTotalPriceText');
+        if (totalPriceText) {
+            totalPriceText.textContent = `₹${grandTotalPrice}`;
+        }
+    };
 
 window.updatePrintStudioUI = window.updateMultiFileStudioUI;
 
@@ -891,49 +921,55 @@ window.applyCurrentSettingToAllFiles = function() {
 };
 
 window.handleStudioFilesAdded = function(input) {
-    if (input.files && input.files.length > 0) {
-        Array.from(input.files).forEach(async (file) => {
-            let pageCount = 1;
-            let pageImages = [];
-            let fileUrl = URL.createObjectURL(file);
-
-            if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        if (input.files && input.files.length > 0) {
+            Array.from(input.files).forEach(async (file) => {
+                let pageCount = 1;
+                let pageImages = [];
+                let fileUrl = '';
+                
                 try {
-                    const arrayBuffer = await file.arrayBuffer();
-                    const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                    pageCount = pdfDoc.numPages || 1;
-
-                    if (pdfDoc && typeof window.convertPdfPageToImage === 'function') {
-                        for (let p = 1; p <= pageCount; p++) {
-                            let pageImgUrl = await window.convertPdfPageToImage(pdfDoc, p);
-                            if (pageImgUrl) pageImages.push(pageImgUrl);
-                        }
-                    }
-                    if (pageImages.length > 0) fileUrl = pageImages[0];
-                } catch (e) {
-                    pageCount = 1;
+                    fileUrl = URL.createObjectURL(file);
+                } catch(e) {
+                    fileUrl = '';
                 }
-            } else {
-                pageImages.push(fileUrl);
-            }
 
-            window.studioMasterFiles.push({
-                name: file.name,
-                size: file.size,
-                fileBlob: file,
-                fileUrl: fileUrl,
-                pageImages: pageImages.length > 0 ? pageImages : [fileUrl],
-                pages: pageCount,
-                copies: 1,
-                printType: 'bw',
-                orientation: 'portrait',
-                binding: 'none'
+                if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                    try {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                        pageCount = pdfDoc.numPages || 1;
+
+                        if (pdfDoc && typeof window.convertPdfPageToImage === 'function') {
+                            for (let p = 1; p <= pageCount; p++) {
+                                let pageImgUrl = await window.convertPdfPageToImage(pdfDoc, p);
+                                if (pageImgUrl) pageImages.push(pageImgUrl);
+                            }
+                        }
+                        if (pageImages.length > 0) fileUrl = pageImages[0];
+                    } catch (e) {
+                        pageCount = 1;
+                    }
+                } else if (file.type && file.type.startsWith('image/')) {
+                    pageImages.push(fileUrl);
+                }
+
+                window.studioMasterFiles.push({
+                    name: file.name,
+                    size: file.size,
+                    fileBlob: file,
+                    fileUrl: fileUrl,
+                    pageImages: pageImages.length > 0 ? pageImages : [fileUrl],
+                    pages: pageCount,
+                    copies: 1,
+                    printType: 'bw',
+                    orientation: 'portrait',
+                    binding: 'none'
+                });
+                updateMultiFileStudioUI();
             });
-            updateMultiFileStudioUI();
-        });
-        input.value = '';
-    }
-};
+            input.value = '';
+        }
+    };
 
 window.removeCurrentStudioFile = function() {
     if (window.studioMasterFiles.length > 1) {
