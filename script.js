@@ -3109,6 +3109,8 @@ const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
     if (typeof calculateTotal === 'function') calculateTotal();
 };
 
+});
+
 if (typeof window.synchronizeWalletInterfaceBalance !== 'function') {
     window.synchronizeWalletInterfaceBalance = function() {
         const sessionActiveUser = localStorage.getItem('printAppUser');
@@ -3186,7 +3188,7 @@ window.forceDebugOrderHistory = function(username, showRecent = true) {
         `;
     }).join('');
 
-    // Attach Event Listeners securely to prevent missing function context errors
+    // Attach Event Listeners securely
     container.querySelectorAll('.track-order-btn').forEach(function(button) {
         button.addEventListener('click', function() {
             const orderId = this.getAttribute('data-order-id');
@@ -3206,21 +3208,19 @@ window.forceDebugOrderHistory = function(username, showRecent = true) {
     });
 };
 
-(function() {
-    // Sync main render engine with debug helper
-    window.renderOrderHistoryUI = function(username, showRecent = true) {
-        if (typeof window.forceDebugOrderHistory === 'function') {
-            window.forceDebugOrderHistory(username, showRecent);
-        }
-    };
+// Sync main render engine with debug helper
+window.renderOrderHistoryUI = function(username, showRecent = true) {
+    if (typeof window.forceDebugOrderHistory === 'function') {
+        window.forceDebugOrderHistory(username, showRecent);
+    }
+};
 
-    // Auto-run debug/render on load
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-            if (typeof window.forceDebugOrderHistory === 'function') {
-                const activeUser = localStorage.getItem('printAppUser') || 'Customer';
-                window.forceDebugOrderHistory(activeUser, true);
-            }
-        }, 1000);
-    });
-})();
+// Auto-run debug/render on load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        if (typeof window.forceDebugOrderHistory === 'function') {
+            const activeUser = localStorage.getItem('printAppUser') || 'Customer';
+            window.forceDebugOrderHistory(activeUser, true);
+        }
+    }, 1000);
+});
