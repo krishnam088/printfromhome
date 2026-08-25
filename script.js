@@ -2860,16 +2860,18 @@ window.executeFinalCartOrderPlacement = async function() {
         el.style.display = 'none';
     });
     
-    const targetNode = document.getElementById(`user_section_${targetId}`);
+    // Fallback if 'orders' or 'history' is passed interchangeably
+    let normalizedId = targetId === 'orders' ? 'history' : targetId;
+    const targetNode = document.getElementById(`user_section_${normalizedId}`);
+    
     if (targetNode) {
         targetNode.classList.add('active');
         targetNode.style.display = 'block';
     }
 
-    // Agar store section active nahi hai toh store elements hide karo
     const storeNode = document.getElementById('user_section_store');
     if (storeNode) {
-        if (targetId === 'store') {
+        if (normalizedId === 'store') {
             storeNode.style.display = 'block';
         } else {
             storeNode.style.display = 'none';
@@ -2877,7 +2879,7 @@ window.executeFinalCartOrderPlacement = async function() {
     }
 
     if (typeof toggleUserDrawer === 'function') toggleUserDrawer(false);
-    updateFloatingCartBar();
+    if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
 };
 
     // 🔥 COMPLETE RENDER CART DRAWER CONTENTS FUNCTION WITH E-52 PANDEYPUR STORE INTEGRATION
