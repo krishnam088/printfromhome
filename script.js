@@ -1945,6 +1945,31 @@ function renderUpsellingGridSafely() {
         upsellingGrid.innerHTML = '<p style="font-size:0.78rem; color:#64748b; text-align:center; padding:15px; width:100%;">No store products available currently.</p>';
     }
 }
+// 🔥 Global Safe Definition of updateFloatingCartBar to prevent ReferenceError
+if (typeof window.updateFloatingCartBar !== 'function') {
+    window.updateFloatingCartBar = function() {
+        const bar = document.getElementById('floatingCartFooterBar');
+        if (!bar) return;
+        
+        let totalSnacks = 0;
+        let totalPrint = 0;
+        try {
+            const snacks = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
+            const prints = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
+            totalSnacks = snacks.reduce((acc, item) => acc + (item.qty || 0), 0);
+            totalPrint = prints.length;
+        } catch(e) {}
+
+        let totalCount = totalSnacks + totalPrint;
+        if (totalCount > 0) {
+            bar.classList.remove('hidden');
+            bar.style.display = 'flex';
+        } else {
+            bar.classList.add('hidden');
+            bar.style.display = 'none';
+        }
+    };
+}
 
 // Helper function to edit a print job from cart (re-opens Print Studio)
 window.editCartPrintJob = function(idx) {
