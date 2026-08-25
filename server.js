@@ -192,10 +192,10 @@ app.get('/api/admin/live-store-qr', (req, res) => {
     res.json({ success: true, qrToken: currentStoreQrToken, validTill: qrTokenExpiry });
 });
 
-// 🔥 Added missing /api/admin/orders endpoint to fix the 404 error on admin panel
+// 🔥 FIXED: Exclude pending online payment orders from admin panel view
 app.get('/api/admin/orders', async (req, res) => {
     try {
-        const orders = await Order.find({}).sort({ timestamp: -1 });
+        const orders = await Order.find({ status: { $ne: 'Pending Payment' } }).sort({ timestamp: -1 });
         res.json(orders);
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -1078,8 +1078,7 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
         let calculatedDeliveryFee = finalAmountNumeric >= 99 ? 0 : 25;
 
         if (selectedPaymentMode === 'cod' || selectedPaymentMode === 'wallet') {
-            await deductStockForOrder(parsedConfig);
-
+            // Stock deduction is handled by the frontend decrement call or explicit confirmation
             const newOrder = new Order({
                 orderId: numericId,
                 customerName: customerName || 'Customer',
