@@ -1684,28 +1684,31 @@ window.openProductDetailModal = function(prod) {
         calculateTotal();
     };
 
-    // 🔥 CART DRAWER & FOOTER BAR UI (WITH AUTO-CLOSE & VERTICAL DETAILED LIST)
-    window.toggleCartDrawer = function(open = true) {
-        const drawerOverlay = document.getElementById('cartDrawerOverlay');
-        const floatingBar = document.getElementById('floatingCartFooterBar');
-        if (!drawerOverlay) return;
+   // ==========================================
+// 🔥 CART DRAWER & FOOTER BAR UI (WITH AUTO-CLOSE & VERTICAL DETAILED LIST)
+// ==========================================
+window.toggleCartDrawer = function(open = true) {
+    const drawerOverlay = document.getElementById('cartDrawerOverlay');
+    const floatingBar = document.getElementById('floatingCartFooterBar');
+    if (!drawerOverlay) return;
 
-        if (open) {
-            drawerOverlay.style.display = 'flex';
-            if (floatingBar) {
-                floatingBar.classList.add('hidden');
-                floatingBar.style.display = 'none';
-            }
-            if (typeof renderCartDrawerContents === 'function') {
-                renderCartDrawerContents();
-            }
-        } else {
-            drawerOverlay.style.display = 'none';
-            if (typeof updateFloatingCartBar === 'function') {
-                updateFloatingCartBar();
-            }
-        }
-    };
+    if (open) {
+        drawerOverlay.style.display = 'flex';
+        if (floatingBar) {
+            floatingBar.classList.add('hidden');
+            floatingBar.style.display = 'none';
+        }
+        // 🔥 Force immediate render when cart drawer opens so items never hide
+        if (typeof renderCartDrawerContents === 'function') {
+            renderCartDrawerContents();
+        }
+    } else {
+        drawerOverlay.style.display = 'none';
+        if (typeof updateFloatingCartBar === 'function') {
+            updateFloatingCartBar();
+        }
+    }
+};
 
 window.updateFloatingCartBar = function() {
     const bar = document.getElementById('floatingCartFooterBar');
@@ -1814,123 +1817,16 @@ window.updateFloatingCartBar = function() {
             stackContainer.appendChild(iconBox);
         });
     }
-}; // 🟢 updateFloatingCartBar safely ends here!
-
-
-// ==========================================
-// 📂 CATEGORY SLIDER DRAWER & FILTERING ENGINE
-// ==========================================
-window.openCategoryDrawer = function(categoryName) {
-    const overlay = document.getElementById('categoryDrawerOverlay');
-    const titleNode = document.getElementById('categoryDrawerTitle');
-    const gridNode = document.getElementById('categoryDrawerItemsGrid');
-    if (!overlay || !gridNode) return;
-
-    if (titleNode) {
-        titleNode.textContent = `${categoryName.toUpperCase()} ITEMS`;
-    }
-
-    gridNode.style.cssText = "flex:1; overflow-y:auto; padding:16px; display:flex; flex-wrap:wrap; gap:12px; align-content:start; justify-content:flex-start;";
-    gridNode.innerHTML = '';
-
-    let filtered = (window.storeInventoryProducts || []).filter(prod => {
-        let categoryLower = (prod.category || prod.type || '').toLowerCase();
-        let nameLower = (prod.name || '').toLowerCase();
-        
-        if (categoryName === 'munchies') {
-            return categoryLower.includes('munchies') || categoryLower.includes('chips') || categoryLower.includes('namkeen') || nameLower.includes('lays') || nameLower.includes('kurkure');
-        } else if (categoryName === 'snacks') {
-            return categoryLower.includes('snacks') || categoryLower.includes('food') || categoryLower.includes('beverage');
-        } else if (categoryName === 'socks') {
-            return categoryLower.includes('socks') || categoryLower.includes('apparel') || categoryLower.includes('clothing') || nameLower.includes('sock');
-        }
-        return true;
-    });
-
-    if (filtered.length === 0) {
-        gridNode.innerHTML = `<p style="width:100%; text-align:center; color:#64748b; font-size:0.8rem; padding:40px;">No items found in this category.</p>`;
-    } else {
-        filtered.forEach(prod => {
-            let originalIndex = window.storeInventoryProducts.findIndex(p => p.sku === prod.sku || p.name === prod.name);
-            const isOutOfStock = (prod.stockQuantity <= 0);
-            const isLowStock = !isOutOfStock && prod.stockQuantity <= 5;
-            const finalImgUrl = prod.imageUrl || prod.image || '';
-            const card = document.createElement('div');
-            
-            card.style.cssText = `
-                background: #ffffff; border: 1px solid ${isLowStock ? '#ef4444' : '#e2e8f0'};
-                border-radius: 14px; padding: 10px; position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; 
-                display: flex; flex-direction: column; align-items: center; cursor: pointer;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-                width: 120px; min-width: 120px; max-width: 120px; flex: 0 0 auto; box-sizing: border-box;
-            `;
-            
-            card.onclick = (e) => {
-                if (e.target.tagName === 'BUTTON') return;
-                if (typeof openProductDetailModal === 'function' && originalIndex !== -1) {
-                    openProductDetailModal(window.storeInventoryProducts[originalIndex]);
-                }
-            };
-
-            const imageHtml = finalImgUrl 
-                ? `<img src="${finalImgUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px; display:block;" />` 
-                : `<div style="font-size:2rem; margin-bottom:6px; height:65px; display:flex; align-items:center; justify-content:center;">📦</div>`;
-
-            let badgeHtml = '';
-            if (isOutOfStock) {
-                badgeHtml = `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.55rem; padding:2px 4px; border-radius:4px; font-weight:800; z-index:5;">OUT</span>`;
-            } else if (isLowStock) {
-                badgeHtml = `<span class="low-stock-badge">Only ${prod.stockQuantity} left</span>`;
-            }
-
-            let safeSku = String(prod.sku || prod.barcode || prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            let safeName = String(prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            let safeImg = String(finalImgUrl || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-
-            card.innerHTML = `
-                ${badgeHtml}
-                ${imageHtml}
-                <div title="${prod.name}" style="font-weight:700; font-size:0.78rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; color:#0f172a;">${prod.name}</div>
-                <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
-                ${isOutOfStock 
-                    ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); notifyWhenAvailable('${safeName}')">Notify</button>`
-                    : `<button type="button" class="btn-quick-add-item" style="background:var(--blinkit-green, #10b981); color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${safeSku}', '${safeName}', ${prod.sellingPrice || 0}, ${prod.stockQuantity}, '${safeImg}')">+ Add</button>`
-                }
-            `;
-            gridNode.appendChild(card);
-        });
-    }
-
-    history.pushState({ drawer: 'category' }, '', '');
-    overlay.style.display = 'flex';
-};
-
-window.closeCategoryDrawer = function() {
-    const overlay = document.getElementById('categoryDrawerOverlay');
-    if (overlay) overlay.style.display = 'none';
-
-    window.currentStoreSelectedCategory = 'all';
-
-    document.querySelectorAll('.store-category-chip').forEach(btn => {
-        if (btn.getAttribute('data-category') === 'all') {
-            btn.style.background = '#065f46';
-            btn.style.color = '#ffffff';
-            btn.style.borderColor = '#065f46';
-        } else {
-            btn.style.background = '#ffffff';
-            btn.style.color = '#0f172a';
-            btn.style.borderColor = '#cbd5e1';
-        }
-    });
 };
 
 
 // ==========================================
-// 🔥 BULLETPROOF UNIVERSAL CART DRAWER RENDER ENGINE
+// 🔥 BULLETPROOF UNIVERSAL CART DRAWER RENDER ENGINE (PRINTS + PRODUCTS)
 // ==========================================
 window.renderCartDrawerContents = function() {
     const container = document.getElementById('cartDrawerItemsList');
     if (!container) return;
+    
     container.innerHTML = '';
     
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
@@ -1941,16 +1837,42 @@ window.renderCartDrawerContents = function() {
     if (!hasItems) {
         container.innerHTML = `<p style="font-size:0.82rem; color:#64748b; text-align:center; padding:20px;">Your cart is empty.</p>`;
         if (typeof calculateTotal === 'function') calculateTotal();
+        
+        // Render upselling products even if cart is empty so users can add them
+        const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
+        if (upsellingGrid && window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
+            upsellingGrid.innerHTML = '';
+            window.storeInventoryProducts.forEach((prod) => {
+                if (prod.stockQuantity > 0) {
+                    const thumb = prod.imageUrl || prod.image || '';
+                    const safeSku = String(prod.sku || prod.name || '').replace(/['"\\]/g, '\\$&');
+                    const safeName = String(prod.name || '').replace(/['"\\]/g, '\\$&');
+                    const safeThumb = String(thumb || '').replace(/['"\\]/g, '\\$&');
+                    const priceVal = Number(prod.sellingPrice || prod.price || 0);
+                    const stockVal = Number(prod.stockQuantity || prod.stock || 0);
+
+                    const itemCard = document.createElement('div');
+                    itemCard.style.cssText = "min-width: 100px; width: 100px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.03);";
+                    itemCard.innerHTML = `
+                        ${thumb ? `<img src="${thumb}" style="width:45px; height:45px; object-fit:cover; border-radius:8px; margin-bottom:4px;" />` : '<div style="font-size:1.5rem; margin-bottom:4px;">📦</div>'}
+                        <div title="${prod.name || ''}" style="font-size:0.7rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name || ''}</div>
+                        <div style="font-size:0.7rem; font-weight:800; color:#065f46; margin:2px 0 6px 0;">₹${priceVal}</div>
+                        <button type="button" style="background:#065f46; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.68rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
+                    `;
+                    upsellingGrid.appendChild(itemCard);
+                }
+            });
+        }
         return;
     }
 
     const wrapper = document.createElement('div');
-    wrapper.style.cssText = "display:flex; flex-direction:column; gap:10px; width:100%;";
+    wrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
 
     let totalPagesCount = 0;
     let totalItemsCount = 0;
 
-    // 1. Render Print Jobs in Cart
+    // 1. Render Print Jobs in Cart (With ✏️ Edit Settings Button)
     window.cartPrintJobsArray.forEach((job, idx) => {
         let rate = (job.printType === 'bw') ? 3 : 10;
         let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
@@ -1975,12 +1897,14 @@ window.renderCartDrawerContents = function() {
                 <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer; font-weight:bold;" title="Remove">&times;</button>
             </div>
 
+            <!-- Specs Pill Bar -->
             <div style="display:flex; flex-wrap:wrap; gap:6px; font-size:0.68rem; font-weight:700;">
                 <span style="background:#f0fdf4; color:#16a34a; padding:2px 8px; border-radius:6px;">Copies: ${job.copies}</span>
                 <span style="background:#eff6ff; color:#2563eb; padding:2px 8px; border-radius:6px;">${printTypeLabel}</span>
                 <span style="background:#fef3c7; color:#d97706; padding:2px 8px; border-radius:6px;">${orientationLabel}</span>
             </div>
 
+            <!-- Footer: Price & Edit Settings Button -->
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e2e8f0; padding-top:8px; margin-top:2px;">
                 <button type="button" onclick="editCartPrintJob(${idx})" style="background:none; border:none; color:#2563eb; font-weight:800; font-size:0.75rem; cursor:pointer; padding:0;">✏️ Edit settings</button>
                 <span style="font-size:0.9rem; font-weight:900; color:#0f172a;">₹${jobTotal.toFixed(2)}</span>
@@ -1989,7 +1913,7 @@ window.renderCartDrawerContents = function() {
         wrapper.appendChild(card);
     });
 
-    // 2. Render Retail Products in Cart
+    // 2. Render Snacks / Store Products in Cart (With Stepper [ - ] Qty [ + ] & Clean UI)
     window.cartSnacksArray.forEach((snack, idx) => {
         totalItemsCount += snack.qty;
         const card = document.createElement('div');
@@ -2010,6 +1934,7 @@ window.renderCartDrawerContents = function() {
                 <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer; font-weight:bold;" title="Remove">&times;</button>
             </div>
 
+            <!-- Quantity Counter & Total Row for Product -->
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e2e8f0; padding-top:8px; margin-top:2px;">
                 <div style="display:flex; align-items:center; background:#065f46; border-radius:8px; padding:3px 8px; gap:10px;">
                     <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; color:#ffffff; font-size:1rem; font-weight:bold; cursor:pointer;">&minus;</button>
@@ -2030,7 +1955,7 @@ window.renderCartDrawerContents = function() {
         shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
     }
 
-    // 3. Populate existing Upselling Slider
+    // 3. Render Inventory Products in "You Might Also Like" Slider inside Cart Drawer
     const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
     if (upsellingGrid) {
         if (window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
