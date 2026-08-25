@@ -739,12 +739,12 @@ let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || fina
                     if (f.fileBlob && f.fileBlob.type && f.fileBlob.type.startsWith('image/')) {
                         previewContent = `<img src="${f.fileUrl}" style="${transformStyle} object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />`;
                     } else {
-                        previewContent = `
-                            <div style="display:flex; flex-direction:column; align-items:center; gap:8px; ${filterStyle}">
-                                <span style="font-size:3.5rem;">📄</span>
-                                <span style="font-size:0.75rem; font-weight:700; color:#1e293b; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${f.name}</span>
-                            </div>
-                        `;
+                       previewContent = `
+    <div style="display:flex; flex-direction:column; align-items:center; gap:8px; ${filterStyle}; max-width: 90%; padding: 0 10px; box-sizing: border-box;">
+        <span style="font-size:3.5rem;">📄</span>
+        <span style="font-size:0.75rem; font-weight:700; color:#1e293b; max-width:100%; white-space:normal; word-break:break-all; overflow-wrap:break-word; text-align:center; line-height:1.3;">${f.name}</span>
+    </div>
+`;
                     }
                 }
 

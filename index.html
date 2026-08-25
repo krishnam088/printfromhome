@@ -309,7 +309,7 @@
         };
     </script>
 
-    <!-- 📄 Compact Mobile-Fit Print Studio Modal -->
+<!-- 📄 Compact Mobile-Fit Print Studio Modal -->
 <div id="printStudioModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#f8fafc; z-index:100000; display:none; flex-direction:column; overflow-y:auto; font-family:'Poppins', sans-serif;">
     
     <!-- Top Bar (Fixed: Button overflow and screen-fit) -->
@@ -399,9 +399,8 @@
             <button type="button" onclick="applyCurrentSettingToAllFiles()" style="background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; padding:6px 14px; border-radius:8px; font-weight:800; font-size:0.78rem; cursor:pointer;">Apply</button>
         </div>
     </div>
-</div>
 
-    <!-- Bottom Sticky Checkout Bar -->
+    <!-- ✅ Bottom Sticky Checkout Bar (Ab ye modal ke ANDAR hai, toh home page pe nahi dikhega) -->
     <div style="position:fixed; bottom:0; left:0; width:100%; background:#ffffff; border-top:1px solid #e2e8f0; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; box-sizing:border-box; box-shadow:0 -4px 12px rgba(0,0,0,0.06); z-index:20;">
         <div>
             <div id="studioTotalPagesText" style="font-size:0.7rem; font-weight:700; color:#64748b;">Total 1 page</div>
@@ -411,7 +410,9 @@
             Add to cart
         </button>
     </div>
-</div>   
+
+</div> <!-- Modal poori tarah yahan close hoga -->
+   
     <!-- 💬 NEED HELP & CUSTOMER CARE MODAL -->
     <div id="helpCenterModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 21000; display: none; justify-content: center; align-items: center; padding: 20px;">
         <div style="background: #ffffff; border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
