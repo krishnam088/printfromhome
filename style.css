@@ -605,8 +605,11 @@ body.theme-festive-diwali .wallet-modal-card {
 /* ========================================
    MOBILE VIEW & CART DRAWER OPTIMIZATIONS
    ======================================== */
+/* Cart Drawer: Border yellow/cream mix, inner background full white */
 .cart-drawer-card {
-    background: linear-gradient(135deg, #FFFBE6 0%, #FFF3B3 30%, #FFFFFF 100%) !important;
+    background: #ffffff !important;
+    border: 3px solid #FFF3B3 !important;
+    border-left: 2px solid #F4C430 !important;
     height: 100vh !important;
     max-height: 100vh !important;
     display: flex;
