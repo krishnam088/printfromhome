@@ -751,14 +751,14 @@
                 <div id="cartDrawerItemsList" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;"></div>
             </div>
 
-<!-- 2. "You Might Also Like" Inventory Section (Matched with Added Items box size & layout) -->
+<!-- 2. "You Might Also Like" Inventory Section -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:14px; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                 <h4 style="font-size:0.88rem; font-weight:900; color:#0f172a; margin-bottom:10px;">You Might Also Like</h4>
-                <div id="cartDrawerUpsellingGrid" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;">
-                    <!-- Inventory store products will render here -->
+                <div id="cartDrawerUpsellingGrid" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; min-height:80px;">
+                    <!-- Inventory items will be injected here safely -->
                 </div>
             </div>
-            
+                        
             <!-- Free Delivery Progress Bar -->
             <div id="freeDeliveryProgressBarBox" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:14px; cursor:pointer; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.02);" onclick="toggleCouponDrawer()">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">

@@ -1775,7 +1775,10 @@ window.toggleCartDrawer = function(open = true) {
             floatingBar.classList.add('hidden');
             floatingBar.style.display = 'none';
         }
-        // 🔥 Force immediate render when cart drawer opens so items never hide
+        // 🔥 Force render contents & upselling products immediately when drawer opens
+        if (typeof loadDynamicStoreProducts === 'function') {
+            loadDynamicStoreProducts();
+        }
         if (typeof renderCartDrawerContents === 'function') {
             renderCartDrawerContents();
         }
