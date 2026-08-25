@@ -738,9 +738,9 @@
 
             <!-- Delivery ETA & Shipment Info Badge -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:12px 14px; display:flex; align-items:center; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.02); flex-shrink:0;">
-                <div style="font-size:1.5rem; background:#f0fdf4; padding:6px; border-radius:10px;">⏰</div>
+                <div style="font-size:1.5rem; background:#f0fdf4; padding:6px; border-radius:10px;">⚡</div>
                 <div>
-                    <h4 style="font-size:0.88rem; font-weight:900; color:#0f172a; margin:0 0 2px 0;">Free delivery in <span id="cartDrawerEtaMinutes">15</span> mins</h4>
+                    <h4 style="font-size:0.88rem; font-weight:900; color:#0f172a; margin:0 0 2px 0;">Fastest & Secure Delivery</h4>
                     <p style="font-size:0.7rem; color:#64748b; font-weight:600; margin:0;" id="shipmentItemsCountText">0 items</p>
                 </div>
             </div>
@@ -748,10 +748,10 @@
             <!-- 1. Added Items & Print Documents List -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:14px; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                 <h4 style="font-size:0.88rem; font-weight:900; color:#0f172a; margin-bottom:10px;">Added Items & Print Jobs</h4>
-                <div id="cartDrawerItemsList" style="display:flex; flex-direction:column; gap:8px; width:100%;"></div>
+                <div id="cartDrawerItemsList" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;"></div>
             </div>
 
-            <!-- 2. You Might Also Like Section (Moved between Added Items and Offers/Coupons) -->
+            <!-- 2. You Might Also Like Section -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:14px; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <h4 style="font-size:0.88rem; font-weight:900; color:#0f172a; margin:0;">You Might Also Like</h4>
@@ -829,7 +829,7 @@
                 </div>
             </div>
 
-<!-- Cancellation Policy -->
+            <!-- Cancellation Policy -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:12px; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.02); margin-bottom:10px;">
                 <h4 style="font-size:0.8rem; font-weight:900; color:#0f172a; margin-bottom:4px;">Cancellation Policy</h4>
                 <p style="font-size:0.65rem; color:#64748b; line-height:1.3; margin:0;">Once order placed, cancellation may result in a fee. In case of unexpected delays, a complete refund will be provided.</p>
@@ -845,52 +845,45 @@
                 </div>
             </div>
 
-        </div> 
-    </div>
-</div>
+        </div> <!-- Scrollable body container ends here -->
 
-      <!-- 🟢 FIXED FLOATING FOOTER DOCK (Compact & Horizontal Layout) -->
-<div style="flex-shrink:0; background:#ffffff; border-top:1px solid #e2e8f0; padding:10px 14px; box-shadow:0 -4px 15px rgba(0,0,0,0.06); display:flex; flex-direction:column; gap:8px;">
-    
-    <!-- Delivery Address Strip -->
-    <div onclick="openAddressManagerModal()" style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:6px 10px; cursor:pointer;">
-        <div style="display:flex; align-items:center; gap:6px; overflow:hidden;">
-            <span style="font-size:0.95rem;">🏠</span>
-            <div style="overflow:hidden;">
-                <div style="font-size:0.62rem; font-weight:800; color:#0f172a;">Delivering to Home</div>
-                <div id="cartDrawerAddressSummary" style="font-size:0.62rem; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;">Select delivery address</div>
+        <!-- 🟢 FIXED FLOATING FOOTER DOCK (Compact & Horizontal) -->
+        <div style="flex-shrink:0; background:#ffffff; border-top:1px solid #e2e8f0; padding:10px 14px; box-shadow:0 -4px 15px rgba(0,0,0,0.06); display:flex; flex-direction:column; gap:8px;">
+            <div onclick="openAddressManagerModal()" style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:6px 10px; cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:6px; overflow:hidden;">
+                    <span style="font-size:0.95rem;">🏠</span>
+                    <div style="overflow:hidden;">
+                        <div style="font-size:0.62rem; font-weight:800; color:#0f172a;">Delivering to Home</div>
+                        <div id="cartDrawerAddressSummary" style="font-size:0.62rem; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;">Select delivery address</div>
+                    </div>
+                </div>
+                <span style="color:#16a34a; font-weight:800; font-size:0.7rem;">Change</span>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <div style="display:flex; flex-direction:column; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:6px 8px; width: 110px; flex-shrink: 0;">
+                    <span style="font-size:0.55rem; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:2px;">PAY USING</span>
+                    <select id="cartDrawerPaymentSelect" onchange="updateCartPaymentMode(this.value)" style="background:none; border:none; font-size:0.75rem; font-weight:900; color:#0f172a; outline:none; cursor:pointer; padding:0; width: 100%;">
+                        <option value="online">⚡ Online</option>
+                        <option value="wallet">💰 Wallet</option>
+                        <option value="cod">💵 COD</option>
+                    </select>
+                </div>
+
+                <button type="button" onclick="executeFinalCartOrderPlacement()" style="flex:1; background:#16a34a; color:#ffffff; border:none; padding:10px 14px; border-radius:12px; font-weight:900; display:flex; align-items:center; justify-content:space-between; cursor:pointer; box-shadow:0 3px 10px rgba(22,163,74,0.3);">
+                    <div style="display:flex; flex-direction:column; text-align:left; max-width: 60%; overflow: hidden;">
+                        <span id="cartDrawerGrandTotal" style="font-size:0.85rem; font-weight:900; line-height:1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">₹0.00</span>
+                        <span style="font-size:0.48rem; font-weight:700; opacity:0.85; text-transform:uppercase; letter-spacing:0.3px;">TOTAL</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:2px; font-size:0.78rem; font-weight:800; flex-shrink: 0;">
+                        <span>Place Order</span>
+                        <span>&gt;</span>
+                    </div>
+                </button>
             </div>
         </div>
-        <span style="color:#16a34a; font-weight:800; font-size:0.7rem;">Change</span>
-    </div>
-
-    <!-- Payment & Place Order Horizontal Row (Compact & Wrapped) -->
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-        
-        <!-- Compact Payment Box -->
-        <div style="display:flex; flex-direction:column; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:6px 8px; width: 110px; flex-shrink: 0;">
-            <span style="font-size:0.55rem; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:2px;">PAY USING</span>
-            <select id="cartDrawerPaymentSelect" onchange="updateCartPaymentMode(this.value)" style="background:none; border:none; font-size:0.75rem; font-weight:900; color:#0f172a; outline:none; cursor:pointer; padding:0; width: 100%; text-overflow: ellipsis;">
-                <option value="online">⚡ Online</option>
-                <option value="wallet">💰 Wallet</option>
-                <option value="cod">💵 COD</option>
-            </select>
-        </div>
-
-        <!-- Compact Horizontal Place Order Button -->
-        <button type="button" onclick="executeFinalCartOrderPlacement()" style="flex:1; background:#16a34a; color:#ffffff; border:none; padding:10px 14px; border-radius:12px; font-weight:900; display:flex; align-items:center; justify-content:space-between; cursor:pointer; box-shadow:0 3px 10px rgba(22,163,74,0.3);">
-            <div style="display:flex; flex-direction:column; text-align:left; max-width: 60%; overflow: hidden;">
-                <span id="cartDrawerGrandTotal" style="font-size:0.85rem; font-weight:900; line-height:1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">₹0.00</span>
-                <span style="font-size:0.48rem; font-weight:700; opacity:0.85; text-transform:uppercase; letter-spacing:0.3px;">TOTAL</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:2px; font-size:0.78rem; font-weight:800; flex-shrink: 0;">
-                <span>Place Order</span>
-                <span>&gt;</span>
-            </div>
-        </button>
 
     </div>
-
 </div>
 
     <div id="mainApp" class="app-hidden">

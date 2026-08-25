@@ -1945,7 +1945,7 @@ window.renderCartDrawerContents = function() {
     let totalPagesCount = 0;
     let totalItemsCount = 0;
 
-    // 1. Render Print Jobs in Horizontal Cards
+    // 1. Render Print Jobs in Horizontal Cards with Edit Button
     window.cartPrintJobsArray.forEach((job, idx) => {
         let rate = (job.printType === 'bw') ? 3 : 10;
         let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
