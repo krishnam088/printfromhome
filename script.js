@@ -29,8 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedActiveAddress = window.selectedActiveAddress; 
 
     window.storeInventoryProducts = [];
-
-    // 🔙 Global Mobile Back Button Handler for Modals & Drawers
+// App khulte hi pehla history state push karna zaroori hai tabhi popstate kaam karega
+    history.pushState(null, null, window.location.href);
+});
   // 🔙 GLOBAL MOBILE BACK BUTTON HANDLER (Double Tap to Exit + Smart Routing)
 let lastBackPressTime = 0;
 
@@ -84,6 +85,7 @@ window.addEventListener('popstate', (event) => {
         }
         history.pushState(null, null, window.location.href); // Push state to prevent immediate exit
     }
+});
 
 // App khulte hi pehla history state push karna zaroori hai tabhi popstate kaam karega
 window.addEventListener('DOMContentLoaded', () => {
@@ -3417,5 +3419,8 @@ window.forceDebugOrderHistory = function(username, showRecent = true) {
         }, 1000);
     });
 })();
-});
-});
+
+// Final safety net: ensure no trailing syntax issues at EOF.
+if (typeof window !== 'undefined') {
+    window.__orderHistoryDebugInit = true;
+}
