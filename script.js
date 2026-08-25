@@ -233,73 +233,88 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 🔥 SAFE FALLBACK HELPER FOR ORDER HISTORY UI
-    if (typeof window.renderOrderHistoryUI !== 'function') {
-        window.renderOrderHistoryUI = function(username, showRecent = true) {
-            const container = document.getElementById('ordersHistoryContainer');
-            if (!container) return;
-            const history = JSON.parse(localStorage.getItem(`history_${username}`) || '[]');
-            if (history.length === 0) {
-                container.innerHTML = `<p style="text-align:center; padding:20px; color:#64748b;">No print jobs recorded yet.</p>`;
-                return;
-            }
-            container.innerHTML = history.map(order => `
-                <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:12px; margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; font-weight:800; font-size:0.85rem;">
-                        <span>Order #${order.orderId || 'N/A'}</span>
-                        <span style="color:#065f46;">₹${order.amount}</span>
-                    </div>
-                    <p style="font-size:0.75rem; color:#64748b; margin:4px 0;">Status: <b style="color:#2563eb;">${order.status}</b></p>
-                    <p style="font-size:0.7rem; color:#94a3b8; margin-bottom:8px;">${order.date}</p>
-                    <button type="button" onclick="openPastOrderInCartPreview('${order.orderId}')" style="background:#065f46; color:white; border:none; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">🔁 Repeat / Edit in Cart</button>
-                </div>
-            `).join('');
-        };
-    }
+  // 🔥 BULLETPROOF ORDER HISTORY UI RENDER ENGINE
+// 🔥 BULLETPROOF ORDER HISTORY UI RENDER ENGINE
+    window.renderOrderHistoryUI = function(username, showRecent = true) {
+        try {
+            const container = document.getElementById('ordersHistoryContainer');
+            if (!container) return;
+            
+            const activeUser = username || localStorage.getItem('printAppUser') || 'Customer';
+            const history = JSON.parse(localStorage.getItem(`history_${activeUser}`) || '[]');
+            
+            if (history.length === 0) {
+                container.innerHTML = `<p style="text-align:center; padding:20px; color:#64748b;">No print jobs recorded yet.</p>`;
+                return;
+            }
 
-    // 🔥 PAST ORDER RE-ORDER / LOAD TO CART PREVIEW
-    window.openPastOrderInCartPreview = function(orderId) {
-        const sessionActiveUser = localStorage.getItem('printAppUser');
-        const history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
-        const targetOrder = history.find(o => o.orderId === orderId);
+            container.innerHTML = history.map(order => {
+                let safeId = order.orderId || 'N/A';
+                let safeAmount = order.amount || '0.00';
+                let safeStatus = order.status || 'Processing';
+                let safeDate = order.date || '';
 
-        if (!targetOrder || !targetOrder.details) {
-            alert("⚠️ Order details not found.");
-            return;
-        }
+                return `
+                    <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:12px; margin-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between; font-weight:800; font-size:0.85rem;">
+                            <span>Order #${safeId}</span>
+                            <span style="color:#065f46;">₹${safeAmount}</span>
+                        </div>
+                        <p style="font-size:0.75rem; color:#64748b; margin:4px 0;">Status: <b style="color:#2563eb;">${safeStatus}</b></p>
+                        <p style="font-size:0.7rem; color:#94a3b8; margin-bottom:8px;">${safeDate}</p>
+                        <button type="button" onclick="openPastOrderInCartPreview('${safeId}')" style="background:#065f46; color:white; border:none; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">🔁 Repeat / Edit in Cart</button>
+                    </div>
+                `;
+            }).join('');
+        } catch (err) {
+            console.error("Render Order History Error:", err);
+        }
+    };
 
-        targetOrder.details.forEach(item => {
-            if (item.printType === 'snack') {
-                window.cartSnacksArray.push({
-                    sku: item.sku || '',
-                    name: item.name,
-                    price: item.price || 0,
-                    qty: item.qty || item.copies || 1,
-                    printType: 'snack',
-                    fileName: item.fileName,
-                    imageUrl: item.imageUrl || ''
-                });
-            } else {
-                window.cartPrintJobsArray.push({
-                    fileName: item.fileName || 'Document.pdf',
-                    pages: item.pages || 1,
-                    printType: item.printType || 'bw',
-                    sides: 'single',
-                    binding: item.binding || 'none',
-                    copies: item.copies || 1,
-                    orientation: 'portrait',
-                    fileData: null
-                });
-            }
-        });
+    // 🔥 PAST ORDER RE-ORDER / LOAD TO CART PREVIEW
+    window.openPastOrderInCartPreview = function(orderId) {
+        const sessionActiveUser = localStorage.getItem('printAppUser');
+        const history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
+        const targetOrder = history.find(o => o.orderId === orderId);
 
-        persistCartStateData();
-        if (typeof toggleCartDrawer === 'function') {
-            toggleCartDrawer(true);
-        }
-        alert("✅ Past order items loaded into your cart! You can modify quantities or add new items.");
-    };
-window.currentDeliveryTip = 0;
+        if (!targetOrder || !targetOrder.details) {
+            alert("⚠️ Order details not found.");
+            return;
+        }
+
+        targetOrder.details.forEach(item => {
+            if (item.printType === 'snack') {
+                window.cartSnacksArray.push({
+                    sku: item.sku || '',
+                    name: item.name,
+                    price: item.price || 0,
+                    qty: item.qty || item.copies || 1,
+                    printType: 'snack',
+                    fileName: item.fileName,
+                    imageUrl: item.imageUrl || ''
+                });
+            } else {
+                window.cartPrintJobsArray.push({
+                    fileName: item.fileName || 'Document.pdf',
+                    pages: item.pages || 1,
+                    printType: item.printType || 'bw',
+                    sides: 'single',
+                    binding: item.binding || 'none',
+                    copies: item.copies || 1,
+                    orientation: 'portrait',
+                    fileData: null
+                });
+            }
+        });
+
+        persistCartStateData();
+        if (typeof toggleCartDrawer === 'function') {
+            toggleCartDrawer(true);
+        }
+        alert("✅ Past order items loaded into your cart! You can modify quantities or add new items.");
+    };
+
+    window.currentDeliveryTip = 0;
 
     window.setDeliveryTip = function(tipAmount) {
         if (window.currentDeliveryTip === tipAmount) {
