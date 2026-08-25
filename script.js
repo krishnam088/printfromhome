@@ -2626,7 +2626,7 @@ window.executeFinalCartOrderPlacement = async function() {
         const historyKey = `history_${sessionActiveUser}`;
         const currentHistoryArray = JSON.parse(localStorage.getItem(historyKey) || '[]');
         
-        const newOrderPayload = { 
+        currentHistoryArray.unshift({ 
             orderId: orderId,
             date: new Date().toLocaleString(), 
             amount: grandTotal.toFixed(2), 
@@ -2634,9 +2634,8 @@ window.executeFinalCartOrderPlacement = async function() {
             details: finalMetaConfig, 
             address: activeAddress,
             deliveryTip: window.currentDeliveryTip || 0
-        };
+        });
         
-        currentHistoryArray.unshift(newOrderPayload);
         localStorage.setItem(historyKey, JSON.stringify(currentHistoryArray));
 
         try {
@@ -2653,6 +2652,9 @@ window.executeFinalCartOrderPlacement = async function() {
         window.cartPrintJobsArray = [];
         window.cartSnacksArray = [];
         window.currentDeliveryTip = 0;
+        localStorage.removeItem('cart_print_jobs');
+        localStorage.removeItem('cart_snacks');
+
         if (typeof persistCartStateData === 'function') persistCartStateData();
         if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
 
@@ -2660,29 +2662,19 @@ window.executeFinalCartOrderPlacement = async function() {
             renderOrderHistoryUI(sessionActiveUser);
         }
 
-  // 🔥 FIX: Redirect smoothly to Order Tracking / History without blank screen
-        const historySection = document.getElementById('user_section_history');
-        const storeSection = document.getElementById('user_section_store');
-        const trackingSection = document.getElementById('user_section_order_tracking');
-
-        document.querySelectorAll('.view-section').forEach(el => {
-            el.classList.remove('active');
-            el.style.display = 'none';
-        });
-
-        // Seedhe live order tracking page par bhejें taaki user ko status dikhe
-        if (trackingSection) {
-            trackingSection.classList.add('active');
-            trackingSection.style.display = 'block';
-            
-            // Optional: Agar order tracking UI populate karne ka function ho toh yahan call karein
-            if (typeof executeLiveTimelineStateStepper === 'function') {
-                executeLiveTimelineStateStepper(initialOrderStatus, '');
+        // 🔥 100% Safe Routing to History View (Never Blank)
+        if (typeof navigateDrawerSection === 'function') {
+            navigateDrawerSection('history');
+        } else {
+            const historySection = document.getElementById('user_section_history');
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.classList.remove('active');
+                el.style.setProperty('display', 'none', 'important');
+            });
+            if (historySection) {
+                historySection.classList.add('active');
+                historySection.style.setProperty('display', 'block', 'important');
             }
-        } else if (historySection) {
-            // Fallback agar tracking section na mile toh history dikha dein
-            historySection.classList.add('active');
-            historySection.style.display = 'block';
         }
     };
 
@@ -2881,32 +2873,43 @@ window.executeFinalCartOrderPlacement = async function() {
         });
     }
 
- window.navigateDrawerSection = function(targetId) {
-    document.querySelectorAll('.view-section').forEach(el => {
-        el.classList.remove('active');
-        el.style.display = 'none';
-    });
-    
-    // Fallback if 'orders' or 'history' is passed interchangeably
-    let normalizedId = targetId === 'orders' ? 'history' : targetId;
-    const targetNode = document.getElementById(`user_section_${normalizedId}`);
-    
-    if (targetNode) {
-        targetNode.classList.add('active');
-        targetNode.style.display = 'block';
-    }
-
-    const storeNode = document.getElementById('user_section_store');
-    if (storeNode) {
-        if (normalizedId === 'store') {
-            storeNode.style.display = 'block';
-        } else {
-            storeNode.style.display = 'none';
+window.navigateDrawerSection = function(targetId) {
+    try {
+        // 1. Sabhi view-sections ko hide karo
+        document.querySelectorAll('.view-section').forEach(el => {
+            el.classList.remove('active');
+            el.style.setProperty('display', 'none', 'important');
+        });
+        
+        let normalizedId = targetId === 'orders' ? 'history' : targetId;
+        const targetNode = document.getElementById(`user_section_${normalizedId}`);
+        
+        if (targetNode) {
+            targetNode.classList.add('active');
+            targetNode.style.setProperty('display', 'block', 'important');
         }
-    }
 
-    if (typeof toggleUserDrawer === 'function') toggleUserDrawer(false);
-    if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
+        // 2. Agar store section nahi hai, toh store-specific upload/config blocks ko hide karo
+        const storeNode = document.getElementById('user_section_store');
+        if (storeNode) {
+            if (normalizedId === 'store') {
+                storeNode.style.setProperty('display', 'block', 'important');
+            } else {
+                storeNode.style.setProperty('display', 'none', 'important');
+            }
+        }
+
+        // 3. Ensure main layout container is fully visible
+        const mainContainer = document.getElementById('mainLayoutAppContainer');
+        if (mainContainer) {
+            mainContainer.style.setProperty('display', 'flex', 'important');
+        }
+
+        if (typeof toggleUserDrawer === 'function') toggleUserDrawer(false);
+        if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
+    } catch (err) {
+        console.error("Navigation Error:", err);
+    }
 };
 
     // 🔥 COMPLETE RENDER CART DRAWER CONTENTS FUNCTION WITH E-52 PANDEYPUR STORE INTEGRATION
