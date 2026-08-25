@@ -1944,7 +1944,7 @@ window.renderCartDrawerContents = function() {
     let totalPagesCount = 0;
     let totalItemsCount = 0;
 
-    // 1. Render Print Jobs in Horizontal Cards
+// 1. Render Print Jobs in Horizontal Cards with Edit Button
     window.cartPrintJobsArray.forEach((job, idx) => {
         let rate = (job.printType === 'bw') ? 3 : 10;
         let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
@@ -1952,15 +1952,15 @@ window.renderCartDrawerContents = function() {
         totalItemsCount += 1;
 
         const card = document.createElement('div');
-        card.style.cssText = "min-width:125px; max-width:125px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
+        card.style.cssText = "min-width:130px; max-width:130px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
 
         card.innerHTML = `
-            <div style="font-size:2rem; margin-bottom:4px;">📄</div>
+            <div style="font-size:1.8rem; margin-bottom:2px;">📄</div>
             <div title="${job.fileName}" style="font-weight:700; font-size:0.72rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${job.fileName}</div>
-            <div style="font-size:0.62rem; color:#64748b; font-weight:600; margin-bottom:6px;">${job.pages} pgs | ${job.printType.toUpperCase()}</div>
+            <div style="font-size:0.6rem; color:#64748b; font-weight:600; margin-bottom:6px;">${job.pages} pgs | ${job.printType.toUpperCase()}</div>
             <div style="display:flex; align-items:center; gap:6px; width:100%; justify-content:center;">
-                <button type="button" onclick="editCartPrintJob(${idx})" style="background:#fef08a; border:none; padding:3px 8px; border-radius:6px; font-size:0.68rem; font-weight:800; cursor:pointer;">Edit</button>
-                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fee2e2; color:#ef4444; border:none; width:20px; height:20px; border-radius:50%; font-weight:bold; cursor:pointer; font-size:0.75rem;">&times;</button>
+                <button type="button" onclick="editCartPrintJob(${idx})" style="background:#fef08a; border:1px solid #fde047; padding:3px 8px; border-radius:6px; font-size:0.68rem; font-weight:800; cursor:pointer; color:#713f12;">Edit</button>
+                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fee2e2; color:#ef4444; border:none; width:22px; height:22px; border-radius:50%; font-weight:bold; cursor:pointer; font-size:0.75rem; display:flex; align-items:center; justify-content:center;">&times;</button>
             </div>
         `;
         container.appendChild(card);
@@ -1997,11 +1997,18 @@ window.renderCartDrawerContents = function() {
     if (typeof calculateTotal === 'function') calculateTotal();
 };
 
-// Helper function to render upselling products inside existing #cartDrawerUpsellingGrid
+// 🔥 Bulletproof Upselling Grid Render for "You Might Also Like" Box
 function renderUpsellingGridSafely() {
     const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
     if (!upsellingGrid) return;
     
+    // Agar store inventory products loaded nahi hain, toh fetch karne ki koshish karein
+    if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) {
+        if (typeof loadDynamicStoreProducts === 'function') {
+            loadDynamicStoreProducts();
+        }
+    }
+
     if (window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
         upsellingGrid.innerHTML = '';
         window.storeInventoryProducts.forEach((prod) => {
@@ -2015,19 +2022,20 @@ function renderUpsellingGridSafely() {
                 const stockVal = Number(prod.stockQuantity || prod.stock || 0);
 
                 const itemCard = document.createElement('div');
-                itemCard.style.cssText = "min-width: 95px; width: 95px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 6px; display: flex; flex-direction: column; align-items: center; text-align: center; flex-shrink: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.02);";
+                // Added items ke cards ke exact size (min-width: 125px) jaisa match kiya hai
+                itemCard.style.cssText = "min-width:125px; max-width:125px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
                 
                 itemCard.innerHTML = `
-                    ${thumb ? `<img src="${thumb}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; margin-bottom:4px;" />` : '<div style="font-size:1.3rem; margin-bottom:4px;">📦</div>'}
-                    <div title="${prod.name || ''}" style="font-size:0.65rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name || ''}</div>
-                    <div style="font-size:0.68rem; font-weight:800; color:#065f46; margin:2px 0 4px 0;">₹${priceVal}</div>
-                    <button type="button" style="background:#065f46; color:white; border:none; padding:3px 6px; border-radius:6px; font-size:0.62rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
+                    ${thumb ? `<img src="${thumb}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; margin-bottom:4px;" />` : '<div style="font-size:1.8rem; margin-bottom:4px;">📦</div>'}
+                    <div title="${prod.name || ''}" style="font-weight:700; font-size:0.72rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name || ''}</div>
+                    <div style="font-size:0.68rem; color:#065f46; font-weight:800; margin-bottom:6px;">₹${priceVal}</div>
+                    <button type="button" style="background:#065f46; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.68rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
                 `;
                 upsellingGrid.appendChild(itemCard);
             }
         });
     } else {
-        upsellingGrid.innerHTML = '<p style="font-size:0.72rem; color:#64748b; text-align:center; padding:8px;">Loading store products...</p>';
+        upsellingGrid.innerHTML = '<p style="font-size:0.75rem; color:#64748b; text-align:center; padding:10px; width:100%;">Loading store products...</p>';
     }
 }
 
