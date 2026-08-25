@@ -256,42 +256,83 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // 🔥 BULLETPROOF ORDER HISTORY UI RENDER ENGINE
 // 🔥 BULLETPROOF ORDER HISTORY UI RENDER ENGINE
-    window.renderOrderHistoryUI = function(username, showRecent = true) {
-        try {
-            const container = document.getElementById('ordersHistoryContainer');
-            if (!container) return;
-            
-            const activeUser = username || localStorage.getItem('printAppUser') || 'Customer';
-            const history = JSON.parse(localStorage.getItem(`history_${activeUser}`) || '[]');
-            
-            if (history.length === 0) {
-                container.innerHTML = `<p style="text-align:center; padding:20px; color:#64748b;">No print jobs recorded yet.</p>`;
-                return;
-            }
-
-            container.innerHTML = history.map(order => {
-                let safeId = order.orderId || 'N/A';
-                let safeAmount = order.amount || '0.00';
-                let safeStatus = order.status || 'Processing';
-                let safeDate = order.date || '';
-
-                return `
-                    <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:12px; margin-bottom:10px;">
-                        <div style="display:flex; justify-content:space-between; font-weight:800; font-size:0.85rem;">
-                            <span>Order #${safeId}</span>
-                            <span style="color:#065f46;">₹${safeAmount}</span>
-                        </div>
-                        <p style="font-size:0.75rem; color:#64748b; margin:4px 0;">Status: <b style="color:#2563eb;">${safeStatus}</b></p>
-                        <p style="font-size:0.7rem; color:#94a3b8; margin-bottom:8px;">${safeDate}</p>
-                        <button type="button" onclick="openPastOrderInCartPreview('${safeId}')" style="background:#065f46; color:white; border:none; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">🔁 Repeat / Edit in Cart</button>
-                    </div>
-                `;
-            }).join('');
-        } catch (err) {
-            console.error("Render Order History Error:", err);
+   window.renderOrderHistoryUI = function(username, showRecent = true) {
+    try {
+        const container = document.getElementById('ordersHistoryContainer');
+        if (!container) return;
+        
+        const activeUser = username || localStorage.getItem('printAppUser') || 'Customer';
+        const history = JSON.parse(localStorage.getItem(`history_${activeUser}`) || '[]');
+        
+        if (history.length === 0) {
+            container.innerHTML = `<p style="text-align:center; padding:20px; color:#64748b;">No print jobs recorded yet.</p>`;
+            return;
         }
-    };
 
+        container.innerHTML = history.map(order => {
+            let safeId = order.orderId || 'N/A';
+            let safeAmount = order.amount || '0.00';
+            let safeStatus = order.status || 'Processing';
+            let safeDate = order.date || '';
+
+            return `
+                <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:12px; margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; font-weight:800; font-size:0.85rem;">
+                        <span>Order #${safeId}</span>
+                        <span style="color:#065f46;">₹${safeAmount}</span>
+                    </div>
+                    <p style="font-size:0.75rem; color:#64748b; margin:4px 0;">Status: <b style="color:#2563eb;">${safeStatus}</b></p>
+                    <p style="font-size:0.7rem; color:#94a3b8; margin-bottom:10px;">${safeDate}</p>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button type="button" onclick="openOrderTrackingView('${safeId}')" style="background:#2563eb; color:white; border:none; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">📍 Track Status</button>
+                        <button type="button" onclick="openPastOrderInCartPreview('${safeId}')" style="background:#065f46; color:white; border:none; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">🔁 Repeat in Cart</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error("Render Order History Error:", err);
+    }
+};
+window.openOrderTrackingView = function(orderId) {
+    const sessionActiveUser = localStorage.getItem('printAppUser');
+    const history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
+    const order = history.find(o => o.orderId === orderId);
+    
+    if (!order) {
+        alert("⚠️ Order details not found.");
+        return;
+    }
+
+    // Tracking UI Elements ko data se populate karo
+    const idLabel = document.getElementById('trackOrderIdLabel');
+    const totalBadge = document.getElementById('trackGrandTotalBadge');
+    const statusBadge = document.getElementById('liveOrderStatusBadge');
+    const manifestList = document.getElementById('trackFilesManifestList');
+    const addressLabel = document.getElementById('trackShippingAddressLabel');
+
+    if (idLabel) idLabel.textContent = `Order ID: #${order.orderId} • ${order.date}`;
+    if (totalBadge) totalBadge.textContent = `₹${order.amount}`;
+    if (statusBadge) statusBadge.textContent = order.status || 'Processing Order...';
+    if (addressLabel) addressLabel.textContent = order.address || 'N/A';
+
+    if (manifestList && order.details) {
+        manifestList.innerHTML = order.details.map(item => `
+            <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:8px 12px; font-size:0.78rem; display:flex; justify-content:space-between; align-items:center;">
+                <span>📄 ${item.fileName || item.name || 'Item'} (Qty: ${item.copies || item.qty || 1})</span>
+                <b style="color:#065f46;">${item.printType ? item.printType.toUpperCase() : 'ITEM'}</b>
+            </div>
+        `).join('');
+    }
+
+    if (typeof executeLiveTimelineStateStepper === 'function') {
+        executeLiveTimelineStateStepper(order.status, '');
+    }
+
+    if (typeof navigateDrawerSection === 'function') {
+        navigateDrawerSection('order_tracking');
+    }
+};
     // 🔥 PAST ORDER RE-ORDER / LOAD TO CART PREVIEW
     window.openPastOrderInCartPreview = function(orderId) {
         const sessionActiveUser = localStorage.getItem('printAppUser');
