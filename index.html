@@ -709,7 +709,7 @@
 <div id="cartDrawerOverlay" class="cart-drawer-overlay" onclick="toggleCartDrawer(false)" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:16000; display:none; justify-content:flex-end;">
     <div class="cart-drawer-card" onclick="event.stopPropagation()" style="background:#f8fafc; color:#0f172a; width:100%; max-width:440px; height:100vh; display:flex; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.2); overflow:hidden; border-left:1px solid #e2e8f0; font-family:'Poppins', sans-serif;">
         
-        <!-- Checkout Header & User Info -->
+        <!-- Header -->
         <div style="flex-shrink:0; background:#ffffff; padding:14px 16px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
             <div style="display:flex; align-items:center; gap:12px;">
                 <span style="cursor:pointer; font-size:1.2rem; font-weight:bold; color:#0f172a;" onclick="toggleCartDrawer(false)">&larr;</span>
@@ -721,111 +721,113 @@
             </div>
         </div>
 
-<!-- Scrollable Drawer Body Content (Compact gaps & continuous flow) -->
-<div style="flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px; display:flex; flex-direction:column; gap:8px; padding-bottom:150px; box-sizing:border-box;">
-    
-    <!-- User Identity Card -->
-    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 2px rgba(0,0,0,0.02); flex-shrink:0;">
-        <span id="cartUserIdentitySummary" style="font-size:0.78rem; font-weight:700; color:#0f172a;">Order for User, 7398746551</span>
-        <button type="button" onclick="openEditProfileModal()" style="background:none; border:none; color:#16a34a; font-weight:800; font-size:0.78rem; cursor:pointer;">Change</button>
-    </div>
-
-    <!-- Delivery ETA Banner -->
-    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; display:flex; align-items:center; gap:10px; box-shadow:0 1px 2px rgba(0,0,0,0.02); flex-shrink:0;">
-        <div style="font-size:1.5rem; background:#f0fdf4; padding:4px 8px; border-radius:8px;">⏰</div>
-        <div>
-            <h4 style="font-size:0.9rem; font-weight:900; color:#0f172a; margin:0 0 2px 0;">Free delivery in <span id="cartDrawerEtaMinutes">15</span> minutes</h4>
-            <p style="font-size:0.7rem; color:#64748b; font-weight:600; margin:0;" id="shipmentItemsCountText">1 page and 1 item</p>
-        </div>
-    </div>
-
-    <!-- 🟢 Added Items & Print Documents List (Directly in main flow, pushes down other elements as items increase) -->
-    <div id="cartDrawerItemsList" style="display:flex; flex-direction:column; gap:8px; width:100%; flex-shrink:0;"></div>
-
-    <!-- 🟢 You Might Also Like (Horizontal Sliding Box) -->
-    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; flex-shrink:0;">
-        <h4 style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:8px;">You might also like</h4>
-        <div id="cartDrawerUpsellingGrid" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;"></div>
-    </div>
-
-    <!-- Free Delivery & Bill Summary Box -->
-    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; cursor:pointer; flex-shrink:0;" onclick="toggleCouponDrawer()" id="freeDeliveryProgressBarBox">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:1rem; background:#eff6ff; color:#3b82f6; padding:2px 6px; border-radius:50%;">✓</span>
-                <span id="freeDeliveryMessageText" style="font-size:0.8rem; font-weight:800; color:#1d4ed8;">Yay! You got FREE Delivery</span>
+        <!-- Scrollable Body Content with proper padding-bottom -->
+        <div style="flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px; display:flex; flex-direction:column; gap:10px; padding-bottom:160px; box-sizing:border-box;">
+            
+            <!-- User Identity Card -->
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,0.02); flex-shrink:0;">
+                <span id="cartUserIdentitySummary" style="font-size:0.8rem; font-weight:700; color:#0f172a;">Order for User, 7398746551</span>
+                <button type="button" onclick="openEditProfileModal()" style="background:none; border:none; color:#16a34a; font-weight:800; font-size:0.8rem; cursor:pointer;">Change</button>
             </div>
-            <span style="font-size:0.72rem; font-weight:700; color:#16a34a;">See offers &gt;</span>
-        </div>
-        <div style="font-size:0.68rem; color:#64748b; font-weight:600;">Tap to view available coupons & discounts</div>
-    </div>
 
-    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; flex-shrink:0;">
-        <h4 style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:10px;">Bill details</h4>
-        <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#64748b; margin-bottom:6px;">
-            <span>Items total</span>
-            <span id="cartItemSubtotal" style="font-weight:700; color:#0f172a;">₹0.00</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#64748b; margin-bottom:6px;">
-            <span>Delivery charge</span>
-            <span id="cartDeliveryFee" style="font-weight:700; color:#16a34a;">FREE</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#64748b; margin-bottom:6px; display:none;" id="rainSurgeRow">
-            <span>🌧️ Rain Surge Fee</span>
-            <span id="cartRainFee" style="font-weight:700; color:#d97706;">₹0.00</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#64748b; margin-bottom:10px;">
-            <span>Handling & Platform charge</span>
-            <span style="font-weight:700; color:#0f172a;">₹0.00</span>
-        </div>
-        <div style="border-top:1px dashed #cbd5e1; padding-top:8px; display:flex; justify-content:space-between; font-size:0.95rem; font-weight:900; color:#0f172a;">
-            <span>Grand total</span>
-            <span id="cartGrandTotalSummary" style="color:#0f172a;">₹0.00</span>
-        </div>
-    </div>
-
-    <!-- Delivery Instructions -->
-    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; flex-shrink:0;">
-        <h4 style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:8px;">Delivery instructions</h4>
-        <div style="display:flex; gap:8px; overflow-x:auto; scrollbar-width:none;">
-            <div onclick="selectDeliveryInstruction(this)" style="min-width:105px; border:1.5px solid #16a34a; background:#f0fdf4; border-radius:10px; padding:8px; cursor:pointer; display:flex; flex-direction:column; gap:4px;">
-                <div style="display:flex; justify-content:space-between;"><span style="font-size:1.1rem;">🔕</span><span style="color:#16a34a; font-weight:bold;">✔</span></div>
-                <span style="font-size:0.7rem; font-weight:700; color:#0f172a;">Don't ring the bell</span>
+            <!-- Delivery ETA Banner -->
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02); flex-shrink:0;">
+                <div style="font-size:1.8rem; background:#f0fdf4; padding:6px; border-radius:10px;">⏰</div>
+                <div>
+                    <h4 style="font-size:0.95rem; font-weight:900; color:#0f172a; margin:0 0 2px 0;">Free delivery in <span id="cartDrawerEtaMinutes">15</span> minutes</h4>
+                    <p style="font-size:0.72rem; color:#64748b; font-weight:600; margin:0;" id="shipmentItemsCountText">1 page and 1 item</p>
+                </div>
             </div>
-            <div onclick="selectDeliveryInstruction(this)" style="min-width:105px; border:1.5px solid #cbd5e1; background:#ffffff; border-radius:10px; padding:8px; cursor:pointer; display:flex; flex-direction:column; gap:4px;">
-                <div style="display:flex; justify-content:space-between;"><span style="font-size:1.1rem;">🔇</span><span style="color:#cbd5e1; font-weight:bold;">☐</span></div>
-                <span style="font-size:0.7rem; font-weight:700; color:#0f172a;">Avoid calling</span>
+
+            <!-- 🟢 Added Items & Print Documents List (Directly visible here) -->
+            <div id="cartDrawerItemsList" style="display:flex; flex-direction:column; gap:8px; width:100%; flex-shrink:0;"></div>
+
+            <!-- 🟢 You Might Also Like Slider Box -->
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; flex-shrink:0;">
+                <h4 style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:10px;">You might also like</h4>
+                <div id="cartDrawerUpsellingGrid" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;"></div>
             </div>
-            <div onclick="selectDeliveryInstruction(this)" style="min-width:105px; border:1.5px solid #cbd5e1; background:#ffffff; border-radius:10px; padding:8px; cursor:pointer; display:flex; flex-direction:column; gap:4px;">
-                <div style="display:flex; justify-content:space-between;"><span style="font-size:1.1rem;">🛡️</span><span style="color:#cbd5e1; font-weight:bold;">☐</span></div>
-                <span style="font-size:0.7rem; font-weight:700; color:#0f172a;">Leave with guard</span>
+
+            <!-- Free Delivery Progress / Coupons Box -->
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; cursor:pointer; flex-shrink:0;" onclick="toggleCouponDrawer()" id="freeDeliveryProgressBarBox">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.1rem; background:#eff6ff; color:#3b82f6; padding:3px; border-radius:50%;">✓</span>
+                        <span id="freeDeliveryMessageText" style="font-size:0.82rem; font-weight:800; color:#1d4ed8;">Yay! You got FREE Delivery</span>
+                    </div>
+                    <span style="font-size:0.75rem; font-weight:700; color:#16a34a;">See offers &gt;</span>
+                </div>
+                <div style="font-size:0.7rem; color:#64748b; font-weight:600;">Tap to view available coupons & discounts</div>
             </div>
+
+            <!-- Bill Details Box -->
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; flex-shrink:0;">
+                <h4 style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:12px;">Bill details</h4>
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#64748b; margin-bottom:8px;">
+                    <span>Items total</span>
+                    <span id="cartItemSubtotal" style="font-weight:700; color:#0f172a;">₹0.00</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#64748b; margin-bottom:8px;">
+                    <span>Delivery charge</span>
+                    <span id="cartDeliveryFee" style="font-weight:700; color:#16a34a;">FREE</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#64748b; margin-bottom:8px; display:none;" id="rainSurgeRow">
+                    <span>🌧️ Rain Surge Fee</span>
+                    <span id="cartRainFee" style="font-weight:700; color:#d97706;">₹0.00</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#64748b; margin-bottom:12px;">
+                    <span>Handling & Platform charge</span>
+                    <span style="font-weight:700; color:#0f172a;">₹0.00</span>
+                </div>
+                <div style="border-top:1px dashed #cbd5e1; padding-top:10px; display:flex; justify-content:space-between; font-size:1rem; font-weight:900; color:#0f172a;">
+                    <span>Grand total</span>
+                    <span id="cartGrandTotalSummary" style="color:#0f172a;">₹0.00</span>
+                </div>
+            </div>
+
+            <!-- Delivery Instructions -->
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; flex-shrink:0;">
+                <h4 style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:10px;">Delivery instructions</h4>
+                <div style="display:flex; gap:10px; overflow-x:auto; scrollbar-width:none;">
+                    <div onclick="selectDeliveryInstruction(this)" style="min-width:110px; border:1.5px solid #16a34a; background:#f0fdf4; border-radius:10px; padding:10px; cursor:pointer; display:flex; flex-direction:column; gap:6px;">
+                        <div style="display:flex; justify-content:space-between;"><span style="font-size:1.2rem;">🔕</span><span style="color:#16a34a; font-weight:bold;">✔</span></div>
+                        <span style="font-size:0.72rem; font-weight:700; color:#0f172a;">Don't ring the bell</span>
+                    </div>
+                    <div onclick="selectDeliveryInstruction(this)" style="min-width:110px; border:1.5px solid #cbd5e1; background:#ffffff; border-radius:10px; padding:10px; cursor:pointer; display:flex; flex-direction:column; gap:6px;">
+                        <div style="display:flex; justify-content:space-between;"><span style="font-size:1.2rem;">🔇</span><span style="color:#cbd5e1; font-weight:bold;">☐</span></div>
+                        <span style="font-size:0.72rem; font-weight:700; color:#0f172a;">Avoid calling</span>
+                    </div>
+                    <div onclick="selectDeliveryInstruction(this)" style="min-width:110px; border:1.5px solid #cbd5e1; background:#ffffff; border-radius:10px; padding:10px; cursor:pointer; display:flex; flex-direction:column; gap:6px;">
+                        <div style="display:flex; justify-content:space-between;"><span style="font-size:1.2rem;">🛡️</span><span style="color:#cbd5e1; font-weight:bold;">☐</span></div>
+                        <span style="font-size:0.72rem; font-weight:700; color:#0f172a;">Leave with guard</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tip your delivery partner -->
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; flex-shrink:0;">
+                <h4 style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:4px;">Tip your delivery partner</h4>
+                <p style="font-size:0.7rem; color:#64748b; margin-bottom:10px;">Your kindness means a lot! 100% goes directly to your delivery partner.</p>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(20)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:10px; background:#ffffff; font-weight:700; font-size:0.75rem; cursor:pointer;">😍 ₹20</button>
+                    <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(30)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:10px; background:#ffffff; font-weight:700; font-size:0.75rem; cursor:pointer;">😍 ₹30</button>
+                    <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(50)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:10px; background:#ffffff; font-weight:700; font-size:0.75rem; cursor:pointer;">😍 ₹50</button>
+                    <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(100)" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:10px; background:#ffffff; font-weight:700; font-size:0.75rem; cursor:pointer;">👏 Custom</button>
+                </div>
+            </div>
+
+            <!-- Cancellation Policy -->
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; flex-shrink:0; margin-bottom:20px;">
+                <h4 style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:6px;">Cancellation Policy</h4>
+                <p style="font-size:0.72rem; color:#64748b; line-height:1.4; margin:0;">Once order placed, cancellation may result in a fee. In case of unexpected delays, a complete refund will be provided.</p>
+            </div>
+
         </div>
-    </div>
 
-    <!-- Tip your delivery partner -->
-    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; flex-shrink:0;">
-        <h4 style="font-size:0.9rem; font-weight:800; color:#0f172a; margin-bottom:2px;">Tip your delivery partner</h4>
-        <p style="font-size:0.68rem; color:#64748b; margin-bottom:8px;">Your kindness means a lot! 100% goes directly to your partner.</p>
-        <div style="display:flex; gap:6px;">
-            <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(20)" style="flex:1; padding:6px; border:1px solid #cbd5e1; border-radius:8px; background:#ffffff; font-weight:700; font-size:0.72rem; cursor:pointer;">😍 ₹20</button>
-            <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(30)" style="flex:1; padding:6px; border:1px solid #cbd5e1; border-radius:8px; background:#ffffff; font-weight:700; font-size:0.72rem; cursor:pointer;">😍 ₹30</button>
-            <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(50)" style="flex:1; padding:6px; border:1px solid #cbd5e1; border-radius:8px; background:#ffffff; font-weight:700; font-size:0.72rem; cursor:pointer;">😍 ₹50</button>
-            <button type="button" class="tip-chip-btn" onclick="setDeliveryTip(100)" style="flex:1; padding:6px; border:1px solid #cbd5e1; border-radius:8px; background:#ffffff; font-weight:700; font-size:0.72rem; cursor:pointer;">👏 Custom</button>
-        </div>
-    </div>
-
-    <!-- Cancellation Policy -->
-    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:12px; flex-shrink:0; margin-bottom:10px;">
-        <h4 style="font-size:0.85rem; font-weight:800; color:#0f172a; margin-bottom:4px;">Cancellation Policy</h4>
-        <p style="font-size:0.68rem; color:#64748b; line-height:1.3; margin:0;">Once order placed, cancellation may result in a fee. In case of unexpected delays, a complete refund will be provided.</p>
-    </div>
-
-</div>
-        <!-- 🟢 EXACT BLINKIT-STYLE FIXED FLOATING FOOTER (Address Strip + Payment & Exact Reference Place Order Button) -->
+        <!-- 🟢 EXACT BLINKIT-STYLE FIXED FLOATING FOOTER -->
         <div style="flex-shrink:0; background:#ffffff; border-top:1px solid #e2e8f0; padding:10px 16px; box-shadow:0 -4px 15px rgba(0,0,0,0.06); display:flex; flex-direction:column; gap:8px;">
             
-            <!-- Delivery Address Floating Strip -->
+            <!-- Delivery Address Strip -->
             <div onclick="openAddressManagerModal()" style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:8px 12px; cursor:pointer;">
                 <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
                     <span style="font-size:1.1rem;">🏠</span>
@@ -837,7 +839,7 @@
                 <span style="color:#16a34a; font-weight:800; font-size:0.75rem;">Change</span>
             </div>
 
-            <!-- Payment Mode & Reference Blinkit-Style Place Order Button Row -->
+            <!-- Payment & Place Order Row matching your reference image -->
             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
                 <div style="display:flex; flex-direction:column;">
                     <span style="font-size:0.65rem; font-weight:700; color:#64748b; text-transform:uppercase;">PAY USING 🛈</span>
@@ -848,7 +850,7 @@
                     </select>
                 </div>
 
-                <!-- Exact Blinkit Reference Style Green Place Order Button -->
+                <!-- Exact Green Place Order Button with Total -->
                 <button type="button" onclick="executeFinalCartOrderPlacement()" style="background:#16a34a; color:#ffffff; border:none; padding:12px 18px; border-radius:14px; font-weight:900; font-size:0.95rem; display:flex; align-items:center; gap:14px; cursor:pointer; box-shadow:0 4px 12px rgba(22,163,74,0.3);">
                     <div style="display:flex; flex-direction:column; text-align:left;">
                         <span id="cartDrawerGrandTotal" style="font-size:0.95rem; font-weight:900; line-height:1.1;">₹0.00</span>
