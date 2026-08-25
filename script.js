@@ -3107,22 +3107,120 @@ const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
     }
 
     if (typeof calculateTotal === 'function') calculateTotal();
-    };
+};
+
 if (typeof window.synchronizeWalletInterfaceBalance !== 'function') {
     window.synchronizeWalletInterfaceBalance = function() {
         const sessionActiveUser = localStorage.getItem('printAppUser');
         const balanceDisplayNode = document.getElementById('headerWalletDisplayBalance');
         const drawerWalletText = document.getElementById('walletDrawerBalanceText');
         if (!balanceDisplayNode) return;
-        if (!sessionActiveUser) { 
-            balanceDisplayNode.textContent = "₹0.00"; 
-            if(drawerWalletText) drawerWalletText.textContent = "₹0";
-            return; 
+        if (!sessionActiveUser) {
+            balanceDisplayNode.textContent = '₹0.00';
+            if (drawerWalletText) drawerWalletText.textContent = '₹0';
+            return;
         }
-        let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
+        const currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
         balanceDisplayNode.textContent = `₹${currentWalletCash.toFixed(2)}`;
-        if(drawerWalletText) drawerWalletText.textContent = `₹${currentWalletCash.toFixed(2)}`;
+        if (drawerWalletText) drawerWalletText.textContent = `₹${currentWalletCash.toFixed(2)}`;
     };
 }
-// END OF renderCartDrawerContents
-});
+
+// 🔥 EMERGENCY FORCE RENDER & DEBUG HELPER
+window.forceDebugOrderHistory = function(username, showRecent = true) {
+    const fallbackUser = localStorage.getItem('printAppUser') || 'Customer';
+    const user = (username && String(username).trim()) ? String(username).trim() : fallbackUser;
+    const container = document.getElementById('ordersHistoryContainer');
+    if (!container) {
+        console.error('❌ #ordersHistoryContainer element missing from HTML!');
+        return;
+    }
+
+    const rawHistory = localStorage.getItem(`history_${user}`) || '[]';
+    if (typeof console !== 'undefined') console.log('📦 Raw History from LocalStorage:', rawHistory);
+
+    let history = [];
+    try {
+        history = JSON.parse(rawHistory);
+    } catch (e) {
+        history = [];
+    }
+
+    if (!Array.isArray(history)) {
+        history = [];
+    }
+
+    if (showRecent !== false) {
+        history = [...history].sort(function(a, b) {
+            const aDate = new Date(a.date || 0).getTime();
+            const bDate = new Date(b.date || 0).getTime();
+            return bDate - aDate;
+        });
+    }
+
+    if (history.length === 0) {
+        container.innerHTML = `<p style="text-align:center; padding:20px; color:#ef4444; font-weight:bold;">⚠️ No orders found in LocalStorage for user: ${user}. Try placing a test order!</p>`;
+        return;
+    }
+
+    container.innerHTML = history.map(function(order) {
+        const orderId = String(order.orderId || order.id || 'N/A');
+        const amount = Number(order.amount || 0).toFixed(2);
+        const statusText = order.status || 'Processing';
+        const dateText = order.date || '';
+        const safeOrderId = String(orderId).replace(/['"\\]/g, '\\$&');
+
+        return `
+            <div style="background:#f8fafc; border:2px solid #065f46; border-radius:12px; padding:14px; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; font-weight:900; font-size:0.9rem; color:#0f172a;">
+                    <span>Order #${orderId}</span>
+                    <span style="color:#065f46;">₹${amount}</span>
+                </div>
+                <p style="font-size:0.8rem; color:#475569; margin:6px 0;">Status: <b style="color:#2563eb;">${statusText}</b></p>
+                <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:10px;">${dateText}</p>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button type="button" data-order-id="${safeOrderId}" class="track-order-btn" style="background:#2563eb; color:white; border:none; padding:8px 14px; border-radius:8px; font-weight:700; font-size:0.78rem; cursor:pointer;">📍 Track Status</button>
+                    <button type="button" data-repeat-id="${safeOrderId}" class="repeat-order-btn" style="background:#065f46; color:white; border:none; padding:8px 14px; border-radius:8px; font-weight:700; font-size:0.78rem; cursor:pointer;">🔁 Repeat in Cart</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Attach Event Listeners securely to prevent missing function context errors
+    container.querySelectorAll('.track-order-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            if (typeof window.openOrderTrackingView === 'function') {
+                window.openOrderTrackingView(orderId);
+            }
+        });
+    });
+
+    container.querySelectorAll('.repeat-order-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-repeat-id');
+            if (typeof window.openPastOrderInCartPreview === 'function') {
+                window.openPastOrderInCartPreview(orderId);
+            }
+        });
+    });
+};
+
+(function() {
+    // Sync main render engine with debug helper
+    window.renderOrderHistoryUI = function(username, showRecent = true) {
+        if (typeof window.forceDebugOrderHistory === 'function') {
+            window.forceDebugOrderHistory(username, showRecent);
+        }
+    };
+
+    // Auto-run debug/render on load
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            if (typeof window.forceDebugOrderHistory === 'function') {
+                const activeUser = localStorage.getItem('printAppUser') || 'Customer';
+                window.forceDebugOrderHistory(activeUser, true);
+            }
+        }, 1000);
+    });
+})();
