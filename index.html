@@ -984,12 +984,6 @@
                         <button type="button" onclick="forceReturnToUploadView()" style="background:none; border:none; color:#065f46; font-weight:700; cursor:pointer; font-size:0.85rem;">&larr; Back to Upload</button>
                     </div>
 
-              <div id="configurationScreenState" class="hidden" style="width:100%;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h3 style="font-size:1.1rem; font-weight:800;">Configure Print & Add to Cart</h3>
-            <button type="button" onclick="forceReturnToUploadView()" style="background:none; border:none; color:#065f46; font-weight:700; cursor:pointer; font-size:0.85rem;">&larr; Back to Upload</button>
-        </div>
-
         <div style="background:var(--surface); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:15px;">
             <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:10px; color:#1e293b;">⚡ Hungry while waiting? Add Store Products</h4>
             <div class="snacks-horizontal-slider" id="configSnacksGrid"></div>
@@ -1283,12 +1277,31 @@
             if (modal) modal.style.display = show ? 'flex' : 'none';
         }
 
-        function navigateDrawerSection(targetId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            if(document.getElementById(`user_section_${targetId}`)) {
-                document.getElementById(`user_section_${targetId}`).classList.add('active');
+       function navigateDrawerSection(targetId) {
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.classList.remove('active');
+                el.style.display = 'none';
+            });
+            
+            let normalizedId = targetId === 'orders' ? 'history' : targetId;
+            const targetNode = document.getElementById(`user_section_${normalizedId}`);
+            
+            if (targetNode) {
+                targetNode.classList.add('active');
+                targetNode.style.display = 'block';
             }
+
+            const storeNode = document.getElementById('user_section_store');
+            if (storeNode) {
+                if (normalizedId === 'store') {
+                    storeNode.style.display = 'block';
+                } else {
+                    storeNode.style.display = 'none';
+                }
+            }
+
             toggleUserDrawer(false);
+            if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
         }
     </script>
     <script src="script.js"></script>
