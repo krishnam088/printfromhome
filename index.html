@@ -728,7 +728,7 @@
             </div>
         </div>
 
-        <!-- Scrollable Body Content -->
+      <!-- Scrollable Body Content -->
         <div style="flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 16px 160px 16px; display:flex; flex-direction:column; gap:12px; box-sizing:border-box; background:#ffffff;">
             
             <!-- User Identity Card -->
@@ -745,18 +745,20 @@
                 </div>
             </div>
 
-            <!-- 1. Added Items & Print Documents List -->
+            <!-- 1. Added Items & Print Documents List (Sirf yahan added items rahenge) -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:14px; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                 <h4 style="font-size:0.88rem; font-weight:900; color:#0f172a; margin-bottom:10px;">Added Items & Print Jobs</h4>
                 <div id="cartDrawerItemsList" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;"></div>
             </div>
 
-            <!-- 2. You Might Also Like Section -->
+            <!-- 2. Independent "You Might Also Like" Section (Yahan inventory items aayenge) -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:14px; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <h4 style="font-size:0.88rem; font-weight:900; color:#0f172a; margin:0;">You Might Also Like</h4>
                 </div>
-                <div id="cartDrawerUpsellingGrid" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;"></div>
+                <div id="cartDrawerUpsellingGrid" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;">
+                    <!-- Inventory items dynamically injected here -->
+                </div>
             </div>
 
             <!-- Free Delivery Progress Bar -->
@@ -772,7 +774,8 @@
                     <div id="freeDeliveryFillBar" style="width:0%; height:100%; background:#16a34a; transition:width 0.3s ease;"></div>
                 </div>
             </div>
-
+            <!-- (Baaki ka section same rahega...) -->
+             
             <!-- Bill Details Box -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:16px; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                 <h4 style="font-size:0.88rem; font-weight:900; color:#0f172a; margin-bottom:12px;">Bill details</h4>

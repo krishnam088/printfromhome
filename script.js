@@ -1897,9 +1897,7 @@ window.updateFloatingCartBar = function() {
 };
 
 
-// ==========================================
-// 🔥 BULLETPROOF UNIVERSAL CART DRAWER RENDER ENGINE
-// ==========================================
+
 // ==========================================
 // 🔥 BULLETPROOF UNIVERSAL CART DRAWER RENDER ENGINE
 // ==========================================
@@ -1910,7 +1908,6 @@ window.renderCartDrawerContents = function() {
     
     container.innerHTML = '';
     
-    // Fetch User name & phone dynamically from address or session profile
     const activeUser = localStorage.getItem('printAppUser') || 'Customer';
     const activePhone = localStorage.getItem('printAppUserIdentity') || '7398746551';
     const activeAddress = localStorage.getItem('selected_active_address') || '';
@@ -1996,13 +1993,9 @@ window.renderCartDrawerContents = function() {
         shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
     }
 
-    // Render upselling items independently in their own separate section below added items
     renderUpsellingGridSafely();
     if (typeof calculateTotal === 'function') calculateTotal();
 };
-    renderUpsellingGridSafely();
-    if (typeof calculateTotal === 'function') calculateTotal();
-
 
 // Helper function to render upselling products inside existing #cartDrawerUpsellingGrid
 function renderUpsellingGridSafely() {
