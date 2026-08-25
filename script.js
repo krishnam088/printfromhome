@@ -70,48 +70,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+// 🔥 Global Store Location (Varanasi Store)
 const STORE_LOCATION = {
     lat: 25.3451,
     lng: 83.0012,
-    name: "Store" // Store name display fix (No address shown)
+    name: "Store"
 };
-});
 
 // ⏱️ CALCULATE REAL-TIME DISTANCE & ETA FROM STORE TO USER (Home & Cart)
 window.calculateRealtimeDistanceAndEta = function() {
-    if (!navigator.geolocation) {
-        updateEtaAndDistanceUI("15", "Store");
-        return;
-    }
+    if (!navigator.geolocation) {
+        updateEtaAndDistanceUI("15", "Store");
+        return;
+    }
 
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const userLat = position.coords.latitude;
-            const userLng = position.coords.longitude;
-            fallbackHaversineCalculation(userLat, userLng);
-        },
-        (error) => {
-            updateEtaAndDistanceUI("15", "Store");
-        },
-        { timeout: 10000, enableHighAccuracy: true }
-    );
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            fallbackHaversineCalculation(userLat, userLng);
+        },
+        (error) => {
+            updateEtaAndDistanceUI("15", "Store");
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+    );
 };
 
 // 📐 Haversine Formula for Distance & Time
 function fallbackHaversineCalculation(userLat, userLng) {
-    const R = 6371; 
-    const dLat = (STORE_LOCATION.lat - userLat) * Math.PI / 180;
-    const dLng = (STORE_LOCATION.lng - userLng) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(userLat * Math.PI / 180) * Math.cos(STORE_LOCATION.lat * Math.PI / 180) *
-              Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    const distanceKm = R * c;
+    const R = 6371; 
+    const dLat = (STORE_LOCATION.lat - userLat) * Math.PI / 180;
+    const dLng = (STORE_LOCATION.lng - userLng) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(userLat * Math.PI / 180) * Math.cos(STORE_LOCATION.lat * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distanceKm = R * c;
 
-    let estimatedMins = Math.max(10, Math.round(5 + (distanceKm * 3)));
-    let formattedDistance = `${distanceKm.toFixed(1)} km`;
+    let estimatedMins = Math.max(10, Math.round(5 + (distanceKm * 3)));
+    let formattedDistance = `${distanceKm.toFixed(1)} km`;
 
-    updateEtaAndDistanceUI(estimatedMins, formattedDistance);
+    updateEtaAndDistanceUI(estimatedMins, formattedDistance);
 }
 
 // 🎨 UI UPDATER (Strictly showing clean distance like "1.7 km away" with store icon)
@@ -1714,7 +1714,110 @@ window.updateFloatingCartBar = function() {
     const stackContainer = document.getElementById('floatingCartImagesStack');
     const drawerOverlay = document.getElementById('cartDrawerOverlay');
     
-    // ==========================================
+    // Category Drawer Cart Elements
+    const catBar = document.getElementById('categoryDrawerFooterBar');
+    const catCountText = document.getElementById('categoryCartCountText');
+    const catPriceText = document.getElementById('categoryCartTotalPriceText');
+    
+    if (!bar) return;
+
+    const sessionActiveUser = localStorage.getItem('printAppUser');
+    const isAuthVisible = document.getElementById('authScreen') && !document.getElementById('authScreen').classList.contains('app-hidden') && document.getElementById('authScreen').style.display !== 'none';
+    
+    const storeSection = document.getElementById('user_section_store');
+    const isStoreActive = storeSection && storeSection.classList.contains('active');
+
+    window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
+    window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
+
+    let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0);
+    let totalPrintCount = window.cartPrintJobsArray.length;
+    let totalCount = totalSnacksCount + totalPrintCount;
+
+    let totalSnacksPrice = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
+    let totalPrintPrice = window.cartPrintJobsArray.reduce((acc, job) => acc + (job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0);
+    
+    let subtotalCalc = totalSnacksPrice + totalPrintPrice;
+    const freeDeliveryThreshold = 99.00;
+
+    let activeDelFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 0;
+    let delFee = (subtotalCalc >= freeDeliveryThreshold || subtotalCalc === 0) ? 0.00 : activeDelFee;
+    
+    let activeRainFee = window.adminRainFee !== undefined ? window.adminRainFee : 0;
+    let rainFee = window.isRainSurgeActive ? activeRainFee : 0;
+    
+    let activeHandlingFee = window.adminHandlingFee !== undefined ? window.adminHandlingFee : 0;
+
+    let totalPrice = subtotalCalc + delFee + rainFee + activeHandlingFee + (window.currentDeliveryTip || 0);
+
+    if (catBar) {
+        if (totalCount > 0) {
+            catBar.style.display = 'flex';
+            if (catCountText) catCountText.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
+            if (catPriceText) catPriceText.textContent = `₹${totalPrice.toFixed(2)}`;
+        } else {
+            catBar.style.display = 'none';
+        }
+    }
+
+    if (totalCount === 0 && drawerOverlay && drawerOverlay.style.display === 'flex') {
+        toggleCartDrawer(false);
+    }
+
+    if (!sessionActiveUser || isAuthVisible || !isStoreActive || totalCount === 0 || (drawerOverlay && drawerOverlay.style.display === 'flex')) {
+        bar.classList.add('hidden');
+        bar.style.display = 'none';
+        return;
+    }
+
+    bar.classList.remove('hidden');
+    bar.style.display = 'flex';
+    if (countText) countText.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
+    if (priceText) priceText.textContent = `₹${totalPrice.toFixed(2)}`;
+
+    if (stackContainer) {
+        stackContainer.innerHTML = '';
+        stackContainer.style.cssText = "position:relative; width:45px; height:34px; display:flex; align-items:center;";
+
+        let allVisualItems = [];
+        window.cartSnacksArray.forEach(s => {
+            for(let i=0; i<s.qty; i++) {
+                allVisualItems.push({ type: 'snack', img: s.imageUrl || '', name: s.name });
+            }
+        });
+        window.cartPrintJobsArray.forEach(p => allVisualItems.push({ type: 'print', img: '', name: p.fileName }));
+
+        let displayItems = allVisualItems.slice(0, 3);
+        displayItems.forEach((item, sIdx) => {
+            const iconBox = document.createElement('div');
+            iconBox.style.cssText = `
+                position: absolute;
+                left: ${sIdx * 12}px;
+                width: 30px;
+                height: 30px;
+                border-radius: 8px;
+                background: #ffffff;
+                border: 2px solid #f59e0b;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.85rem;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+                overflow: hidden;
+                z-index: ${10 - sIdx};
+            `;
+            if (item.type === 'snack' && item.img) {
+                iconBox.innerHTML = `<img src="${item.img}" style="width:100%; height:100%; object-fit:cover;" />`;
+            } else {
+                iconBox.innerHTML = item.type === 'print' ? '📄' : '📦';
+            }
+            stackContainer.appendChild(iconBox);
+        });
+    }
+}; // 🟢 updateFloatingCartBar safely ends here!
+
+
+// ==========================================
 // 📂 CATEGORY SLIDER DRAWER & FILTERING ENGINE
 // ==========================================
 window.openCategoryDrawer = function(categoryName) {
@@ -1955,16 +2058,21 @@ window.renderCartDrawerContents = function() {
             window.storeInventoryProducts.forEach((prod) => {
                 if (prod.stockQuantity > 0) {
                     const thumb = prod.imageUrl || prod.image || '';
-                    const safeSku = String(prod.sku || prod.name || '').replace(/'/g, "\\'");
-                    const safeName = String(prod.name || '').replace(/'/g, "\\'");
-                    const safeThumb = String(thumb || '').replace(/'/g, "\\'");
+                    const safeSku = String(prod.sku || prod.name || '').replace(/['"\\]/g, '\\$&');
+                    const safeName = String(prod.name || '').replace(/['"\\]/g, '\\$&');
+                    const safeThumb = String(thumb || '').replace(/['"\\]/g, '\\$&');
+                    
+                    const priceVal = Number(prod.sellingPrice || prod.price || 0);
+                    const stockVal = Number(prod.stockQuantity || prod.stock || 0);
+
                     const itemCard = document.createElement('div');
                     itemCard.style.cssText = "min-width: 100px; width: 100px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.03);";
+                    
                     itemCard.innerHTML = `
                         ${thumb ? `<img src="${thumb}" style="width:45px; height:45px; object-fit:cover; border-radius:8px; margin-bottom:4px;" />` : '<div style="font-size:1.5rem; margin-bottom:4px;">📦</div>'}
-                        <div title="${prod.name}" style="font-size:0.7rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name}</div>
-                        <div style="font-size:0.7rem; font-weight:800; color:#065f46; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
-                        <button type="button" style="background:#065f46; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.68rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${Number(prod.sellingPrice) || 0}, ${Number(prod.stockQuantity) || 0}, '${safeThumb}')">+ Add</button>
+                        <div title="${prod.name || ''}" style="font-size:0.7rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name || ''}</div>
+                        <div style="font-size:0.7rem; font-weight:800; color:#065f46; margin:2px 0 6px 0;">₹${priceVal}</div>
+                        <button type="button" style="background:#065f46; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.68rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
                     `;
                     upsellingGrid.appendChild(itemCard);
                 }
@@ -1975,8 +2083,7 @@ window.renderCartDrawerContents = function() {
     }
 
     if (typeof calculateTotal === 'function') calculateTotal();
-   };
-
+};
 
 // Helper function to edit a print job from cart (re-opens Print Studio)
 window.editCartPrintJob = function(idx) {
@@ -2761,5 +2868,7 @@ const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
     }
 
     if (typeof calculateTotal === 'function') calculateTotal();
-}
-};
+    };
+
+// END OF renderCartDrawerContents
+});
