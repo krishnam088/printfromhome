@@ -1769,7 +1769,6 @@ window.openProductDetailModal = function(prod) {
    // ==========================================
 // 🔥 CART DRAWER & FOOTER BAR UI (WITH AUTO-CLOSE & VERTICAL DETAILED LIST)
 // ==========================================
-// 🔥 Cart Drawer Toggle with Immediate Product Fetching
 // 🔥 Cart Drawer Toggle with Immediate Product & Upselling Render
 window.toggleCartDrawer = function(open = true) {
     const drawerOverlay = document.getElementById('cartDrawerOverlay');
