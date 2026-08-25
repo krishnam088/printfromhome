@@ -1950,7 +1950,7 @@ window.renderCartDrawerContents = function() {
     let totalPagesCount = 0;
     let totalItemsCount = 0;
 
-    // 1. Render Print Jobs in Cart (With Edit Settings Button)
+    // 1. Render Print Jobs in Cart
     window.cartPrintJobsArray.forEach((job, idx) => {
         let rate = (job.printType === 'bw') ? 3 : 10;
         let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
@@ -1989,7 +1989,7 @@ window.renderCartDrawerContents = function() {
         wrapper.appendChild(card);
     });
 
-    // 2. Render Retail Products in Cart (With Stepper [ - ] Qty [ + ])
+    // 2. Render Retail Products in Cart
     window.cartSnacksArray.forEach((snack, idx) => {
         totalItemsCount += snack.qty;
         const card = document.createElement('div');
@@ -2030,7 +2030,7 @@ window.renderCartDrawerContents = function() {
         shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
     }
 
-    // 3. Render "You Might Also Like" Slider
+    // 3. Populate existing Upselling Slider
     const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
     if (upsellingGrid) {
         if (window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
