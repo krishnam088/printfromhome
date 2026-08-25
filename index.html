@@ -721,33 +721,35 @@
                 </div>
             </div>
 
-            <!-- Scrollable Drawer Body Content -->
-            <div style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px; display:flex; flex-direction:column; gap:12px; padding-bottom:90px;">
-                
-                <!-- User Identity Card -->
-                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-                    <span id="cartUserIdentitySummary" style="font-size:0.8rem; font-weight:700; color:#0f172a;">Order for User, 7398746551</span>
-                    <button type="button" onclick="openEditProfileModal()" style="background:none; border:none; color:#16a34a; font-weight:800; font-size:0.8rem; cursor:pointer;">Change</button>
-                </div>
+          <!-- Scrollable Drawer Body Content -->
+<div style="flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px; display:flex; flex-direction:column; gap:12px; padding-bottom:90px; box-sizing:border-box;">
+    
+    <!-- User Identity Card -->
+    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+        <span id="cartUserIdentitySummary" style="font-size:0.8rem; font-weight:700; color:#0f172a;">Order for User, 7398746551</span>
+        <button type="button" onclick="openEditProfileModal()" style="background:none; border:none; color:#16a34a; font-weight:800; font-size:0.8rem; cursor:pointer;">Change</button>
+    </div>
 
-                <!-- Delivery ETA Banner -->
-                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:14px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-                    <div style="font-size:1.8rem; background:#f0fdf4; padding:6px; border-radius:10px;">⏰</div>
-                    <div>
-                        <h4 style="font-size:0.95rem; font-weight:900; color:#0f172a; margin:0 0 2px 0;">Free delivery in <span id="cartDrawerEtaMinutes">15</span> minutes</h4>
-                        <p style="font-size:0.72rem; color:#64748b; font-weight:600; margin:0;" id="shipmentItemsCountText">1 page and 1 item</p>
-                    </div>
-                </div>
+    <!-- Delivery ETA Banner -->
+    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:14px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+        <div style="font-size:1.8rem; background:#f0fdf4; padding:6px; border-radius:10px;">⏰</div>
+        <div>
+            <h4 style="font-size:0.95rem; font-weight:900; color:#0f172a; margin:0 0 2px 0;">Free delivery in <span id="cartDrawerEtaMinutes">15</span> minutes</h4>
+            <p style="font-size:0.72rem; color:#64748b; font-weight:600; margin:0;" id="shipmentItemsCountText">1 page and 1 item</p>
+        </div>
+    </div>
 
-                <!-- 🖼️ Image 2: Added Items & Print Documents List Container -->
-                <div id="cartDrawerItemsList" style="display:flex; flex-direction:column; gap:10px;"></div>
+    <!-- 🖼️ Added Items & Print Documents List Container (Fixed with min-height) -->
+    <div id="cartDrawerItemsList" style="display:flex; flex-direction:column; gap:10px; width:100%; min-height:40px;"></div>
 
-                <!-- 🖼️ Image 2: You Might Also Like (Upselling Horizontal Slider) -->
-                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:14px;">
-                    <h4 style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:10px;">You might also like</h4>
-                    <div id="cartDrawerUpsellingGrid" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;"></div>
-                </div>
+    <!-- 🖼️ You Might Also Like (Upselling Horizontal Slider) -->
+    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:14px;">
+        <h4 style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-bottom:10px;">You might also like</h4>
+        <div id="cartDrawerUpsellingGrid" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;"></div>
+    </div>
 
+    <!-- (Baaki saare sections jaise bill details, delivery instructions, tip, policy waise hi rahenge) -->
+     
                <!-- 🖼️ Image 4: Free Delivery & Bill Summary Box (Clickable for Coupons) -->
                 <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:14px; cursor:pointer;" onclick="toggleCouponDrawer()" id="freeDeliveryProgressBarBox">
                     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">

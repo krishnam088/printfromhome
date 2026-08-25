@@ -1926,13 +1926,10 @@ window.closeCategoryDrawer = function() {
 
 
 // ==========================================
-// 🔥 UNIFIED CART DRAWER RENDER ENGINE (PRINTS + PRODUCTS)
+// 🔥 BULLETPROOF UNIVERSAL CART DRAWER RENDER ENGINE
 // ==========================================
 window.renderCartDrawerContents = function() {
-    const container = document.getElementById('cartDrawerItemsList') || 
-                        document.getElementById('cartItemsListContainer') || 
-                        document.getElementById('cartItemsContainer');
-    
+    const container = document.getElementById('cartDrawerItemsList');
     if (!container) return;
     container.innerHTML = '';
     
@@ -1944,17 +1941,16 @@ window.renderCartDrawerContents = function() {
     if (!hasItems) {
         container.innerHTML = `<p style="font-size:0.82rem; color:#64748b; text-align:center; padding:20px;">Your cart is empty.</p>`;
         if (typeof calculateTotal === 'function') calculateTotal();
-        if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
         return;
     }
 
     const wrapper = document.createElement('div');
-    wrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
+    wrapper.style.cssText = "display:flex; flex-direction:column; gap:10px; width:100%;";
 
     let totalPagesCount = 0;
     let totalItemsCount = 0;
 
-    // 1. Render Print Jobs in Cart (With ✏️ Edit Settings Button)
+    // 1. Render Print Jobs in Cart (With Edit Settings Button)
     window.cartPrintJobsArray.forEach((job, idx) => {
         let rate = (job.printType === 'bw') ? 3 : 10;
         let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
@@ -1979,14 +1975,12 @@ window.renderCartDrawerContents = function() {
                 <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer; font-weight:bold;" title="Remove">&times;</button>
             </div>
 
-            <!-- Specs Pill Bar -->
             <div style="display:flex; flex-wrap:wrap; gap:6px; font-size:0.68rem; font-weight:700;">
                 <span style="background:#f0fdf4; color:#16a34a; padding:2px 8px; border-radius:6px;">Copies: ${job.copies}</span>
                 <span style="background:#eff6ff; color:#2563eb; padding:2px 8px; border-radius:6px;">${printTypeLabel}</span>
                 <span style="background:#fef3c7; color:#d97706; padding:2px 8px; border-radius:6px;">${orientationLabel}</span>
             </div>
 
-            <!-- Footer: Price & Edit Settings Button -->
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e2e8f0; padding-top:8px; margin-top:2px;">
                 <button type="button" onclick="editCartPrintJob(${idx})" style="background:none; border:none; color:#2563eb; font-weight:800; font-size:0.75rem; cursor:pointer; padding:0;">✏️ Edit settings</button>
                 <span style="font-size:0.9rem; font-weight:900; color:#0f172a;">₹${jobTotal.toFixed(2)}</span>
@@ -1995,7 +1989,7 @@ window.renderCartDrawerContents = function() {
         wrapper.appendChild(card);
     });
 
-    // 2. Render Snacks / Store Products in Cart (With Stepper [ - ] Qty [ + ] & Clean UI)
+    // 2. Render Retail Products in Cart (With Stepper [ - ] Qty [ + ])
     window.cartSnacksArray.forEach((snack, idx) => {
         totalItemsCount += snack.qty;
         const card = document.createElement('div');
@@ -2016,7 +2010,6 @@ window.renderCartDrawerContents = function() {
                 <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer; font-weight:bold;" title="Remove">&times;</button>
             </div>
 
-            <!-- Quantity Counter & Total Row for Product -->
             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e2e8f0; padding-top:8px; margin-top:2px;">
                 <div style="display:flex; align-items:center; background:#065f46; border-radius:8px; padding:3px 8px; gap:10px;">
                     <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; color:#ffffff; font-size:1rem; font-weight:bold; cursor:pointer;">&minus;</button>
@@ -2037,20 +2030,7 @@ window.renderCartDrawerContents = function() {
         shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
     }
 
-    // Sync User Name & Mobile from Saved Delivery Address
-    const identityNode = document.getElementById('cartUserIdentitySummary');
-    if (identityNode) {
-        let activeAddr = localStorage.getItem('selected_active_address') || "";
-        let activeUser = localStorage.getItem('printAppUser') || "Customer";
-        if (activeAddr.includes('Contact:')) {
-            let contactPart = activeAddr.split('Contact:')[1].trim();
-            identityNode.textContent = `Order for ${contactPart}`;
-        } else {
-            identityNode.textContent = `Order for ${activeUser}`;
-        }
-    }
-
-    // Render Inventory Products in "You Might Also Like" Slider inside Cart Drawer
+    // 3. Render "You Might Also Like" Slider
     const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
     if (upsellingGrid) {
         if (window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
