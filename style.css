@@ -365,7 +365,7 @@ body.theme-festive-diwali .wallet-modal-card {
 .wallet-chip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
 .wallet-chip-btn { background: var(--bg-primary); border: 2px solid var(--border-color); padding: 8px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
 
-/* 📄 MAIN LAYOUT CONTAINER */
+/* 📄 MAIN LAYOUT CONTAINER & VIEW SECTIONS (Fixed blank white screen bugs) */
 .container { 
     width: 100%; 
     max-width: 900px; 
@@ -380,9 +380,17 @@ body.theme-festive-diwali .wallet-modal-card {
 .compact-offers-bar { display: flex; align-items: center; gap: 8px; background: #fffbeb; border: 1px solid #fed7aa; padding: 10px 14px; border-radius: 12px; font-size: 0.78rem; font-weight: 600; color: #b45309; width: 100%; overflow: hidden; }
 .compact-offers-bar marquee { width: 100%; font-weight: 600; }
 
-.view-section { display: none; width: 100%; box-sizing: border-box; }
-.view-section.active { display: block; }
+/* 🔥 Bulletproof View Section Toggle Rule to Prevent Blank Screens */
+.view-section { 
+    display: none !important; 
+    width: 100% !important; 
+    box-sizing: border-box !important; 
+}
 
+.view-section.active { 
+    display: block !important; 
+    width: 100% !important; 
+}
 .store-header-box { text-align: center; padding: 10px 5px; width: 100%; box-sizing: border-box; }
 .store-header-box h2 { font-size: 2.1rem; font-weight: 800; color: #1a202c; letter-spacing: -1px; }
 .store-header-box p { font-size: 0.88rem; color: var(--text-sub); font-weight: 600; margin-top: 2px; }

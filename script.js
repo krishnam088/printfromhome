@@ -2685,7 +2685,7 @@ window.executeFinalCartOrderPlacement = async function() {
             historySection.style.display = 'block';
         }
     };
-    
+
     // 1️⃣ CASH ON DELIVERY (COD) ROUTE -> Directly saves and redirects to history
     if (paymentMode === 'cod' || paymentMode === 'cash') {
         try {
@@ -3037,6 +3037,21 @@ const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
 
     if (typeof calculateTotal === 'function') calculateTotal();
     };
-
+if (typeof window.synchronizeWalletInterfaceBalance !== 'function') {
+    window.synchronizeWalletInterfaceBalance = function() {
+        const sessionActiveUser = localStorage.getItem('printAppUser');
+        const balanceDisplayNode = document.getElementById('headerWalletDisplayBalance');
+        const drawerWalletText = document.getElementById('walletDrawerBalanceText');
+        if (!balanceDisplayNode) return;
+        if (!sessionActiveUser) { 
+            balanceDisplayNode.textContent = "₹0.00"; 
+            if(drawerWalletText) drawerWalletText.textContent = "₹0";
+            return; 
+        }
+        let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
+        balanceDisplayNode.textContent = `₹${currentWalletCash.toFixed(2)}`;
+        if(drawerWalletText) drawerWalletText.textContent = `₹${currentWalletCash.toFixed(2)}`;
+    };
+}
 // END OF renderCartDrawerContents
 });
