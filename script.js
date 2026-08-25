@@ -1900,6 +1900,9 @@ window.updateFloatingCartBar = function() {
 // ==========================================
 // 🔥 BULLETPROOF UNIVERSAL CART DRAWER RENDER ENGINE
 // ==========================================
+// ==========================================
+// 🔥 BULLETPROOF UNIVERSAL CART DRAWER RENDER ENGINE
+// ==========================================
 window.renderCartDrawerContents = function() {
     const container = document.getElementById('cartDrawerItemsList');
     const identityBox = document.getElementById('cartUserIdentitySummary');
@@ -1912,7 +1915,6 @@ window.renderCartDrawerContents = function() {
     const activePhone = localStorage.getItem('printAppUserIdentity') || '7398746551';
     const activeAddress = localStorage.getItem('selected_active_address') || '';
 
-    // Extract name/mobile from address if formatted, or fallback to storage
     let displayName = activeUser;
     let displayPhone = activePhone;
     if (activeAddress.includes('Contact:')) {
@@ -1945,7 +1947,7 @@ window.renderCartDrawerContents = function() {
     let totalPagesCount = 0;
     let totalItemsCount = 0;
 
-    // 1. Render Print Jobs in Horizontal Cards with Edit Button
+    // 1. Render Print Jobs in Horizontal Cards
     window.cartPrintJobsArray.forEach((job, idx) => {
         let rate = (job.printType === 'bw') ? 3 : 10;
         let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
@@ -1994,9 +1996,13 @@ window.renderCartDrawerContents = function() {
         shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
     }
 
+    // Render upselling items independently in their own separate section below added items
     renderUpsellingGridSafely();
     if (typeof calculateTotal === 'function') calculateTotal();
 };
+    renderUpsellingGridSafely();
+    if (typeof calculateTotal === 'function') calculateTotal();
+
 
 // Helper function to render upselling products inside existing #cartDrawerUpsellingGrid
 function renderUpsellingGridSafely() {
