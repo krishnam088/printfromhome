@@ -84,7 +84,6 @@ window.addEventListener('popstate', (event) => {
         }
         history.pushState(null, null, window.location.href); // Push state to prevent immediate exit
     }
-});
 
 // App khulte hi pehla history state push karna zaroori hai tabhi popstate kaam karega
 window.addEventListener('DOMContentLoaded', () => {
@@ -154,6 +153,7 @@ function updateEtaAndDistanceUI(mins, distanceStr) {
         addressPreviewNode.textContent = `- ${selectedActiveAddress}`;
     }
 }
+
 // 🛵 LIVE ORDER TRACKING: DELIVERY BOY TO USER DISTANCE & TIME
 window.updateDeliveryBoyTrackingMatrix = function(deliveryBoyLat, deliveryBoyLng, userDeliveryLat, userDeliveryLng) {
     const R = 6371;
@@ -1956,29 +1956,21 @@ window.updateFloatingCartBar = function() {
 window.renderCartDrawerContents = function() {
     const container = document.getElementById('cartDrawerItemsList');
     const identityBox = document.getElementById('cartUserIdentitySummary');
+    const addressSummaryNode = document.getElementById('cartDrawerAddressSummary');
     if (!container) return;
     
     container.innerHTML = '';
     
     const activeUser = localStorage.getItem('printAppUser') || 'Customer';
     const activePhone = localStorage.getItem('printAppUserIdentity') || '7398746551';
-    const activeAddress = localStorage.getItem('selected_active_address') || '';
-
-    let displayName = activeUser;
-    let displayPhone = activePhone;
-    if (activeAddress.includes('Contact:')) {
-        let parts = activeAddress.split('Contact:');
-        if (parts[1]) {
-            let contactInfo = parts[1].trim();
-            let nameMatch = contactInfo.match(/^(.*?)\s*\(/);
-            let phoneMatch = contactInfo.match(/\((.*?)\)/);
-            if (nameMatch && nameMatch[1]) displayName = nameMatch[1].trim();
-            if (phoneMatch && phoneMatch[1]) displayPhone = phoneMatch[1].trim();
-        }
-    }
+    const activeAddress = localStorage.getItem('selected_active_address') || 'No delivery address added yet.';
 
     if (identityBox) {
-        identityBox.textContent = `Order for User (${displayName}) | (${displayPhone})`;
+        identityBox.textContent = `Order for User (${activeUser}) | (${activePhone})`;
+    }
+
+    if (addressSummaryNode) {
+        addressSummaryNode.textContent = activeAddress;
     }
     
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
@@ -2019,6 +2011,141 @@ window.renderCartDrawerContents = function() {
     });
 
     // 2. Render Snacks / Store Products in Horizontal Cards with +/- Stepper
+    window.cartSnacksArray.forEach((snack, idx) => {
+        totalItemsCount += snack.qty;
+        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; margin-bottom:4px;" />` : `<div style="font-size:1.8rem; margin-bottom:4px;">📦</div>`;
+        let itemTotal = snack.price * snack.qty;
+
+        const card = document.createElement('div');
+        card.style.cssText = "min-width:125px; max-width:125px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
+
+        card.innerHTML = `
+            ${thumbImg}
+            <div title="${snack.name}" style="font-weight:700; font-size:0.72rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${snack.name}</div>
+            <div style="font-size:0.68rem; color:#065f46; font-weight:800; margin-bottom:6px;">₹${itemTotal}</div>
+            <div style="display:flex; align-items:center; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:2px 6px; gap:6px; width:100%; justify-content:center;">
+                <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; cursor:pointer; font-size:0.85rem;">-</button>
+                <span style="font-weight:800; font-size:0.72rem; color:#0f172a;">${snack.qty}</span>
+                <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; cursor:pointer; color:#065f46; font-size:0.85rem;">+</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+
+    const shipmentTextNode = document.getElementById('shipmentItemsCountText');
+    if (shipmentTextNode) {
+        shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
+    }
+
+    if (typeof renderUpsellingGridSafely === 'function') {
+        renderUpsellingGridSafely();
+    }
+    if (typeof calculateTotal === 'function') {
+        calculateTotal();
+    }
+};
+
+// 🔍 1. CART DRAWER LIVE SEARCH FUNCTION FOR INVENTORY ITEMS (Global Scope)
+window.filterCartItemsSearch = function(query) {
+    const q = (query || "").toLowerCase().trim();
+    const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
+    if (!upsellingGrid) return;
+
+    if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) {
+        upsellingGrid.innerHTML = '<p style="font-size:0.78rem; color:#64748b; text-align:center; padding:10px; width:100%;">No store products available.</p>';
+        return;
+    }
+
+    let filtered = window.storeInventoryProducts.filter(prod => (prod.name || '').toLowerCase().includes(q));
+    upsellingGrid.innerHTML = '';
+
+    if (filtered.length > 0) {
+        filtered.forEach((prod) => {
+            if (prod.stockQuantity > 0) {
+                const thumb = prod.imageUrl || prod.image || '';
+                const safeSku = String(prod.sku || prod.name || '').replace(/['"\\]/g, '\\$&');
+                const safeName = String(prod.name || '').replace(/['"\\]/g, '\\$&');
+                const safeThumb = String(thumb || '').replace(/['"\\]/g, '\\$&');
+                
+                const priceVal = Number(prod.sellingPrice || prod.price || 0);
+                const stockVal = Number(prod.stockQuantity || prod.stock || 0);
+
+                const itemCard = document.createElement('div');
+                itemCard.style.cssText = "min-width:140px; max-width:140px; background:#ffffff; border:1px solid #cbd5e1; border-radius:16px; padding:12px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 3px 10px rgba(0,0,0,0.04); flex-shrink:0;";
+                
+                itemCard.innerHTML = `
+                    ${thumb ? `<img src="${thumb}" style="width:55px; height:55px; object-fit:cover; border-radius:10px; margin-bottom:6px;" />` : '<div style="font-size:2rem; margin-bottom:6px;">📦</div>'}
+                    <div title="${prod.name || ''}" style="font-weight:800; font-size:0.78rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; margin-bottom:2px;">${prod.name || ''}</div>
+                    <div style="font-size:0.75rem; font-weight:900; color:#065f46; margin-bottom:8px;">₹${priceVal}</div>
+                    <button type="button" style="background:#065f46; color:white; border:none; padding:6px 10px; border-radius:8px; font-size:0.72rem; font-weight:800; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
+                `;
+                upsellingGrid.appendChild(itemCard);
+            }
+        });
+    } else {
+        upsellingGrid.innerHTML = '<p style="font-size:0.78rem; color:#64748b; text-align:center; padding:10px; width:100%;">No matching products found.</p>';
+    }
+};
+
+// ==========================================
+// 🔥 2. USER IDENTITY & ADDRESS FETCH FIX IN CART RENDER
+// ==========================================
+window.renderCartDrawerContents = function() {
+    const container = document.getElementById('cartDrawerItemsList');
+    const identityBox = document.getElementById('cartUserIdentitySummary');
+    const addressSummaryNode = document.getElementById('cartDrawerAddressSummary');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const activeUser = localStorage.getItem('printAppUser') || 'Customer';
+    const activePhone = localStorage.getItem('printAppUserIdentity') || '7398746551';
+    const activeAddress = localStorage.getItem('selected_active_address') || 'No delivery address added yet.';
+
+    if (identityBox) {
+        identityBox.textContent = `Order for User (${activeUser}) | (${activePhone})`;
+    }
+
+    if (addressSummaryNode) {
+        addressSummaryNode.textContent = activeAddress;
+    }
+    
+    window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
+    window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
+
+    let hasItems = (window.cartSnacksArray.length > 0) || (window.cartPrintJobsArray.length > 0);
+    
+    if (!hasItems) {
+        container.innerHTML = `<p style="font-size:0.8rem; color:#64748b; text-align:center; padding:15px; width:100%;">Your cart is empty.</p>`;
+        if (typeof calculateTotal === 'function') calculateTotal();
+        if (typeof renderUpsellingGridSafely === 'function') renderUpsellingGridSafely();
+        return;
+    }
+
+    let totalPagesCount = 0;
+    let totalItemsCount = 0;
+
+    window.cartPrintJobsArray.forEach((job, idx) => {
+        let rate = (job.printType === 'bw') ? 3 : 10;
+        let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
+        totalPagesCount += job.pages * job.copies;
+        totalItemsCount += 1;
+
+        const card = document.createElement('div');
+        card.style.cssText = "min-width:130px; max-width:130px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
+
+        card.innerHTML = `
+            <div style="font-size:1.8rem; margin-bottom:2px;">📄</div>
+            <div title="${job.fileName}" style="font-weight:700; font-size:0.72rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${job.fileName}</div>
+            <div style="font-size:0.6rem; color:#64748b; font-weight:600; margin-bottom:6px;">${job.pages} pgs | ${job.printType.toUpperCase()}</div>
+            <div style="display:flex; align-items:center; gap:6px; width:100%; justify-content:center;">
+                <button type="button" onclick="editCartPrintJob(${idx})" style="background:#fef08a; border:1px solid #fde047; padding:3px 8px; border-radius:6px; font-size:0.68rem; font-weight:800; cursor:pointer; color:#713f12;">Edit</button>
+                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fee2e2; color:#ef4444; border:none; width:22px; height:22px; border-radius:50%; font-weight:bold; cursor:pointer; font-size:0.75rem; display:flex; align-items:center; justify-content:center;">&times;</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+
     window.cartSnacksArray.forEach((snack, idx) => {
         totalItemsCount += snack.qty;
         const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; margin-bottom:4px;" />` : `<div style="font-size:1.8rem; margin-bottom:4px;">📦</div>`;
@@ -3163,8 +3290,6 @@ const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
     if (typeof calculateTotal === 'function') calculateTotal();
 };
 
-});
-
 if (typeof window.synchronizeWalletInterfaceBalance !== 'function') {
     window.synchronizeWalletInterfaceBalance = function() {
         const sessionActiveUser = localStorage.getItem('printAppUser');
@@ -3184,6 +3309,18 @@ if (typeof window.synchronizeWalletInterfaceBalance !== 'function') {
 
 // 🔥 EMERGENCY FORCE RENDER & DEBUG HELPER
 window.forceDebugOrderHistory = function(username, showRecent = true) {
+    const escapeHtml = function(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function(character) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[character];
+        });
+    };
+
     const fallbackUser = localStorage.getItem('printAppUser') || 'Customer';
     const user = (username && String(username).trim()) ? String(username).trim() : fallbackUser;
     const container = document.getElementById('ordersHistoryContainer');
@@ -3215,21 +3352,21 @@ window.forceDebugOrderHistory = function(username, showRecent = true) {
     }
 
     if (history.length === 0) {
-        container.innerHTML = `<p style="text-align:center; padding:20px; color:#ef4444; font-weight:bold;">⚠️ No orders found in LocalStorage for user: ${user}. Try placing a test order!</p>`;
+        container.innerHTML = `<p style="text-align:center; padding:20px; color:#ef4444; font-weight:bold;">⚠️ No orders found in LocalStorage for user: ${escapeHtml(user)}. Try placing a test order!</p>`;
         return;
     }
 
     container.innerHTML = history.map(function(order) {
         const orderId = String(order.orderId || order.id || 'N/A');
         const amount = Number(order.amount || 0).toFixed(2);
-        const statusText = order.status || 'Processing';
-        const dateText = order.date || '';
-        const safeOrderId = String(orderId).replace(/['"\\]/g, '\\$&');
+        const statusText = escapeHtml(order.status || 'Processing');
+        const dateText = escapeHtml(order.date || '');
+        const safeOrderId = escapeHtml(orderId);
 
         return `
             <div style="background:#f8fafc; border:2px solid #065f46; border-radius:12px; padding:14px; margin-bottom:12px;">
                 <div style="display:flex; justify-content:space-between; font-weight:900; font-size:0.9rem; color:#0f172a;">
-                    <span>Order #${orderId}</span>
+                    <span>Order #${escapeHtml(orderId)}</span>
                     <span style="color:#065f46;">₹${amount}</span>
                 </div>
                 <p style="font-size:0.8rem; color:#475569; margin:6px 0;">Status: <b style="color:#2563eb;">${statusText}</b></p>
@@ -3262,19 +3399,23 @@ window.forceDebugOrderHistory = function(username, showRecent = true) {
     });
 };
 
-// Sync main render engine with debug helper
-window.renderOrderHistoryUI = function(username, showRecent = true) {
-    if (typeof window.forceDebugOrderHistory === 'function') {
-        window.forceDebugOrderHistory(username, showRecent);
-    }
-};
-
-// Auto-run debug/render on load
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
+(function() {
+    // Sync main render engine with debug helper
+    window.renderOrderHistoryUI = function(username, showRecent = true) {
         if (typeof window.forceDebugOrderHistory === 'function') {
-            const activeUser = localStorage.getItem('printAppUser') || 'Customer';
-            window.forceDebugOrderHistory(activeUser, true);
+            window.forceDebugOrderHistory(username, showRecent);
         }
-    }, 1000);
+    };
+
+    // Auto-run debug/render on load
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            if (typeof window.forceDebugOrderHistory === 'function') {
+                const activeUser = localStorage.getItem('printAppUser') || 'Customer';
+                window.forceDebugOrderHistory(activeUser, true);
+            }
+        }, 1000);
+    });
+})();
+});
 });
