@@ -2660,20 +2660,32 @@ window.executeFinalCartOrderPlacement = async function() {
             renderOrderHistoryUI(sessionActiveUser);
         }
 
-        // 🔥 FIX: Redirect smoothly to Order History tab (Ensures it's never blank)
+  // 🔥 FIX: Redirect smoothly to Order Tracking / History without blank screen
         const historySection = document.getElementById('user_section_history');
         const storeSection = document.getElementById('user_section_store');
         const trackingSection = document.getElementById('user_section_order_tracking');
 
-        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-        if (historySection) {
+        document.querySelectorAll('.view-section').forEach(el => {
+            el.classList.remove('active');
+            el.style.display = 'none';
+        });
+
+        // Seedhe live order tracking page par bhejें taaki user ko status dikhe
+        if (trackingSection) {
+            trackingSection.classList.add('active');
+            trackingSection.style.display = 'block';
+            
+            // Optional: Agar order tracking UI populate karne ka function ho toh yahan call karein
+            if (typeof executeLiveTimelineStateStepper === 'function') {
+                executeLiveTimelineStateStepper(initialOrderStatus, '');
+            }
+        } else if (historySection) {
+            // Fallback agar tracking section na mile toh history dikha dein
             historySection.classList.add('active');
             historySection.style.display = 'block';
         }
-        if (storeSection) storeSection.style.display = 'none';
-        if (trackingSection) trackingSection.style.display = 'none';
     };
-
+    
     // 1️⃣ CASH ON DELIVERY (COD) ROUTE -> Directly saves and redirects to history
     if (paymentMode === 'cod' || paymentMode === 'cash') {
         try {
