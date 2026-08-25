@@ -606,6 +606,7 @@ body.theme-festive-diwali .wallet-modal-card {
    MOBILE VIEW & CART DRAWER OPTIMIZATIONS
    ======================================== */
 .cart-drawer-card {
+    background: linear-gradient(135deg, #FFFBE6 0%, #FFF3B3 30%, #FFFFFF 100%) !important;
     height: 100vh !important;
     max-height: 100vh !important;
     display: flex;
