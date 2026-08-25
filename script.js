@@ -31,44 +31,65 @@ document.addEventListener('DOMContentLoaded', () => {
     window.storeInventoryProducts = [];
 
     // 🔙 Global Mobile Back Button Handler for Modals & Drawers
-    window.addEventListener('popstate', (event) => {
-        const categoryOverlay = document.getElementById('categoryDrawerOverlay');
-        const cartOverlay = document.getElementById('cartDrawerOverlay');
-        const addressModal = document.getElementById('addressManagerModal');
-        const productModal = document.getElementById('productDetailModal');
-        const studioModal = document.getElementById('printStudioModal');
-        const searchOverlay = document.getElementById('blinkitSearchOverlayModal');
-        const aiModal = document.getElementById('aiChatModal');
+  // 🔙 GLOBAL MOBILE BACK BUTTON HANDLER (Double Tap to Exit + Smart Routing)
+let lastBackPressTime = 0;
 
-        if (categoryOverlay && categoryOverlay.style.display === 'flex') {
-            if (typeof closeCategoryDrawer === 'function') closeCategoryDrawer();
-            return;
+window.addEventListener('popstate', (event) => {
+    const categoryOverlay = document.getElementById('categoryDrawerOverlay');
+    const cartOverlay = document.getElementById('cartDrawerOverlay');
+    const addressModal = document.getElementById('addressManagerModal');
+    const productModal = document.getElementById('productDetailModal');
+    const studioModal = document.getElementById('printStudioModal');
+    const searchOverlay = document.getElementById('blinkitSearchOverlayModal');
+    const aiModal = document.getElementById('aiChatModal');
+    const helpModal = document.getElementById('helpCenterModal');
+    const profileModal = document.getElementById('editProfileModal');
+
+    // 1. Agar koi modal/drawer khula hai, toh usko band karo (App se bahar mat jao)
+    let modalClosed = false;
+    if (categoryOverlay && categoryOverlay.style.display === 'flex') { closeCategoryDrawer(); modalClosed = true; }
+    if (cartOverlay && cartOverlay.style.display === 'flex') { toggleCartDrawer(false); modalClosed = true; }
+    if (addressModal && addressModal.style.display === 'flex') { closeAddressManagerModal(); modalClosed = true; }
+    if (productModal && productModal.style.display === 'flex') { closeProductDetailModal(); modalClosed = true; }
+    if (studioModal && studioModal.style.display === 'flex') { closePrintStudio(); modalClosed = true; }
+    if (searchOverlay && searchOverlay.style.display === 'flex') { closeSearchOverlay(); modalClosed = true; }
+    if (aiModal && aiModal.style.display === 'flex') { toggleAiChatModal(false); modalClosed = true; }
+    if (helpModal && helpModal.style.display === 'flex') { toggleHelpModal(false); modalClosed = true; }
+    if (profileModal && profileModal.style.display === 'flex') { closeEditProfileModal(); modalClosed = true; }
+
+    if (modalClosed) {
+        history.pushState(null, null, window.location.href); // Stay in App
+        return;
+    }
+
+    // 2. Agar user kisi doosre page pe hai (History, Tracking), toh pehle Home/Store pe bhejo
+    const activeSection = document.querySelector('.view-section.active');
+    if (activeSection && activeSection.id !== 'user_section_store') {
+        navigateDrawerSection('store');
+        history.pushState(null, null, window.location.href); // Stay in App
+        return;
+    }
+
+    // 3. DOUBLE TAP TO EXIT LOGIC (Jab user Home/Store pe ho)
+    const currentTime = new Date().getTime();
+    if (currentTime - lastBackPressTime < 2000) {
+        // Double tap confirmed -> Allow Exit
+        window.history.go(-1); 
+    } else {
+        lastBackPressTime = currentTime;
+        if (typeof showAppToast === 'function') {
+            showAppToast("Press back again to exit", "info");
+        } else {
+            alert("Press back again to exit");
         }
-        if (cartOverlay && cartOverlay.style.display === 'flex') {
-            if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
-            return;
-        }
-        if (addressModal && addressModal.style.display === 'flex') {
-            if (typeof closeAddressManagerModal === 'function') closeAddressManagerModal();
-            return;
-        }
-        if (productModal && productModal.style.display === 'flex') {
-            if (typeof closeProductDetailModal === 'function') closeProductDetailModal();
-            return;
-        }
-        if (studioModal && studioModal.style.display === 'flex') {
-            if (typeof closePrintStudio === 'function') closePrintStudio();
-            return;
-        }
-        if (searchOverlay && searchOverlay.style.display === 'flex') {
-            if (typeof closeSearchOverlay === 'function') closeSearchOverlay();
-            return;
-        }
-        if (aiModal && aiModal.style.display === 'flex') {
-            if (typeof toggleAiChatModal === 'function') toggleAiChatModal(false);
-            return;
-        }
-    });
+        history.pushState(null, null, window.location.href); // Push state to prevent immediate exit
+    }
+});
+
+// App khulte hi pehla history state push karna zaroori hai tabhi popstate kaam karega
+window.addEventListener('DOMContentLoaded', () => {
+    history.pushState(null, null, window.location.href);
+});
 
 // 🔥 Global Store Location (Varanasi Store)
 const STORE_LOCATION = {
@@ -2875,7 +2896,7 @@ window.executeFinalCartOrderPlacement = async function() {
 
 window.navigateDrawerSection = function(targetId) {
     try {
-        // 1. Sabhi view-sections ko hide karo
+        // 1. Hide all sections securely
         document.querySelectorAll('.view-section').forEach(el => {
             el.classList.remove('active');
             el.style.setProperty('display', 'none', 'important');
@@ -2884,12 +2905,12 @@ window.navigateDrawerSection = function(targetId) {
         let normalizedId = targetId === 'orders' ? 'history' : targetId;
         const targetNode = document.getElementById(`user_section_${normalizedId}`);
         
+        // 2. Show the targeted section
         if (targetNode) {
             targetNode.classList.add('active');
             targetNode.style.setProperty('display', 'block', 'important');
         }
 
-        // 2. Agar store section nahi hai, toh store-specific upload/config blocks ko hide karo
         const storeNode = document.getElementById('user_section_store');
         if (storeNode) {
             if (normalizedId === 'store') {
@@ -2899,7 +2920,6 @@ window.navigateDrawerSection = function(targetId) {
             }
         }
 
-        // 3. Ensure main layout container is fully visible
         const mainContainer = document.getElementById('mainLayoutAppContainer');
         if (mainContainer) {
             mainContainer.style.setProperty('display', 'flex', 'important');
@@ -2907,6 +2927,13 @@ window.navigateDrawerSection = function(targetId) {
 
         if (typeof toggleUserDrawer === 'function') toggleUserDrawer(false);
         if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
+
+        // 🔥 CRITICAL FIX: Force UI to render exactly when the History tab is opened!
+        if (normalizedId === 'history' && typeof renderOrderHistoryUI === 'function') {
+            const activeUser = localStorage.getItem('printAppUser');
+            renderOrderHistoryUI(activeUser);
+        }
+
     } catch (err) {
         console.error("Navigation Error:", err);
     }
