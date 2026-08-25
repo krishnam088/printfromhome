@@ -590,69 +590,80 @@ let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || fina
         }
     };
 
-    // ==========================================
-    // 📂 100% SAFE FILE UPLOAD & PREVIEW TRIGGER
-    // ==========================================
-    if (fileUpload) {
-        fileUpload.addEventListener('change', async (event) => {
-            const files = event.target.files;
-            if (!files || files.length === 0) return;
+   // ==========================================
+// 📂 MULTI-PAGE PDF & FILE UPLOAD ENGINE
+// ==========================================
+if (fileUpload) {
+    fileUpload.addEventListener('change', async (event) => {
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
+        
+        let uploadedFilesList = [];
+        
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            let pageCount = 1;
+            let fileUrl = '';
+            let pageImages = []; // Saare pages ki images store karne ke liye array
             
-            let uploadedFilesList = [];
-            
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                let pageCount = 1;
-                let fileUrl = '';
-                
-                try {
-                    fileUrl = URL.createObjectURL(file);
-                } catch(e) {
-                    fileUrl = '';
-                }
+            try {
+                fileUrl = URL.createObjectURL(file);
+            } catch(e) {
+                fileUrl = '';
+            }
 
-              if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-                    try {
-                        if (typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
-                            const arrayBuffer = await file.arrayBuffer();
-                            const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-                            const pdfDoc = await loadingTask.promise;
-                            pageCount = pdfDoc.numPages || 1;
-                            
-                            if (pdfDoc && typeof window.convertPdfPageToImage === 'function') {
-                                let generatedImgUrl = await window.convertPdfPageToImage(pdfDoc, 1);
-                                if (generatedImgUrl) {
-                                    fileUrl = generatedImgUrl;
+            if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                try {
+                    if (typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                        const pdfDoc = await loadingTask.promise;
+                        pageCount = pdfDoc.numPages || 1;
+                        
+                        // 🔥 Loop through ALL pages of the PDF to convert each page to an image
+                        if (pdfDoc && typeof window.convertPdfPageToImage === 'function') {
+                            for (let p = 1; p <= pageCount; p++) {
+                                let pageImgUrl = await window.convertPdfPageToImage(pdfDoc, p);
+                                if (pageImgUrl) {
+                                    pageImages.push(pageImgUrl);
                                 }
                             }
                         }
-                    } catch (e) {
-                        pageCount = 1;
+                        if (pageImages.length > 0) {
+                            fileUrl = pageImages[0]; // Default preview ke liye pehla page
+                        }
                     }
-                } 
-
-                uploadedFilesList.push({
-                    name: file.name || 'Document.pdf',
-                    size: file.size || 0,
-                    fileBlob: file,
-                    fileUrl: fileUrl,
-                    pages: pageCount,
-                    copies: 1,
-                    printType: 'bw',
-                    orientation: 'portrait',
-                    binding: 'none'
-                });
-            }
-
-            fileUpload.value = '';
-            
-            if (uploadedFilesList.length > 0) {
-                if (typeof openPrintStudioWithFilesArray === 'function') {
-                    openPrintStudioWithFilesArray(uploadedFilesList, 0);
+                } catch (e) {
+                    pageCount = 1;
                 }
+            } else {
+                // Agar normal image file hai toh usko bhi array mein dal dein
+                pageImages.push(fileUrl);
+            } 
+
+            uploadedFilesList.push({
+                name: file.name || 'Document.pdf',
+                size: file.size || 0,
+                fileBlob: file,
+                fileUrl: fileUrl,
+                pageImages: pageImages.length > 0 ? pageImages : [fileUrl], // Store all page images here
+                pages: pageCount,
+                copies: 1,
+                printType: 'bw',
+                orientation: 'portrait',
+                binding: 'none'
+            });
+        }
+
+        fileUpload.value = '';
+        
+        if (uploadedFilesList.length > 0) {
+            if (typeof openPrintStudioWithFilesArray === 'function') {
+                openPrintStudioWithFilesArray(uploadedFilesList, 0);
             }
-        });
-    }
+        }
+    });
+}
 
     window.triggerInlineFileUploadClick = function() {
         if (fileUpload) fileUpload.click();
@@ -727,223 +738,266 @@ let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || fina
         const currentFile = files[window.currentStudioActiveIndex] || files[0];
 
         const imageSlider = document.getElementById('studioInImageHorizontalSlider');
-        if (imageSlider) {
-            imageSlider.innerHTML = files.map((f) => {
-                let isLand = f.orientation === 'landscape';
-                let isBw = f.printType === 'bw';
-                let filterStyle = isBw ? 'filter: grayscale(100%);' : '';
-                let transformStyle = isLand ? 'transform: rotate(90deg); max-width: 75%; max-height: 75%;' : 'max-width: 90%; max-height: 90%;';
+    if (imageSlider) {
+        imageSlider.innerHTML = files.map((f, fIdx) => {
+            let isLand = f.orientation === 'landscape';
+            let isBw = f.printType === 'bw';
+            let filterStyle = isBw ? 'filter: grayscale(100%);' : '';
+            let transformStyle = isLand ? 'transform: rotate(90deg); max-width: 75%; max-height: 75%;' : 'max-width: 90%; max-height: 90%;';
 
-                let previewContent = `<span style="font-size:3.5rem; ${filterStyle}">📄</span>`;
-                if (f.fileUrl) {
-                    if (f.fileBlob && f.fileBlob.type && f.fileBlob.type.startsWith('image/')) {
-                        previewContent = `<img src="${f.fileUrl}" style="${transformStyle} object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />`;
-                    } else {
-                       previewContent = `
-    <div style="display:flex; flex-direction:column; align-items:center; gap:8px; ${filterStyle}; max-width: 90%; padding: 0 10px; box-sizing: border-box;">
-        <span style="font-size:3.5rem;">📄</span>
-        <span style="font-size:0.75rem; font-weight:700; color:#1e293b; max-width:100%; white-space:normal; word-break:break-all; overflow-wrap:break-word; text-align:center; line-height:1.3;">${f.name}</span>
-    </div>
-`;
-                    }
-                }
+            let previewContent = '';
 
-                return `
-                    <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; flex-shrink:0; position:relative; background:#f8fafc; overflow:hidden;">
-                        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${previewContent}</div>
+            // 🔥 AGAR MULTI-PAGE PDF HAI TOH SAHRE PAGES VERTICAL SCROLL (UP/DOWN) MEIN DIKHENGE
+            if (f.pageImages && f.pageImages.length > 1) {
+                let verticalPagesHtml = f.pageImages.map((imgSrc, pIdx) => `
+                    <div style="width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:12px; background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:10px; box-sizing:border-box;">
+                        <img src="${imgSrc}" style="${transformStyle} object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />
+                        <div style="margin-top:6px; background:#1e293b; color:white; font-size:0.65rem; font-weight:700; padding:2px 8px; border-radius:6px;">
+                            Page ${pIdx + 1} of ${f.pageImages.length}
+                        </div>
+                    </div>
+                `).join('');
+
+                previewContent = `
+                    <div style="width:100%; height:100%; display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; padding:10px; box-sizing:border-box; scrollbar-width:thin;">
+                        ${verticalPagesHtml}
                     </div>
                 `;
-            }).join('');
-
-            let slideWidth = imageSlider.clientWidth || 300;
-            imageSlider.scrollTo({ left: slideWidth * window.currentStudioActiveIndex, behavior: 'smooth' });
-        }
-
-        const counterBadge = document.getElementById('studioSlideCounterBadge');
-        if (counterBadge) {
-            counterBadge.textContent = `${window.currentStudioActiveIndex + 1}/${files.length}`;
-        }
-
-        const copiesText = document.getElementById('studioCopiesCountText');
-        if (copiesText) copiesText.textContent = currentFile.copies;
-
-        const pagesInfo = document.getElementById('studioFilePagesInfo');
-        if (pagesInfo) pagesInfo.textContent = `${currentFile.name} (${currentFile.pages} page${currentFile.pages > 1 ? 's' : ''})`;
-
-        const colColoured = document.getElementById('colorOptionColoured');
-        const colBw = document.getElementById('colorOptionBw');
-        if (colColoured && colBw) {
-            if (currentFile.printType === 'coloured' || currentFile.printType === 'color') {
-                colColoured.style.borderColor = '#065f46'; colColoured.style.background = '#f0fdf4';
-                colBw.style.borderColor = '#e2e8f0'; colBw.style.background = '#ffffff';
             } else {
-                colBw.style.borderColor = '#065f46'; colBw.style.background = '#f0fdf4';
-                colColoured.style.borderColor = '#e2e8f0'; colColoured.style.background = '#ffffff';
-            }
-        }
+                // 🔥 SINGLE PAGE FILE YA NORMAL IMAGE KE LIYE STANDARD VIEW
+                let singleImgSrc = (f.pageImages && f.pageImages.length > 0) ? f.pageImages[0] : f.fileUrl;
+                
+                if (singleImgSrc) {
+                    const isImageFile = (f.fileBlob && f.fileBlob.type && f.fileBlob.type.startsWith('image/')) || 
+                                        singleImgSrc.startsWith('data:image/') || 
+                                        singleImgSrc.startsWith('blob:');
 
-        const oriPortrait = document.getElementById('orientationPortrait');
-        const oriLandscape = document.getElementById('orientationLandscape');
-        if (oriPortrait && oriLandscape) {
-            if (currentFile.orientation === 'portrait') {
-                oriPortrait.style.borderColor = '#065f46'; oriPortrait.style.background = '#f0fdf4';
-                oriLandscape.style.borderColor = '#e2e8f0'; oriLandscape.style.background = '#ffffff';
-            } else {
-                oriLandscape.style.borderColor = '#065f46'; oriLandscape.style.background = '#f0fdf4';
-                oriPortrait.style.borderColor = '#e2e8f0'; oriPortrait.style.background = '#ffffff';
-            }
-        }
-
-        let grandTotalPrice = 0;
-        files.forEach((f) => {
-            let rate = (f.printType === 'bw') ? 3 : 10;
-            grandTotalPrice += f.pages * rate * f.copies;
-        });
-
-        const totalPriceText = document.getElementById('studioTotalPriceText');
-        if (totalPriceText) {
-            totalPriceText.textContent = `₹${grandTotalPrice}`;
-        }
-    };
-
-    window.updatePrintStudioUI = window.updateMultiFileStudioUI;
-
-    window.switchStudioFileIndex = function(index) {
-        window.currentStudioActiveIndex = index;
-        updateMultiFileStudioUI();
-    };
-
-    window.adjustStudioCopies = function(change) {
-        let file = window.studioMasterFiles[window.currentStudioActiveIndex];
-        if (file) {
-            file.copies = Math.max(1, file.copies + change);
-            updateMultiFileStudioUI();
-        }
-    };
-
-    window.setStudioPrintColor = function(type) {
-        let file = window.studioMasterFiles[window.currentStudioActiveIndex];
-        if (file) {
-            file.printType = type === 'coloured' ? 'color' : type;
-            updateMultiFileStudioUI();
-        }
-    };
-
-    window.setStudioOrientation = function(ori) {
-        let file = window.studioMasterFiles[window.currentStudioActiveIndex];
-        if (file) {
-            file.orientation = ori;
-            updateMultiFileStudioUI();
-        }
-    };
-
-    window.applyCurrentSettingToAllFiles = function() {
-        let currentFile = window.studioMasterFiles[window.currentStudioActiveIndex];
-        if (!currentFile) return;
-
-        window.studioMasterFiles.forEach(f => {
-            f.copies = currentFile.copies;
-            f.printType = currentFile.printType;
-            f.orientation = currentFile.orientation;
-        });
-        updateMultiFileStudioUI();
-        alert("✅ Current settings applied to all files!");
-    };
-
-    window.handleStudioFilesAdded = function(input) {
-        if (input.files && input.files.length > 0) {
-            Array.from(input.files).forEach(async (file) => {
-                let pageCount = 1;
-                if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-                    try {
-                        const arrayBuffer = await file.arrayBuffer();
-                        const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                        pageCount = pdfDoc.numPages || 1;
-                    } catch (e) {
-                        pageCount = 1;
+                    if (isImageFile) {
+                        previewContent = `<img src="${singleImgSrc}" style="${transformStyle} object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />`;
+                    } else {
+                        previewContent = `
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:8px; ${filterStyle}; max-width: 90%; padding: 0 10px; box-sizing: border-box;">
+                                <span style="font-size:3.5rem;">📄</span>
+                                <span style="font-size:0.75rem; font-weight:700; color:#1e293b; max-width:100%; white-space:normal; word-break:break-all; overflow-wrap:break-word; text-align:center; line-height:1.3;">${f.name}</span>
+                            </div>
+                        `;
                     }
+                } else {
+                    previewContent = `<span style="font-size:3.5rem; ${filterStyle}">📄</span>`;
                 }
-                window.studioMasterFiles.push({
-                    name: file.name,
-                    size: file.size,
-                    fileBlob: file,
-                    fileUrl: URL.createObjectURL(file),
-                    pages: pageCount,
-                    copies: 1,
-                    printType: 'bw',
-                    orientation: 'portrait',
-                    binding: 'none'
-                });
-                updateMultiFileStudioUI();
-            });
-            input.value = '';
-        }
-    };
-
-    window.removeCurrentStudioFile = function() {
-        if (window.studioMasterFiles.length > 1) {
-            window.studioMasterFiles.splice(window.currentStudioActiveIndex, 1);
-            window.currentStudioActiveIndex = Math.max(0, window.currentStudioActiveIndex - 1);
-            updateMultiFileStudioUI();
-        } else {
-            closePrintStudio();
-        }
-    };
-
-    window.addStudioJobToCart = function() {
-        if (!window.studioMasterFiles || window.studioMasterFiles.length === 0) return;
-
-        window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
-
-        window.studioMasterFiles.forEach(f => {
-            let rate = (f.printType === 'bw') ? 3 : 10;
-            let printJobItem = {
-                id: 'print_' + Date.now() + Math.random(),
-                fileName: f.name,
-                fileUrl: f.fileUrl,
-                fileData: f.fileBlob,
-                pages: f.pages,
-                copies: f.copies,
-                printType: f.printType,
-                orientation: f.orientation,
-                sides: f.orientation === 'portrait' ? 'single' : 'landscape',
-                binding: f.binding || 'none',
-                price: f.pages * rate * f.copies
-            };
-            window.cartPrintJobsArray.push(printJobItem);
-        });
-
-        localStorage.setItem('cart_print_jobs', JSON.stringify(window.cartPrintJobsArray));
-
-        if (typeof persistCartStateData === 'function') persistCartStateData();
-        if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
-
-        closePrintStudio();
-        if (typeof toggleCartDrawer === 'function') {
-            toggleCartDrawer(true);
-        }
-    };
-
-    window.addStudioDocumentToCartAndRedirect = window.addStudioJobToCart;
-    window.toggleGlobalOrientation = function() {
-        let file = window.studioMasterFiles[window.currentStudioActiveIndex];
-        if (file) {
-            file.orientation = (file.orientation === 'portrait') ? 'landscape' : 'portrait';
-            updateMultiFileStudioUI();
-        }
-    };
-
-    const slider = document.getElementById('studioInImageHorizontalSlider');
-    if (slider) {
-        slider.addEventListener('scroll', () => {
-            let slideWidth = slider.clientWidth || 300;
-            let activeIdx = Math.round(slider.scrollLeft / slideWidth);
-            if (activeIdx >= 0 && activeIdx < window.studioMasterFiles.length && activeIdx !== window.currentStudioActiveIndex) {
-                window.currentStudioActiveIndex = activeIdx;
-                updateMultiFileStudioUI();
             }
-        });
+
+            return `
+                <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; flex-shrink:0; position:relative; background:#f8fafc; overflow:hidden;">
+                    <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${previewContent}</div>
+                </div>
+            `;
+        }).join('');
+
+        let slideWidth = imageSlider.clientWidth || 300;
+        imageSlider.scrollTo({ left: slideWidth * window.currentStudioActiveIndex, behavior: 'smooth' });
     }
+
+    const counterBadge = document.getElementById('studioSlideCounterBadge');
+    if (counterBadge) {
+        counterBadge.textContent = `${window.currentStudioActiveIndex + 1}/${files.length}`;
+    }
+
+    const copiesText = document.getElementById('studioCopiesCountText');
+    if (copiesText) copiesText.textContent = currentFile.copies;
+
+    const pagesInfo = document.getElementById('studioFilePagesInfo');
+    if (pagesInfo) pagesInfo.textContent = `${currentFile.name} (${currentFile.pages} page${currentFile.pages > 1 ? 's' : ''})`;
+
+    const colColoured = document.getElementById('colorOptionColoured');
+    const colBw = document.getElementById('colorOptionBw');
+    if (colColoured && colBw) {
+        if (currentFile.printType === 'coloured' || currentFile.printType === 'color') {
+            colColoured.style.borderColor = '#065f46'; colColoured.style.background = '#f0fdf4';
+            colBw.style.borderColor = '#e2e8f0'; colBw.style.background = '#ffffff';
+        } else {
+            colBw.style.borderColor = '#065f46'; colBw.style.background = '#f0fdf4';
+            colColoured.style.borderColor = '#e2e8f0'; colColoured.style.background = '#ffffff';
+        }
+    }
+
+    const oriPortrait = document.getElementById('orientationPortrait');
+    const oriLandscape = document.getElementById('orientationLandscape');
+    if (oriPortrait && oriLandscape) {
+        if (currentFile.orientation === 'portrait') {
+            oriPortrait.style.borderColor = '#065f46'; oriPortrait.style.background = '#f0fdf4';
+            oriLandscape.style.borderColor = '#e2e8f0'; oriLandscape.style.background = '#ffffff';
+        } else {
+            oriLandscape.style.borderColor = '#065f46'; oriLandscape.style.background = '#f0fdf4';
+            oriPortrait.style.borderColor = '#e2e8f0'; oriPortrait.style.background = '#ffffff';
+        }
+    }
+
+    let grandTotalPrice = 0;
+    files.forEach((f) => {
+        let rate = (f.printType === 'bw') ? 3 : 10;
+        grandTotalPrice += f.pages * rate * f.copies;
+    });
+
+    const totalPriceText = document.getElementById('studioTotalPriceText');
+    if (totalPriceText) {
+        totalPriceText.textContent = `₹${grandTotalPrice}`;
+    }
+};
+
+window.updatePrintStudioUI = window.updateMultiFileStudioUI;
+
+window.switchStudioFileIndex = function(index) {
+    window.currentStudioActiveIndex = index;
+    updateMultiFileStudioUI();
+};
+
+window.adjustStudioCopies = function(change) {
+    let file = window.studioMasterFiles[window.currentStudioActiveIndex];
+    if (file) {
+        file.copies = Math.max(1, file.copies + change);
+        updateMultiFileStudioUI();
+    }
+};
+
+window.setStudioPrintColor = function(type) {
+    let file = window.studioMasterFiles[window.currentStudioActiveIndex];
+    if (file) {
+        file.printType = type === 'coloured' ? 'color' : type;
+        updateMultiFileStudioUI();
+    }
+};
+
+window.setStudioOrientation = function(ori) {
+    let file = window.studioMasterFiles[window.currentStudioActiveIndex];
+    if (file) {
+        file.orientation = ori;
+        updateMultiFileStudioUI();
+    }
+};
+
+window.applyCurrentSettingToAllFiles = function() {
+    let currentFile = window.studioMasterFiles[window.currentStudioActiveIndex];
+    if (!currentFile) return;
+
+    window.studioMasterFiles.forEach(f => {
+        f.copies = currentFile.copies;
+        f.printType = currentFile.printType;
+        f.orientation = currentFile.orientation;
+    });
+    updateMultiFileStudioUI();
+    alert("✅ Current settings applied to all files!");
+};
+
+window.handleStudioFilesAdded = function(input) {
+    if (input.files && input.files.length > 0) {
+        Array.from(input.files).forEach(async (file) => {
+            let pageCount = 1;
+            let pageImages = [];
+            let fileUrl = URL.createObjectURL(file);
+
+            if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    pageCount = pdfDoc.numPages || 1;
+
+                    if (pdfDoc && typeof window.convertPdfPageToImage === 'function') {
+                        for (let p = 1; p <= pageCount; p++) {
+                            let pageImgUrl = await window.convertPdfPageToImage(pdfDoc, p);
+                            if (pageImgUrl) pageImages.push(pageImgUrl);
+                        }
+                    }
+                    if (pageImages.length > 0) fileUrl = pageImages[0];
+                } catch (e) {
+                    pageCount = 1;
+                }
+            } else {
+                pageImages.push(fileUrl);
+            }
+
+            window.studioMasterFiles.push({
+                name: file.name,
+                size: file.size,
+                fileBlob: file,
+                fileUrl: fileUrl,
+                pageImages: pageImages.length > 0 ? pageImages : [fileUrl],
+                pages: pageCount,
+                copies: 1,
+                printType: 'bw',
+                orientation: 'portrait',
+                binding: 'none'
+            });
+            updateMultiFileStudioUI();
+        });
+        input.value = '';
+    }
+};
+
+window.removeCurrentStudioFile = function() {
+    if (window.studioMasterFiles.length > 1) {
+        window.studioMasterFiles.splice(window.currentStudioActiveIndex, 1);
+        window.currentStudioActiveIndex = Math.max(0, window.currentStudioActiveIndex - 1);
+        updateMultiFileStudioUI();
+    } else {
+        closePrintStudio();
+    }
+};
+
+window.addStudioJobToCart = function() {
+    if (!window.studioMasterFiles || window.studioMasterFiles.length === 0) return;
+
+    window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
+
+    window.studioMasterFiles.forEach(f => {
+        let rate = (f.printType === 'bw') ? 3 : 10;
+        let printJobItem = {
+            id: 'print_' + Date.now() + Math.random(),
+            fileName: f.name,
+            fileUrl: f.fileUrl,
+            fileData: f.fileBlob,
+            pages: f.pages,
+            copies: f.copies,
+            printType: f.printType,
+            orientation: f.orientation,
+            sides: f.orientation === 'portrait' ? 'single' : 'landscape',
+            binding: f.binding || 'none',
+            price: f.pages * rate * f.copies
+        };
+        window.cartPrintJobsArray.push(printJobItem);
+    });
+
+    localStorage.setItem('cart_print_jobs', JSON.stringify(window.cartPrintJobsArray));
+
+    if (typeof persistCartStateData === 'function') persistCartStateData();
+    if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
+
+    closePrintStudio();
+    if (typeof toggleCartDrawer === 'function') {
+        toggleCartDrawer(true);
+    }
+};
+
+window.addStudioDocumentToCartAndRedirect = window.addStudioJobToCart;
+window.toggleGlobalOrientation = function() {
+    let file = window.studioMasterFiles[window.currentStudioActiveIndex];
+    if (file) {
+        file.orientation = (file.orientation === 'portrait') ? 'landscape' : 'portrait';
+        updateMultiFileStudioUI();
+    }
+};
+
+const slider = document.getElementById('studioInImageHorizontalSlider');
+if (slider) {
+    slider.addEventListener('scroll', () => {
+        let slideWidth = slider.clientWidth || 300;
+        let activeIdx = Math.round(slider.scrollLeft / slideWidth);
+        if (activeIdx >= 0 && activeIdx < window.studioMasterFiles.length && activeIdx !== window.currentStudioActiveIndex) {
+            window.currentStudioActiveIndex = activeIdx;
+            updateMultiFileStudioUI();
+        }
+    });
+}
 
     // 🔥 STORE STATUS & NOTIFICATIONS
     let isStoreCurrentlyOpen = true;
