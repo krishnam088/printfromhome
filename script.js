@@ -1902,9 +1902,33 @@ window.updateFloatingCartBar = function() {
 // ==========================================
 window.renderCartDrawerContents = function() {
     const container = document.getElementById('cartDrawerItemsList');
+    const identityBox = document.getElementById('cartUserIdentitySummary');
     if (!container) return;
     
     container.innerHTML = '';
+    
+    // Fetch User name & phone dynamically from address or session profile
+    const activeUser = localStorage.getItem('printAppUser') || 'Customer';
+    const activePhone = localStorage.getItem('printAppUserIdentity') || '7398746551';
+    const activeAddress = localStorage.getItem('selected_active_address') || '';
+
+    // Extract name/mobile from address if formatted, or fallback to storage
+    let displayName = activeUser;
+    let displayPhone = activePhone;
+    if (activeAddress.includes('Contact:')) {
+        let parts = activeAddress.split('Contact:');
+        if (parts[1]) {
+            let contactInfo = parts[1].trim();
+            let nameMatch = contactInfo.match(/^(.*?)\s*\(/);
+            let phoneMatch = contactInfo.match(/\((.*?)\)/);
+            if (nameMatch && nameMatch[1]) displayName = nameMatch[1].trim();
+            if (phoneMatch && phoneMatch[1]) displayPhone = phoneMatch[1].trim();
+        }
+    }
+
+    if (identityBox) {
+        identityBox.textContent = `Order for User (${displayName}) | (${displayPhone})`;
+    }
     
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
     window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
@@ -1912,87 +1936,59 @@ window.renderCartDrawerContents = function() {
     let hasItems = (window.cartSnacksArray.length > 0) || (window.cartPrintJobsArray.length > 0);
     
     if (!hasItems) {
-        container.innerHTML = `<p style="font-size:0.82rem; color:#64748b; text-align:center; padding:20px;">Your cart is empty.</p>`;
+        container.innerHTML = `<p style="font-size:0.8rem; color:#64748b; text-align:center; padding:15px; width:100%;">Your cart is empty.</p>`;
         if (typeof calculateTotal === 'function') calculateTotal();
-        
-        // Populate upselling even if empty
         renderUpsellingGridSafely();
         return;
     }
 
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = "display:flex; flex-direction:column; gap:10px; width:100%;";
-
     let totalPagesCount = 0;
     let totalItemsCount = 0;
 
-    // 1. Render Print Jobs in Cart
+    // 1. Render Print Jobs in Horizontal Cards
     window.cartPrintJobsArray.forEach((job, idx) => {
         let rate = (job.printType === 'bw') ? 3 : 10;
         let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
         totalPagesCount += job.pages * job.copies;
         totalItemsCount += 1;
 
-        let printTypeLabel = (job.printType === 'bw') ? 'B&W (₹3/p)' : 'Color (₹10/p)';
-        let orientationLabel = job.orientation ? job.orientation.toUpperCase() : 'PORTRAIT';
-
         const card = document.createElement('div');
-        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.02);";
+        card.style.cssText = "min-width:125px; max-width:125px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
 
         card.innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <div style="display:flex; align-items:center; gap:8px; flex:1; overflow:hidden;">
-                    <div style="font-size:1.4rem; width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:6px; flex-shrink:0;">📄</div>
-                    <div style="overflow:hidden; flex:1;">
-                        <div title="${job.fileName}" style="font-weight:700; font-size:0.8rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
-                        <div style="font-size:0.65rem; color:#64748b; font-weight:600;">${job.pages} pgs | ${printTypeLabel} | Copies: ${job.copies}</div>
-                    </div>
-                </div>
-                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:none; border:none; color:#ef4444; font-size:1rem; cursor:pointer; font-weight:bold;" title="Remove">&times;</button>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e2e8f0; padding-top:6px; margin-top:2px;">
-                <button type="button" onclick="editCartPrintJob(${idx})" style="background:none; border:none; color:#2563eb; font-weight:800; font-size:0.72rem; cursor:pointer; padding:0;">✏️ Edit settings</button>
-                <span style="font-size:0.85rem; font-weight:900; color:#0f172a;">₹${jobTotal.toFixed(2)}</span>
+            <div style="font-size:2rem; margin-bottom:4px;">📄</div>
+            <div title="${job.fileName}" style="font-weight:700; font-size:0.72rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${job.fileName}</div>
+            <div style="font-size:0.62rem; color:#64748b; font-weight:600; margin-bottom:6px;">${job.pages} pgs | ${job.printType.toUpperCase()}</div>
+            <div style="display:flex; align-items:center; gap:6px; width:100%; justify-content:center;">
+                <button type="button" onclick="editCartPrintJob(${idx})" style="background:#fef08a; border:none; padding:3px 8px; border-radius:6px; font-size:0.68rem; font-weight:800; cursor:pointer;">Edit</button>
+                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fee2e2; color:#ef4444; border:none; width:20px; height:20px; border-radius:50%; font-weight:bold; cursor:pointer; font-size:0.75rem;">&times;</button>
             </div>
         `;
-        wrapper.appendChild(card);
+        container.appendChild(card);
     });
 
-    // 2. Render Snacks / Store Products in Cart
+    // 2. Render Snacks / Store Products in Horizontal Cards with +/- Stepper
     window.cartSnacksArray.forEach((snack, idx) => {
         totalItemsCount += snack.qty;
-        const card = document.createElement('div');
-        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.02);";
-        
-        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:36px; height:36px; object-fit:cover; border-radius:6px;" />` : `<div style="font-size:1.3rem; width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:6px;">📦</div>`;
+        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; margin-bottom:4px;" />` : `<div style="font-size:1.8rem; margin-bottom:4px;">📦</div>`;
         let itemTotal = snack.price * snack.qty;
 
+        const card = document.createElement('div');
+        card.style.cssText = "min-width:125px; max-width:125px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
+
         card.innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <div style="display:flex; align-items:center; gap:8px; flex:1; overflow:hidden;">
-                    ${thumbImg}
-                    <div style="overflow:hidden; flex:1;">
-                        <div title="${snack.name}" style="font-weight:700; font-size:0.8rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</div>
-                        <div style="font-size:0.68rem; color:#64748b; font-weight:600;">₹${snack.price} each</div>
-                    </div>
-                </div>
-                <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:none; border:none; color:#ef4444; font-size:1rem; cursor:pointer; font-weight:bold;" title="Remove">&times;</button>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e2e8f0; padding-top:6px; margin-top:2px;">
-                <div style="display:flex; align-items:center; background:#065f46; border-radius:6px; padding:2px 6px; gap:8px;">
-                    <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; color:#ffffff; font-size:0.9rem; font-weight:bold; cursor:pointer;">&minus;</button>
-                    <span style="color:#ffffff; font-weight:800; font-size:0.78rem; min-width:12px; text-align:center;">${snack.qty}</span>
-                    <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; color:#ffffff; font-size:0.9rem; font-weight:bold; cursor:pointer;">+</button>
-                </div>
-                <span style="font-size:0.85rem; font-weight:900; color:#0f172a;">₹${itemTotal.toFixed(2)}</span>
+            ${thumbImg}
+            <div title="${snack.name}" style="font-weight:700; font-size:0.72rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${snack.name}</div>
+            <div style="font-size:0.68rem; color:#065f46; font-weight:800; margin-bottom:6px;">₹${itemTotal}</div>
+            <div style="display:flex; align-items:center; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:2px 6px; gap:6px; width:100%; justify-content:center;">
+                <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; cursor:pointer; font-size:0.85rem;">-</button>
+                <span style="font-weight:800; font-size:0.72rem; color:#0f172a;">${snack.qty}</span>
+                <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; cursor:pointer; color:#065f46; font-size:0.85rem;">+</button>
             </div>
         `;
-        wrapper.appendChild(card);
+        container.appendChild(card);
     });
 
-    container.appendChild(wrapper);
-
-    // Update shipment count text
     const shipmentTextNode = document.getElementById('shipmentItemsCountText');
     if (shipmentTextNode) {
         shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
