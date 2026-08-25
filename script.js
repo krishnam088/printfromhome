@@ -1769,206 +1769,326 @@ window.openProductDetailModal = function(prod) {
    // ==========================================
 // 🔥 CART DRAWER & FOOTER BAR UI (WITH AUTO-CLOSE & VERTICAL DETAILED LIST)
 // ==========================================
-// 🔥 Cart Drawer Toggle with Immediate Product & Upselling Render
 window.toggleCartDrawer = function(open = true) {
-    const drawerOverlay = document.getElementById('cartDrawerOverlay');
-    const floatingBar = document.getElementById('floatingCartFooterBar');
-    if (!drawerOverlay) return;
+    const drawerOverlay = document.getElementById('cartDrawerOverlay');
+    const floatingBar = document.getElementById('floatingCartFooterBar');
+    if (!drawerOverlay) return;
 
-    if (open) {
-        drawerOverlay.style.display = 'flex';
-        if (floatingBar) {
-            floatingBar.classList.add('hidden');
-            floatingBar.style.display = 'none';
-        }
-        
-        // 1. Render cart items
-        if (typeof renderCartDrawerContents === 'function') {
-            renderCartDrawerContents();
-        }
-        // 2. Fetch and render upselling store inventory products immediately
-        if (typeof loadDynamicStoreProducts === 'function') {
-            loadDynamicStoreProducts();
-        } else if (typeof renderUpsellingGridSafely === 'function') {
-            renderUpsellingGridSafely();
-        }
-    } else {
-        drawerOverlay.style.display = 'none';
-        if (typeof updateFloatingCartBar === 'function') {
-            updateFloatingCartBar();
-        }
-    }
+    if (open) {
+        drawerOverlay.style.display = 'flex';
+        if (floatingBar) {
+            floatingBar.classList.add('hidden');
+            floatingBar.style.display = 'none';
+        }
+        
+        // 🔥 Cart khulte hi turant store products fetch aur render karein
+        if (typeof loadDynamicStoreProducts === 'function') {
+            loadDynamicStoreProducts();
+        }
+        if (typeof renderCartDrawerContents === 'function') {
+            renderCartDrawerContents();
+        }
+    } else {
+        drawerOverlay.style.display = 'none';
+        if (typeof updateFloatingCartBar === 'function') {
+            updateFloatingCartBar();
+        }
+    }
 };
+
+// 🔥 Bulletproof Upselling Grid Render for "You Might Also Like" Box
+function renderUpsellingGridSafely() {
+    const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
+    if (!upsellingGrid) return;
+    
+    // Agar products empty hain toh background mein fetch call lagayein
+    if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) {
+        upsellingGrid.innerHTML = '<p style="font-size:0.78rem; color:#64748b; text-align:center; padding:15px; width:100%;">Loading store products...</p>';
+        if (typeof loadDynamicStoreProducts === 'function') {
+            loadDynamicStoreProducts();
+        }
+        return;
+    }
+
+    upsellingGrid.innerHTML = '';
+    let availableProducts = window.storeInventoryProducts.filter(prod => prod.stockQuantity > 0);
+
+    if (availableProducts.length > 0) {
+        availableProducts.forEach((prod) => {
+            const thumb = prod.imageUrl || prod.image || '';
+            const safeSku = String(prod.sku || prod.name || '').replace(/['"\\]/g, '\\$&');
+            const safeName = String(prod.name || '').replace(/['"\\]/g, '\\$&');
+            const safeThumb = String(thumb || '').replace(/['"\\]/g, '\\$&');
+            
+            const priceVal = Number(prod.sellingPrice || prod.price || 0);
+            const stockVal = Number(prod.stockQuantity || prod.stock || 0);
+
+            const itemCard = document.createElement('div');
+            itemCard.style.cssText = "min-width:140px; max-width:140px; background:#ffffff; border:1px solid #cbd5e1; border-radius:16px; padding:12px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 3px 10px rgba(0,0,0,0.04); flex-shrink:0;";
+            
+            itemCard.innerHTML = `
+                ${thumb ? `<img src="${thumb}" style="width:55px; height:55px; object-fit:cover; border-radius:10px; margin-bottom:6px;" />` : '<div style="font-size:2rem; margin-bottom:6px;">📦</div>'}
+                <div title="${prod.name || ''}" style="font-weight:800; font-size:0.78rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; margin-bottom:2px;">${prod.name || ''}</div>
+                <div style="font-size:0.75rem; font-weight:900; color:#065f46; margin-bottom:8px;">₹${priceVal}</div>
+                <button type="button" style="background:#065f46; color:white; border:none; padding:6px 10px; border-radius:8px; font-size:0.72rem; font-weight:800; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
+            `;
+            upsellingGrid.appendChild(itemCard);
+        });
+    } else {
+        upsellingGrid.innerHTML = '<p style="font-size:0.78rem; color:#64748b; text-align:center; padding:15px; width:100%;">No store products available currently.</p>';
+    }
+}
+
+window.updateFloatingCartBar = function() {
+    const bar = document.getElementById('floatingCartFooterBar');
+    const countText = document.getElementById('floatingCartCountText');
+    const priceText = document.getElementById('floatingCartTotalPriceText');
+    const stackContainer = document.getElementById('floatingCartImagesStack');
+    const drawerOverlay = document.getElementById('cartDrawerOverlay');
+    
+    // Category Drawer Cart Elements
+    const catBar = document.getElementById('categoryDrawerFooterBar');
+    const catCountText = document.getElementById('categoryCartCountText');
+    const catPriceText = document.getElementById('categoryCartTotalPriceText');
+    
+    if (!bar) return;
+
+    const sessionActiveUser = localStorage.getItem('printAppUser');
+    const isAuthVisible = document.getElementById('authScreen') && !document.getElementById('authScreen').classList.contains('app-hidden') && document.getElementById('authScreen').style.display !== 'none';
+    
+    const storeSection = document.getElementById('user_section_store');
+    const isStoreActive = storeSection && storeSection.classList.contains('active');
+
+    window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
+    window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
+
+    let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0);
+    let totalPrintCount = window.cartPrintJobsArray.length;
+    let totalCount = totalSnacksCount + totalPrintCount;
+
+    let totalSnacksPrice = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
+    let totalPrintPrice = window.cartPrintJobsArray.reduce((acc, job) => acc + (job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0);
+    
+    let subtotalCalc = totalSnacksPrice + totalPrintPrice;
+    const freeDeliveryThreshold = 99.00;
+
+    let activeDelFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 0;
+    let delFee = (subtotalCalc >= freeDeliveryThreshold || subtotalCalc === 0) ? 0.00 : activeDelFee;
+    
+    let activeRainFee = window.adminRainFee !== undefined ? window.adminRainFee : 0;
+    let rainFee = window.isRainSurgeActive ? activeRainFee : 0;
+    
+    let activeHandlingFee = window.adminHandlingFee !== undefined ? window.adminHandlingFee : 0;
+
+    let totalPrice = subtotalCalc + delFee + rainFee + activeHandlingFee + (window.currentDeliveryTip || 0);
+
+    if (catBar) {
+        if (totalCount > 0) {
+            catBar.style.display = 'flex';
+            if (catCountText) catCountText.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
+            if (catPriceText) catPriceText.textContent = `₹${totalPrice.toFixed(2)}`;
+        } else {
+            catBar.style.display = 'none';
+        }
+    }
+
+    if (totalCount === 0 && drawerOverlay && drawerOverlay.style.display === 'flex') {
+        toggleCartDrawer(false);
+    }
+
+    if (!sessionActiveUser || isAuthVisible || !isStoreActive || totalCount === 0 || (drawerOverlay && drawerOverlay.style.display === 'flex')) {
+        bar.classList.add('hidden');
+        bar.style.display = 'none';
+        return;
+    }
+
+    bar.classList.remove('hidden');
+    bar.style.display = 'flex';
+    if (countText) countText.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
+    if (priceText) priceText.textContent = `₹${totalPrice.toFixed(2)}`;
+
+    if (stackContainer) {
+        stackContainer.innerHTML = '';
+        stackContainer.style.cssText = "position:relative; width:45px; height:34px; display:flex; align-items:center;";
+
+        let allVisualItems = [];
+        window.cartSnacksArray.forEach(s => {
+            for(let i=0; i<s.qty; i++) {
+                allVisualItems.push({ type: 'snack', img: s.imageUrl || '', name: s.name });
+            }
+        });
+        window.cartPrintJobsArray.forEach(p => allVisualItems.push({ type: 'print', img: '', name: p.fileName }));
+
+        let displayItems = allVisualItems.slice(0, 3);
+        displayItems.forEach((item, sIdx) => {
+            const iconBox = document.createElement('div');
+            iconBox.style.cssText = `
+                position: absolute;
+                left: ${sIdx * 12}px;
+                width: 30px;
+                height: 30px;
+                border-radius: 8px;
+                background: #ffffff;
+                border: 2px solid #f59e0b;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.85rem;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+                overflow: hidden;
+                z-index: ${10 - sIdx};
+            `;
+            if (item.type === 'snack' && item.img) {
+                iconBox.innerHTML = `<img src="${item.img}" style="width:100%; height:100%; object-fit:cover;" />`;
+            } else {
+                iconBox.innerHTML = item.type === 'print' ? '📄' : '📦';
+            }
+            stackContainer.appendChild(iconBox);
+        });
+    }
+};
+
+
 
 // ==========================================
 // 🔥 BULLETPROOF UNIVERSAL CART DRAWER RENDER ENGINE
 // ==========================================
 window.renderCartDrawerContents = function() {
-    const container = document.getElementById('cartDrawerItemsList');
-    const identityBox = document.getElementById('cartUserIdentitySummary');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    const activeUser = localStorage.getItem('printAppUser') || 'Customer';
-    const activePhone = localStorage.getItem('printAppUserIdentity') || '7398746551';
-    const activeAddress = localStorage.getItem('selected_active_address') || '';
+    const container = document.getElementById('cartDrawerItemsList');
+    const identityBox = document.getElementById('cartUserIdentitySummary');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const activeUser = localStorage.getItem('printAppUser') || 'Customer';
+    const activePhone = localStorage.getItem('printAppUserIdentity') || '7398746551';
+    const activeAddress = localStorage.getItem('selected_active_address') || '';
 
-    let displayName = activeUser;
-    let displayPhone = activePhone;
-    if (activeAddress.includes('Contact:')) {
-        let parts = activeAddress.split('Contact:');
-        if (parts[1]) {
-            let contactInfo = parts[1].trim();
-            let nameMatch = contactInfo.match(/^(.*?)\s*\(/);
-            let phoneMatch = contactInfo.match(/\((.*?)\)/);
-            if (nameMatch && nameMatch[1]) displayName = nameMatch[1].trim();
-            if (phoneMatch && phoneMatch[1]) displayPhone = phoneMatch[1].trim();
-        }
-    }
+    let displayName = activeUser;
+    let displayPhone = activePhone;
+    if (activeAddress.includes('Contact:')) {
+        let parts = activeAddress.split('Contact:');
+        if (parts[1]) {
+            let contactInfo = parts[1].trim();
+            let nameMatch = contactInfo.match(/^(.*?)\s*\(/);
+            let phoneMatch = contactInfo.match(/\((.*?)\)/);
+            if (nameMatch && nameMatch[1]) displayName = nameMatch[1].trim();
+            if (phoneMatch && phoneMatch[1]) displayPhone = phoneMatch[1].trim();
+        }
+    }
 
-    if (identityBox) {
-        identityBox.textContent = `Order for User (${displayName}) | (${displayPhone})`;
-    }
-    
-    window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
-    window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
+    if (identityBox) {
+        identityBox.textContent = `Order for User (${displayName}) | (${displayPhone})`;
+    }
+    
+    window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
+    window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
-    let hasItems = (window.cartSnacksArray.length > 0) || (window.cartPrintJobsArray.length > 0);
-    
-    if (!hasItems) {
-        container.innerHTML = `<p style="font-size:0.8rem; color:#64748b; text-align:center; padding:15px; width:100%;">Your cart is empty.</p>`;
-        if (typeof calculateTotal === 'function') calculateTotal();
-        if (typeof renderUpsellingGridSafely === 'function') renderUpsellingGridSafely();
-        return;
-    }
+    let hasItems = (window.cartSnacksArray.length > 0) || (window.cartPrintJobsArray.length > 0);
+    
+    if (!hasItems) {
+        container.innerHTML = `<p style="font-size:0.8rem; color:#64748b; text-align:center; padding:15px; width:100%;">Your cart is empty.</p>`;
+        if (typeof calculateTotal === 'function') calculateTotal();
+        renderUpsellingGridSafely();
+        return;
+    }
 
-    let totalPagesCount = 0;
-    let totalItemsCount = 0;
+    let totalPagesCount = 0;
+    let totalItemsCount = 0;
 
-    // 1. Render Print Jobs in Horizontal Cards with Edit Button
-    window.cartPrintJobsArray.forEach((job, idx) => {
-        let rate = (job.printType === 'bw') ? 3 : 10;
-        let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
-        totalPagesCount += job.pages * job.copies;
-        totalItemsCount += 1;
+// 1. Render Print Jobs in Horizontal Cards with Edit Button
+    window.cartPrintJobsArray.forEach((job, idx) => {
+        let rate = (job.printType === 'bw') ? 3 : 10;
+        let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
+        totalPagesCount += job.pages * job.copies;
+        totalItemsCount += 1;
 
-        const card = document.createElement('div');
-        card.style.cssText = "min-width:130px; max-width:130px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
+        const card = document.createElement('div');
+        card.style.cssText = "min-width:130px; max-width:130px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
 
-        card.innerHTML = `
-            <div style="font-size:1.8rem; margin-bottom:2px;">📄</div>
-            <div title="${job.fileName}" style="font-weight:700; font-size:0.72rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${job.fileName}</div>
-            <div style="font-size:0.6rem; color:#64748b; font-weight:600; margin-bottom:6px;">${job.pages} pgs | ${job.printType.toUpperCase()}</div>
-            <div style="display:flex; align-items:center; gap:6px; width:100%; justify-content:center;">
-                <button type="button" onclick="editCartPrintJob(${idx})" style="background:#fef08a; border:1px solid #fde047; padding:3px 8px; border-radius:6px; font-size:0.68rem; font-weight:800; cursor:pointer; color:#713f12;">Edit</button>
-                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fee2e2; color:#ef4444; border:none; width:22px; height:22px; border-radius:50%; font-weight:bold; cursor:pointer; font-size:0.75rem; display:flex; align-items:center; justify-content:center;">&times;</button>
-            </div>
-        `;
-        container.appendChild(card);
-    });
+        card.innerHTML = `
+            <div style="font-size:1.8rem; margin-bottom:2px;">📄</div>
+            <div title="${job.fileName}" style="font-weight:700; font-size:0.72rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${job.fileName}</div>
+            <div style="font-size:0.6rem; color:#64748b; font-weight:600; margin-bottom:6px;">${job.pages} pgs | ${job.printType.toUpperCase()}</div>
+            <div style="display:flex; align-items:center; gap:6px; width:100%; justify-content:center;">
+                <button type="button" onclick="editCartPrintJob(${idx})" style="background:#fef08a; border:1px solid #fde047; padding:3px 8px; border-radius:6px; font-size:0.68rem; font-weight:800; cursor:pointer; color:#713f12;">Edit</button>
+                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fee2e2; color:#ef4444; border:none; width:22px; height:22px; border-radius:50%; font-weight:bold; cursor:pointer; font-size:0.75rem; display:flex; align-items:center; justify-content:center;">&times;</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
 
-    // 2. Render Snacks / Store Products in Horizontal Cards with +/- Stepper
-    window.cartSnacksArray.forEach((snack, idx) => {
-        totalItemsCount += snack.qty;
-        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; margin-bottom:4px;" />` : `<div style="font-size:1.8rem; margin-bottom:4px;">📦</div>`;
-        let itemTotal = snack.price * snack.qty;
+    // 2. Render Snacks / Store Products in Horizontal Cards with +/- Stepper
+    window.cartSnacksArray.forEach((snack, idx) => {
+        totalItemsCount += snack.qty;
+        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; margin-bottom:4px;" />` : `<div style="font-size:1.8rem; margin-bottom:4px;">📦</div>`;
+        let itemTotal = snack.price * snack.qty;
 
-        const card = document.createElement('div');
-        card.style.cssText = "min-width:125px; max-width:125px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
+        const card = document.createElement('div');
+        card.style.cssText = "min-width:125px; max-width:125px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
 
-        card.innerHTML = `
-            ${thumbImg}
-            <div title="${snack.name}" style="font-weight:700; font-size:0.72rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${snack.name}</div>
-            <div style="font-size:0.68rem; color:#065f46; font-weight:800; margin-bottom:6px;">₹${itemTotal}</div>
-            <div style="display:flex; align-items:center; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:2px 6px; gap:6px; width:100%; justify-content:center;">
-                <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; cursor:pointer; font-size:0.85rem;">-</button>
-                <span style="font-weight:800; font-size:0.72rem; color:#0f172a;">${snack.qty}</span>
-                <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; cursor:pointer; color:#065f46; font-size:0.85rem;">+</button>
-            </div>
-        `;
-        container.appendChild(card);
-    });
+        card.innerHTML = `
+            ${thumbImg}
+            <div title="${snack.name}" style="font-weight:700; font-size:0.72rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${snack.name}</div>
+            <div style="font-size:0.68rem; color:#065f46; font-weight:800; margin-bottom:6px;">₹${itemTotal}</div>
+            <div style="display:flex; align-items:center; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:2px 6px; gap:6px; width:100%; justify-content:center;">
+                <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; cursor:pointer; font-size:0.85rem;">-</button>
+                <span style="font-weight:800; font-size:0.72rem; color:#0f172a;">${snack.qty}</span>
+                <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; cursor:pointer; color:#065f46; font-size:0.85rem;">+</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
 
-    const shipmentTextNode = document.getElementById('shipmentItemsCountText');
-    if (shipmentTextNode) {
-        shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
-    }
+    const shipmentTextNode = document.getElementById('shipmentItemsCountText');
+    if (shipmentTextNode) {
+        shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
+    }
 
-    if (typeof renderUpsellingGridSafely === 'function') {
-        renderUpsellingGridSafely();
-    }
-    if (typeof calculateTotal === 'function') {
-        calculateTotal();
-    }
+    renderUpsellingGridSafely();
+    if (typeof calculateTotal === 'function') calculateTotal();
 };
 
 // 🔥 Bulletproof Upselling Grid Render for "You Might Also Like" Box (Bada Size)
 function renderUpsellingGridSafely() {
-    const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
-    if (!upsellingGrid) return;
-    
-    // Agar store inventory products loaded nahi hain, toh fetch karne ki koshish karein
-    if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) {
-        upsellingGrid.innerHTML = '<p style="font-size:0.78rem; color:#64748b; text-align:center; padding:15px; width:100%;">Loading store products...</p>';
-        if (typeof loadDynamicStoreProducts === 'function') {
-            loadDynamicStoreProducts();
-        }
-        return;
-    }
+    const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
+    if (!upsellingGrid) return;
+    
+    // Agar store inventory products loaded nahi hain, toh fetch karne ki koshish karein
+    if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) {
+        if (typeof loadDynamicStoreProducts === 'function') {
+            loadDynamicStoreProducts();
+        }
+    }
 
-    upsellingGrid.innerHTML = '';
-    let availableProducts = window.storeInventoryProducts.filter(prod => prod.stockQuantity > 0);
+    if (window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
+        upsellingGrid.innerHTML = '';
+        window.storeInventoryProducts.forEach((prod) => {
+            if (prod.stockQuantity > 0) {
+                const thumb = prod.imageUrl || prod.image || '';
+                const safeSku = String(prod.sku || prod.name || '').replace(/['"\\]/g, '\\$&');
+                const safeName = String(prod.name || '').replace(/['"\\]/g, '\\$&');
+                const safeThumb = String(thumb || '').replace(/['"\\]/g, '\\$&');
+                
+                const priceVal = Number(prod.sellingPrice || prod.price || 0);
+                const stockVal = Number(prod.stockQuantity || prod.stock || 0);
 
-    if (availableProducts.length > 0) {
-        availableProducts.forEach((prod) => {
-            const thumb = prod.imageUrl || prod.image || '';
-            const safeSku = String(prod.sku || prod.name || '').replace(/['"\\]/g, '\\$&');
-            const safeName = String(prod.name || '').replace(/['"\\]/g, '\\$&');
-            const safeThumb = String(thumb || '').replace(/['"\\]/g, '\\$&');
-            
-            const priceVal = Number(prod.sellingPrice || prod.price || 0);
-            const stockVal = Number(prod.stockQuantity || prod.stock || 0);
-
-            const itemCard = document.createElement('div');
-            itemCard.style.cssText = "min-width:140px; max-width:140px; background:#ffffff; border:1px solid #cbd5e1; border-radius:16px; padding:12px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 3px 10px rgba(0,0,0,0.04); flex-shrink:0;";
-            
-            itemCard.innerHTML = `
-                ${thumb ? `<img src="${thumb}" style="width:55px; height:55px; object-fit:cover; border-radius:10px; margin-bottom:6px;" />` : '<div style="font-size:2rem; margin-bottom:6px;">📦</div>'}
-                <div title="${prod.name || ''}" style="font-weight:800; font-size:0.78rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; margin-bottom:2px;">${prod.name || ''}</div>
-                <div style="font-size:0.75rem; font-weight:900; color:#065f46; margin-bottom:8px;">₹${priceVal}</div>
-                <button type="button" style="background:#065f46; color:white; border:none; padding:6px 10px; border-radius:8px; font-size:0.72rem; font-weight:800; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
-            `;
-            upsellingGrid.appendChild(itemCard);
-        });
-    } else {
-        upsellingGrid.innerHTML = '<p style="font-size:0.78rem; color:#64748b; text-align:center; padding:15px; width:100%;">No store products available currently.</p>';
-    }
-}
-// 🔥 Global Safe Definition of updateFloatingCartBar to prevent ReferenceError
-if (typeof window.updateFloatingCartBar !== 'function') {
-    window.updateFloatingCartBar = function() {
-        const bar = document.getElementById('floatingCartFooterBar');
-        if (!bar) return;
-        
-        let totalSnacks = 0;
-        let totalPrint = 0;
-        try {
-            const snacks = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
-            const prints = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
-            totalSnacks = snacks.reduce((acc, item) => acc + (item.qty || 0), 0);
-            totalPrint = prints.length;
-        } catch(e) {}
-
-        let totalCount = totalSnacks + totalPrint;
-        if (totalCount > 0) {
-            bar.classList.remove('hidden');
-            bar.style.display = 'flex';
-        } else {
-            bar.classList.add('hidden');
-            bar.style.display = 'none';
-        }
-    };
+                const itemCard = document.createElement('div');
+                // 📦 Bada Size Card (min-width badha kar 140px aur padding 12px kar di hai)
+                itemCard.style.cssText = "min-width:140px; max-width:140px; background:#ffffff; border:1px solid #cbd5e1; border-radius:16px; padding:12px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 3px 10px rgba(0,0,0,0.04); flex-shrink:0;";
+                
+                itemCard.innerHTML = `
+                    ${thumb ? `<img src="${thumb}" style="width:55px; height:55px; object-fit:cover; border-radius:10px; margin-bottom:6px;" />` : '<div style="font-size:2rem; margin-bottom:6px;">📦</div>'}
+                    <div title="${prod.name || ''}" style="font-weight:800; font-size:0.78rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; margin-bottom:2px;">${prod.name || ''}</div>
+                    <div style="font-size:0.75rem; font-weight:900; color:#065f46; margin-bottom:8px;">₹${priceVal}</div>
+                    <button type="button" style="background:#065f46; color:white; border:none; padding:6px 10px; border-radius:8px; font-size:0.72rem; font-weight:800; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
+                `;
+                upsellingGrid.appendChild(itemCard);
+            }
+        });
+    } else {
+        upsellingGrid.innerHTML = '<p style="font-size:0.75rem; color:#64748b; text-align:center; padding:10px; width:100%;">Loading store products...</p>';
+    }
 }
 
 // Helper function to edit a print job from cart (re-opens Print Studio)
