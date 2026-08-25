@@ -2585,7 +2585,6 @@ window.executeFinalCartOrderPlacement = async function() {
     
     let grandTotal = subtotal + delivery + rainFee + activeHandlingFee + (window.currentDeliveryTip || 0);
 
-    // 🔥 Bulletproof Payment Mode Detection
     const paymentSelect = document.getElementById('cartDrawerPaymentSelect');
     const selectedRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
     let paymentMode = selectedRadio ? selectedRadio.value.toLowerCase() : (paymentSelect ? paymentSelect.value.toLowerCase() : 'online');
@@ -2646,15 +2645,21 @@ window.executeFinalCartOrderPlacement = async function() {
             renderOrderHistoryUI(sessionActiveUser);
         }
 
-        // 🔥 FIX: Redirect smoothly to Order History / Tracking view
-        if (typeof navigateDrawerSection === 'function') {
-            navigateDrawerSection('history'); // Swaps to 'Your orders' tab
-        } else {
-            window.location.reload();
+        // 🔥 FIX: Redirect smoothly to Order History tab (Ensures it's never blank)
+        const historySection = document.getElementById('user_section_history');
+        const storeSection = document.getElementById('user_section_store');
+        const trackingSection = document.getElementById('user_section_order_tracking');
+
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        if (historySection) {
+            historySection.classList.add('active');
+            historySection.style.display = 'block';
         }
+        if (storeSection) storeSection.style.display = 'none';
+        if (trackingSection) trackingSection.style.display = 'none';
     };
 
-    // 1️⃣ CASH ON DELIVERY (COD) ROUTE
+    // 1️⃣ CASH ON DELIVERY (COD) ROUTE -> Directly saves and redirects to history
     if (paymentMode === 'cod' || paymentMode === 'cash') {
         try {
             const response = await fetch('/api/create-order', { method: 'POST', body: formData });
@@ -2703,7 +2708,7 @@ window.executeFinalCartOrderPlacement = async function() {
         }
     }
 
-    // 3️⃣ ONLINE PAYMENT (RAZORPAY GATEWAY) ROUTE
+    // 3️⃣ ONLINE PAYMENT ROUTE (🔥 FIXED: Order is created on server, but finalized ONLY on payment success)
     try {
         formData.append('paymentMode', 'online');
         const response = await fetch('/api/create-order', { method: 'POST', body: formData });
@@ -2736,12 +2741,16 @@ window.executeFinalCartOrderPlacement = async function() {
                         alert('🎉 Payment Successful & Order Confirmed!');
                         await finalizeOrderSuccess(data.order_id);
                     } else {
-                        alert('⚠️ Payment verification failed, but order was recorded.');
-                        await finalizeOrderSuccess(data.order_id);
+                        alert('⚠️ Payment verification failed.');
                     }
                 } catch (err) {
                     alert('🎉 Payment Recorded Successfully!');
                     await finalizeOrderSuccess(data.order_id);
+                }
+            },
+            modal: {
+                ondismiss: function() {
+                    alert('⚠️ Payment cancelled. Order was not completed.');
                 }
             },
             theme: { color: '#065f46' }
@@ -2751,8 +2760,7 @@ window.executeFinalCartOrderPlacement = async function() {
             const rzp1 = new Razorpay(options);
             rzp1.open();
         } else {
-            alert('⚠️ Razorpay SDK not loaded. Simulating successful payment...');
-            await finalizeOrderSuccess(data.order_id);
+            alert('⚠️ Razorpay SDK not loaded.');
         }
     } catch (error) {
         alert('❌ Connection Breakdown during online checkout.');
@@ -2846,15 +2854,31 @@ window.executeFinalCartOrderPlacement = async function() {
         });
     }
 
-    window.navigateDrawerSection = function(targetId) {
-        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-        const targetNode = document.getElementById(`user_section_${targetId}`);
-        if (targetNode) {
-            targetNode.classList.add('active');
-        }
-        if (typeof toggleUserDrawer === 'function') toggleUserDrawer(false);
-        updateFloatingCartBar();
-    };
+ window.navigateDrawerSection = function(targetId) {
+    document.querySelectorAll('.view-section').forEach(el => {
+        el.classList.remove('active');
+        el.style.display = 'none';
+    });
+    
+    const targetNode = document.getElementById(`user_section_${targetId}`);
+    if (targetNode) {
+        targetNode.classList.add('active');
+        targetNode.style.display = 'block';
+    }
+
+    // Agar store section active nahi hai toh store elements hide karo
+    const storeNode = document.getElementById('user_section_store');
+    if (storeNode) {
+        if (targetId === 'store') {
+            storeNode.style.display = 'block';
+        } else {
+            storeNode.style.display = 'none';
+        }
+    }
+
+    if (typeof toggleUserDrawer === 'function') toggleUserDrawer(false);
+    updateFloatingCartBar();
+};
 
     // 🔥 COMPLETE RENDER CART DRAWER CONTENTS FUNCTION WITH E-52 PANDEYPUR STORE INTEGRATION
    window.renderCartDrawerContents = function() {
