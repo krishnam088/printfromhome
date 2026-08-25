@@ -838,24 +838,26 @@
                     <span style="color:#16a34a; font-weight:800; font-size:0.75rem;">Change</span>
                 </div>
 
-                <!-- Payment & Place Order Row -->
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                    <div style="display:flex; flex-direction:column;">
-                        <span style="font-size:0.65rem; font-weight:700; color:#64748b; text-transform:uppercase;">PAY USING 🛈</span>
-                        <select id="cartDrawerPaymentSelect" onchange="updateCartPaymentMode(this.value)" style="background:none; border:none; font-size:0.85rem; font-weight:900; color:#0f172a; outline:none; cursor:pointer; padding:0;">
-                            <option value="online">⚡ Online (UPI / Card)</option>
-                            <option value="wallet">💰 Print Wallet (<span id="walletDrawerBalanceText">₹0</span>)</option>
-                            <option value="cod">💵 Cash on Delivery</option>
-                        </select>
-                    </div>
-                    <button type="button" onclick="executeFinalCartOrderPlacement()" style="background:#16a34a; color:#ffffff; border:none; padding:12px 20px; border-radius:14px; font-weight:900; font-size:0.95rem; display:flex; align-items:center; gap:10px; cursor:pointer; box-shadow:0 4px 12px rgba(22,163,74,0.3);">
-                        <div style="display:flex; flex-direction:column; text-align:right;">
-                            <span id="cartDrawerGrandTotal" style="font-size:0.95rem; font-weight:900;">₹0.00</span>
-                            <span style="font-size:0.55rem; font-weight:700; opacity:0.85; text-transform:uppercase;">TOTAL</span>
-                        </div>
-                        <span>Place Order &rarr;</span>
-                    </button>
-                </div>
+                <!-- Payment & Place Order Row (Compact & Attractive) -->
+<div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+    <div style="display:flex; flex-direction:column;">
+        <span style="font-size:0.65rem; font-weight:700; color:#64748b; text-transform:uppercase;">PAY USING 🛈</span>
+        <select id="cartDrawerPaymentSelect" onchange="updateCartPaymentMode(this.value)" style="background:none; border:none; font-size:0.85rem; font-weight:900; color:#0f172a; outline:none; cursor:pointer; padding:0;">
+            <option value="online">⚡ Online (UPI / Card)</option>
+            <option value="wallet">💰 Print Wallet (<span id="walletDrawerBalanceText">₹0</span>)</option>
+            <option value="cod">💵 Cash on Delivery</option>
+        </select>
+    </div>
+    <!-- 🟢 Clean, Compact & Attractive Place Order Button -->
+    <button type="button" onclick="executeFinalCartOrderPlacement()" style="background:#16a34a; color:#ffffff; border:none; padding:10px 16px; border-radius:12px; font-weight:900; font-size:0.9rem; display:flex; align-items:center; gap:8px; cursor:pointer; box-shadow:0 4px 10px rgba(22,163,74,0.25); transition:transform 0.1s ease;">
+        <div style="display:flex; flex-direction:column; text-align:right;">
+            <span id="cartDrawerGrandTotal" style="font-size:0.9rem; font-weight:900;">₹0.00</span>
+            <span style="font-size:0.5rem; font-weight:700; opacity:0.85; text-transform:uppercase;">TOTAL</span>
+        </div>
+        <span style="font-size:0.85rem;">Place Order &rarr;</span>
+    </button>
+</div>
+
             </div>
 
         </div>

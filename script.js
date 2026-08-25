@@ -75,6 +75,7 @@ const STORE_LOCATION = {
     lng: 83.0012,
     name: "Store" // Store name display fix (No address shown)
 };
+});
 
 // ⏱️ CALCULATE REAL-TIME DISTANCE & ETA FROM STORE TO USER (Home & Cart)
 window.calculateRealtimeDistanceAndEta = function() {
@@ -387,7 +388,7 @@ window.toggleCouponDrawer = function() {
             check.style.color = '#16a34a'; 
         }
     };
-});
+
 
     const LIVE_SERVER_URL = window.location.origin;
     window.globalRawOrdersCache = [];
@@ -1713,116 +1714,122 @@ window.updateFloatingCartBar = function() {
     const stackContainer = document.getElementById('floatingCartImagesStack');
     const drawerOverlay = document.getElementById('cartDrawerOverlay');
     
-    // Category Drawer Cart Elements
-    const catBar = document.getElementById('categoryDrawerFooterBar');
-    const catCountText = document.getElementById('categoryCartCountText');
-    const catPriceText = document.getElementById('categoryCartTotalPriceText');
-    
-    if (!bar) return;
+    // ==========================================
+// 📂 CATEGORY SLIDER DRAWER & FILTERING ENGINE
+// ==========================================
+window.openCategoryDrawer = function(categoryName) {
+    const overlay = document.getElementById('categoryDrawerOverlay');
+    const titleNode = document.getElementById('categoryDrawerTitle');
+    const gridNode = document.getElementById('categoryDrawerItemsGrid');
+    if (!overlay || !gridNode) return;
 
-    const sessionActiveUser = localStorage.getItem('printAppUser');
-    const isAuthVisible = document.getElementById('authScreen') && !document.getElementById('authScreen').classList.contains('app-hidden') && document.getElementById('authScreen').style.display !== 'none';
-    
-    const storeSection = document.getElementById('user_section_store');
-    const isStoreActive = storeSection && storeSection.classList.contains('active');
+    if (titleNode) {
+        titleNode.textContent = `${categoryName.toUpperCase()} ITEMS`;
+    }
 
-    window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
-    window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
+    gridNode.style.cssText = "flex:1; overflow-y:auto; padding:16px; display:flex; flex-wrap:wrap; gap:12px; align-content:start; justify-content:flex-start;";
+    gridNode.innerHTML = '';
 
-    let totalSnacksCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0);
-    let totalPrintCount = window.cartPrintJobsArray.length;
-    let totalCount = totalSnacksCount + totalPrintCount;
-
-    let totalSnacksPrice = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
-    let totalPrintPrice = window.cartPrintJobsArray.reduce((acc, job) => acc + (job.pages * (job.printType === 'bw' ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0);
-    
-    let subtotalCalc = totalSnacksPrice + totalPrintPrice;
-    const freeDeliveryThreshold = 99.00;
-
-    // 🔥 Strictly Admin Controlled Dynamic Fees (No Hardcoded 25 or 15)
-    let activeDelFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 0;
-    let delFee = (subtotalCalc >= freeDeliveryThreshold || subtotalCalc === 0) ? 0.00 : activeDelFee;
-    
-    let activeRainFee = window.adminRainFee !== undefined ? window.adminRainFee : 0;
-    let rainFee = window.isRainSurgeActive ? activeRainFee : 0;
-    
-    let activeHandlingFee = window.adminHandlingFee !== undefined ? window.adminHandlingFee : 0;
-
-    let totalPrice = subtotalCalc + delFee + rainFee + activeHandlingFee + (window.currentDeliveryTip || 0);
-
-    // Update Category Drawer Footer Cart Bar if items exist
-    if (catBar) {
-        if (totalCount > 0) {
-            catBar.style.display = 'flex';
-            if (catCountText) catCountText.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
-            if (catPriceText) catPriceText.textContent = `₹${totalPrice.toFixed(2)}`;
-        } else {
-            catBar.style.display = 'none';
+    let filtered = (window.storeInventoryProducts || []).filter(prod => {
+        let categoryLower = (prod.category || prod.type || '').toLowerCase();
+        let nameLower = (prod.name || '').toLowerCase();
+        
+        if (categoryName === 'munchies') {
+            return categoryLower.includes('munchies') || categoryLower.includes('chips') || categoryLower.includes('namkeen') || nameLower.includes('lays') || nameLower.includes('kurkure');
+        } else if (categoryName === 'snacks') {
+            return categoryLower.includes('snacks') || categoryLower.includes('food') || categoryLower.includes('beverage');
+        } else if (categoryName === 'socks') {
+            return categoryLower.includes('socks') || categoryLower.includes('apparel') || categoryLower.includes('clothing') || nameLower.includes('sock');
         }
-    }
+        return true;
+    });
 
-    // Auto-close cart drawer if empty
-    if (totalCount === 0 && drawerOverlay && drawerOverlay.style.display === 'flex') {
-        toggleCartDrawer(false);
-    }
-
-    if (!sessionActiveUser || isAuthVisible || !isStoreActive || totalCount === 0 || (drawerOverlay && drawerOverlay.style.display === 'flex')) {
-        bar.classList.add('hidden');
-        bar.style.display = 'none';
-        return;
-    }
-
-    bar.classList.remove('hidden');
-    bar.style.display = 'flex';
-    if (countText) countText.textContent = `${totalCount} item${totalCount > 1 ? 's' : ''}`;
-    if (priceText) priceText.textContent = `₹${totalPrice.toFixed(2)}`;
-
-    if (stackContainer) {
-        stackContainer.innerHTML = '';
-        stackContainer.style.cssText = "position:relative; width:45px; height:34px; display:flex; align-items:center;";
-
-        let allVisualItems = [];
-        window.cartSnacksArray.forEach(s => {
-            for(let i=0; i<s.qty; i++) {
-                allVisualItems.push({ type: 'snack', img: s.imageUrl || '', name: s.name });
-            }
-        });
-        window.cartPrintJobsArray.forEach(p => allVisualItems.push({ type: 'print', img: '', name: p.fileName }));
-
-        let displayItems = allVisualItems.slice(0, 3);
-        displayItems.forEach((item, sIdx) => {
-            const iconBox = document.createElement('div');
-            iconBox.style.cssText = `
-                position: absolute;
-                left: ${sIdx * 12}px;
-                width: 30px;
-                height: 30px;
-                border-radius: 8px;
-                background: #ffffff;
-                border: 2px solid #f59e0b;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 0.85rem;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-                overflow: hidden;
-                z-index: ${10 - sIdx};
+    if (filtered.length === 0) {
+        gridNode.innerHTML = `<p style="width:100%; text-align:center; color:#64748b; font-size:0.8rem; padding:40px;">No items found in this category.</p>`;
+    } else {
+        filtered.forEach(prod => {
+            let originalIndex = window.storeInventoryProducts.findIndex(p => p.sku === prod.sku || p.name === prod.name);
+            const isOutOfStock = (prod.stockQuantity <= 0);
+            const isLowStock = !isOutOfStock && prod.stockQuantity <= 5;
+            const finalImgUrl = prod.imageUrl || prod.image || '';
+            const card = document.createElement('div');
+            
+            card.style.cssText = `
+                background: #ffffff; border: 1px solid ${isLowStock ? '#ef4444' : '#e2e8f0'};
+                border-radius: 14px; padding: 10px; position: relative; opacity: ${isOutOfStock ? '0.7' : '1'}; 
+                display: flex; flex-direction: column; align-items: center; cursor: pointer;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+                width: 120px; min-width: 120px; max-width: 120px; flex: 0 0 auto; box-sizing: border-box;
             `;
-            if (item.type === 'snack' && item.img) {
-                iconBox.innerHTML = `<img src="${item.img}" style="width:100%; height:100%; object-fit:cover;" />`;
-            } else {
-                iconBox.innerHTML = item.type === 'print' ? '📄' : '📦';
+            
+            card.onclick = (e) => {
+                if (e.target.tagName === 'BUTTON') return;
+                if (typeof openProductDetailModal === 'function' && originalIndex !== -1) {
+                    openProductDetailModal(window.storeInventoryProducts[originalIndex]);
+                }
+            };
+
+            const imageHtml = finalImgUrl 
+                ? `<img src="${finalImgUrl}" style="width:65px; height:65px; object-fit:cover; border-radius:10px; margin-bottom:6px; display:block;" />` 
+                : `<div style="font-size:2rem; margin-bottom:6px; height:65px; display:flex; align-items:center; justify-content:center;">📦</div>`;
+
+            let badgeHtml = '';
+            if (isOutOfStock) {
+                badgeHtml = `<span style="position:absolute; top:4px; right:4px; background:#ef4444; color:white; font-size:0.55rem; padding:2px 4px; border-radius:4px; font-weight:800; z-index:5;">OUT</span>`;
+            } else if (isLowStock) {
+                badgeHtml = `<span class="low-stock-badge">Only ${prod.stockQuantity} left</span>`;
             }
-            stackContainer.appendChild(iconBox);
+
+            let safeSku = String(prod.sku || prod.barcode || prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            let safeName = String(prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            let safeImg = String(finalImgUrl || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+            card.innerHTML = `
+                ${badgeHtml}
+                ${imageHtml}
+                <div title="${prod.name}" style="font-weight:700; font-size:0.78rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; color:#0f172a;">${prod.name}</div>
+                <div style="font-weight:800; font-size:0.78rem; color:#0f172a; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
+                ${isOutOfStock 
+                    ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); notifyWhenAvailable('${safeName}')">Notify</button>`
+                    : `<button type="button" class="btn-quick-add-item" style="background:var(--blinkit-green, #10b981); color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" onclick="event.stopPropagation(); addDynamicProductToCart('${safeSku}', '${safeName}', ${prod.sellingPrice || 0}, ${prod.stockQuantity}, '${safeImg}')">+ Add</button>`
+                }
+            `;
+            gridNode.appendChild(card);
         });
     }
+
+    history.pushState({ drawer: 'category' }, '', '');
+    overlay.style.display = 'flex';
 };
 
+window.closeCategoryDrawer = function() {
+    const overlay = document.getElementById('categoryDrawerOverlay');
+    if (overlay) overlay.style.display = 'none';
+
+    window.currentStoreSelectedCategory = 'all';
+
+    document.querySelectorAll('.store-category-chip').forEach(btn => {
+        if (btn.getAttribute('data-category') === 'all') {
+            btn.style.background = '#065f46';
+            btn.style.color = '#ffffff';
+            btn.style.borderColor = '#065f46';
+        } else {
+            btn.style.background = '#ffffff';
+            btn.style.color = '#0f172a';
+            btn.style.borderColor = '#cbd5e1';
+        }
+    });
+};
+
+
 // ==========================================
-// 🔥 BULLETPROOF UNIVERSAL CART DRAWER & ITEMS RENDERER
+// 🔥 UNIFIED CART DRAWER RENDER ENGINE (PRINTS + PRODUCTS)
 // ==========================================
 window.renderCartDrawerContents = function() {
-    const container = document.getElementById('cartDrawerItemsList');
+    const container = document.getElementById('cartDrawerItemsList') || 
+                        document.getElementById('cartItemsListContainer') || 
+                        document.getElementById('cartItemsContainer');
+    
     if (!container) return;
     container.innerHTML = '';
     
@@ -1834,64 +1841,86 @@ window.renderCartDrawerContents = function() {
     if (!hasItems) {
         container.innerHTML = `<p style="font-size:0.82rem; color:#64748b; text-align:center; padding:20px;">Your cart is empty.</p>`;
         if (typeof calculateTotal === 'function') calculateTotal();
+        if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
         return;
     }
 
     const wrapper = document.createElement('div');
-    wrapper.style.cssText = "display:flex; flex-direction:column; gap:10px; width:100%;";
+    wrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
 
     let totalPagesCount = 0;
     let totalItemsCount = 0;
 
-    // 1. Render Print Jobs in Cart
+    // 1. Render Print Jobs in Cart (With ✏️ Edit Settings Button)
     window.cartPrintJobsArray.forEach((job, idx) => {
         let rate = (job.printType === 'bw') ? 3 : 10;
         let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
         totalPagesCount += job.pages * job.copies;
         totalItemsCount += 1;
 
+        let printTypeLabel = (job.printType === 'bw') ? 'B&W (₹3/p)' : 'Color (₹10/p)';
+        let orientationLabel = job.orientation ? job.orientation.toUpperCase() : 'PORTRAIT';
+
         const card = document.createElement('div');
-        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 3px rgba(0,0,0,0.02); gap:10px;";
+        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02);";
 
         card.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
-                <div style="font-size:1.5rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📄</div>
-                <div style="overflow:hidden; flex:1;">
-                    <div title="${job.fileName}" style="font-weight:700; font-size:0.8rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
-                    <div style="font-size:0.68rem; color:#64748b; font-weight:600; margin-top:2px;">${job.pages} pgs | ${job.printType.toUpperCase()} | Copies: ${job.copies}</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                    <div style="font-size:1.6rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px; flex-shrink:0;">📄</div>
+                    <div style="overflow:hidden; flex:1;">
+                        <div title="${job.fileName}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
+                        <div style="font-size:0.68rem; color:#64748b; font-weight:600; margin-top:2px;">${job.pages} pgs per copy</div>
+                    </div>
                 </div>
+                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer; font-weight:bold;" title="Remove">&times;</button>
             </div>
-            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-                <div style="font-weight:800; font-size:0.8rem; color:#065f46;">₹${jobTotal}</div>
-                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:5px; font-size:0.7rem; cursor:pointer;" title="Remove">🗑️</button>
+
+            <!-- Specs Pill Bar -->
+            <div style="display:flex; flex-wrap:wrap; gap:6px; font-size:0.68rem; font-weight:700;">
+                <span style="background:#f0fdf4; color:#16a34a; padding:2px 8px; border-radius:6px;">Copies: ${job.copies}</span>
+                <span style="background:#eff6ff; color:#2563eb; padding:2px 8px; border-radius:6px;">${printTypeLabel}</span>
+                <span style="background:#fef3c7; color:#d97706; padding:2px 8px; border-radius:6px;">${orientationLabel}</span>
+            </div>
+
+            <!-- Footer: Price & Edit Settings Button -->
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e2e8f0; padding-top:8px; margin-top:2px;">
+                <button type="button" onclick="editCartPrintJob(${idx})" style="background:none; border:none; color:#2563eb; font-weight:800; font-size:0.75rem; cursor:pointer; padding:0;">✏️ Edit settings</button>
+                <span style="font-size:0.9rem; font-weight:900; color:#0f172a;">₹${jobTotal.toFixed(2)}</span>
             </div>
         `;
         wrapper.appendChild(card);
     });
 
-    // 2. Render Snacks / Store Products in Cart
+    // 2. Render Snacks / Store Products in Cart (With Stepper [ - ] Qty [ + ] & Clean UI)
     window.cartSnacksArray.forEach((snack, idx) => {
         totalItemsCount += snack.qty;
         const card = document.createElement('div');
-        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 3px rgba(0,0,0,0.02); gap:10px;";
+        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02);";
         
-        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:40px; height:40px; object-fit:contain; border-radius:8px;" />` : `<div style="font-size:1.4rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📦</div>`;
+        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:42px; height:42px; object-fit:cover; border-radius:8px;" />` : `<div style="font-size:1.5rem; width:42px; height:42px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📦</div>`;
+        let itemTotal = snack.price * snack.qty;
 
         card.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
-                ${thumbImg}
-                <div style="overflow:hidden; flex:1;">
-                    <div title="${snack.name}" style="font-weight:700; font-size:0.8rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</div>
-                    <div style="font-size:0.7rem; color:#059669; font-weight:800; margin-top:2px;">₹${snack.price * snack.qty}</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                    ${thumbImg}
+                    <div style="overflow:hidden; flex:1;">
+                        <div title="${snack.name}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</div>
+                        <div style="font-size:0.72rem; color:#64748b; font-weight:600; margin-top:2px;">₹${snack.price} each</div>
+                    </div>
                 </div>
+                <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer; font-weight:bold;" title="Remove">&times;</button>
             </div>
-            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-                <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:2px 6px; gap:6px;">
-                    <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; font-size:0.9rem; cursor:pointer; color:#0f172a;">-</button>
-                    <span style="font-weight:800; font-size:0.8rem; color:#0f172a;">${snack.qty}</span>
-                    <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; font-size:0.9rem; cursor:pointer; color:#065f46;">+</button>
+
+            <!-- Quantity Counter & Total Row for Product -->
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e2e8f0; padding-top:8px; margin-top:2px;">
+                <div style="display:flex; align-items:center; background:#065f46; border-radius:8px; padding:3px 8px; gap:10px;">
+                    <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; color:#ffffff; font-size:1rem; font-weight:bold; cursor:pointer;">&minus;</button>
+                    <span style="color:#ffffff; font-weight:800; font-size:0.85rem; min-width:14px; text-align:center;">${snack.qty}</span>
+                    <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; color:#ffffff; font-size:1rem; font-weight:bold; cursor:pointer;">+</button>
                 </div>
-                <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:5px; font-size:0.7rem; cursor:pointer;" title="Remove">🗑️</button>
+                <span style="font-size:0.9rem; font-weight:900; color:#0f172a;">₹${itemTotal.toFixed(2)}</span>
             </div>
         `;
         wrapper.appendChild(card);
@@ -1918,7 +1947,7 @@ window.renderCartDrawerContents = function() {
         }
     }
 
-    // Render Inventory Products in "You Might Also Like" Slider
+    // Render Inventory Products in "You Might Also Like" Slider inside Cart Drawer
     const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
     if (upsellingGrid) {
         if (window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
@@ -1946,6 +1975,37 @@ window.renderCartDrawerContents = function() {
     }
 
     if (typeof calculateTotal === 'function') calculateTotal();
+   };
+
+
+// Helper function to edit a print job from cart (re-opens Print Studio)
+window.editCartPrintJob = function(idx) {
+    let job = window.cartPrintJobsArray[idx];
+    if (!job) return;
+
+    window.studioMasterFiles = [{
+        name: job.fileName,
+        size: 0,
+        fileBlob: job.fileData,
+        fileUrl: job.fileUrl,
+        pageImages: [job.fileUrl],
+        pages: job.pages,
+        copies: job.copies,
+        printType: job.printType,
+        orientation: job.orientation,
+        binding: job.binding || 'none'
+    }];
+    window.currentStudioActiveIndex = 0;
+
+    // Remove from cart while editing
+    window.cartPrintJobsArray.splice(idx, 1);
+    persistCartStateData();
+    renderCartDrawerContents();
+    toggleCartDrawer(false);
+
+    if (typeof openPrintStudioWithFilesArray === 'function') {
+        openPrintStudioWithFilesArray(window.studioMasterFiles, 0);
+    }
 };
 
 window.removeSnackItemCompletely = function(index) {
@@ -2667,23 +2727,30 @@ window.addEventListener('DOMContentLoaded', () => {
     `;
     container.appendChild(upsellingSection);
 
-    const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
+const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
     if (upsellingGrid) {
         if (window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
             upsellingGrid.innerHTML = '';
             window.storeInventoryProducts.forEach((prod) => {
                 if (prod.stockQuantity > 0) {
                     const thumb = prod.imageUrl || prod.image || '';
-                    const safeSku = String(prod.sku || prod.name || '').replace(/'/g, "\\'");
-                    const safeName = String(prod.name || '').replace(/'/g, "\\'");
-                    const safeThumb = String(thumb || '').replace(/'/g, "\\'");
+                    
+                    // 🔥 Safe escaping for HTML inline onclick string parameters
+                    const safeSku = String(prod.sku || prod.name || '').replace(/['"\\]/g, '\\$&');
+                    const safeName = String(prod.name || '').replace(/['"\\]/g, '\\$&');
+                    const safeThumb = String(thumb || '').replace(/['"\\]/g, '\\$&');
+                    
+                    const priceVal = Number(prod.sellingPrice || prod.price || 0);
+                    const stockVal = Number(prod.stockQuantity || prod.stock || 0);
+
                     const itemCard = document.createElement('div');
                     itemCard.style.cssText = "min-width: 100px; width: 100px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.03);";
+                    
                     itemCard.innerHTML = `
                         ${thumb ? `<img src="${thumb}" style="width:45px; height:45px; object-fit:cover; border-radius:8px; margin-bottom:4px;" />` : '<div style="font-size:1.5rem; margin-bottom:4px;">📦</div>'}
-                        <div title="${prod.name}" style="font-size:0.7rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name}</div>
-                        <div style="font-size:0.7rem; font-weight:800; color:#065f46; margin:2px 0 6px 0;">₹${prod.sellingPrice || 0}</div>
-                        <button type="button" style="background:#065f46; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.68rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${Number(prod.sellingPrice) || 0}, ${Number(prod.stockQuantity) || 0}, '${safeThumb}')">+ Add</button>
+                        <div title="${prod.name || ''}" style="font-size:0.7rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name || ''}</div>
+                        <div style="font-size:0.7rem; font-weight:800; color:#065f46; margin:2px 0 6px 0;">₹${priceVal}</div>
+                        <button type="button" style="background:#065f46; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.68rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
                     `;
                     upsellingGrid.appendChild(itemCard);
                 }
@@ -2694,4 +2761,5 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     if (typeof calculateTotal === 'function') calculateTotal();
+}
 };
