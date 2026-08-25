@@ -1821,7 +1821,7 @@ window.updateFloatingCartBar = function() {
 
 
 // ==========================================
-// 🔥 BULLETPROOF UNIVERSAL CART DRAWER RENDER ENGINE (PRINTS + PRODUCTS)
+// 🔥 BULLETPROOF UNIVERSAL CART DRAWER RENDER ENGINE
 // ==========================================
 window.renderCartDrawerContents = function() {
     const container = document.getElementById('cartDrawerItemsList');
@@ -1838,41 +1838,18 @@ window.renderCartDrawerContents = function() {
         container.innerHTML = `<p style="font-size:0.82rem; color:#64748b; text-align:center; padding:20px;">Your cart is empty.</p>`;
         if (typeof calculateTotal === 'function') calculateTotal();
         
-        // Render upselling products even if cart is empty so users can add them
-        const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
-        if (upsellingGrid && window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
-            upsellingGrid.innerHTML = '';
-            window.storeInventoryProducts.forEach((prod) => {
-                if (prod.stockQuantity > 0) {
-                    const thumb = prod.imageUrl || prod.image || '';
-                    const safeSku = String(prod.sku || prod.name || '').replace(/['"\\]/g, '\\$&');
-                    const safeName = String(prod.name || '').replace(/['"\\]/g, '\\$&');
-                    const safeThumb = String(thumb || '').replace(/['"\\]/g, '\\$&');
-                    const priceVal = Number(prod.sellingPrice || prod.price || 0);
-                    const stockVal = Number(prod.stockQuantity || prod.stock || 0);
-
-                    const itemCard = document.createElement('div');
-                    itemCard.style.cssText = "min-width: 100px; width: 100px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.03);";
-                    itemCard.innerHTML = `
-                        ${thumb ? `<img src="${thumb}" style="width:45px; height:45px; object-fit:cover; border-radius:8px; margin-bottom:4px;" />` : '<div style="font-size:1.5rem; margin-bottom:4px;">📦</div>'}
-                        <div title="${prod.name || ''}" style="font-size:0.7rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name || ''}</div>
-                        <div style="font-size:0.7rem; font-weight:800; color:#065f46; margin:2px 0 6px 0;">₹${priceVal}</div>
-                        <button type="button" style="background:#065f46; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.68rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
-                    `;
-                    upsellingGrid.appendChild(itemCard);
-                }
-            });
-        }
+        // Populate upselling even if empty
+        renderUpsellingGridSafely();
         return;
     }
 
     const wrapper = document.createElement('div');
-    wrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
+    wrapper.style.cssText = "display:flex; flex-direction:column; gap:10px; width:100%;";
 
     let totalPagesCount = 0;
     let totalItemsCount = 0;
 
-    // 1. Render Print Jobs in Cart (With ✏️ Edit Settings Button)
+    // 1. Render Print Jobs in Cart
     window.cartPrintJobsArray.forEach((job, idx) => {
         let rate = (job.printType === 'bw') ? 3 : 10;
         let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
@@ -1883,65 +1860,54 @@ window.renderCartDrawerContents = function() {
         let orientationLabel = job.orientation ? job.orientation.toUpperCase() : 'PORTRAIT';
 
         const card = document.createElement('div');
-        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02);";
+        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.02);";
 
         card.innerHTML = `
             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
-                    <div style="font-size:1.6rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px; flex-shrink:0;">📄</div>
+                <div style="display:flex; align-items:center; gap:8px; flex:1; overflow:hidden;">
+                    <div style="font-size:1.4rem; width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:6px; flex-shrink:0;">📄</div>
                     <div style="overflow:hidden; flex:1;">
-                        <div title="${job.fileName}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
-                        <div style="font-size:0.68rem; color:#64748b; font-weight:600; margin-top:2px;">${job.pages} pgs per copy</div>
+                        <div title="${job.fileName}" style="font-weight:700; font-size:0.8rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
+                        <div style="font-size:0.65rem; color:#64748b; font-weight:600;">${job.pages} pgs | ${printTypeLabel} | Copies: ${job.copies}</div>
                     </div>
                 </div>
-                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer; font-weight:bold;" title="Remove">&times;</button>
+                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:none; border:none; color:#ef4444; font-size:1rem; cursor:pointer; font-weight:bold;" title="Remove">&times;</button>
             </div>
-
-            <!-- Specs Pill Bar -->
-            <div style="display:flex; flex-wrap:wrap; gap:6px; font-size:0.68rem; font-weight:700;">
-                <span style="background:#f0fdf4; color:#16a34a; padding:2px 8px; border-radius:6px;">Copies: ${job.copies}</span>
-                <span style="background:#eff6ff; color:#2563eb; padding:2px 8px; border-radius:6px;">${printTypeLabel}</span>
-                <span style="background:#fef3c7; color:#d97706; padding:2px 8px; border-radius:6px;">${orientationLabel}</span>
-            </div>
-
-            <!-- Footer: Price & Edit Settings Button -->
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e2e8f0; padding-top:8px; margin-top:2px;">
-                <button type="button" onclick="editCartPrintJob(${idx})" style="background:none; border:none; color:#2563eb; font-weight:800; font-size:0.75rem; cursor:pointer; padding:0;">✏️ Edit settings</button>
-                <span style="font-size:0.9rem; font-weight:900; color:#0f172a;">₹${jobTotal.toFixed(2)}</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e2e8f0; padding-top:6px; margin-top:2px;">
+                <button type="button" onclick="editCartPrintJob(${idx})" style="background:none; border:none; color:#2563eb; font-weight:800; font-size:0.72rem; cursor:pointer; padding:0;">✏️ Edit settings</button>
+                <span style="font-size:0.85rem; font-weight:900; color:#0f172a;">₹${jobTotal.toFixed(2)}</span>
             </div>
         `;
         wrapper.appendChild(card);
     });
 
-    // 2. Render Snacks / Store Products in Cart (With Stepper [ - ] Qty [ + ] & Clean UI)
+    // 2. Render Snacks / Store Products in Cart
     window.cartSnacksArray.forEach((snack, idx) => {
         totalItemsCount += snack.qty;
         const card = document.createElement('div');
-        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02);";
+        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.02);";
         
-        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:42px; height:42px; object-fit:cover; border-radius:8px;" />` : `<div style="font-size:1.5rem; width:42px; height:42px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📦</div>`;
+        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:36px; height:36px; object-fit:cover; border-radius:6px;" />` : `<div style="font-size:1.3rem; width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:6px;">📦</div>`;
         let itemTotal = snack.price * snack.qty;
 
         card.innerHTML = `
             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                <div style="display:flex; align-items:center; gap:8px; flex:1; overflow:hidden;">
                     ${thumbImg}
                     <div style="overflow:hidden; flex:1;">
-                        <div title="${snack.name}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</div>
-                        <div style="font-size:0.72rem; color:#64748b; font-weight:600; margin-top:2px;">₹${snack.price} each</div>
+                        <div title="${snack.name}" style="font-weight:700; font-size:0.8rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</div>
+                        <div style="font-size:0.68rem; color:#64748b; font-weight:600;">₹${snack.price} each</div>
                     </div>
                 </div>
-                <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:none; border:none; color:#ef4444; font-size:1.1rem; cursor:pointer; font-weight:bold;" title="Remove">&times;</button>
+                <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:none; border:none; color:#ef4444; font-size:1rem; cursor:pointer; font-weight:bold;" title="Remove">&times;</button>
             </div>
-
-            <!-- Quantity Counter & Total Row for Product -->
-            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e2e8f0; padding-top:8px; margin-top:2px;">
-                <div style="display:flex; align-items:center; background:#065f46; border-radius:8px; padding:3px 8px; gap:10px;">
-                    <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; color:#ffffff; font-size:1rem; font-weight:bold; cursor:pointer;">&minus;</button>
-                    <span style="color:#ffffff; font-weight:800; font-size:0.85rem; min-width:14px; text-align:center;">${snack.qty}</span>
-                    <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; color:#ffffff; font-size:1rem; font-weight:bold; cursor:pointer;">+</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e2e8f0; padding-top:6px; margin-top:2px;">
+                <div style="display:flex; align-items:center; background:#065f46; border-radius:6px; padding:2px 6px; gap:8px;">
+                    <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; color:#ffffff; font-size:0.9rem; font-weight:bold; cursor:pointer;">&minus;</button>
+                    <span style="color:#ffffff; font-weight:800; font-size:0.78rem; min-width:12px; text-align:center;">${snack.qty}</span>
+                    <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; color:#ffffff; font-size:0.9rem; font-weight:bold; cursor:pointer;">+</button>
                 </div>
-                <span style="font-size:0.9rem; font-weight:900; color:#0f172a;">₹${itemTotal.toFixed(2)}</span>
+                <span style="font-size:0.85rem; font-weight:900; color:#0f172a;">₹${itemTotal.toFixed(2)}</span>
             </div>
         `;
         wrapper.appendChild(card);
@@ -1955,40 +1921,43 @@ window.renderCartDrawerContents = function() {
         shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
     }
 
-    // 3. Render Inventory Products in "You Might Also Like" Slider inside Cart Drawer
-    const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
-    if (upsellingGrid) {
-        if (window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
-            upsellingGrid.innerHTML = '';
-            window.storeInventoryProducts.forEach((prod) => {
-                if (prod.stockQuantity > 0) {
-                    const thumb = prod.imageUrl || prod.image || '';
-                    const safeSku = String(prod.sku || prod.name || '').replace(/['"\\]/g, '\\$&');
-                    const safeName = String(prod.name || '').replace(/['"\\]/g, '\\$&');
-                    const safeThumb = String(thumb || '').replace(/['"\\]/g, '\\$&');
-                    
-                    const priceVal = Number(prod.sellingPrice || prod.price || 0);
-                    const stockVal = Number(prod.stockQuantity || prod.stock || 0);
-
-                    const itemCard = document.createElement('div');
-                    itemCard.style.cssText = "min-width: 100px; width: 100px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; align-items: center; text-align: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.03);";
-                    
-                    itemCard.innerHTML = `
-                        ${thumb ? `<img src="${thumb}" style="width:45px; height:45px; object-fit:cover; border-radius:8px; margin-bottom:4px;" />` : '<div style="font-size:1.5rem; margin-bottom:4px;">📦</div>'}
-                        <div title="${prod.name || ''}" style="font-size:0.7rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name || ''}</div>
-                        <div style="font-size:0.7rem; font-weight:800; color:#065f46; margin:2px 0 6px 0;">₹${priceVal}</div>
-                        <button type="button" style="background:#065f46; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.68rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
-                    `;
-                    upsellingGrid.appendChild(itemCard);
-                }
-            });
-        } else {
-            upsellingGrid.innerHTML = '<p style="font-size:0.75rem; color:#64748b; text-align:center; padding:10px;">Loading store products...</p>';
-        }
-    }
-
+    renderUpsellingGridSafely();
     if (typeof calculateTotal === 'function') calculateTotal();
 };
+
+// Helper function to render upselling products inside existing #cartDrawerUpsellingGrid
+function renderUpsellingGridSafely() {
+    const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
+    if (!upsellingGrid) return;
+    
+    if (window.storeInventoryProducts && window.storeInventoryProducts.length > 0) {
+        upsellingGrid.innerHTML = '';
+        window.storeInventoryProducts.forEach((prod) => {
+            if (prod.stockQuantity > 0) {
+                const thumb = prod.imageUrl || prod.image || '';
+                const safeSku = String(prod.sku || prod.name || '').replace(/['"\\]/g, '\\$&');
+                const safeName = String(prod.name || '').replace(/['"\\]/g, '\\$&');
+                const safeThumb = String(thumb || '').replace(/['"\\]/g, '\\$&');
+                
+                const priceVal = Number(prod.sellingPrice || prod.price || 0);
+                const stockVal = Number(prod.stockQuantity || prod.stock || 0);
+
+                const itemCard = document.createElement('div');
+                itemCard.style.cssText = "min-width: 95px; width: 95px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 6px; display: flex; flex-direction: column; align-items: center; text-align: center; flex-shrink: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.02);";
+                
+                itemCard.innerHTML = `
+                    ${thumb ? `<img src="${thumb}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; margin-bottom:4px;" />` : '<div style="font-size:1.3rem; margin-bottom:4px;">📦</div>'}
+                    <div title="${prod.name || ''}" style="font-size:0.65rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${prod.name || ''}</div>
+                    <div style="font-size:0.68rem; font-weight:800; color:#065f46; margin:2px 0 4px 0;">₹${priceVal}</div>
+                    <button type="button" style="background:#065f46; color:white; border:none; padding:3px 6px; border-radius:6px; font-size:0.62rem; font-weight:700; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
+                `;
+                upsellingGrid.appendChild(itemCard);
+            }
+        });
+    } else {
+        upsellingGrid.innerHTML = '<p style="font-size:0.72rem; color:#64748b; text-align:center; padding:8px;">Loading store products...</p>';
+    }
+}
 
 // Helper function to edit a print job from cart (re-opens Print Studio)
 window.editCartPrintJob = function(idx) {
@@ -2548,6 +2517,62 @@ window.addEventListener('DOMContentLoaded', () => {
         calculateTotal();
         updateFloatingCartBar();
     }, 1500);
+
+// ==========================================
+// 🔥 FINAL CART ORDER PLACEMENT ENGINE (GLOBAL)
+// ==========================================
+window.executeFinalCartOrderPlacement = function() {
+    const activeAddress = localStorage.getItem('selected_active_address');
+    if (!activeAddress || activeAddress.trim() === "") {
+        alert("⚠️ Please select or add a delivery address before placing your order!");
+        if (typeof openAddressManagerModal === 'function') {
+            openAddressManagerModal();
+        }
+        return;
+    }
+
+    const snacks = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
+    const prints = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
+
+    if (snacks.length === 0 && prints.length === 0) {
+        alert("⚠️ Your cart is empty! Add print jobs or store products.");
+        return;
+    }
+
+    const orderId = 'ORD_' + Math.floor(100000 + Math.random() * 900000);
+    const finalAmountText = document.getElementById('cartDrawerGrandTotal')?.textContent || '₹0.00';
+    
+    const orderData = {
+        orderId: orderId,
+        date: new Date().toLocaleString(),
+        status: 'Order Placed & Confirmed 🟢',
+        address: activeAddress,
+        details: [...snacks, ...prints],
+        amount: finalAmountText.replace('₹', '').trim()
+    };
+
+    const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+    let userHistory = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
+    userHistory.unshift(orderData);
+    localStorage.setItem(`history_${sessionActiveUser}`, JSON.stringify(userHistory));
+
+    // Clear cart data after successful order placement
+    localStorage.removeItem('cart_snacks');
+    localStorage.removeItem('cart_print_jobs');
+    window.cartSnacksArray = [];
+    window.cartPrintJobsArray = [];
+
+    alert(`🎉 Order Placed Successfully! Order ID: ${orderId}`);
+    
+    if (typeof toggleCartDrawer === 'function') {
+        toggleCartDrawer(false);
+    }
+    
+    if (typeof renderOrderHistoryUI === 'function') {
+        renderOrderHistoryUI(sessionActiveUser);
+    }
+    window.location.reload();
+};
 
     // --- AUTH FORM (Login & Signup) ---
     if (authForm) {
