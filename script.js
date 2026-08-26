@@ -306,36 +306,115 @@ window.openOrderTrackingView = function(orderId) {
         return;
     }
 
-    // Tracking UI Elements ko data se populate karo
-    const idLabel = document.getElementById('trackOrderIdLabel');
+    // UI elements update
+    const idHeader = document.getElementById('trackOrderIdHeader');
     const totalBadge = document.getElementById('trackGrandTotalBadge');
     const statusBadge = document.getElementById('liveOrderStatusBadge');
     const manifestList = document.getElementById('trackFilesManifestList');
     const addressLabel = document.getElementById('trackShippingAddressLabel');
+    const riderNameNode = document.getElementById('deliveryExecutiveName');
+    const riderPhoneNode = document.getElementById('deliveryExecutivePhone');
 
-    if (idLabel) idLabel.textContent = `Order ID: #${order.orderId} • ${order.date}`;
+    if (idHeader) idHeader.textContent = `Order #${order.orderId}`;
     if (totalBadge) totalBadge.textContent = `₹${order.amount}`;
-    if (statusBadge) statusBadge.textContent = order.status || 'Processing Order...';
     if (addressLabel) addressLabel.textContent = order.address || 'N/A';
+
+    // Status check: Agar order assign nahi hua ya ready for print hai
+    let currentStatus = order.status || 'Your order is getting ready...';
+    if (statusBadge) statusBadge.textContent = currentStatus;
+
+    if (riderNameNode) {
+        if (order.assignedDeliveryBoy) {
+            riderNameNode.textContent = `Delivery Partner: Agent (${order.assignedDeliveryBoy})`;
+            if (riderPhoneNode) riderPhoneNode.textContent = `📞 ${order.assignedDeliveryBoy}`;
+        } else {
+            riderNameNode.textContent = "Your order is getting ready...";
+            if (riderPhoneNode) riderPhoneNode.textContent = "Will be assigned shortly";
+        }
+    }
 
     if (manifestList && order.details) {
         manifestList.innerHTML = order.details.map(item => `
-            <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:8px 12px; font-size:0.78rem; display:flex; justify-content:space-between; align-items:center;">
-                <span>📄 ${item.fileName || item.name || 'Item'} (Qty: ${item.copies || item.qty || 1})</span>
-                <b style="color:#065f46;">${item.printType ? item.printType.toUpperCase() : 'ITEM'}</b>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#334155; background:#f8fafc; padding:6px 10px; border-radius:8px;">
+                <span>📄 ${item.fileName || item.name || 'Item'} (×${item.copies || item.qty || 1})</span>
+                <b style="color:#065f46;">₹${(item.price || 3) * (item.copies || item.qty || 1)}</b>
             </div>
         `).join('');
     }
 
-    if (typeof executeLiveTimelineStateStepper === 'function') {
-        executeLiveTimelineStateStepper(order.status, '');
-    }
-
+    // Navigate to tracking view section
     if (typeof navigateDrawerSection === 'function') {
         navigateDrawerSection('order_tracking');
     }
+
+    // 🗺️ Initialize Google Maps (Store Pin, User Pin & Rider Movement Animation)
+    setTimeout(() => {
+        const mapElement = document.getElementById('liveTrackingGoogleMap');
+        const distanceBadge = document.getElementById('mapDistanceBadge');
+        if (!mapElement || typeof google === 'undefined') return;
+
+        // Store Fixed Location (Varanasi Store)
+        const storeLatLng = { lat: STORE_LOCATION.lat, lng: STORE_LOCATION.lng };
+        
+        // Default user location offset if exact coords not saved
+        const userLatLng = { lat: STORE_LOCATION.lat + 0.015, lng: STORE_LOCATION.lng + 0.012 };
+
+        const map = new google.maps.Map(mapElement, {
+            center: storeLatLng,
+            zoom: 14,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false
+        });
+
+        // Store Pin Marker
+        new google.maps.Marker({
+            position: storeLatLng,
+            map: map,
+            title: "Print From Home Store",
+            icon: { url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png" }
+        });
+
+        // User Location Pin Marker
+        new google.maps.Marker({
+            position: userLatLng,
+            map: map,
+            title: "Delivery Destination",
+            icon: { url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png" }
+        });
+
+        // Rider Marker (Bike icon) - Moves when Out for Delivery
+        let riderPos = { ...storeLatLng };
+        const riderMarker = new google.maps.Marker({
+            position: riderPos,
+            map: map,
+            title: "Delivery Executive",
+            icon: { url: "https://maps.google.com/mapfiles/ms/icons/motorcycle.png" }
+        });
+
+        // Calculate Distance
+        const distanceKm = Math.sqrt(Math.pow(storeLatLng.lat - userLatLng.lat, 2) + Math.pow(storeLatLng.lng - userLatLng.lng, 2)) * 111;
+        if (distanceBadge) {
+            distanceBadge.textContent = `Distance: ${distanceKm.toFixed(1)} km`;
+        }
+
+        // Simulate bike moving towards user if order status is Out for Delivery
+        if (currentStatus.toLowerCase().includes('out') || order.assignedDeliveryBoy) {
+            let step = 0;
+            const totalSteps = 50;
+            const interval = setInterval(() => {
+                step++;
+                riderPos.lat += (userLatLng.lat - storeLatLng.lat) / totalSteps;
+                riderPos.lng += (userLatLng.lng - storeLatLng.lng) / totalSteps;
+                riderMarker.setPosition(riderPos);
+                if (step >= totalSteps) clearInterval(interval);
+            }, 500);
+        }
+
+    }, 400);
 };
-    // 🔥 PAST ORDER RE-ORDER / LOAD TO CART PREVIEW
+
+// 🔥 PAST ORDER RE-ORDER / LOAD TO CART PREVIEW
     window.openPastOrderInCartPreview = function(orderId) {
         const sessionActiveUser = localStorage.getItem('printAppUser');
         const history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');

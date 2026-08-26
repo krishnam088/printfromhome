@@ -1021,61 +1021,86 @@
                 </div>
             </div>
 
-            <div id="user_section_order_tracking" class="view-section">
-                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%; text-align:left;">
-                    <button type="button" class="back-to-upload-link" onclick="navigateDrawerSection('history')">&larr; Back to All Orders</button>
-                    
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-bottom:2px solid var(--border-color); padding-bottom:12px;">
-                        <div>
-                            <h3 style="font-weight:800; font-size:1.2rem;">Order Details Matrix</h3>
-                            <p id="trackOrderIdLabel" style="font-size:0.75rem; color:var(--text-sub); font-weight:600;"></p>
-                        </div>
-                        <div id="trackGrandTotalBadge" style="font-size:1.4rem; font-weight:900; color:#065f46;">₹0.00</div>
-                    </div>
+        <div id="user_section_order_tracking" class="view-section" style="background: #f8fafc; font-family: 'Poppins', sans-serif; padding-bottom: 40px;">
+    
+    <!-- Top Header: Back Button & Title (Blinkit Style) -->
+    <div style="background: #ffffff; padding: 12px 16px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100;">
+        <button type="button" onclick="navigateDrawerSection('history')" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; color: #0f172a;">Back</button>
+        <h3 style="font-size: 1.05rem; font-weight: 900; color: #0f172a; margin: 0 auto; transform: translateX(-20px);">Order Status</h3>
+    </div>
 
-                    <div style="margin-top:20px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 16px; padding: 18px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase;">Live Status</span>
-                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; color: #065f46;">
-                                🟢 ACTIVE TRACKING
-                            </div>
-                        </div>
-                        <h3 id="liveOrderStatusBadge" style="font-size: 1.2rem; font-weight: 900; color: #065f46;">Processing Order...</h3>
-                    </div>
+    <!-- Main Container -->
+    <div style="max-width: 480px; width: 100%; margin: 0 auto; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px;">
 
-                    <div id="liveTrackingTimelineContainer" style="margin-top: 20px;">
-                        <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); text-transform:uppercase; margin-bottom: 12px;">📦 Real-Time Package Journey</h4>
-                        <div class="tracking-timeline-box" style="display: flex; flex-direction: column; gap: 15px;">
-                            <div class="timeline-step" id="step_pending" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Order Received</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">Awaiting verification parameters sync</p></div></div>
-                            <div class="timeline-step" id="step_paid" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Payment Confirmed</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">Order routed successfully</p></div></div>
-                            <div class="timeline-step" id="step_printing" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Printing Document</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">HP Smart Tank running active logs</p></div></div>
-                            <div class="timeline-step" id="step_delivery" style="display: flex; gap: 12px; align-items: flex-start;"><div class="step-node-dot" style="width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; margin-top: 2px;"></div><div class="step-meta-details"><p class="step-main-label" style="font-size: 0.85rem; font-weight: 700; color: #0f172a;">Out For Delivery</p><p class="step-desc-label" style="font-size: 0.72rem; color: #64748b;">Delivery Executive arriving</p></div></div>
-                        </div>
-                    </div>
+        <!-- Header ke bahar: Tracking Page Title & Order ID -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.85rem; font-weight: 800; color: #64748b; text-transform: uppercase;">Tracking Page</span>
+            <span id="trackOrderIdHeader" style="font-size: 0.85rem; font-weight: 900; color: #0f172a;">Order #---</span>
+        </div>
 
-                    <div style="margin-top: 15px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; display: flex; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="width: 44px; height: 44px; background: #0f172a; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🛵</div>
-                            <div>
-                                <h4 style="font-size: 0.88rem; font-weight: 800; color: var(--text-main);" id="deliveryExecutiveName">Assigning Delivery Partner...</h4>
-                                <p style="font-size: 0.72rem; font-weight: 600; color: var(--text-sub); margin-top: 2px;" id="deliveryExecutivePhone">Will be assigned shortly</p>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 8px;">
-                            <a id="callExecutiveBtn" href="tel:" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1rem;" title="Call Delivery Executive">📞</a>
-                        </div>
-                    </div>
-
-                    <h4 style="font-size:0.85rem; font-weight:800; color:var(--text-main); margin-top:25px; text-transform:uppercase; border-bottom:1px dashed var(--border-color); padding-bottom:6px;">📄 Printable Items & Products Summary</h4>
-                    <div id="trackFilesManifestList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
-                    
-                    <div style="margin-top:20px; background:var(--bg-primary); padding:15px; border-radius:12px; border:1px dashed var(--border-color);">
-                        <p style="font-size:0.8rem; font-weight:700; color:var(--text-main);">📍 Shipping Gate Destination:</p>
-                        <p id="trackShippingAddressLabel" style="font-size:0.8rem; color:var(--text-sub); margin-top:2px; font-weight:500;"></p>
-                    </div>
+        <!-- Live Delivery Status Banner Card -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Live Status</span>
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; color: #065f46;">
+                    🟢 ACTIVE
                 </div>
             </div>
+            <h3 id="liveOrderStatusBadge" style="font-size: 1.15rem; font-weight: 900; color: #065f46; margin: 0 0 4px 0;">Your order is getting ready...</h3>
+            <p id="liveOrderEtaSubtext" style="font-size: 0.75rem; color: #64748b; font-weight: 600; margin: 0;">Preparing items at Print From Home store in Varanasi</p>
+        </div>
 
+        <!-- 🗺️ Google Map Container (Store Pin, User Pin & Moving Rider) -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02); position: relative;">
+            <div id="liveTrackingGoogleMap" style="width: 100%; height: 240px; background: #e2e8f0;"></div>
+            <div id="mapDistanceBadge" style="position: absolute; top: 12px; left: 12px; background: rgba(15, 23, 42, 0.85); color: #ffffff; padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; backdrop-filter: blur(4px);">
+                Calculating distance...
+            </div>
+        </div>
+
+        <!-- Rider Details Section (Appears after assignment / Out for Delivery) -->
+        <div id="riderDetailsCardBox" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 42px; height: 42px; background: #0f172a; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">🛵</div>
+                <div>
+                    <h4 style="font-size: 0.85rem; font-weight: 800; color: #0f172a; margin: 0;" id="deliveryExecutiveName">Awaiting Rider Assignment...</h4>
+                    <p style="font-size: 0.7rem; font-weight: 600; color: #64748b; margin: 2px 0 0 0;" id="deliveryExecutivePhone">Will be assigned shortly</p>
+                </div>
+            </div>
+            <a id="callExecutiveBtn" href="tel:7007626731" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 0.9rem;" title="Call Rider">📞</a>
+        </div>
+
+        <!-- Order ID & Items Summary Card -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                <span style="font-size: 0.78rem; font-weight: 800; color: #0f172a;">Order Items Summary</span>
+                <span id="trackGrandTotalBadge" style="font-size: 0.85rem; font-weight: 900; color: #065f46;">₹0.00</span>
+            </div>
+            <div id="trackFilesManifestList" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
+            <div style="background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                <p style="font-size: 0.7rem; font-weight: 700; color: #64748b; margin: 0 0 2px 0;">Delivery Address:</p>
+                <p id="trackShippingAddressLabel" style="font-size: 0.75rem; color: #0f172a; margin: 0; font-weight: 600; line-height: 1.3;"></p>
+            </div>
+        </div>
+
+        <!-- Terms, Cancellation Policy & Support Hub -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+            <div>
+                <h4 style="font-size: 0.78rem; font-weight: 800; color: #0f172a; margin-bottom: 4px;">Cancellation Policy</h4>
+                <p style="font-size: 0.68rem; color: #64748b; line-height: 1.4; margin: 0;">Orders cannot be cancelled once printing has started or once the delivery executive is out for delivery.</p>
+            </div>
+            <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 0;">
+            <div>
+                <h4 style="font-size: 0.78rem; font-weight: 800; color: #0f172a; margin-bottom: 4px;">Customer Care Support</h4>
+                <p style="font-size: 0.68rem; color: #64748b; line-height: 1.4; margin: 0; margin-bottom: 8px;">Need help with your print order or delivery? We are available 24/7.</p>
+                <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Print%20From%20Home%20Support" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: #25D366; color: white; padding: 8px 14px; border-radius: 8px; font-weight: 800; text-decoration: none; font-size: 0.75rem;">
+                    <span>💬</span> Chat on WhatsApp
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
             <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; background:var(--surface); border:1px solid var(--border-color); padding:20px; border-radius:16px;">
                 <h2>Order Invoice Summary</h2>
                 <div class="summary-card">
