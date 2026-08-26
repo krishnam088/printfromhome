@@ -3207,7 +3207,7 @@ window.executeFinalCartOrderPlacement = async function() {
 
 window.navigateDrawerSection = function(targetId) {
     try {
-        // 1. Hide all sections securely
+        // 1. Saare view sections ko securely hide karein
         document.querySelectorAll('.view-section').forEach(el => {
             el.classList.remove('active');
             el.style.setProperty('display', 'none', 'important');
@@ -3216,12 +3216,13 @@ window.navigateDrawerSection = function(targetId) {
         let normalizedId = targetId === 'orders' ? 'history' : targetId;
         const targetNode = document.getElementById(`user_section_${normalizedId}`);
         
-        // 2. Show the targeted section
+        // 2. Sirf targeted section ko display block karein
         if (targetNode) {
             targetNode.classList.add('active');
             targetNode.style.setProperty('display', 'block', 'important');
         }
 
+        // Store section ko manage karein
         const storeNode = document.getElementById('user_section_store');
         if (storeNode) {
             if (normalizedId === 'store') {
@@ -3239,9 +3240,9 @@ window.navigateDrawerSection = function(targetId) {
         if (typeof toggleUserDrawer === 'function') toggleUserDrawer(false);
         if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
 
-        // 🔥 CRITICAL FIX: Force UI to render exactly when the History tab is opened!
+        // 3. Agar History tab khula hai, toh uski list render karein
         if (normalizedId === 'history' && typeof renderOrderHistoryUI === 'function') {
-            const activeUser = localStorage.getItem('printAppUser');
+            const activeUser = localStorage.getItem('printAppUser') || 'Customer';
             renderOrderHistoryUI(activeUser);
         }
 
