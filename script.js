@@ -256,30 +256,37 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-  // 🔥 BULLETPROOF ORDER HISTORY UI RENDER ENGINE
-// 🔥 BULLETPROOF ORDER HISTORY UI RENDER ENGINE
-   window.renderOrderHistoryUI = function(username, showRecent = true) {
+ 
+// 🔥 100% Safe Order History UI Render Engine (Prevents White Blank Screen)
+window.renderOrderHistoryUI = function(username, showRecent = true) {
     try {
         const container = document.getElementById('ordersHistoryContainer');
         if (!container) return;
         
         const activeUser = username || localStorage.getItem('printAppUser') || 'Customer';
-        const history = JSON.parse(localStorage.getItem(`history_${activeUser}`) || '[]');
+        let history = [];
         
-        if (history.length === 0) {
-            container.innerHTML = `<p style="text-align:center; padding:20px; color:#64748b;">No print jobs recorded yet.</p>`;
+        try {
+            history = JSON.parse(localStorage.getItem(`history_${activeUser}`) || '[]');
+        } catch (e) {
+            history = [];
+        }
+        
+        if (!Array.isArray(history) || history.length === 0) {
+            container.innerHTML = `<p style="text-align:center; padding:20px; color:#64748b; font-size:0.85rem;">No print jobs recorded yet.</p>`;
             return;
         }
 
         container.innerHTML = history.map(order => {
-            let safeId = order.orderId || 'N/A';
+            if (!order) return '';
+            let safeId = order.orderId || order.id || 'N/A';
             let safeAmount = order.amount || '0.00';
             let safeStatus = order.status || 'Processing';
             let safeDate = order.date || '';
 
             return `
-                <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:12px; margin-bottom:12px;">
-                    <div style="display:flex; justify-content:space-between; font-weight:800; font-size:0.85rem;">
+                <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; padding:14px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
+                    <div style="display:flex; justify-content:space-between; font-weight:800; font-size:0.85rem; color:#0f172a;">
                         <span>Order #${safeId}</span>
                         <span style="color:#065f46;">₹${safeAmount}</span>
                     </div>
@@ -294,16 +301,32 @@ window.addEventListener('DOMContentLoaded', () => {
         }).join('');
     } catch (err) {
         console.error("Render Order History Error:", err);
+        const container = document.getElementById('ordersHistoryContainer');
+        if (container) {
+            container.innerHTML = `<p style="text-align:center; padding:20px; color:#ef4444; font-size:0.85rem;">⚠️ Error loading order history.</p>`;
+        }
     }
 };
+
+// 🔥 100% Safe Order Tracking View Engine
 window.openOrderTrackingView = function(orderId) {
     try {
         const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
-        const history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
-        const order = history.find(o => String(o.orderId) === String(orderId));
+        let history = [];
+        try {
+            history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
+        } catch (e) {
+            history = [];
+        }
+
+        const order = history.find(o => String(o.orderId || o.id) === String(orderId));
         
         if (!order) {
-            showAppToast("⚠️ Order details not found.", "error");
+            if (typeof showAppToast === 'function') {
+                showAppToast("⚠️ Order details not found.", "error");
+            } else {
+                alert("⚠️ Order details not found.");
+            }
             navigateDrawerSection('history');
             return;
         }
@@ -317,11 +340,23 @@ window.openOrderTrackingView = function(orderId) {
         const statusBadge = document.getElementById('liveOrderStatusBadge');
         const manifestList = document.getElementById('trackFilesManifestList');
         const addressLabel = document.getElementById('trackShippingAddressLabel');
+        const riderNameNode = document.getElementById('deliveryExecutiveName');
+        const riderPhoneNode = document.getElementById('deliveryExecutivePhone');
 
-        if (idHeader) idHeader.textContent = `Order #${order.orderId || 'N/A'}`;
+        if (idHeader) idHeader.textContent = `Order #${order.orderId || order.id || 'N/A'}`;
         if (totalBadge) totalBadge.textContent = `₹${order.amount || '0.00'}`;
         if (addressLabel) addressLabel.textContent = order.address || 'Varanasi Delivery Address';
         if (statusBadge) statusBadge.textContent = order.status || 'Your order is getting ready...';
+
+        if (riderNameNode) {
+            if (order.assignedDeliveryBoy) {
+                riderNameNode.textContent = `Delivery Partner: Agent (${order.assignedDeliveryBoy})`;
+                if (riderPhoneNode) riderPhoneNode.textContent = `📞 ${order.assignedDeliveryBoy}`;
+            } else {
+                riderNameNode.textContent = "Your order is getting ready...";
+                if (riderPhoneNode) riderPhoneNode.textContent = "Will be assigned shortly";
+            }
+        }
 
         if (manifestList) {
             let detailsArray = order.details || order.configDetails || [];
@@ -347,7 +382,9 @@ window.openOrderTrackingView = function(orderId) {
         }
     } catch (err) {
         console.error("Order Tracking View Error:", err);
-        navigateDrawerSection('history');
+        if (typeof navigateDrawerSection === 'function') {
+            navigateDrawerSection('history');
+        }
     }
 };
     // 🗺️ Initialize Google Maps (Store Pin, User Pin & Rider Movement Animation)
