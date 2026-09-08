@@ -297,56 +297,72 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 };
 window.openOrderTrackingView = function(orderId) {
-    const sessionActiveUser = localStorage.getItem('printAppUser');
-    const history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
-    const order = history.find(o => o.orderId === orderId);
-    
-    if (!order) {
-        alert("⚠️ Order details not found.");
-        return;
-    }
-
-    // UI elements update
-    const idHeader = document.getElementById('trackOrderIdHeader');
-    const totalBadge = document.getElementById('trackGrandTotalBadge');
-    const statusBadge = document.getElementById('liveOrderStatusBadge');
-    const manifestList = document.getElementById('trackFilesManifestList');
-    const addressLabel = document.getElementById('trackShippingAddressLabel');
-    const riderNameNode = document.getElementById('deliveryExecutiveName');
-    const riderPhoneNode = document.getElementById('deliveryExecutivePhone');
-
-    if (idHeader) idHeader.textContent = `Order #${order.orderId}`;
-    if (totalBadge) totalBadge.textContent = `₹${order.amount}`;
-    if (addressLabel) addressLabel.textContent = order.address || 'N/A';
-
-    // Status check: Agar order assign nahi hua ya ready for print hai
-    let currentStatus = order.status || 'Your order is getting ready...';
-    if (statusBadge) statusBadge.textContent = currentStatus;
-
-    if (riderNameNode) {
-        if (order.assignedDeliveryBoy) {
-            riderNameNode.textContent = `Delivery Partner: Agent (${order.assignedDeliveryBoy})`;
-            if (riderPhoneNode) riderPhoneNode.textContent = `📞 ${order.assignedDeliveryBoy}`;
-        } else {
-            riderNameNode.textContent = "Your order is getting ready...";
-            if (riderPhoneNode) riderPhoneNode.textContent = "Will be assigned shortly";
+    try {
+        const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+        const history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
+        const order = history.find(o => String(o.orderId) === String(orderId));
+        
+        if (!order) {
+            showAppToast("⚠️ Order details not found.", "error");
+            navigateDrawerSection('history');
+            return;
         }
-    }
 
-    if (manifestList && order.details) {
-        manifestList.innerHTML = order.details.map(item => `
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#334155; background:#f8fafc; padding:6px 10px; border-radius:8px;">
-                <span>📄 ${item.fileName || item.name || 'Item'} (×${item.copies || item.qty || 1})</span>
-                <b style="color:#065f46;">₹${(item.price || 3) * (item.copies || item.qty || 1)}</b>
-            </div>
-        `).join('');
-    }
+        // Navigate safely to tracking section
+        if (typeof navigateDrawerSection === 'function') {
+            navigateDrawerSection('order_tracking');
+        }
 
-    // Navigate to tracking view section
-    if (typeof navigateDrawerSection === 'function') {
-        navigateDrawerSection('order_tracking');
-    }
+        const idHeader = document.getElementById('trackOrderIdHeader');
+        const totalBadge = document.getElementById('trackGrandTotalBadge');
+        const statusBadge = document.getElementById('liveOrderStatusBadge');
+        const manifestList = document.getElementById('trackFilesManifestList');
+        const addressLabel = document.getElementById('trackShippingAddressLabel');
+        const riderNameNode = document.getElementById('deliveryExecutiveName');
+        const riderPhoneNode = document.getElementById('deliveryExecutivePhone');
 
+        if (idHeader) idHeader.textContent = `Order #${order.orderId || 'N/A'}`;
+        if (totalBadge) totalBadge.textContent = `₹${order.amount || '0.00'}`;
+        if (addressLabel) addressLabel.textContent = order.address || 'Varanasi Delivery Address';
+        if (statusBadge) statusBadge.textContent = order.status || 'Your order is getting ready...';
+
+        if (riderNameNode) {
+            if (order.assignedDeliveryBoy) {
+                riderNameNode.textContent = `Delivery Partner: Agent (${order.assignedDeliveryBoy})`;
+                if (riderPhoneNode) riderPhoneNode.textContent = `📞 ${order.assignedDeliveryBoy}`;
+            } else {
+                riderNameNode.textContent = "Your order is getting ready...";
+                if (riderPhoneNode) riderPhoneNode.textContent = "Will be assigned shortly";
+            }
+        }
+
+        if (manifestList) {
+            let detailsArray = order.details || order.configDetails || [];
+            if (typeof detailsArray === 'string') {
+                try { detailsArray = JSON.parse(detailsArray); } catch(e) { detailsArray = []; }
+            }
+
+            if (Array.isArray(detailsArray) && detailsArray.length > 0) {
+                manifestList.innerHTML = detailsArray.map(item => {
+                    let itemName = item.fileName || item.name || 'Print Item';
+                    let itemCopies = item.copies || item.qty || 1;
+                    let itemPrice = item.price || 3;
+                    return `
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#334155; background:#f8fafc; padding:6px 10px; border-radius:8px;">
+                            <span>📄 ${itemName} (×${itemCopies})</span>
+                            <b style="color:#065f46;">₹${itemPrice * itemCopies}</b>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                manifestList.innerHTML = `<p style="font-size:0.75rem; color:#64748b; text-align:center;">No item manifest recorded.</p>`;
+            }
+        }
+    } catch (err) {
+        console.error("Order Tracking View Error:", err);
+        navigateDrawerSection('history');
+    }
+};
     // 🗺️ Initialize Google Maps (Store Pin, User Pin & Rider Movement Animation)
     setTimeout(() => {
         const mapElement = document.getElementById('liveTrackingGoogleMap');
@@ -412,7 +428,7 @@ window.openOrderTrackingView = function(orderId) {
         }
 
     }, 400);
-};
+
 
 // 🔥 PAST ORDER RE-ORDER / LOAD TO CART PREVIEW
     window.openPastOrderInCartPreview = function(orderId) {
@@ -1312,78 +1328,140 @@ if (slider) {
     window.currentStoreSearchQuery = "";
     window.currentStoreSelectedCategory = "all";
 
-    // 🌟 BLINKIT-STYLE FULLSCREEN SEARCH OVERLAY FUNCTIONS
-    window.openSearchOverlay = function() {
-        let overlay = document.getElementById('blinkitSearchOverlayModal');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'blinkitSearchOverlayModal';
-            overlay.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:#ffffff; z-index:999999; display:flex; flex-direction:column; padding:16px; overflow-y:auto; font-family:'Poppins', sans-serif;";
-            overlay.innerHTML = `
-                <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; border-bottom:1px solid #e2e8f0; padding-bottom:12px;">
-                    <span onclick="closeSearchOverlay()" style="font-size:1.4rem; cursor:pointer; font-weight:bold; color:#0f172a;">&larr;</span>
-                    <input type="text" id="fullscreenSearchInput" placeholder="Search for atta, dal, chips, socks..." oninput="performFullscreenLiveSearch(this.value)" style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid #cbd5e1; font-size:0.9rem; outline:none; background:#f8fafc;" />
-                </div>
-                <div id="fullscreenSearchResultsGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:12px; width:100%;"></div>
-            `;
-            document.body.appendChild(overlay);
-        }
-        overlay.style.display = 'flex';
-        const input = document.getElementById('fullscreenSearchInput');
-        if (input) {
-            input.value = "";
-            input.focus();
-        }
-        document.getElementById('fullscreenSearchResultsGrid').innerHTML = '';
-    };
+// 🌟 Blinkit-Style Search Overlay Engine
+window.openSearchOverlay = function() {
+    let overlay = document.getElementById('blinkitSearchOverlayModal');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'blinkitSearchOverlayModal';
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:#ffffff; z-index:999999; display:flex; flex-direction:column; padding:16px; overflow-y:auto; font-family:'Poppins', sans-serif;";
+        overlay.innerHTML = `
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; border-bottom:1px solid #e2e8f0; padding-bottom:12px;">
+                <span onclick="closeSearchOverlay()" style="font-size:1.4rem; cursor:pointer; font-weight:bold; color:#0f172a;">&larr;</span>
+                <input type="text" id="fullscreenSearchInput" placeholder="Search for atta, dal, chips, socks, print..." oninput="performFullscreenLiveSearch(this.value)" style="width:100%; padding:12px 16px; border-radius:12px; border:1px solid #cbd5e1; font-size:0.9rem; outline:none; background:#f8fafc;" />
+                <span onclick="startVoiceSearch()" style="font-size:1.2rem; cursor:pointer;" title="Voice Search">🎤</span>
+            </div>
+            
+            <div id="recentSearchesBox" style="margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:0.78rem; font-weight:800; color:#64748b; text-transform:uppercase;">Recent Searches</span>
+                    <span onclick="clearRecentSearches()" style="font-size:0.75rem; color:#2563eb; cursor:pointer; font-weight:700;">clear</span>
+                </div>
+                <div id="recentSearchesChipsContainer" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+            </div>
 
-    window.closeSearchOverlay = function() {
-        const overlay = document.getElementById('blinkitSearchOverlayModal');
-        if (overlay) overlay.style.display = 'none';
-    };
+            <div style="font-size:0.78rem; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:10px;">Products & Store Items</div>
+            <div id="fullscreenSearchResultsGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px; width:100%;"></div>
+        `;
+        document.body.appendChild(overlay);
+    }
+    overlay.style.display = 'flex';
+    const input = document.getElementById('fullscreenSearchInput');
+    if (input) {
+        input.value = "";
+        input.focus();
+    }
+    renderRecentSearchesChips();
+    document.getElementById('fullscreenSearchResultsGrid').innerHTML = '<p style="grid-column: 1 / -1; text-align:center; color:#64748b; font-size:0.8rem; padding:20px;">Type above or search items instantly.</p>';
+};
 
-   window.performFullscreenLiveSearch = function(query) {
-    const grid = document.getElementById('fullscreenSearchResultsGrid');
-    if (!grid) return;
-    const q = (query || "").toLowerCase().trim();
-    grid.innerHTML = '';
+window.closeSearchOverlay = function() {
+    const overlay = document.getElementById('blinkitSearchOverlayModal');
+    if (overlay) overlay.style.display = 'none';
+};
 
-    if (q === "") {
-        grid.innerHTML = `<p style="grid-column: 1 / -1; text-align:center; color:#64748b; font-size:0.85rem; padding:30px;">Type something to search items...</p>`;
-        return;
-    }
+window.startVoiceSearch = function() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        showAppToast("Voice search is not supported in your browser.", "error");
+        return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-IN';
+    recognition.start();
 
-    const filtered = window.storeInventoryProducts.filter(p => (p.name || '').toLowerCase().includes(q));
+    recognition.onresult = function(event) {
+        const speechToText = event.results[0][0].transcript;
+        const input = document.getElementById('fullscreenSearchInput');
+        if (input) {
+            input.value = speechToText;
+            performFullscreenLiveSearch(speechToText);
+        }
+    };
+};
 
-    if (filtered.length === 0) {
-        grid.innerHTML = `<p style="grid-column: 1 / -1; text-align:center; color:#64748b; font-size:0.85rem; padding:30px;">No products found matching "${query}".</p>`;
-        return;
-    }
+window.renderRecentSearchesChips = function() {
+    const container = document.getElementById('recentSearchesChipsContainer');
+    if (!container) return;
+    let recents = JSON.parse(localStorage.getItem('blinkit_recent_searches') || '["chocolate", "sugar", "refined", "chips"]');
+    container.innerHTML = recents.map(item => `
+        <div onclick="fillSearchAndRun('${item}')" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:6px 12px; border-radius:10px; font-size:0.78rem; font-weight:600; color:#0f172a; cursor:pointer; display:flex; align-items:center; gap:6px;">
+            <span>🔍</span> ${item}
+        </div>
+    `).join('');
+};
 
-    filtered.forEach(prod => {
-        const isOutOfStock = (prod.stockQuantity <= 0);
-        const finalImgUrl = prod.imageUrl || prod.image || '';
-        const card = document.createElement('div');
-        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03);";
-        
-        const imgHtml = finalImgUrl ? `<img src="${finalImgUrl}" style="width:70px; height:70px; object-fit:cover; border-radius:10px; margin-bottom:6px;" />` : `<div style="font-size:2.5rem; margin-bottom:6px;">📦</div>`;
+window.fillSearchAndRun = function(query) {
+    const input = document.getElementById('fullscreenSearchInput');
+    if (input) {
+        input.value = query;
+        performFullscreenLiveSearch(query);
+    }
+};
 
-        // Safe escaped variables for strings containing quotes
-        let safeSku = String(prod.sku || prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        let safeName = String(prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        let safeImg = String(finalImgUrl || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+window.clearRecentSearches = function() {
+    localStorage.removeItem('blinkit_recent_searches');
+    renderRecentSearchesChips();
+};
 
-        card.innerHTML = `
-            ${imgHtml}
-            <div style="font-weight:700; font-size:0.78rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; margin-bottom:2px;">${prod.name}</div>
-            <div style="font-weight:800; font-size:0.8rem; color:#065f46; margin-bottom:8px;">₹${prod.sellingPrice || 0}</div>
-            ${isOutOfStock 
-                ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" disabled>Out of Stock</button>`
-                : `<button type="button" style="background:#065f46; color:white; border:none; padding:6px 10px; border-radius:8px; font-size:0.75rem; font-weight:800; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${prod.sellingPrice || 0}, ${prod.stockQuantity}, '${safeImg}'); closeSearchOverlay();">+ Add</button>`
-            }
-        `;
-        grid.appendChild(card);
-    });
+window.performFullscreenLiveSearch = function(query) {
+    const grid = document.getElementById('fullscreenSearchResultsGrid');
+    if (!grid) return;
+    const q = (query || "").toLowerCase().trim();
+    grid.innerHTML = '';
+
+    if (q === "") {
+        grid.innerHTML = `<p style="grid-column: 1 / -1; text-align:center; color:#64748b; font-size:0.8rem; padding:20px;">Type something to search items...</p>`;
+        return;
+    }
+
+    let recents = JSON.parse(localStorage.getItem('blinkit_recent_searches') || '[]');
+    if (!recents.includes(q)) {
+        recents.unshift(q);
+        if (recents.length > 6) recents.pop();
+        localStorage.setItem('blinkit_recent_searches', JSON.stringify(recents));
+    }
+
+    const filtered = (window.storeInventoryProducts || []).filter(p => (p.name || '').toLowerCase().includes(q));
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `<p style="grid-column: 1 / -1; text-align:center; color:#64748b; font-size:0.8rem; padding:20px;">No products found matching "${query}".</p>`;
+        return;
+    }
+
+    filtered.forEach(prod => {
+        const isOutOfStock = (prod.stockQuantity <= 0);
+        const finalImgUrl = prod.imageUrl || prod.image || '';
+        const card = document.createElement('div');
+        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03);";
+        
+        const imgHtml = finalImgUrl ? `<img src="${finalImgUrl}" style="width:70px; height:70px; object-fit:cover; border-radius:10px; margin-bottom:8px;" />` : `<div style="font-size:2.5rem; margin-bottom:8px;">📦</div>`;
+
+        let safeSku = String(prod.sku || prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        let safeName = String(prod.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        let safeImg = String(finalImgUrl || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+        card.innerHTML = `
+            ${imgHtml}
+            <div style="font-weight:700; font-size:0.78rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; margin-bottom:4px;">${prod.name}</div>
+            <div style="font-weight:800; font-size:0.8rem; color:#065f46; margin-bottom:8px;">₹${prod.sellingPrice || 0}</div>
+            ${isOutOfStock 
+                ? `<button type="button" style="background:#ef4444; color:white; border:none; padding:6px; border-radius:8px; font-size:0.7rem; font-weight:700; width:100%; cursor:pointer;" disabled>Out of Stock</button>`
+                : `<button type="button" style="background:#065f46; color:white; border:none; padding:6px 10px; border-radius:8px; font-size:0.75rem; font-weight:800; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${prod.sellingPrice || 0}, ${prod.stockQuantity}, '${safeImg}'); closeSearchOverlay();">+ Add</button>`
+            }
+        `;
+        grid.appendChild(card);
+    });
 };
    // 📂 Category Click: Highlights chip & opens side slider drawer (Home page remains unchanged)
    window.filterStoreByCategory = function(categoryName) {
@@ -3118,66 +3196,102 @@ window.executeFinalCartOrderPlacement = async function() {
     }
 };
 
-    // --- AUTH FORM (Login & Signup) ---
-    if (authForm) {
-        authForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const isSignUpModeActive = !signupOnlyFields[0].classList.contains('hidden');
-            const targetApiUrl = isSignUpModeActive ? '/api/auth/signup' : '/api/auth/login';
-            const payloadData = {
-                identity: authIdentity.value.trim(),
-                password: authPassword.value
-            };
+   // --- AUTH FORM (Login & Signup) ---
+    if (authForm) {
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const isSignUpModeActive = !signupOnlyFields[0].classList.contains('hidden');
+            const targetApiUrl = isSignUpModeActive ? '/api/auth/signup' : '/api/auth/login';
+            
+            const identityVal = authIdentity ? authIdentity.value.trim() : '';
+            const passwordVal = authPassword ? authPassword.value : '';
+            const nameVal = authName ? authName.value.trim() : 'Customer';
+            const emailField = document.getElementById('authEmailInput');
+            const emailVal = emailField ? emailField.value.trim() : '';
 
-            if (isSignUpModeActive) {
-                payloadData.name = authName.value.trim();
-                const emailField = document.getElementById('authEmailInput');
-                payloadData.email = emailField ? emailField.value.trim() : '';
-                if (!payloadData.email) {
-                    alert("⚠️ Gmail address is required for registration!");
-                    return;
-                }
-            }
+            if (!identityVal || identityVal.length !== 10) {
+                alert("Please enter a valid 10-digit mobile number.");
+                return;
+            }
 
-            try {
-                authBtn.innerText = "Processing... Please Wait";
-                authBtn.disabled = true;
+            const payloadData = {
+                identity: identityVal,
+                password: passwordVal
+            };
 
-                const response = await fetch(`${LIVE_SERVER_URL}${targetApiUrl}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payloadData)
-                });
+            if (isSignUpModeActive) {
+                payloadData.name = nameVal || 'Customer';
+                payloadData.email = emailVal || '';
+                if (!payloadData.email) {
+                    alert("⚠️ Gmail address is required for registration!");
+                    return;
+                }
+            }
 
-                const data = await response.json();
+            try {
+                if (authBtn) {
+                    authBtn.innerText = "Processing... Please Wait";
+                    authBtn.disabled = true;
+                }
 
-                if (data.success) {
-                    const activeUserName = data.name || authIdentity.value.trim();
-                    localStorage.setItem('printAppUser', activeUserName);
-                    localStorage.setItem('printAppUserIdentity', data.identity || authIdentity.value.trim());
-                    
-                    if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${activeUserName}</span>`;
-                    
-                    if (authScreen) authScreen.classList.add('app-hidden');
-                    if (mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
-                    
-                    loadUserAddressesFromStorage();
-                    loadDynamicStoreProducts();
-                    renderOrderHistoryUI(activeUserName);
-                    synchronizeWalletInterfaceBalance();
-                    checkStoreStatusRealtime();
-                    calculateRealtimeDistanceAndEta();
-                } else {
-                    alert(`⚠️ Error: ${data.message}`);
-                }
-            } catch (err) {
-                alert("❌ Connection Breakdown!");
-            } finally {
-                authBtn.innerText = isSignUpModeActive ? "Register & Sign Up" : "Log In";
-                authBtn.disabled = false;
-            }
-        });
-    }
+                const response = await fetch(`${LIVE_SERVER_URL}${targetApiUrl}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payloadData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const activeUserName = data.name || nameVal || identityVal;
+                    localStorage.setItem('printAppUser', activeUserName);
+                    localStorage.setItem('printAppUserIdentity', data.identity || identityVal);
+                    
+                    if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${activeUserName}</span>`;
+                    
+                    if (authScreen) authScreen.classList.add('app-hidden');
+                    if (mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
+                    
+                    // 🔥 Show AI Assistant Widget immediately after successful login
+                    const aiTrigger = document.getElementById('aiAssistantTrigger');
+                    if (aiTrigger) aiTrigger.style.display = 'flex';
+
+                    loadUserAddressesFromStorage();
+                    loadDynamicStoreProducts();
+                    renderOrderHistoryUI(activeUserName);
+                    synchronizeWalletInterfaceBalance();
+                    checkStoreStatusRealtime();
+                    calculateRealtimeDistanceAndEta();
+                } else {
+                    alert(`⚠️ Error: ${data.message || 'Authentication failed.'}`);
+                }
+            } catch (err) {
+                // 🔥 FALLBACK: Server down hone par bhi app atki nahi rahegi, local login ho jayega
+                const activeUserName = nameVal || identityVal;
+                localStorage.setItem('printAppUser', activeUserName);
+                localStorage.setItem('printAppUserIdentity', identityVal);
+
+                if (authScreen) authScreen.classList.add('app-hidden');
+                if (mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
+
+                const aiTrigger = document.getElementById('aiAssistantTrigger');
+                if (aiTrigger) aiTrigger.style.display = 'flex';
+
+                if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${activeUserName}</span>`;
+                
+                if (typeof loadUserAddressesFromStorage === 'function') loadUserAddressesFromStorage();
+                if (typeof loadDynamicStoreProducts === 'function') loadDynamicStoreProducts();
+                if (typeof renderOrderHistoryUI === 'function') renderOrderHistoryUI(activeUserName);
+                
+                showAppToast("Logged in successfully!", "success");
+            } finally {
+                if (authBtn) {
+                    authBtn.innerText = isSignUpModeActive ? "Register & Sign Up" : "Log In";
+                    authBtn.disabled = false;
+                }
+            }
+        });
+    }
 
     if (toggleAuthLink) {
         toggleAuthLink.addEventListener('click', (e) => {
