@@ -308,7 +308,6 @@ window.openOrderTrackingView = function(orderId) {
             return;
         }
 
-        // Navigate safely to tracking section
         if (typeof navigateDrawerSection === 'function') {
             navigateDrawerSection('order_tracking');
         }
@@ -318,23 +317,11 @@ window.openOrderTrackingView = function(orderId) {
         const statusBadge = document.getElementById('liveOrderStatusBadge');
         const manifestList = document.getElementById('trackFilesManifestList');
         const addressLabel = document.getElementById('trackShippingAddressLabel');
-        const riderNameNode = document.getElementById('deliveryExecutiveName');
-        const riderPhoneNode = document.getElementById('deliveryExecutivePhone');
 
         if (idHeader) idHeader.textContent = `Order #${order.orderId || 'N/A'}`;
         if (totalBadge) totalBadge.textContent = `₹${order.amount || '0.00'}`;
         if (addressLabel) addressLabel.textContent = order.address || 'Varanasi Delivery Address';
         if (statusBadge) statusBadge.textContent = order.status || 'Your order is getting ready...';
-
-        if (riderNameNode) {
-            if (order.assignedDeliveryBoy) {
-                riderNameNode.textContent = `Delivery Partner: Agent (${order.assignedDeliveryBoy})`;
-                if (riderPhoneNode) riderPhoneNode.textContent = `📞 ${order.assignedDeliveryBoy}`;
-            } else {
-                riderNameNode.textContent = "Your order is getting ready...";
-                if (riderPhoneNode) riderPhoneNode.textContent = "Will be assigned shortly";
-            }
-        }
 
         if (manifestList) {
             let detailsArray = order.details || order.configDetails || [];
@@ -3196,121 +3183,135 @@ window.executeFinalCartOrderPlacement = async function() {
     }
 };
 
-   // --- AUTH FORM (Login & Signup) ---
-    if (authForm) {
-        authForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const isSignUpModeActive = !signupOnlyFields[0].classList.contains('hidden');
-            const targetApiUrl = isSignUpModeActive ? '/api/auth/signup' : '/api/auth/login';
-            
-            const identityVal = authIdentity ? authIdentity.value.trim() : '';
-            const passwordVal = authPassword ? authPassword.value : '';
-            const nameVal = authName ? authName.value.trim() : 'Customer';
-            const emailField = document.getElementById('authEmailInput');
-            const emailVal = emailField ? emailField.value.trim() : '';
+ // --- AUTH FORM (Login & Signup) ---
 
-            if (!identityVal || identityVal.length !== 10) {
-                alert("Please enter a valid 10-digit mobile number.");
+if (authForm) {
+    authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const signupOnlyFields = document.querySelectorAll('.signup-only');
+        const isSignUpModeActive = signupOnlyFields.length > 0 && !signupOnlyFields[0].classList.contains('hidden');
+        const targetApiUrl = isSignUpModeActive ? '/api/auth/signup' : '/api/auth/login';
+        
+        const authIdentity = document.getElementById('authIdentity');
+        const authPassword = document.getElementById('authPassword');
+        const authName = document.getElementById('authName');
+        const authBtn = document.getElementById('authBtn');
+        const userGreeting = document.getElementById('userGreeting');
+        const authScreen = document.getElementById('authScreen');
+        const mainApp = document.getElementById('mainApp');
+
+        const identityVal = authIdentity ? authIdentity.value.trim() : '';
+        const passwordVal = authPassword ? authPassword.value : '';
+        const nameVal = authName ? authName.value.trim() : 'Customer';
+        const emailField = document.getElementById('authEmailInput');
+        const emailVal = emailField ? emailField.value.trim() : '';
+
+        if (!identityVal || identityVal.length !== 10) {
+            alert("Please enter a valid 10-digit mobile number.");
+            return;
+        }
+
+        const payloadData = {
+            identity: identityVal,
+            password: passwordVal
+        };
+
+        if (isSignUpModeActive) {
+            payloadData.name = nameVal || 'Customer';
+            payloadData.email = emailVal || '';
+            if (!payloadData.email) {
+                alert("⚠️ Gmail address is required for registration!");
                 return;
             }
+        }
 
-            const payloadData = {
-                identity: identityVal,
-                password: passwordVal
-            };
-
-            if (isSignUpModeActive) {
-                payloadData.name = nameVal || 'Customer';
-                payloadData.email = emailVal || '';
-                if (!payloadData.email) {
-                    alert("⚠️ Gmail address is required for registration!");
-                    return;
-                }
+        try {
+            if (authBtn) {
+                authBtn.innerText = "Processing... Please Wait";
+                authBtn.disabled = true;
             }
 
-            try {
-                if (authBtn) {
-                    authBtn.innerText = "Processing... Please Wait";
-                    authBtn.disabled = true;
-                }
+            const response = await fetch(`${window.location.origin}${targetApiUrl}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payloadData)
+            });
 
-                const response = await fetch(`${LIVE_SERVER_URL}${targetApiUrl}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payloadData)
-                });
+            const data = await response.json();
 
-                const data = await response.json();
-
-                if (data.success) {
-                    const activeUserName = data.name || nameVal || identityVal;
-                    localStorage.setItem('printAppUser', activeUserName);
-                    localStorage.setItem('printAppUserIdentity', data.identity || identityVal);
-                    
-                    if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${activeUserName}</span>`;
-                    
-                    if (authScreen) authScreen.classList.add('app-hidden');
-                    if (mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
-                    
-                    // 🔥 Show AI Assistant Widget immediately after successful login
-                    const aiTrigger = document.getElementById('aiAssistantTrigger');
-                    if (aiTrigger) aiTrigger.style.display = 'flex';
-
-                    loadUserAddressesFromStorage();
-                    loadDynamicStoreProducts();
-                    renderOrderHistoryUI(activeUserName);
-                    synchronizeWalletInterfaceBalance();
-                    checkStoreStatusRealtime();
-                    calculateRealtimeDistanceAndEta();
-                } else {
-                    alert(`⚠️ Error: ${data.message || 'Authentication failed.'}`);
-                }
-            } catch (err) {
-                // 🔥 FALLBACK: Server down hone par bhi app atki nahi rahegi, local login ho jayega
-                const activeUserName = nameVal || identityVal;
+            if (data.success) {
+                const activeUserName = data.name || nameVal || identityVal;
                 localStorage.setItem('printAppUser', activeUserName);
-                localStorage.setItem('printAppUserIdentity', identityVal);
-
+                localStorage.setItem('printAppUserIdentity', data.identity || identityVal);
+                
+                if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${activeUserName}</span>`;
+                
                 if (authScreen) authScreen.classList.add('app-hidden');
                 if (mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
-
+                
+                // 🔥 Show AI Assistant Widget ONLY after successful login
                 const aiTrigger = document.getElementById('aiAssistantTrigger');
                 if (aiTrigger) aiTrigger.style.display = 'flex';
 
-                if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${activeUserName}</span>`;
-                
                 if (typeof loadUserAddressesFromStorage === 'function') loadUserAddressesFromStorage();
                 if (typeof loadDynamicStoreProducts === 'function') loadDynamicStoreProducts();
                 if (typeof renderOrderHistoryUI === 'function') renderOrderHistoryUI(activeUserName);
-                
-                showAppToast("Logged in successfully!", "success");
-            } finally {
-                if (authBtn) {
-                    authBtn.innerText = isSignUpModeActive ? "Register & Sign Up" : "Log In";
-                    authBtn.disabled = false;
-                }
+                if (typeof synchronizeWalletInterfaceBalance === 'function') synchronizeWalletInterfaceBalance();
+                if (typeof checkStoreStatusRealtime === 'function') checkStoreStatusRealtime();
+                if (typeof calculateRealtimeDistanceAndEta === 'function') calculateRealtimeDistanceAndEta();
+            } else {
+                alert(`⚠️ Error: ${data.message || 'Authentication failed.'}`);
             }
-        });
-    }
+        } catch (err) {
+            const activeUserName = nameVal || identityVal;
+            localStorage.setItem('printAppUser', activeUserName);
+            localStorage.setItem('printAppUserIdentity', identityVal);
 
-    if (toggleAuthLink) {
-        toggleAuthLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            const isLoginViewNow = signupOnlyFields[0].classList.contains('hidden');
-            if (isLoginViewNow) {
-                signupOnlyFields.forEach(el => el.classList.remove('hidden'));
-                authTitle.textContent = "Create Account";
-                authBtn.textContent = "Register & Sign Up";
-                toggleAuthLink.textContent = "Already have an account? Log In";
-            } else {
-                signupOnlyFields.forEach(el => el.classList.add('hidden'));
-                authTitle.textContent = "Welcome Back!";
-                authBtn.textContent = "Log In";
-                toggleAuthLink.textContent = "New user? Create Account";
-            }
-        });
-    }
+            if (authScreen) authScreen.classList.add('app-hidden');
+            if (mainApp) { mainApp.classList.remove('app-hidden'); mainApp.style.display = 'block'; }
 
+            const aiTrigger = document.getElementById('aiAssistantTrigger');
+            if (aiTrigger) aiTrigger.style.display = 'flex';
+
+            if(userGreeting) userGreeting.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${activeUserName}</span>`;
+            
+            if (typeof loadUserAddressesFromStorage === 'function') loadUserAddressesFromStorage();
+            if (typeof loadDynamicStoreProducts === 'function') loadDynamicStoreProducts();
+            if (typeof renderOrderHistoryUI === 'function') renderOrderHistoryUI(activeUserName);
+            
+            showAppToast("Logged in successfully!", "success");
+        } finally {
+            if (authBtn) {
+                authBtn.innerText = isSignUpModeActive ? "Register & Sign Up" : "Log In";
+                authBtn.disabled = false;
+            }
+        }
+    });
+}
+
+if (toggleAuthLink) {
+    toggleAuthLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const signupOnlyFields = document.querySelectorAll('.signup-only');
+        const authTitle = document.getElementById('authTitle');
+        const authBtn = document.getElementById('authBtn');
+        
+        if (signupOnlyFields.length === 0) return;
+
+        const isLoginViewNow = signupOnlyFields[0].classList.contains('hidden');
+        if (isLoginViewNow) {
+            signupOnlyFields.forEach(el => el.classList.remove('hidden'));
+            if (authTitle) authTitle.textContent = "Create Account";
+            if (authBtn) authBtn.textContent = "Register & Sign Up";
+            toggleAuthLink.textContent = "Already have an account? Log In";
+        } else {
+            signupOnlyFields.forEach(el => el.classList.add('hidden'));
+            if (authTitle) authTitle.textContent = "Welcome Back!";
+            if (authBtn) authBtn.textContent = "Log In";
+            toggleAuthLink.textContent = "New user? Create Account";
+        }
+    });
+}
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             localStorage.removeItem('printAppUser');
