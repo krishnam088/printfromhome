@@ -307,19 +307,41 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
         }
     }
 };
-
-// 🔥 100% Safe Order Tracking View Engine
+// 🔥 100% Bulletproof & Fallback-Secured Order Tracking View Engine
 window.openOrderTrackingView = function(orderId) {
     try {
         const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+        const sessionActiveIdentity = localStorage.getItem('printAppUserIdentity') || '';
+        
         let history = [];
+        
+        // 1. Primary User Key se history fetch karein
         try {
             history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
         } catch (e) {
             history = [];
         }
 
-        const order = history.find(o => String(o.orderId || o.id) === String(orderId));
+        // 2. Fallback: Agar primary mein nahi mila toh identity key se check karein
+        if ((!history || history.length === 0) && sessionActiveIdentity) {
+            try {
+                history = JSON.parse(localStorage.getItem(`history_${sessionActiveIdentity}`) || '[]');
+            } catch (e) {
+                history = [];
+            }
+        }
+
+        // 3. Fallback: Agar phir bhi na mile toh global backup key check karein
+        if ((!history || history.length === 0)) {
+            try {
+                const lastOrder = JSON.parse(localStorage.getItem('print_app_last_order') || 'null');
+                if (lastOrder) history = [lastOrder];
+            } catch (e) {
+                history = [];
+            }
+        }
+
+        const order = history.find(o => o && String(o.orderId || o.id) === String(orderId));
         
         if (!order) {
             if (typeof showAppToast === 'function') {
@@ -327,7 +349,7 @@ window.openOrderTrackingView = function(orderId) {
             } else {
                 alert("⚠️ Order details not found.");
             }
-            navigateDrawerSection('history');
+            if (typeof navigateDrawerSection === 'function') navigateDrawerSection('history');
             return;
         }
 
@@ -3359,7 +3381,7 @@ if (toggleAuthLink) {
 
 window.navigateDrawerSection = function(targetId) {
     try {
-        // 1. Saare view sections ko securely hide karein
+        // 1. Saare view sections ko hide karein
         document.querySelectorAll('.view-section').forEach(el => {
             el.classList.remove('active');
             el.style.setProperty('display', 'none', 'important');
@@ -3368,20 +3390,22 @@ window.navigateDrawerSection = function(targetId) {
         let normalizedId = targetId === 'orders' ? 'history' : targetId;
         const targetNode = document.getElementById(`user_section_${normalizedId}`);
         
-        // 2. Sirf targeted section ko display block karein
         if (targetNode) {
             targetNode.classList.add('active');
             targetNode.style.setProperty('display', 'block', 'important');
         }
 
-        // Store section ko manage karein
-        const storeNode = document.getElementById('user_section_store');
-        if (storeNode) {
-            if (normalizedId === 'store') {
-                storeNode.style.setProperty('display', 'block', 'important');
-            } else {
-                storeNode.style.setProperty('display', 'none', 'important');
-            }
+        // 2. Home store elements (Search bar & category chips) ko strictly hide karein jab aap store pe na hon
+        const storeSection = document.getElementById('user_section_store');
+        // Select all sticky search/category wrappers under the header
+        const storeSearchBars = document.querySelectorAll('header.brand-premium-header ~ div, div[style*="position: sticky"]');
+
+        if (normalizedId === 'store') {
+            if (storeSection) storeSection.style.setProperty('display', 'block', 'important');
+            storeSearchBars.forEach(el => el.style.setProperty('display', 'block', 'important'));
+        } else {
+            if (storeSection) storeSection.style.setProperty('display', 'none', 'important');
+            storeSearchBars.forEach(el => el.style.setProperty('display', 'none', 'important'));
         }
 
         const mainContainer = document.getElementById('mainLayoutAppContainer');
@@ -3392,9 +3416,8 @@ window.navigateDrawerSection = function(targetId) {
         if (typeof toggleUserDrawer === 'function') toggleUserDrawer(false);
         if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
 
-        // 3. Agar History tab khula hai, toh uski list render karein
         if (normalizedId === 'history' && typeof renderOrderHistoryUI === 'function') {
-            const activeUser = localStorage.getItem('printAppUser') || 'Customer';
+            const activeUser = localStorage.getItem('printAppUser') || localStorage.getItem('printAppUserIdentity') || 'Customer';
             renderOrderHistoryUI(activeUser);
         }
 
