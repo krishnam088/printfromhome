@@ -3381,7 +3381,7 @@ if (toggleAuthLink) {
 
 window.navigateDrawerSection = function(targetId) {
     try {
-        // 1. Saare view sections ko hide karein
+        // 1. Saare view sections ko securely hide karein
         document.querySelectorAll('.view-section').forEach(el => {
             el.classList.remove('active');
             el.style.setProperty('display', 'none', 'important');
@@ -3395,17 +3395,17 @@ window.navigateDrawerSection = function(targetId) {
             targetNode.style.setProperty('display', 'block', 'important');
         }
 
-        // 2. Home store elements (Search bar & category chips) ko strictly hide karein jab aap store pe na hon
-        const storeSection = document.getElementById('user_section_store');
-        // Select all sticky search/category wrappers under the header
-        const storeSearchBars = document.querySelectorAll('header.brand-premium-header ~ div, div[style*="position: sticky"]');
+        // 2. Home store ka search bar aur category chips container strictly hide karo
+        const storeSearchAndChipsBar = document.querySelector('header.brand-premium-header + div');
 
         if (normalizedId === 'store') {
-            if (storeSection) storeSection.style.setProperty('display', 'block', 'important');
-            storeSearchBars.forEach(el => el.style.setProperty('display', 'block', 'important'));
+            if (storeSearchAndChipsBar) {
+                storeSearchAndChipsBar.style.setProperty('display', 'block', 'important');
+            }
         } else {
-            if (storeSection) storeSection.style.setProperty('display', 'none', 'important');
-            storeSearchBars.forEach(el => el.style.setProperty('display', 'none', 'important'));
+            if (storeSearchAndChipsBar) {
+                storeSearchAndChipsBar.style.setProperty('display', 'none', 'important');
+            }
         }
 
         const mainContainer = document.getElementById('mainLayoutAppContainer');

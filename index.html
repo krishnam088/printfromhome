@@ -1153,7 +1153,7 @@
     </div>
 
     <script>
-        // Global state initializers
+// Global state initializers
         window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
         window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
         window.storeInventoryProducts = [];
@@ -1321,10 +1321,11 @@
             if (modal) modal.style.display = show ? 'flex' : 'none';
         }
 
-       function navigateDrawerSection(targetId) {
+        // 🔥 UPDATED NAVIGATE FUNCTION (Yeh home ka search bar aur category chips strictly hide kar dega non-store pages par)
+        function navigateDrawerSection(targetId) {
             document.querySelectorAll('.view-section').forEach(el => {
                 el.classList.remove('active');
-                el.style.display = 'none';
+                el.style.setProperty('display', 'none', 'important');
             });
             
             let normalizedId = targetId === 'orders' ? 'history' : targetId;
@@ -1332,20 +1333,28 @@
             
             if (targetNode) {
                 targetNode.classList.add('active');
-                targetNode.style.display = 'block';
+                targetNode.style.setProperty('display', 'block', 'important');
             }
 
             const storeNode = document.getElementById('user_section_store');
-            if (storeNode) {
-                if (normalizedId === 'store') {
-                    storeNode.style.display = 'block';
-                } else {
-                    storeNode.style.display = 'none';
-                }
+            // Select the sticky search bar and category chips container sitting right below header in index.html
+            const storeSearchAndChipsBar = document.querySelector('header.brand-premium-header + div');
+
+            if (normalizedId === 'store') {
+                if (storeNode) storeNode.style.setProperty('display', 'block', 'important');
+                if (storeSearchAndChipsBar) storeSearchAndChipsBar.style.setProperty('display', 'block', 'important');
+            } else {
+                if (storeNode) storeNode.style.setProperty('display', 'none', 'important');
+                if (storeSearchAndChipsBar) storeSearchAndChipsBar.style.setProperty('display', 'none', 'important');
             }
 
             toggleUserDrawer(false);
             if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
+
+            if (normalizedId === 'history' && typeof renderOrderHistoryUI === 'function') {
+                const activeUser = localStorage.getItem('printAppUser') || localStorage.getItem('printAppUserIdentity') || 'Customer';
+                renderOrderHistoryUI(activeUser);
+            }
         }
     </script>
     <script src="script.js"></script>
