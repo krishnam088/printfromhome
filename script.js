@@ -440,11 +440,15 @@ window.openOrderTrackingView = function(orderId) {
         }
     }
 };
-    // 🗺️ Initialize Google Maps (Store Pin, User Pin & Rider Movement Animation)
+// 🗺️ Initialize Google Maps (Store Pin, User Pin & Rider Movement Animation)
     setTimeout(() => {
         const mapElement = document.getElementById('liveTrackingGoogleMap');
         const distanceBadge = document.getElementById('mapDistanceBadge');
         if (!mapElement || typeof google === 'undefined') return;
+
+        // 🔥 Safe Variable Fallbacks
+        const currentStatus = (typeof window.currentActiveOrderStatus === 'string') ? window.currentActiveOrderStatus : 'Processing';
+        const hasDeliveryBoy = false; // or check your order object safely
 
         // Store Fixed Location (Varanasi Store)
         const storeLatLng = { lat: STORE_LOCATION.lat, lng: STORE_LOCATION.lng };
@@ -492,7 +496,7 @@ window.openOrderTrackingView = function(orderId) {
         }
 
         // Simulate bike moving towards user if order status is Out for Delivery
-        if (currentStatus.toLowerCase().includes('out') || order.assignedDeliveryBoy) {
+        if (currentStatus.toLowerCase().includes('out') || hasDeliveryBoy) {
             let step = 0;
             const totalSteps = 50;
             const interval = setInterval(() => {
@@ -505,7 +509,6 @@ window.openOrderTrackingView = function(orderId) {
         }
 
     }, 400);
-
 
 // 🔥 PAST ORDER RE-ORDER / LOAD TO CART PREVIEW
     window.openPastOrderInCartPreview = function(orderId) {
