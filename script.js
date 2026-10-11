@@ -1,3 +1,15 @@
+// 🔥 ABSOLUTE WHITE SCREEN KILLER (Catches all hidden crashes)
+window.addEventListener('error', function(event) {
+    console.error("🚨 Caught Global Script Error:", event.message, "at line:", event.lineno);
+    event.preventDefault();
+});
+
+window.addEventListener('unhandledrejection', function(event) {
+    console.error("🚨 Uncaught Promise Rejection:", event.reason);
+});
+
+// --- Iske niche aapka baki ka sara purana code rahega ---
+
 // 🔥 GLOBAL ERROR BOUNDARY (Prevents White Blank Screen Crashes)
 window.onerror = function(msg, url, lineNo, columnNo, error) {
     console.error("❌ App Crash Prevented:", msg, "at line:", lineNo);
