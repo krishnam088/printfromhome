@@ -1,15 +1,51 @@
-// 🔥 ABSOLUTE WHITE SCREEN KILLER (Catches all hidden crashes)
-window.addEventListener('error', function(event) {
-    console.error("🚨 Caught Global Script Error:", event.message, "at line:", event.lineno);
-    event.preventDefault();
+// 🔥 ABSOLUTE WHITE SCREEN & VISIBILITY FIXER
+window.forceFixWhiteScreen = function() {
+    try {
+        // 1. Ensure main app containers are forced visible
+        const mainApp = document.getElementById('mainApp');
+        const authScreen = document.getElementById('authScreen');
+        const splashScreen = document.getElementById('splashScreen');
+        
+        if (splashScreen) splashScreen.style.setProperty('display', 'none', 'important');
+        if (authScreen) authScreen.style.setProperty('display', 'none', 'important');
+        if (mainApp) mainApp.style.setProperty('display', 'block', 'important');
+
+        // 2. Force history section to be active and visible
+        const historySection = document.getElementById('user_section_history');
+        if (historySection) {
+            historySection.classList.add('active');
+            historySection.style.setProperty('display', 'block', 'important');
+        }
+
+        // 3. Force render order history safely
+        const container = document.getElementById('ordersHistoryContainer');
+        if (container) {
+            container.style.setProperty('display', 'block', 'important');
+            const activeUser = localStorage.getItem('printAppUser') || 'Customer';
+            let history = JSON.parse(localStorage.getItem(`history_${activeUser}`) || '[]');
+            
+            if (history.length > 0) {
+                container.innerHTML = history.map(order => `
+                    <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; padding:14px; margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; font-weight:800; font-size:0.85rem; color:#0f172a;">
+                            <span>Order #${order.orderId || 'N/A'}</span>
+                            <span style="color:#065f46;">₹${Number(order.amount || 0).toFixed(2)}</span>
+                        </div>
+                        <p style="font-size:0.75rem; color:#64748b; margin:4px 0;">Status: <b>${order.status || 'Processing'}</b></p>
+                        <p style="font-size:0.7rem; color:#94a3b8;">${order.date || ''}</p>
+                    </div>
+                `).join('');
+            }
+        }
+    } catch(e) {
+        console.error("Fixer Error:", e);
+    }
+};
+
+// Run automatically on load and every 1 second to prevent blank screens
+window.addEventListener('DOMContentLoaded', () => {
+    setInterval(window.forceFixWhiteScreen, 1000);
 });
-
-window.addEventListener('unhandledrejection', function(event) {
-    console.error("🚨 Uncaught Promise Rejection:", event.reason);
-});
-
-// --- Iske niche aapka baki ka sara purana code rahega ---
-
 // 🔥 GLOBAL ERROR BOUNDARY (Prevents White Blank Screen Crashes)
 window.onerror = function(msg, url, lineNo, columnNo, error) {
     console.error("❌ App Crash Prevented:", msg, "at line:", lineNo);
