@@ -3731,3 +3731,13 @@ window.initiatePasswordReset = function() {
     
     alert(`✅ Password reset instructions sent to ${email} (Demo Mode).`);
 };
+// 🔥 Fix Hidden Invalid Form Control Focus Errors
+document.addEventListener('DOMContentLoaded', () => {
+    const hiddenInputs = document.querySelectorAll('form input[required], form select[required], form textarea[required]');
+    hiddenInputs.forEach(input => {
+        // Agar input hidden hai toh required attribute hata do taaki browser error na de
+        if (input.offsetWidth === 0 && input.offsetHeight === 0) {
+            input.removeAttribute('required');
+        }
+    });
+});
