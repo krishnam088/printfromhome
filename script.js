@@ -13,14 +13,7 @@ window.onerror = function(msg, url, lineNo, columnNo, error) {
     return false;
 };
 
-// ⸻⸻⸻⸻⸻⸻⸻⸻⸻⸻⸻⸻⸻⸻⸻⸻
-// Iske niche aapka purana DOMContentLoaded wala code shuru hoga:
-document.addEventListener('DOMContentLoaded', () => {
-    const splashScreen = document.getElementById('splashScreen');
-    const authScreen = document.getElementById('authScreen');
-    const mainApp = document.getElementById('mainApp');
-    // ... baaki ka aapka code ...
-});
+
 document.addEventListener('DOMContentLoaded', () => {
     const splashScreen = document.getElementById('splashScreen');
     const authScreen = document.getElementById('authScreen');
@@ -313,7 +306,7 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
             } catch (e) {}
         }
 
-        // 🔥 AGAR KOI ORDER NA HO, TOH WHITE SCREEN KE BAJAYE CLEAN MESSAGE DIKHAYEIN
+        // Agar order list khali hai toh white screen ke bajaye clean message dikhao
         if (!Array.isArray(history) || history.length === 0) {
             container.innerHTML = `
                 <div style="text-align:center; padding:40px 20px; font-family:'Poppins', sans-serif;">
@@ -3282,9 +3275,9 @@ window.executeFinalCartOrderPlacement = async function() {
 
  // --- AUTH FORM (Login & Signup) ---
 
+// 🔥 UNIFIED & BULLETPROOF NAVIGATION ROUTER (Fixes White Screen & Overlaps)
 window.navigateDrawerSection = function(targetId) {
     try {
-        // 1. Saare view sections ko securely hide karein
         document.querySelectorAll('.view-section').forEach(el => {
             el.classList.remove('active');
             el.style.setProperty('display', 'none', 'important');
@@ -3300,13 +3293,13 @@ window.navigateDrawerSection = function(targetId) {
             console.error(`⚠️ View section not found: user_section_${normalizedId}`);
         }
 
-        // 2. Home store ka search bar aur category chips strictly hide karo
         const storeSearchAndChipsBar = document.querySelector('header.brand-premium-header + div');
-
-        if (normalizedId === 'store') {
-            if (storeSearchAndChipsBar) storeSearchAndChipsBar.style.setProperty('display', 'block', 'important');
-        } else {
-            if (storeSearchAndChipsBar) storeSearchAndChipsBar.style.setProperty('display', 'none', 'important');
+        if (storeSearchAndChipsBar) {
+            if (normalizedId === 'store') {
+                storeSearchAndChipsBar.style.setProperty('display', 'block', 'important');
+            } else {
+                storeSearchAndChipsBar.style.setProperty('display', 'none', 'important');
+            }
         }
 
         const mainContainer = document.getElementById('mainLayoutAppContainer');
@@ -3321,7 +3314,6 @@ window.navigateDrawerSection = function(targetId) {
             const activeUser = localStorage.getItem('printAppUser') || localStorage.getItem('printAppUserIdentity') || 'Customer';
             renderOrderHistoryUI(activeUser);
         }
-
     } catch (err) {
         console.error("Navigation Error:", err);
     }
