@@ -4188,3 +4188,80 @@ window.finalizeOrderSuccess = async function(orderId) {
         window.openOrderTrackingView(orderId);
     }
 };
+
+// ==========================================
+// 🔥 2. REAL-TIME ADMIN STATUS SYNC & POLLING ENGINE
+// ==========================================
+window.syncActiveOrderStatusFromBackend = async function() {
+    const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+    let history = [];
+    try {
+        history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
+    } catch(e) {
+        return;
+    }
+
+    // Check if there are any active (non-delivered, non-cancelled) orders
+    const activeOrders = history.filter(o => {
+        let st = (o.status || '').toLowerCase();
+        return !st.includes('delivered') && !st.includes('cancelled');
+    });
+
+    if (activeOrders.length === 0) return;
+
+    // Fetch latest order statuses from the backend server
+    try {
+        const res = await fetch('/api/orders/history?user=' + encodeURIComponent(sessionActiveUser));
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        if (data.success && Array.isArray(data.orders)) {
+            let updated = false;
+            
+            history = history.map(localOrd => {
+                let remoteOrd = data.orders.find(r => String(r.orderId || r.id) === String(localOrd.orderId || localOrd.id));
+                if (remoteOrd && remoteOrd.status && remoteOrd.status !== localOrd.status) {
+                    localOrd.status = remoteOrd.status; // Update status (e.g., "Delivered")
+                    updated = true;
+                }
+                return localOrd;
+            });
+
+            if (updated) {
+                // Save updated history to localStorage
+                localStorage.setItem(`history_${sessionActiveUser}`, JSON.stringify(history));
+
+                // Refresh history UI if open
+                if (typeof renderOrderHistoryUI === 'function') {
+                    renderOrderHistoryUI(sessionActiveUser);
+                }
+
+                // If currently viewing tracking page, update status text & banner live
+                const activeTrackingHeader = document.getElementById('trackOrderIdHeader');
+                if (activeTrackingHeader) {
+                    let currentTrackedId = activeTrackingHeader.textContent.replace('Order #', '').trim();
+                    let currentOrderObj = history.find(o => String(o.orderId || o.id) === currentTrackedId);
+                    if (currentOrderObj) {
+                        const statusBadge = document.getElementById('liveOrderStatusBadge');
+                        if (statusBadge) statusBadge.textContent = currentOrderObj.status;
+                        
+                        // If order is delivered, update subtext instantly
+                        if (currentOrderObj.status.toLowerCase().includes('delivered')) {
+                            const etaSubtext = document.getElementById('liveOrderEtaSubtext');
+                            if (etaSubtext) etaSubtext.innerHTML = "🎉 Order Delivered Successfully! Thank you for ordering.";
+                        }
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        // Fallback silent catch
+    }
+};
+
+// Run status sync check every 4 seconds in the background
+setInterval(() => {
+    if (typeof window.syncActiveOrderStatusFromBackend === 'function') {
+        window.syncActiveOrderStatusFromBackend();
+    }
+}, 4000);
