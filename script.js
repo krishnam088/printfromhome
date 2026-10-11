@@ -4229,3 +4229,34 @@ setInterval(() => {
         window.syncActiveOrderStatusFromBackend();
     }
 }, 3000);
+// ==========================================
+// 🔥 EDIT CART PRINT JOB HANDLER
+// ==========================================
+window.editCartPrintJob = function(idx) {
+    let job = window.cartPrintJobsArray[idx];
+    if (!job) return;
+
+    window.studioMasterFiles = [{
+        name: job.fileName,
+        size: 0,
+        fileBlob: job.fileData,
+        fileUrl: job.fileUrl,
+        pageImages: [job.fileUrl],
+        pages: job.pages,
+        copies: job.copies,
+        printType: job.printType,
+        orientation: job.orientation,
+        binding: job.binding || 'none'
+    }];
+    window.currentStudioActiveIndex = 0;
+
+    // Temporarily remove from cart while editing
+    window.cartPrintJobsArray.splice(idx, 1);
+    persistCartStateData();
+    renderCartDrawerContents();
+    toggleCartDrawer(false);
+
+    if (typeof openPrintStudioWithFilesArray === 'function') {
+        openPrintStudioWithFilesArray(window.studioMasterFiles, 0);
+    }
+};
