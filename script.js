@@ -840,6 +840,8 @@ let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || fina
         updateUI('summaryPrint', `₹${(totalPrintCost + printJobsTotal).toFixed(2)}`);
         updateUI('summaryBinding', `₹${(totalBindingCost + snacksTotal).toFixed(2)}`);
         updateUI('summaryDelivery', accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`);
+
+        updateUI('cartHandlingFee', `₹${activeHandlingFee.toFixed(2)}`);
         
         // Update Rain Surge UI text dynamically if element exists
         const rainFeeSpan = document.getElementById('cartRainFee');
