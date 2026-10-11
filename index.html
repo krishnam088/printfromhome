@@ -946,174 +946,173 @@
             </div>
         </div>
 
-        <div class="container" id="mainLayoutAppContainer">
-            <div id="user_section_store" class="view-section active">
-                
-                <div style="background: linear-gradient(90deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); border-bottom: 1px solid #334155; border-top: 1px solid #334155; padding: 10px 0; overflow: hidden; white-space: nowrap; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 14px; border-radius: 12px; margin-top: 10px;">
-                    <marquee scrollamount="6" style="width: 100%; display: flex; align-items: center; font-family: 'Poppins', sans-serif;">
-                        <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #f8fafc;">
-                            <span style="font-size: 1rem;">🪔✨</span> 
-                            <span style="color: #38bdf8;">Coming Soon:</span> Official Launch on <strong style="color: #f59e0b;">Diwali 2026</strong> in Varanasi!
-                        </span>
-                        <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #10b981;">
-                            <span>⚡</span> 15-Minute Instant Print & Delivery App
-                        </span>
-                    </marquee>
-                </div>
-
-                <div id="uploadScreenInitialState" style="width:100%;">
-                    
-                    <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border: 1px solid #ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            🚨 <b>Store is Closed!</b> We are not taking orders currently.
-                        </div>
-                        <button type="button" onclick="dismissStoreClosedNotice()" style="background: none; border: none; font-size: 1.3rem; font-weight: bold; color: #991b1b; cursor: pointer; padding: 0 5px;">&times;</button>
-                    </div>
-
-                    <div class="store-header-box">
-                        <h2>Print Store</h2>
-                        <p>printfromhome ensures secure prints at every stage</p>
-                    </div>
-
-                    <div class="verbatim-docs-promo-card">
-                        <div class="promo-details-block">
-                            <h3 class="promo-main-title">Documents</h3>
-                            <ul class="promo-bullet-list">
-                                <li class="promo-bullet-item">✦ Price starting at ₹3/page</li>
-                                <li class="promo-bullet-item">✦ Paper quality: 70 GSM</li>
-                                <li class="promo-bullet-item">✦ Dynamic Customization Controls</li>
-                            </ul>
-                            <label class="verbatim-upload-btn" for="fileUpload">Upload Files</label>
-                            <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
-                        </div>
-                        <div class="promo-graphic-mockup">
-                            <img src="/printer-icon.jpg" alt="HP Smart Tank Printer" style="width: 100%; filter: grayscale(100%);">
-                        </div>
-                    </div>
-
-                    <div class="category-section-title">
-                        <span>⚡ Store Products & Snacks (Slide &rarr;)</span>
-                    </div>
-                    <div class="snacks-horizontal-slider" id="homeSnacksGrid"></div>
-                </div>
-
-                <div id="configurationScreenState" class="hidden" style="width:100%;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <h3 style="font-size:1.1rem; font-weight:800;">Configure Print & Add to Cart</h3>
-                        <button type="button" onclick="forceReturnToUploadView()" style="background:none; border:none; color:#065f46; font-weight:700; cursor:pointer; font-size:0.85rem;">&larr; Back to Upload</button>
-                    </div>
-
-        <div style="background:var(--surface); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:15px;">
-            <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:10px; color:#1e293b;">⚡ Hungry while waiting? Add Store Products</h4>
-            <div class="snacks-horizontal-slider" id="configSnacksGrid"></div>
-        </div>
-
-        <form id="printForm" enctype="multipart/form-data" style="width:100%;">
-            <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
-            <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: #065f46; font-weight: 700; width: 100%;">Add Print Job to Cart</button>
-        </form>
-    </div>
-            <div id="user_section_history" class="view-section">
-                <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
-                    <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
-                    <div id="ordersHistoryContainer" style="width:100%;">
-                        <p style="text-align:center; padding:20px; color:var(--text-sub);">No print jobs recorded yet.</p>
-                    </div>
-                </div>
-            </div>
-
-        <div id="user_section_order_tracking" class="view-section" style="background: #f8fafc; font-family: 'Poppins', sans-serif; padding-bottom: 40px;">
+      <div class="container" id="mainLayoutAppContainer">
     
-    <!-- Top Header: Back Button & Title (Blinkit Style) -->
-    <div style="background: #ffffff; padding: 12px 16px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100;">
-        <button type="button" onclick="navigateDrawerSection('history')" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; color: #0f172a;">Back</button>
-        <h3 style="font-size: 1.05rem; font-weight: 900; color: #0f172a; margin: 0 auto; transform: translateX(-20px);">Order Status</h3>
-    </div>
-
-    <!-- Main Container -->
-    <div style="max-width: 480px; width: 100%; margin: 0 auto; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px;">
-
-        <!-- Header ke bahar: Tracking Page Title & Order ID -->
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 0.85rem; font-weight: 800; color: #64748b; text-transform: uppercase;">Tracking Page</span>
-            <span id="trackOrderIdHeader" style="font-size: 0.85rem; font-weight: 900; color: #0f172a;">Order #---</span>
+    <!-- 1. Store / Upload Section -->
+    <div id="user_section_store" class="view-section active" style="width: 100%;">
+        <div style="background: linear-gradient(90deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); border-bottom: 1px solid #334155; border-top: 1px solid #334155; padding: 10px 0; overflow: hidden; white-space: nowrap; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 14px; border-radius: 12px; margin-top: 10px;">
+            <marquee scrollamount="6" style="width: 100%; display: flex; align-items: center; font-family: 'Poppins', sans-serif;">
+                <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #f8fafc;">
+                    <span style="font-size: 1rem;">🪔✨</span> 
+                    <span style="color: #38bdf8;">Coming Soon:</span> Official Launch on <strong style="color: #f59e0b;">Diwali 2026</strong> in Varanasi!
+                </span>
+                <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #10b981;">
+                    <span>⚡</span> 15-Minute Instant Print & Delivery App
+                </span>
+            </marquee>
         </div>
 
-        <!-- Live Delivery Status Banner Card -->
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Live Status</span>
-                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; color: #065f46;">
-                    🟢 ACTIVE
+        <div id="uploadScreenInitialState" style="width:100%;">
+            <div id="storeClosedNoticeBox" class="offer-badge-box hidden" style="background:#fef2f2; border: 1px solid #ef4444; color:#991b1b; border-radius:12px; padding:15px; margin-bottom:20px; width:100%; display: flex; justify-content: space-between; align-items: center;">
+                <div>🚨 <b>Store is Closed!</b> We are not taking orders currently.</div>
+                <button type="button" onclick="dismissStoreClosedNotice()" style="background: none; border: none; font-size: 1.3rem; font-weight: bold; color: #991b1b; cursor: pointer; padding: 0 5px;">&times;</button>
+            </div>
+
+            <div class="store-header-box">
+                <h2>Print Store</h2>
+                <p>printfromhome ensures secure prints at every stage</p>
+            </div>
+
+            <div class="verbatim-docs-promo-card">
+                <div class="promo-details-block">
+                    <h3 class="promo-main-title">Documents</h3>
+                    <ul class="promo-bullet-list">
+                        <li class="promo-bullet-item">✦ Price starting at ₹3/page</li>
+                        <li class="promo-bullet-item">✦ Paper quality: 70 GSM</li>
+                        <li class="promo-bullet-item">✦ Dynamic Customization Controls</li>
+                    </ul>
+                    <label class="verbatim-upload-btn" for="fileUpload">Upload Files</label>
+                    <input type="file" id="fileUpload" name="document" accept=".pdf,.doc,.docx,.png,.jpg" multiple style="display:none;">
+                </div>
+                <div class="promo-graphic-mockup">
+                    <img src="/printer-icon.jpg" alt="HP Smart Tank Printer" style="width: 100%; filter: grayscale(100%);">
                 </div>
             </div>
-            <h3 id="liveOrderStatusBadge" style="font-size: 1.15rem; font-weight: 900; color: #065f46; margin: 0 0 4px 0;">Your order is getting ready...</h3>
-            <p id="liveOrderEtaSubtext" style="font-size: 0.75rem; color: #64748b; font-weight: 600; margin: 0;">Preparing items at Print From Home store in Varanasi</p>
+
+            <div class="category-section-title">
+                <span>⚡ Store Products & Snacks (Slide &rarr;)</span>
+            </div>
+            <div class="snacks-horizontal-slider" id="homeSnacksGrid"></div>
         </div>
 
-        <!-- 🗺️ Google Map Container (Store Pin, User Pin & Moving Rider) -->
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02); position: relative;">
-            <div id="liveTrackingGoogleMap" style="width: 100%; height: 240px; background: #e2e8f0;"></div>
-            <div id="mapDistanceBadge" style="position: absolute; top: 12px; left: 12px; background: rgba(15, 23, 42, 0.85); color: #ffffff; padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; backdrop-filter: blur(4px);">
-                Calculating distance...
+        <div id="configurationScreenState" class="hidden" style="width:100%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="font-size:1.1rem; font-weight:800;">Configure Print & Add to Cart</h3>
+                <button type="button" onclick="forceReturnToUploadView()" style="background:none; border:none; color:#065f46; font-weight:700; cursor:pointer; font-size:0.85rem;">&larr; Back to Upload</button>
+            </div>
+
+            <div style="background:var(--surface); border:1px solid var(--border-color); border-radius:16px; padding:14px; margin-bottom:15px;">
+                <h4 style="font-size:0.85rem; font-weight:800; margin-bottom:10px; color:#1e293b;">⚡ Hungry while waiting? Add Store Products</h4>
+                <div class="snacks-horizontal-slider" id="configSnacksGrid"></div>
+            </div>
+
+            <form id="printForm" enctype="multipart/form-data" style="width:100%;">
+                <div id="multiFilesContainer" style="margin-bottom: 25px; width:100%;"></div>
+                <button type="submit" id="submitOrderBtn" class="btn-submit" style="padding: 14px; font-size: 1rem; border-radius: 12px; background: #065f46; font-weight: 700; width: 100%;">Add Print Job to Cart</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Order History Section -->
+    <div id="user_section_history" class="view-section" style="display: none; width: 100%;">
+        <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
+            <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
+            <div id="ordersHistoryContainer" style="width:100%;">
+                <p style="text-align:center; padding:20px; color:var(--text-sub);">No print jobs recorded yet.</p>
             </div>
         </div>
+    </div>
 
-        <!-- Rider Details Section (Appears after assignment / Out for Delivery) -->
-        <div id="riderDetailsCardBox" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 42px; height: 42px; background: #0f172a; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">🛵</div>
+    <!-- 3. Order Tracking / Status Section (Clean & Isolated) -->
+    <div id="user_section_order_tracking" class="view-section" style="display: none; background: #f8fafc; font-family: 'Poppins', sans-serif; padding-bottom: 40px; width: 100%;">
+        
+        <!-- Top Header: Back Button & Title -->
+        <div style="background: #ffffff; padding: 12px 16px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100;">
+            <button type="button" onclick="navigateDrawerSection('history')" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; color: #0f172a;">&larr; Back</button>
+            <h3 style="font-size: 1.05rem; font-weight: 900; color: #0f172a; margin: 0 auto; transform: translateX(-20px);">Order Status</h3>
+        </div>
+
+        <!-- Main Tracking Container -->
+        <div style="max-width: 480px; width: 100%; margin: 0 auto; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px;">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.85rem; font-weight: 800; color: #64748b; text-transform: uppercase;">Tracking Page</span>
+                <span id="trackOrderIdHeader" style="font-size: 0.85rem; font-weight: 900; color: #0f172a;">Order #---</span>
+            </div>
+
+            <!-- Live Delivery Status Banner Card -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Live Status</span>
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; color: #065f46;">🟢 ACTIVE</div>
+                </div>
+                <h3 id="liveOrderStatusBadge" style="font-size: 1.15rem; font-weight: 900; color: #065f46; margin: 0 0 4px 0;">Your order is getting ready...</h3>
+                <p id="liveOrderEtaSubtext" style="font-size: 0.75rem; color: #64748b; font-weight: 600; margin: 0;">Preparing items at Print From Home store in Varanasi</p>
+            </div>
+
+            <!-- Google Map Container -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02); position: relative;">
+                <div id="liveTrackingGoogleMap" style="width: 100%; height: 240px; background: #e2e8f0;"></div>
+                <div id="mapDistanceBadge" style="position: absolute; top: 12px; left: 12px; background: rgba(15, 23, 42, 0.85); color: #ffffff; padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 800; backdrop-filter: blur(4px);">Calculating distance...</div>
+            </div>
+
+            <!-- Rider Details Section -->
+            <div id="riderDetailsCardBox" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 42px; height: 42px; background: #0f172a; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">🛵</div>
+                    <div>
+                        <h4 style="font-size: 0.85rem; font-weight: 800; color: #0f172a; margin: 0;" id="deliveryExecutiveName">Awaiting Rider Assignment...</h4>
+                        <p style="font-size: 0.7rem; font-weight: 600; color: #64748b; margin: 2px 0 0 0;" id="deliveryExecutivePhone">Will be assigned shortly</p>
+                    </div>
+                </div>
+                <a id="callExecutiveBtn" href="tel:7007626731" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 0.9rem;" title="Call Rider">📞</a>
+            </div>
+
+            <!-- Order ID & Items Summary Card -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                    <span style="font-size: 0.78rem; font-weight: 800; color: #0f172a;">Order Items Summary</span>
+                    <span id="trackGrandTotalBadge" style="font-size: 0.85rem; font-weight: 900; color: #065f46;">₹0.00</span>
+                </div>
+                <div id="trackFilesManifestList" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
+                <div style="background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <p style="font-size: 0.7rem; font-weight: 700; color: #64748b; margin: 0 0 2px 0;">Delivery Address:</p>
+                    <p id="trackShippingAddressLabel" style="font-size: 0.75rem; color: #0f172a; margin: 0; font-weight: 600; line-height: 1.3;"></p>
+                </div>
+            </div>
+
+            <!-- Terms, Cancellation Policy & Support Hub -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
                 <div>
-                    <h4 style="font-size: 0.85rem; font-weight: 800; color: #0f172a; margin: 0;" id="deliveryExecutiveName">Awaiting Rider Assignment...</h4>
-                    <p style="font-size: 0.7rem; font-weight: 600; color: #64748b; margin: 2px 0 0 0;" id="deliveryExecutivePhone">Will be assigned shortly</p>
+                    <h4 style="font-size: 0.78rem; font-weight: 800; color: #0f172a; margin-bottom: 4px;">Cancellation Policy</h4>
+                    <p style="font-size: 0.68rem; color: #64748b; line-height: 1.4; margin: 0;">Orders cannot be cancelled once printing has started or once the delivery executive is out for delivery.</p>
+                </div>
+                <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 0;">
+                <div>
+                    <h4 style="font-size: 0.78rem; font-weight: 800; color: #0f172a; margin-bottom: 4px;">Customer Care Support</h4>
+                    <p style="font-size: 0.68rem; color: #64748b; line-height: 1.4; margin: 0; margin-bottom: 8px;">Need help with your print order or delivery? We are available 24/7.</p>
+                    <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Print%20From%20Home%20Support" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: #25D366; color: white; padding: 8px 14px; border-radius: 8px; font-weight: 800; text-decoration: none; font-size: 0.75rem;">
+                        <span>💬</span> Chat on WhatsApp
+                    </a>
                 </div>
             </div>
-            <a id="callExecutiveBtn" href="tel:7007626731" style="background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 0.9rem;" title="Call Rider">📞</a>
-        </div>
 
-        <!-- Order ID & Items Summary Card -->
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
-                <span style="font-size: 0.78rem; font-weight: 800; color: #0f172a;">Order Items Summary</span>
-                <span id="trackGrandTotalBadge" style="font-size: 0.85rem; font-weight: 900; color: #065f46;">₹0.00</span>
-            </div>
-            <div id="trackFilesManifestList" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
-            <div style="background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0;">
-                <p style="font-size: 0.7rem; font-weight: 700; color: #64748b; margin: 0 0 2px 0;">Delivery Address:</p>
-                <p id="trackShippingAddressLabel" style="font-size: 0.75rem; color: #0f172a; margin: 0; font-weight: 600; line-height: 1.3;"></p>
-            </div>
         </div>
-
-        <!-- Terms, Cancellation Policy & Support Hub -->
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-            <div>
-                <h4 style="font-size: 0.78rem; font-weight: 800; color: #0f172a; margin-bottom: 4px;">Cancellation Policy</h4>
-                <p style="font-size: 0.68rem; color: #64748b; line-height: 1.4; margin: 0;">Orders cannot be cancelled once printing has started or once the delivery executive is out for delivery.</p>
-            </div>
-            <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 0;">
-            <div>
-                <h4 style="font-size: 0.78rem; font-weight: 800; color: #0f172a; margin-bottom: 4px;">Customer Care Support</h4>
-                <p style="font-size: 0.68rem; color: #64748b; line-height: 1.4; margin: 0; margin-bottom: 8px;">Need help with your print order or delivery? We are available 24/7.</p>
-                <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Print%20From%20Home%20Support" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: #25D366; color: white; padding: 8px 14px; border-radius: 8px; font-weight: 800; text-decoration: none; font-size: 0.75rem;">
-                    <span>💬</span> Chat on WhatsApp
-                </a>
-            </div>
-        </div>
-
     </div>
+
+    <!-- Sidebar Invoice Panel -->
+    <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; background:var(--surface); border:1px solid var(--border-color); padding:20px; border-radius:16px;">
+        <h2>Order Invoice Summary</h2>
+        <div class="summary-card">
+            <div class="summary-row"><span>Printing Sheet Cost</span><span id="summaryPrint">₹0.00</span></div>
+            <div class="summary-row"><span>Binding Cost Allocation</span><span id="summaryBinding">₹0.00</span></div>
+            <div class="summary-row"><span>Delivery Logistics Fee</span><span id="summaryDelivery">₹0.00</span></div>
+            <hr class="summary-divider">
+            <div class="summary-row total-row"><h3>Grand Total Amount</h3><h3 id="summaryTotal">₹0.00</h3></div>
+        </div>
+    </section>
+
 </div>
-            <section class="summary-section hidden" id="sidebarPricingPanel" style="width:100%; height: fit-content; background:var(--surface); border:1px solid var(--border-color); padding:20px; border-radius:16px;">
-                <h2>Order Invoice Summary</h2>
-                <div class="summary-card">
-                    <div class="summary-row"><span>Printing Sheet Cost</span><span id="summaryPrint">₹0.00</span></div>
-                    <div class="summary-row"><span>Binding Cost Allocation</span><span id="summaryBinding">₹0.00</span></div>
-                    <div class="summary-row"><span>Delivery Logistics Fee</span><span id="summaryDelivery">₹0.00</span></div>
-                    <hr class="summary-divider">
-                    <div class="summary-row total-row"><h3>Grand Total Amount</h3><h3 id="summaryTotal">₹0.00</h3></div>
-                </div>
-            </section>
-        </div>
-    </div>
 
     <!-- 📱 Compact & Attractive Floating Cart Footer Bar -->
     <div id="floatingCartFooterBar" class="floating-cart-footer hidden">
