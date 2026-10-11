@@ -273,7 +273,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
  
-// 🔥 100% Safe Order History UI Render Engine (Prevents White Blank Screen)
+// 🔥 100% Bulletproof Order History UI Render Engine (Stops White Screen Crashes)
 window.renderOrderHistoryUI = function(username, showRecent = true) {
     try {
         const container = document.getElementById('ordersHistoryContainer');
@@ -299,14 +299,6 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
             } catch (e) {}
         }
 
-        if (history.length === 0) {
-            try {
-                let lastOrder = JSON.parse(localStorage.getItem('print_app_last_order') || 'null');
-                if (lastOrder) history = [lastOrder];
-            } catch (e) {}
-        }
-
-        // Agar order list khali hai toh white screen ke bajaye clean message dikhao
         if (!Array.isArray(history) || history.length === 0) {
             container.innerHTML = `
                 <div style="text-align:center; padding:40px 20px; font-family:'Poppins', sans-serif;">
@@ -321,8 +313,11 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
 
         container.innerHTML = history.map(order => {
             if (!order) return '';
+            
+            // 🔥 Safe fallback values for corrupted or missing localstorage fields
             let safeId = order.orderId || order.id || 'N/A';
-            let safeAmount = Number(order.amount || order.totalAmount || 0).toFixed(2);
+            let rawAmount = order.amount !== undefined ? order.amount : (order.totalAmount !== undefined ? order.totalAmount : 0);
+            let safeAmount = Number(rawAmount || 0).toFixed(2);
             let safeStatus = order.status || 'Processing';
             let safeDate = order.date || '';
 
@@ -336,7 +331,6 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
                     <p style="font-size:0.7rem; color:#94a3b8; margin-bottom:10px;">${safeDate}</p>
                     <div style="display:flex; gap:8px; flex-wrap:wrap;">
                         <button type="button" onclick="openOrderTrackingView('${safeId}')" style="background:#2563eb; color:white; border:none; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">📍 Track Status</button>
-                        <button type="button" onclick="openPastOrderInCartPreview('${safeId}')" style="background:#065f46; color:white; border:none; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">🔁 Repeat in Cart</button>
                     </div>
                 </div>
             `;
