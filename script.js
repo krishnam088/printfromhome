@@ -3580,3 +3580,47 @@ window.forceDebugOrderHistory = function(username, showRecent = true) {
 if (typeof window !== 'undefined') {
     window.__orderHistoryDebugInit = true;
 }
+// 🔥 PRINT WALLET DEPOSIT & QUICK AMOUNT ENGINE
+window.setWalletQuickAmount = function(amount) {
+    const input = document.getElementById('walletCustomAmountInput');
+    if (input) {
+        input.value = amount;
+    }
+};
+
+window.executeWalletRazorpayDeposit = async function() {
+    const input = document.getElementById('walletCustomAmountInput');
+    const amount = parseFloat(input ? input.value : 100);
+    
+    if (isNaN(amount) || amount <= 0) {
+        alert("⚠️ Please enter a valid amount to add!");
+        return;
+    }
+
+    const sessionActiveUser = localStorage.getItem('printAppUser');
+    if (!sessionActiveUser) {
+        alert("⚠️ Please log in first to add money to your wallet.");
+        return;
+    }
+
+    try {
+        // Local Wallet Balance Update & Synchronization
+        let currentBalance = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
+        let newBalance = currentBalance + amount;
+        
+        localStorage.setItem(`wallet_cash_${sessionActiveUser}`, newBalance.toFixed(2));
+        
+        if (typeof synchronizeWalletInterfaceBalance === 'function') {
+            synchronizeWalletInterfaceBalance();
+        }
+        
+        if (typeof toggleWalletPopupGrid === 'function') {
+            toggleWalletPopupGrid(false);
+        }
+
+        alert(`🎉 Success! Added ₹${amount.toFixed(2)} to your Print Wallet. New Balance: ₹${newBalance.toFixed(2)}`);
+    } catch (err) {
+        console.error("Wallet deposit error:", err);
+        alert("❌ Failed to add money to wallet.");
+    }
+};
