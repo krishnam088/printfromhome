@@ -287,23 +287,41 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
         if (!container) return;
         
         const activeUser = username || localStorage.getItem('printAppUser') || 'Customer';
+        const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
+        
         let history = [];
-        
-        try {
-            history = JSON.parse(localStorage.getItem(`history_${activeUser}`) || '[]');
-        } catch (e) {
-            history = [];
+        const possibleKeys = [
+            `history_${activeUser}`,
+            `history_${activeIdentity}`,
+            'history_Customer'
+        ];
+
+        for (let key of possibleKeys) {
+            try {
+                let data = JSON.parse(localStorage.getItem(key) || '[]');
+                if (Array.isArray(data) && data.length > 0) {
+                    history = data;
+                    break;
+                }
+            } catch (e) {}
         }
-        
+
+        if (history.length === 0) {
+            try {
+                let lastOrder = JSON.parse(localStorage.getItem('print_app_last_order') || 'null');
+                if (lastOrder) history = [lastOrder];
+            } catch (e) {}
+        }
+
         if (!Array.isArray(history) || history.length === 0) {
-            container.innerHTML = `<p style="text-align:center; padding:20px; color:#64748b; font-size:0.85rem;">No print jobs recorded yet.</p>`;
+            container.innerHTML = `<p style="text-align:center; padding:20px; color:#64748b; font-size:0.85rem; font-weight:600;">No print jobs recorded yet.</p>`;
             return;
         }
 
         container.innerHTML = history.map(order => {
             if (!order) return '';
             let safeId = order.orderId || order.id || 'N/A';
-            let safeAmount = order.amount || '0.00';
+            let safeAmount = Number(order.amount || order.totalAmount || 0).toFixed(2);
             let safeStatus = order.status || 'Processing';
             let safeDate = order.date || '';
 
@@ -337,31 +355,20 @@ window.openOrderTrackingView = function(orderId) {
         const sessionActiveIdentity = localStorage.getItem('printAppUserIdentity') || '';
         
         let history = [];
-        
-        // 1. Primary User Key se history fetch karein
-        try {
-            history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
-        } catch (e) {
-            history = [];
-        }
+        const possibleKeys = [
+            `history_${sessionActiveUser}`,
+            `history_${sessionActiveIdentity}`,
+            'history_Customer'
+        ];
 
-        // 2. Fallback: Agar primary mein nahi mila toh identity key se check karein
-        if ((!history || history.length === 0) && sessionActiveIdentity) {
+        for (let key of possibleKeys) {
             try {
-                history = JSON.parse(localStorage.getItem(`history_${sessionActiveIdentity}`) || '[]');
-            } catch (e) {
-                history = [];
-            }
-        }
-
-        // 3. Fallback: Agar phir bhi na mile toh global backup key check karein
-        if ((!history || history.length === 0)) {
-            try {
-                const lastOrder = JSON.parse(localStorage.getItem('print_app_last_order') || 'null');
-                if (lastOrder) history = [lastOrder];
-            } catch (e) {
-                history = [];
-            }
+                let data = JSON.parse(localStorage.getItem(key) || '[]');
+                if (Array.isArray(data) && data.length > 0) {
+                    history = data;
+                    break;
+                }
+            } catch (e) {}
         }
 
         const order = history.find(o => o && String(o.orderId || o.id) === String(orderId));
@@ -389,7 +396,7 @@ window.openOrderTrackingView = function(orderId) {
         const riderPhoneNode = document.getElementById('deliveryExecutivePhone');
 
         if (idHeader) idHeader.textContent = `Order #${order.orderId || order.id || 'N/A'}`;
-        if (totalBadge) totalBadge.textContent = `₹${order.amount || '0.00'}`;
+        if (totalBadge) totalBadge.textContent = `₹${order.amount || order.totalAmount || '0.00'}`;
         if (addressLabel) addressLabel.textContent = order.address || 'Varanasi Delivery Address';
         if (statusBadge) statusBadge.textContent = order.status || 'Your order is getting ready...';
 
@@ -3269,7 +3276,7 @@ window.executeFinalCartOrderPlacement = async function() {
 
 window.navigateDrawerSection = function(targetId) {
     try {
-        // 1. Force hide all sections via important flag
+        // 1. Saare view sections ko securely hide karein
         document.querySelectorAll('.view-section').forEach(el => {
             el.classList.remove('active');
             el.style.setProperty('display', 'none', 'important');
@@ -3281,19 +3288,17 @@ window.navigateDrawerSection = function(targetId) {
         if (targetNode) {
             targetNode.classList.add('active');
             targetNode.style.setProperty('display', 'block', 'important');
+        } else {
+            console.error(`⚠️ View section not found: user_section_${normalizedId}`);
         }
 
-        // 2. Control home store search bar and category chips container
+        // 2. Home store ka search bar aur category chips strictly hide karo
         const storeSearchAndChipsBar = document.querySelector('header.brand-premium-header + div');
 
         if (normalizedId === 'store') {
-            if (storeSearchAndChipsBar) {
-                storeSearchAndChipsBar.style.setProperty('display', 'block', 'important');
-            }
+            if (storeSearchAndChipsBar) storeSearchAndChipsBar.style.setProperty('display', 'block', 'important');
         } else {
-            if (storeSearchAndChipsBar) {
-                storeSearchAndChipsBar.style.setProperty('display', 'none', 'important');
-            }
+            if (storeSearchAndChipsBar) storeSearchAndChipsBar.style.setProperty('display', 'none', 'important');
         }
 
         const mainContainer = document.getElementById('mainLayoutAppContainer');
