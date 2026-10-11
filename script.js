@@ -313,8 +313,16 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
             } catch (e) {}
         }
 
+        // 🔥 AGAR KOI ORDER NA HO, TOH WHITE SCREEN KE BAJAYE CLEAN MESSAGE DIKHAYEIN
         if (!Array.isArray(history) || history.length === 0) {
-            container.innerHTML = `<p style="text-align:center; padding:20px; color:#64748b; font-size:0.85rem; font-weight:600;">No print jobs recorded yet.</p>`;
+            container.innerHTML = `
+                <div style="text-align:center; padding:40px 20px; font-family:'Poppins', sans-serif;">
+                    <div style="font-size:3rem; margin-bottom:10px;">📦</div>
+                    <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:4px;">No orders found</h3>
+                    <p style="font-size:0.78rem; color:#64748b; margin-bottom:16px;">You haven't placed any print orders or purchases yet.</p>
+                    <button type="button" onclick="navigateDrawerSection('store')" style="background:#065f46; color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:800; font-size:0.8rem; cursor:pointer;">Start Printing Now &rarr;</button>
+                </div>
+            `;
             return;
         }
 
