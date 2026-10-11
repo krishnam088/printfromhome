@@ -4040,3 +4040,88 @@ window.openOrderTrackingView = function(orderId) {
         }
     }
 };
+// ==========================================
+// 🔥 ZOMATO-STYLE LIVE TRACKING & REDIRECT ENGINE
+// ==========================================
+
+// 1. Order Place hote hi direct naye order ke tracking page par bhejna
+const originalFinalizeOrderSuccess = window.finalizeOrderSuccess;
+window.finalizeOrderSuccess = async function(orderId) {
+    if (typeof originalFinalizeOrderSuccess === 'function') {
+        await originalFinalizeOrderSuccess(orderId);
+    }
+    
+    // Direct open tracking view for this newly created order ID
+    if (typeof window.openOrderTrackingView === 'function') {
+        window.openOrderTrackingView(orderId);
+    }
+};
+
+// 2. Home Page par Zomato-style Floating Active Order Bar Render karna
+window.renderHomeActiveOrderTrackingBar = function() {
+    let activeBar = document.getElementById('homeActiveOrderFloatingBar');
+    if (!activeBar) {
+        activeBar = document.createElement('div');
+        activeBar.id = 'homeActiveOrderFloatingBar';
+        // Zomato style dark bottom floating pill just above footer/nav
+        activeBar.style.cssText = "position:fixed; bottom:75px; left:50%; transform:translateX(-50%); width:90%; max-width:400px; background:#0f172a; color:#ffffff; padding:12px 16px; border-radius:16px; z-index:99999; display:none; align-items:center; justify-content:space-between; box-shadow:0 10px 25px rgba(0,0,0,0.25); font-family:'Poppins', sans-serif; cursor:pointer; border:1px solid #334155;";
+        document.body.appendChild(activeBar);
+    }
+
+    const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+    let history = [];
+    try {
+        history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
+    } catch(e) {
+        history = [];
+    }
+
+    // Find the latest active order (Not delivered and not cancelled)
+    const latestActiveOrder = history.find(o => {
+        let st = (o.status || '').toLowerCase();
+        return !st.includes('delivered') && !st.includes('cancelled');
+    });
+
+    const storeSection = document.getElementById('user_section_store');
+    const isStoreActive = storeSection && storeSection.classList.contains('active');
+
+    if (latestActiveOrder && isStoreActive) {
+        let safeId = latestActiveOrder.orderId || latestActiveOrder.id || 'N/A';
+        let safeStatus = latestActiveOrder.status || 'Processing';
+        let safeAmount = latestActiveOrder.amount || latestActiveOrder.totalAmount || '0';
+
+        activeBar.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="font-size:1.4rem; background:rgba(255,255,255,0.1); padding:6px; border-radius:10px;">🛵</div>
+                <div style="display:flex; flex-direction:column; text-align:left;">
+                    <div style="font-size:0.75rem; font-weight:800; color:#38bdf8; text-transform:uppercase;">Live Order #${safeId}</div>
+                    <div style="font-size:0.82rem; font-weight:700; color:#f8fafc;">${safeStatus} (₹${safeAmount})</div>
+                </div>
+            </div>
+            <div style="background:#065f46; color:white; padding:6px 12px; border-radius:10px; font-weight:800; font-size:0.75rem; display:flex; align-items:center; gap:4px;">
+                <span>Track</span> <span>&rarr;</span>
+            </div>
+        `;
+
+        activeBar.onclick = function() {
+            if (typeof window.openOrderTrackingView === 'function') {
+                window.openOrderTrackingView(safeId);
+            }
+        };
+
+        activeBar.style.display = 'flex';
+    } else {
+        activeBar.style.display = 'none';
+    }
+};
+
+// Run check every 3 seconds to update active order floating bar on home screen
+setInterval(() => {
+    if (typeof window.renderHomeActiveOrderTrackingBar === 'function') {
+        window.renderHomeActiveOrderTrackingBar();
+    }
+}, 3000);
+
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(window.renderHomeActiveOrderTrackingBar, 500);
+});
