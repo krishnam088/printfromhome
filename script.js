@@ -4041,167 +4041,141 @@ window.openOrderTrackingView = function(orderId) {
     }
 };
 // ==========================================
-// 🔥 ZOMATO-STYLE LIVE TRACKING & REDIRECT ENGINE
+// 🔥 ADMIN LIVE GPS TRACKING & DYNAMIC ETA ENGINE
 // ==========================================
 
-// 1. Order Place hote hi direct naye order ke tracking page par bhejna
+let userLiveTrackingMap = null;
+let userLiveAdminMarker = null;
+let userLiveStoreMarker = null;
+let userLiveDestinationMarker = null;
+
+// 1. Initialize Real Google Map on Tracking Page with Live Admin Marker
+window.initLiveOrderTrackingGoogleMap = function(order) {
+    const mapElement = document.getElementById('liveTrackingGoogleMap');
+    const distanceBadge = document.getElementById('mapDistanceBadge');
+    if (!mapElement || typeof google === 'undefined') return;
+
+    // Store Fixed Location (Varanasi Store)
+    const storeLatLng = { lat: STORE_LOCATION.lat, lng: STORE_LOCATION.lng };
+    
+    // User Delivery Address Coordinates
+    const userLatLng = order.userLat && order.userLng ? 
+        { lat: Number(order.userLat), lng: Number(order.userLng) } : 
+        { lat: STORE_LOCATION.lat + 0.015, lng: STORE_LOCATION.lng + 0.012 };
+
+    // Initial Map Center
+    userLiveTrackingMap = new google.maps.Map(mapElement, {
+        center: storeLatLng,
+        zoom: 15,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        zoomControl: true
+    });
+
+    // Store Pin Marker (Green)
+    userLiveStoreMarker = new google.maps.Marker({
+        position: storeLatLng,
+        map: userLiveTrackingMap,
+        title: "Print From Home Store (Varanasi)",
+        icon: { url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png" }
+    });
+
+    // Destination Pin Marker (Red)
+    userLiveDestinationMarker = new google.maps.Marker({
+        position: userLatLng,
+        map: userLiveTrackingMap,
+        title: "Delivery Destination",
+        icon: { url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png" }
+    });
+
+    // Admin / Rider Live Bike Marker (Motorcycle Icon representing Admin moving)
+    userLiveAdminMarker = new google.maps.Marker({
+        position: storeLatLng,
+        map: userLiveTrackingMap,
+        title: "Delivery Partner (Admin Live)",
+        icon: { url: "https://maps.google.com/mapfiles/ms/icons/motorcycle.png" }
+    });
+
+    // Start polling admin live location from server
+    if (window.adminTrackingInterval) clearInterval(window.adminTrackingInterval);
+    window.adminTrackingInterval = setInterval(() => {
+        fetchAdminLiveLocationAndSyncMap(order.orderId || order.id, userLatLng, distanceBadge);
+    }, 5000); // Check admin location every 5 seconds
+};
+
+// 2. Fetch Admin Live Coordinates from Backend Server & Update Map
+async function fetchAdminLiveLocationAndSyncMap(orderId, userLatLng, distanceBadgeNode) {
+    try {
+        const res = await fetch(`/api/admin/live-location?orderId=${encodeURIComponent(orderId)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        if (data.success && data.lat && data.lng) {
+            const adminCurrentLatLng = { lat: Number(data.lat), lng: Number(data.lng) };
+            
+            if (userLiveAdminMarker) {
+                userLiveAdminMarker.setPosition(adminCurrentLatLng);
+            }
+
+            const distanceKm = calculateHaversineKm(
+                adminCurrentLatLng.lat, adminCurrentLatLng.lng, 
+                userLatLng.lat, userLatLng.lng
+            );
+
+            let etaMins = Math.max(2, Math.round((distanceKm * 3) + 2));
+
+            if (distanceBadgeNode) {
+                distanceBadgeNode.innerHTML = `🛵 Arriving in <b>${etaMins} mins</b> (${distanceKm.toFixed(1)} km away)`;
+            }
+
+            const etaSubtext = document.getElementById('liveOrderEtaSubtext');
+            if (etaSubtext) {
+                etaSubtext.innerHTML = `Delivery partner is on the way! Estimated arrival in <b>${etaMins} mins</b>.`;
+            }
+        }
+    } catch (e) {
+        // Fallback
+    }
+}
+
+// 📐 Haversine Distance Helper in Kilometers
+function calculateHaversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+// 3. Hook into openOrderTrackingView to initialize map automatically
+const existingOpenOrderTrackingView = window.openOrderTrackingView;
+window.openOrderTrackingView = function(orderId) {
+    if (typeof existingOpenOrderTrackingView === 'function') {
+        existingOpenOrderTrackingView(orderId);
+    }
+
+    const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+    let history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
+    const order = history.history.find ? history.find(o => o && String(o.orderId || o.id) === String(orderId)) : null;
+
+    if (order) {
+        setTimeout(() => {
+            initLiveOrderTrackingGoogleMap(order);
+        }, 400);
+    }
+};
+
+// 4. Order Place hote hi direct naye order ke tracking page par bhejna
 const originalFinalizeOrderSuccess = window.finalizeOrderSuccess;
 window.finalizeOrderSuccess = async function(orderId) {
     if (typeof originalFinalizeOrderSuccess === 'function') {
         await originalFinalizeOrderSuccess(orderId);
     }
-    
-    // Direct open tracking view for this newly created order ID
     if (typeof window.openOrderTrackingView === 'function') {
         window.openOrderTrackingView(orderId);
     }
 };
-
-// 2. Home Page par Zomato-style Floating Active Order Bar Render karna
-window.renderHomeActiveOrderTrackingBar = function() {
-    let activeBar = document.getElementById('homeActiveOrderFloatingBar');
-    if (!activeBar) {
-        activeBar = document.createElement('div');
-        activeBar.id = 'homeActiveOrderFloatingBar';
-        // Zomato style dark bottom floating pill just above footer/nav
-        activeBar.style.cssText = "position:fixed; bottom:75px; left:50%; transform:translateX(-50%); width:90%; max-width:400px; background:#0f172a; color:#ffffff; padding:12px 16px; border-radius:16px; z-index:99999; display:none; align-items:center; justify-content:space-between; box-shadow:0 10px 25px rgba(0,0,0,0.25); font-family:'Poppins', sans-serif; cursor:pointer; border:1px solid #334155;";
-        document.body.appendChild(activeBar);
-    }
-
-    const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
-    let history = [];
-    try {
-        history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
-    } catch(e) {
-        history = [];
-    }
-
-    // Find the latest active order (Not delivered and not cancelled)
-    const latestActiveOrder = history.find(o => {
-        let st = (o.status || '').toLowerCase();
-        return !st.includes('delivered') && !st.includes('cancelled');
-    });
-
-    const storeSection = document.getElementById('user_section_store');
-    const isStoreActive = storeSection && storeSection.classList.contains('active');
-
-    if (latestActiveOrder && isStoreActive) {
-        let safeId = latestActiveOrder.orderId || latestActiveOrder.id || 'N/A';
-        let safeStatus = latestActiveOrder.status || 'Processing';
-        let safeAmount = latestActiveOrder.amount || latestActiveOrder.totalAmount || '0';
-
-        activeBar.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px;">
-                <div style="font-size:1.4rem; background:rgba(255,255,255,0.1); padding:6px; border-radius:10px;">🛵</div>
-                <div style="display:flex; flex-direction:column; text-align:left;">
-                    <div style="font-size:0.75rem; font-weight:800; color:#38bdf8; text-transform:uppercase;">Live Order #${safeId}</div>
-                    <div style="font-size:0.82rem; font-weight:700; color:#f8fafc;">${safeStatus} (₹${safeAmount})</div>
-                </div>
-            </div>
-            <div style="background:#065f46; color:white; padding:6px 12px; border-radius:10px; font-weight:800; font-size:0.75rem; display:flex; align-items:center; gap:4px;">
-                <span>Track</span> <span>&rarr;</span>
-            </div>
-        `;
-
-        activeBar.onclick = function() {
-            if (typeof window.openOrderTrackingView === 'function') {
-                window.openOrderTrackingView(safeId);
-            }
-        };
-
-        activeBar.style.display = 'flex';
-    } else {
-        activeBar.style.display = 'none';
-    }
-};
-
-// Run check every 3 seconds to update active order floating bar on home screen
-setInterval(() => {
-    if (typeof window.renderHomeActiveOrderTrackingBar === 'function') {
-        window.renderHomeActiveOrderTrackingBar();
-    }
-}, 3000);
-
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(window.renderHomeActiveOrderTrackingBar, 500);
-});
-// ==========================================
-// 🔥 REAL-TIME ORDER STATUS SYNC & POLLING ENGINE
-// ==========================================
-
-window.syncActiveOrderStatusFromBackend = async function() {
-    const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
-    let history = [];
-    try {
-        history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
-    } catch(e) {
-        return;
-    }
-
-    // Check if there are any active (non-delivered, non-cancelled) orders
-    const activeOrders = history.filter(o => {
-        let st = (o.status || '').toLowerCase();
-        return !st.includes('delivered') && !st.includes('cancelled');
-    });
-
-    if (activeOrders.length === 0) return;
-
-    // Fetch latest order statuses from the backend server
-    try {
-        const res = await fetch('/api/orders/history?user=' + encodeURIComponent(sessionActiveUser));
-        if (!res.ok) return;
-        const data = await res.json();
-        
-        if (data.success && Array.isArray(data.orders)) {
-            let updated = false;
-            
-            history = history.map(localOrd => {
-                let remoteOrd = data.orders.find(r => String(r.orderId || r.id) === String(localOrd.orderId || localOrd.id));
-                if (remoteOrd && remoteOrd.status && remoteOrd.status !== localOrd.status) {
-                    localOrd.status = remoteOrd.status; // Update status (e.g., "Delivered")
-                    updated = true;
-                }
-                return localOrd;
-            });
-
-            if (updated) {
-                // Save updated history to localStorage
-                localStorage.setItem(`history_${sessionActiveUser}`, JSON.stringify(history));
-
-                // Refresh UI components instantly if visible
-                if (typeof renderOrderHistoryUI === 'function') {
-                    renderOrderHistoryUI(sessionActiveUser);
-                }
-                if (typeof renderHomeActiveOrderTrackingBar === 'function') {
-                    renderHomeActiveOrderTrackingBar();
-                }
-
-                // If currently viewing tracking page for this order, update status text live
-                const activeTrackingHeader = document.getElementById('trackOrderIdHeader');
-                if (activeTrackingHeader) {
-                    let currentTrackedId = activeTrackingHeader.textContent.replace('Order #', '').trim();
-                    let currentOrderObj = history.find(o => String(o.orderId || o.id) === currentTrackedId);
-                    if (currentOrderObj) {
-                        const statusBadge = document.getElementById('liveOrderStatusBadge');
-                        if (statusBadge) statusBadge.textContent = currentOrderObj.status;
-                        
-                        // If order is delivered, show a success banner or alert
-                        if (currentOrderObj.status.toLowerCase().includes('delivered')) {
-                            const etaSubtext = document.getElementById('liveOrderEtaSubtext');
-                            if (etaSubtext) etaSubtext.innerHTML = "🎉 Order Delivered Successfully! Thank you for ordering.";
-                        }
-                    }
-                }
-            }
-        }
-    } catch (e) {
-        // Fallback silent catch for offline simulation or server sync lag
-    }
-};
-
-// Run status sync check every 4 seconds in the background
-setInterval(() => {
-    if (typeof window.syncActiveOrderStatusFromBackend === 'function') {
-        window.syncActiveOrderStatusFromBackend();
-    }
-}, 4000);
