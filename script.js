@@ -457,7 +457,9 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
         }
     }
 };
-// 🔥 100% Bulletproof & Fallback-Secured Order Tracking View Engine
+// ==========================================
+// 🔥 BRAND-NEW BULLETPROOF ORDER STATUS & TRACKING ENGINE
+// ==========================================
 window.openOrderTrackingView = function(orderId) {
     try {
         const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
@@ -470,21 +472,104 @@ window.openOrderTrackingView = function(orderId) {
             return;
         }
 
+        // 1. Navigate to the tracking section safely
         if (typeof navigateDrawerSection === 'function') {
             navigateDrawerSection('order_tracking');
         }
 
-        // Safely update tracking DOM elements with fallbacks
+        // 2. Populate Order Header Details
         const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
         
         setText('trackOrderIdHeader', `Order #${order.orderId || order.id || 'N/A'}`);
-        setText('trackGrandTotalBadge', `₹${order.amount || order.totalAmount || '0.00'}`);
+        setText('trackGrandTotalBadge', `₹${Number(order.amount || order.totalAmount || 0).toFixed(2)}`);
         setText('liveOrderStatusBadge', order.status || 'Your order is getting ready...');
         setText('trackShippingAddressLabel', order.address || 'Varanasi Delivery Address');
-        
+
+        // 3. Populate Rider / Delivery Partner Details
+        const riderNameNode = document.getElementById('deliveryExecutiveName');
+        const riderPhoneNode = document.getElementById('deliveryExecutivePhone');
+        const callBtn = document.getElementById('callExecutiveBtn');
+
+        if (order.assignedDeliveryBoy && order.assignedDeliveryBoy.trim() !== '') {
+            if (riderNameNode) riderNameNode.textContent = `Delivery Partner (${order.assignedDeliveryBoy})`;
+            if (riderPhoneNode) riderPhoneNode.textContent = `📞 ${order.assignedDeliveryBoy}`;
+            if (callBtn) callBtn.href = `tel:${order.assignedDeliveryBoy}`;
+        } else {
+            if (riderNameNode) riderNameNode.textContent = "Assigning Delivery Executive...";
+            if (riderPhoneNode) riderPhoneNode.textContent = "Will be assigned shortly";
+            if (callBtn) callBtn.href = "tel:7007626731";
+        }
+
+        // 4. Render Item Manifest (Print Jobs & Snacks Breakdown)
+        const manifestList = document.getElementById('trackFilesManifestList');
+        if (manifestList) {
+            let detailsArray = order.details || order.configDetails || [];
+            if (typeof detailsArray === 'string') {
+                try { detailsArray = JSON.parse(detailsArray); } catch(e) { detailsArray = []; }
+            }
+
+            if (Array.isArray(detailsArray) && detailsArray.length > 0) {
+                manifestList.innerHTML = detailsArray.map(item => {
+                    let itemName = item.fileName || item.name || 'Print Item';
+                    let itemCopies = item.copies || item.qty || 1;
+                    let itemPrice = item.price || 3;
+                    return `
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:#334155; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;">
+                            <span>📄 ${itemName} (×${itemCopies})</span>
+                            <b style="color:#065f46;">₹${itemPrice * itemCopies}</b>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                manifestList.innerHTML = `<p style="font-size:0.75rem; color:#64748b; text-align:center;">No item manifest recorded.</p>`;
+            }
+        }
+
+        // 5. Initialize Live Tracking Google Map & Distance Matrix
+        setTimeout(() => {
+            const mapElement = document.getElementById('liveTrackingGoogleMap');
+            const distanceBadge = document.getElementById('mapDistanceBadge');
+            if (!mapElement || typeof google === 'undefined') return;
+
+            const storeLatLng = { lat: 25.3451, lng: 83.0012 }; // Varanasi Store
+            const userLatLng = { lat: STORE_LOCATION.lat + 0.015, lng: STORE_LOCATION.lng + 0.012 };
+
+            const map = new google.maps.Map(mapElement, {
+                center: storeLatLng,
+                zoom: 14,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false
+            });
+
+            // Store Pin
+            new google.maps.Marker({
+                position: storeLatLng,
+                map: map,
+                title: "Print From Home Store",
+                icon: { url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png" }
+            });
+
+            // User Destination Pin
+            new google.maps.Marker({
+                position: userLatLng,
+                map: map,
+                title: "Delivery Destination",
+                icon: { url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png" }
+            });
+
+            // Calculate Distance
+            const distanceKm = Math.sqrt(Math.pow(storeLatLng.lat - userLatLng.lat, 2) + Math.pow(storeLatLng.lng - userLatLng.lng, 2)) * 111;
+            if (distanceBadge) {
+                distanceBadge.textContent = `Distance: ${distanceKm.toFixed(1)} km away`;
+            }
+        }, 300);
+
     } catch (err) {
-        console.error("Tracking View Error:", err);
-        if (typeof navigateDrawerSection === 'function') navigateDrawerSection('history');
+        console.error("Order Tracking View Error:", err);
+        if (typeof navigateDrawerSection === 'function') {
+            navigateDrawerSection('history');
+        }
     }
 };
 // 🗺️ Initialize Google Maps (Store Pin, User Pin & Rider Movement Animation)
