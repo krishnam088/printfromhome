@@ -4159,8 +4159,17 @@ window.openOrderTrackingView = function(orderId) {
     }
 
     const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
-    let history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
-    const order = history.history.find ? history.find(o => o && String(o.orderId || o.id) === String(orderId)) : null;
+    let history = [];
+    
+    try {
+        let rawHistory = localStorage.getItem(`history_${sessionActiveUser}`);
+        history = rawHistory ? JSON.parse(rawHistory) : [];
+    } catch(e) {
+        history = [];
+    }
+
+    // Safe array check before calling .find()
+    const order = Array.isArray(history) ? history.find(o => o && String(o.orderId || o.id) === String(orderId)) : null;
 
     if (order) {
         setTimeout(() => {
