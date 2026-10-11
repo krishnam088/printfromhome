@@ -3698,39 +3698,7 @@ window.executeWalletRazorpayDeposit = async function() {
         alert("❌ Failed to initiate payment gateway.");
     }
 };
-// 🔥 Universal Click & Auth Action Fixer
-document.addEventListener('click', function(e) {
-    const target = e.target;
-    
-    // 1. Logout Handler Fix
-    if (target.id === 'logoutBtn' || target.id.toLowerCase().includes('logout')) {
-        e.preventDefault();
-        localStorage.removeItem('printAppUser');
-        localStorage.removeItem('printAppUserIdentity');
-        alert("✅ Logged out successfully!");
-        location.reload();
-    }
-    
-    // 2. Forgot Password Handler Fix
-    if (target.id === 'toggleAuthLink' || target.textContent.toLowerCase().includes('forgot')) {
-        // Handle toggle or forgot password modal safely
-        const authTitle = document.getElementById('authTitle');
-        if (authTitle) authTitle.textContent = "Reset Password";
-    }
-});
-// 🔥 Missing Password Reset Function Fix
-window.initiatePasswordReset = function() {
-    const emailInput = document.getElementById('authEmailInput') || document.getElementById('authIdentity');
-    const email = emailInput ? emailInput.value.trim() : '';
-    
-    if (!email) {
-        alert("⚠️ Please enter your email or phone number first to reset password!");
-        if (emailInput) emailInput.focus();
-        return;
-    }
-    
-    alert(`✅ Password reset instructions sent to ${email} (Demo Mode).`);
-};
+
 // 🔥 Fix Hidden Invalid Form Control Focus Errors
 document.addEventListener('DOMContentLoaded', () => {
     const hiddenInputs = document.querySelectorAll('form input[required], form select[required], form textarea[required]');
@@ -3788,5 +3756,119 @@ document.addEventListener('click', function(e) {
     if (target.id === 'toggleAuthLink' || target.textContent.toLowerCase().includes('forgot')) {
         const authTitle = document.getElementById('authTitle');
         if (authTitle) authTitle.textContent = "Reset Password";
+    }
+});
+// ==========================================
+// 🔥 COMPLETE WORKING AUTHENTICATION & TOGGLE ENGINE
+// ==========================================
+
+window.isSignupActive = false;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const authForm = document.getElementById('authForm');
+    const authTitle = document.getElementById('authTitle');
+    const authBtn = document.getElementById('authBtn');
+    const toggleAuthLink = document.getElementById('toggleAuthLink');
+    const toggleMsg = document.getElementById('toggleMsg');
+    const signupOnlyFields = document.querySelectorAll('.signup-only');
+
+    // 1. Toggle between Login and Signup Mode smoothly
+    if (toggleAuthLink) {
+        toggleAuthLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.isSignupActive = !window.isSignupActive;
+
+            if (window.isSignupActive) {
+                if (authTitle) authTitle.textContent = "Create Account";
+                if (authBtn) authBtn.textContent = "Sign Up";
+                if (toggleMsg) toggleMsg.textContent = "Already have an account?";
+                toggleAuthLink.textContent = "Log In";
+                signupOnlyFields.forEach(el => el.classList.remove('hidden'));
+            } else {
+                if (authTitle) authTitle.textContent = "Welcome Back!";
+                if (authBtn) authBtn.textContent = "Log In";
+                if (toggleMsg) toggleMsg.textContent = "New to Print From Home?";
+                toggleAuthLink.textContent = "Create Account";
+                signupOnlyFields.forEach(el => el.classList.add('hidden'));
+            }
+        });
+    }
+
+    // 2. Handle Form Submission for Database Login & Signup
+    if (authForm) {
+        authForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const identityInput = document.getElementById('authIdentity');
+            const passwordInput = document.getElementById('authPassword');
+            
+            const identity = identityInput ? identityInput.value.trim() : '';
+            const password = passwordInput ? passwordInput.value.trim() : '';
+
+            if (!identity || !password) {
+                alert("⚠️ Please enter mobile number and password!");
+                return;
+            }
+
+            try {
+                if (window.isSignupActive) {
+                    // --- SIGNUP FLOW ---
+                    const nameInput = document.getElementById('authName');
+                    const emailInput = document.getElementById('authEmailInput');
+                    
+                    const name = nameInput ? nameInput.value.trim() : 'Customer';
+                    const email = emailInput ? emailInput.value.trim() : '';
+
+                    if (!email) {
+                        alert("⚠️ Please enter your Gmail address for notifications!");
+                        return;
+                    }
+
+                    const response = await fetch('/api/auth/signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, identity, email, password })
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        alert("🎉 Account created successfully! Please log in with your number and password.");
+                        // Switch back to login view automatically
+                        window.isSignupActive = false;
+                        if (authTitle) authTitle.textContent = "Welcome Back!";
+                        if (authBtn) authBtn.textContent = "Log In";
+                        if (toggleMsg) toggleMsg.textContent = "New to Print From Home?";
+                        if (toggleAuthLink) toggleAuthLink.textContent = "Create Account";
+                        signupOnlyFields.forEach(el => el.classList.add('hidden'));
+                        authForm.reset();
+                    } else {
+                        alert(`❌ ${data.message || 'Signup failed'}`);
+                    }
+
+                } else {
+                    // --- LOGIN FLOW ---
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ identity, password })
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        localStorage.setItem('printAppUser', data.name);
+                        localStorage.setItem('printAppUserIdentity', data.identity);
+                        if (data.email) localStorage.setItem('printAppUserEmail', data.email);
+
+                        alert("✅ Login Successful!");
+                        location.reload(); // Reload to enter main app dashboard
+                    } else {
+                        alert(`❌ ${data.message || 'Invalid mobile number or password!'}`);
+                    }
+                }
+            } catch (err) {
+                console.error("Auth Error:", err);
+                alert("❌ Server connection error during authentication.");
+            }
+        });
     }
 });
