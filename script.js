@@ -461,33 +461,11 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
 window.openOrderTrackingView = function(orderId) {
     try {
         const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
-        const sessionActiveIdentity = localStorage.getItem('printAppUserIdentity') || '';
-        
-        let history = [];
-        const possibleKeys = [
-            `history_${sessionActiveUser}`,
-            `history_${sessionActiveIdentity}`,
-            'history_Customer'
-        ];
-
-        for (let key of possibleKeys) {
-            try {
-                let data = JSON.parse(localStorage.getItem(key) || '[]');
-                if (Array.isArray(data) && data.length > 0) {
-                    history = data;
-                    break;
-                }
-            } catch (e) {}
-        }
-
+        let history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
         const order = history.find(o => o && String(o.orderId || o.id) === String(orderId));
         
         if (!order) {
-            if (typeof showAppToast === 'function') {
-                showAppToast("⚠️ Order details not found.", "error");
-            } else {
-                alert("⚠️ Order details not found.");
-            }
+            alert("⚠️ Order details not found.");
             if (typeof navigateDrawerSection === 'function') navigateDrawerSection('history');
             return;
         }
@@ -496,56 +474,17 @@ window.openOrderTrackingView = function(orderId) {
             navigateDrawerSection('order_tracking');
         }
 
-        const idHeader = document.getElementById('trackOrderIdHeader');
-        const totalBadge = document.getElementById('trackGrandTotalBadge');
-        const statusBadge = document.getElementById('liveOrderStatusBadge');
-        const manifestList = document.getElementById('trackFilesManifestList');
-        const addressLabel = document.getElementById('trackShippingAddressLabel');
-        const riderNameNode = document.getElementById('deliveryExecutiveName');
-        const riderPhoneNode = document.getElementById('deliveryExecutivePhone');
-
-        if (idHeader) idHeader.textContent = `Order #${order.orderId || order.id || 'N/A'}`;
-        if (totalBadge) totalBadge.textContent = `₹${order.amount || order.totalAmount || '0.00'}`;
-        if (addressLabel) addressLabel.textContent = order.address || 'Varanasi Delivery Address';
-        if (statusBadge) statusBadge.textContent = order.status || 'Your order is getting ready...';
-
-        if (riderNameNode) {
-            if (order.assignedDeliveryBoy) {
-                riderNameNode.textContent = `Delivery Partner: Agent (${order.assignedDeliveryBoy})`;
-                if (riderPhoneNode) riderPhoneNode.textContent = `📞 ${order.assignedDeliveryBoy}`;
-            } else {
-                riderNameNode.textContent = "Your order is getting ready...";
-                if (riderPhoneNode) riderPhoneNode.textContent = "Will be assigned shortly";
-            }
-        }
-
-        if (manifestList) {
-            let detailsArray = order.details || order.configDetails || [];
-            if (typeof detailsArray === 'string') {
-                try { detailsArray = JSON.parse(detailsArray); } catch(e) { detailsArray = []; }
-            }
-
-            if (Array.isArray(detailsArray) && detailsArray.length > 0) {
-                manifestList.innerHTML = detailsArray.map(item => {
-                    let itemName = item.fileName || item.name || 'Print Item';
-                    let itemCopies = item.copies || item.qty || 1;
-                    let itemPrice = item.price || 3;
-                    return `
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#334155; background:#f8fafc; padding:6px 10px; border-radius:8px;">
-                            <span>📄 ${itemName} (×${itemCopies})</span>
-                            <b style="color:#065f46;">₹${itemPrice * itemCopies}</b>
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                manifestList.innerHTML = `<p style="font-size:0.75rem; color:#64748b; text-align:center;">No item manifest recorded.</p>`;
-            }
-        }
+        // Safely update tracking DOM elements with fallbacks
+        const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        
+        setText('trackOrderIdHeader', `Order #${order.orderId || order.id || 'N/A'}`);
+        setText('trackGrandTotalBadge', `₹${order.amount || order.totalAmount || '0.00'}`);
+        setText('liveOrderStatusBadge', order.status || 'Your order is getting ready...');
+        setText('trackShippingAddressLabel', order.address || 'Varanasi Delivery Address');
+        
     } catch (err) {
-        console.error("Order Tracking View Error:", err);
-        if (typeof navigateDrawerSection === 'function') {
-            navigateDrawerSection('history');
-        }
+        console.error("Tracking View Error:", err);
+        if (typeof navigateDrawerSection === 'function') navigateDrawerSection('history');
     }
 };
 // 🗺️ Initialize Google Maps (Store Pin, User Pin & Rider Movement Animation)
@@ -3694,7 +3633,7 @@ window.setWalletQuickAmount = function(amount) {
 window.executeWalletRazorpayDeposit = async function() {
     const input = document.getElementById('walletCustomAmountInput');
     const amount = parseFloat(input ? input.value : 100);
-    
+
     if (isNaN(amount) || amount <= 0) {
         alert("⚠️ Please enter a valid amount to add!");
         return;
@@ -3707,23 +3646,75 @@ window.executeWalletRazorpayDeposit = async function() {
     }
 
     try {
-        // Local Wallet Balance Update & Synchronization
-        let currentBalance = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
-        let newBalance = currentBalance + amount;
-        
-        localStorage.setItem(`wallet_cash_${sessionActiveUser}`, newBalance.toFixed(2));
-        
-        if (typeof synchronizeWalletInterfaceBalance === 'function') {
-            synchronizeWalletInterfaceBalance();
-        }
-        
-        if (typeof toggleWalletPopupGrid === 'function') {
-            toggleWalletPopupGrid(false);
+        // 1. Initialize order on backend for wallet top-up
+        const formData = new FormData();
+        formData.append('totalAmount', amount.toFixed(2));
+        formData.append('customerName', sessionActiveUser);
+        formData.append('paymentMode', 'wallet_recharge');
+
+        const response = await fetch('/api/create-order', { method: 'POST', body: formData });
+        const data = await response.json();
+
+        if (!data.success) {
+            alert(`⚠️ Error: ${data.message || 'Failed to initialize payment'}`);
+            return;
         }
 
-        alert(`🎉 Success! Added ₹${amount.toFixed(2)} to your Print Wallet. New Balance: ₹${newBalance.toFixed(2)}`);
+        // 2. Open Razorpay Gateway
+        const options = {
+            key: data.key_id,
+            amount: data.amount,
+            currency: 'INR',
+            name: 'Print From Home',
+            description: 'Wallet Recharge',
+            order_id: data.rzp_order_id,
+            handler: function (response) {
+                // 3. Success -> Add money to local wallet balance
+                let currentBalance = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
+                let newBalance = currentBalance + amount;
+                localStorage.setItem(`wallet_cash_${sessionActiveUser}`, newBalance.toFixed(2));
+
+                if (typeof synchronizeWalletInterfaceBalance === 'function') {
+                    synchronizeWalletInterfaceBalance();
+                }
+                alert(`🎉 Payment Successful! Added ₹${amount.toFixed(2)} to your Print Wallet. New Balance: ₹${newBalance.toFixed(2)}`);
+            },
+            modal: {
+                ondismiss: function() {
+                    alert('⚠️ Payment cancelled.');
+                }
+            },
+            theme: { color: '#065f46' }
+        };
+
+        if (typeof Razorpay !== 'undefined') {
+            const rzp = new Razorpay(options);
+            rzp.open();
+        } else {
+            alert('⚠️ Razorpay SDK not loaded.');
+        }
     } catch (err) {
-        console.error("Wallet deposit error:", err);
-        alert("❌ Failed to add money to wallet.");
+        console.error("Wallet deposit gateway error:", err);
+        alert("❌ Failed to initiate payment gateway.");
     }
 };
+// 🔥 Universal Click & Auth Action Fixer
+document.addEventListener('click', function(e) {
+    const target = e.target;
+    
+    // 1. Logout Handler Fix
+    if (target.id === 'logoutBtn' || target.id.toLowerCase().includes('logout')) {
+        e.preventDefault();
+        localStorage.removeItem('printAppUser');
+        localStorage.removeItem('printAppUserIdentity');
+        alert("✅ Logged out successfully!");
+        location.reload();
+    }
+    
+    // 2. Forgot Password Handler Fix
+    if (target.id === 'toggleAuthLink' || target.textContent.toLowerCase().includes('forgot')) {
+        // Handle toggle or forgot password modal safely
+        const authTitle = document.getElementById('authTitle');
+        if (authTitle) authTitle.textContent = "Reset Password";
+    }
+});
