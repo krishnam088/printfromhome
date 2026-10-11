@@ -3718,3 +3718,16 @@ document.addEventListener('click', function(e) {
         if (authTitle) authTitle.textContent = "Reset Password";
     }
 });
+// 🔥 Missing Password Reset Function Fix
+window.initiatePasswordReset = function() {
+    const emailInput = document.getElementById('authEmailInput') || document.getElementById('authIdentity');
+    const email = emailInput ? emailInput.value.trim() : '';
+    
+    if (!email) {
+        alert("⚠️ Please enter your email or phone number first to reset password!");
+        if (emailInput) emailInput.focus();
+        return;
+    }
+    
+    alert(`✅ Password reset instructions sent to ${email} (Demo Mode).`);
+};
