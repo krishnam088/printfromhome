@@ -1331,6 +1331,63 @@ app.post('/api/admin/settings/update', async (req, res) => {
     }
 });
 
+// ==========================================
+// 📍 ADMIN LIVE GPS LOCATION TRACKING ENDPOINTS
+// ==========================================
+let activeAdminLocations = {};
+
+// 1. Admin device updates its current GPS location
+app.post('/api/admin/update-location', (req, res) => {
+    try {
+        const { orderId, lat, lng } = req.body;
+        if (lat && lng) {
+            const targetOrderId = orderId || 'default';
+            activeAdminLocations[targetOrderId] = { 
+                lat: Number(lat), 
+                lng: Number(lng), 
+                timestamp: Date.now() 
+            };
+            return res.json({ success: true, message: "Admin location updated successfully" });
+        }
+        res.status(400).json({ success: false, message: "Latitude and Longitude are required" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2. User tracking page fetches admin live GPS location
+app.get('/api/admin/live-location', (req, res) => {
+    try {
+        const { orderId } = req.query;
+        let locationData = (orderId && activeAdminLocations[orderId]) ? activeAdminLocations[orderId] : null;
+
+        // Fallback to latest active admin location if specific orderId not found
+        if (!locationData) {
+            const keys = Object.keys(activeAdminLocations);
+            if (keys.length > 0) {
+                locationData = activeAdminLocations[keys[keys.length - 1]];
+            }
+        }
+
+        if (locationData) {
+            return res.json({
+                success: true,
+                lat: locationData.lat,
+                lng: locationData.lng
+            });
+        }
+
+        // Default to store location (Varanasi Store) if no GPS broadcasted yet
+        res.json({
+            success: true,
+            lat: 25.3451,
+            lng: 83.0012
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
