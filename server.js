@@ -113,6 +113,7 @@ const DeliveryBoy = mongoose.model('DeliveryBoy', deliveryBoySchema);
 
 const storeConfigSchema = new mongoose.Schema({
     isOpen: { type: Boolean, default: true },
+    printEnabled: { type: Boolean, default: true }, // 🔥 New Print Switch Flag
     rainSurgeActive: { type: Boolean, default: false },
     updatedAt: String
 });
@@ -289,13 +290,29 @@ app.get('/api/store-status', async (req, res) => {
         const isTimeWithinOperatingHours = istHours >= 7 && istHours < 22;
         const finalIsOpen = isTimeWithinOperatingHours && config.isOpen;
 
-        res.json({ 
+       res.json({ 
             success: true, 
             isOpen: finalIsOpen, 
+            printEnabled: config.printEnabled, // 🔥 Send print status to frontend
             manualOverride: config.isOpen, 
             rainSurgeActive: config.rainSurgeActive, 
             currentIstHour: istHours 
         });
+        const handlePrintToggle = async (req, res) => {
+    try {
+        const { printEnabled } = req.body;
+        let config = await StoreConfig.findOne();
+        if (!config) { config = new StoreConfig(); }
+        config.printEnabled = Boolean(printEnabled);
+        config.updatedAt = new Date().toISOString();
+        await config.save();
+        res.json({ success: true, printEnabled: config.printEnabled });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+
+app.post('/api/admin/toggle-print', handlePrintToggle);
     } catch (err) {
         res.status(500).json({ success: false, isOpen: true, error: err.message });
     }
@@ -1048,6 +1065,16 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             parsedConfig = [];
         }
 
+        // 🔥 YAHAN PAR PRINT SERVICE TOGGLE CHECK ADD KAREIN:
+        const hasPrintJobs = Array.isArray(parsedConfig) && parsedConfig.some(item => item.printType !== 'snack' && item.printType !== 'product' && (!item.fileName || !item.fileName.startsWith('Product:')));
+        const isPrintAllowed = config ? config.printEnabled !== false : true;
+
+        if (hasPrintJobs && !isPrintAllowed) {
+            return res.status(403).json({ 
+                success: false, 
+                message: "⚠️ Printing service is currently temporarily OFF due to technical maintenance. Please try again later." 
+            });
+        }
         if (Array.isArray(parsedConfig)) {
             for (const item of parsedConfig) {
                 if (item.printType === 'snack' || item.printType === 'product' || (item.fileName && String(item.fileName).startsWith('Product:'))) {
@@ -1083,7 +1110,6 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
         const primaryUrl = filesMappedList.length > 0 ? filesMappedList[0].url : '';
         const primaryName = filesMappedList.length > 0 ? filesMappedList[0].name : (parsedConfig[0]?.fileName || 'Document.pdf');
 
-        const hasPrintJobs = parsedConfig.some(item => item.printType !== 'snack' && item.printType !== 'product' && (!item.fileName || !item.fileName.startsWith('Product:')));
         const initialOrderStatus = hasPrintJobs ? 'Ready for Print' : 'Processing';
 
         let calculatedDeliveryFee = finalAmountNumeric >= 99 ? 0 : 25;
