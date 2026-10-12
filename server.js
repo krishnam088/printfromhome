@@ -612,16 +612,27 @@ app.post('/api/admin/send-notification', async (req, res) => {
 });
 
 const festivalCalendar = {
-    "23-01": { subject: "Happy Vasant Panchami: Celebrate with Exclusive Prints!", message: "Wishing you a auspicious Vasant Panchami! May Goddess Saraswati bring wisdom and creativity into your life." },
-    "15-02": { subject: "Happy Maha Shivaratri: Special Blessings & Offers!", message: "Wishing you a blessed Maha Shivaratri! May Lord Shiva fulfill all your wishes." },
-    "04-03": { subject: "Happy Holi: Add Vibrant Colors to Your Prints!", message: "Wishing you and your family a very Happy and Colorful Holi!" },
-    "26-03": { subject: "Happy Ram Navami: Auspicious Greetings from Print From Home!", message: "Happy Ram Navami! May Lord Rama shower his divine blessings upon you." },
-    "15-08": { subject: "Happy Independence Day: Special Printing Deals!", message: "Happy Independence Day! Celebrate the spirit of freedom with special patriotic prints." },
-    "08-11": { subject: "Happy Diwali: Exclusive Festive Printing Deals for You!", message: "We are excited to share our latest festive calendar deals with you! Enjoy exclusive discounts this Diwali." },
-    "25-12": { subject: "Merry Christmas & Happy Holidays!", message: "Merry Christmas from Print From Home! Enjoy special year-end discounts on all custom printing services." },
-    "01-01": { subject: "Happy New Year: Exclusive Calendar Offers!", message: "Happy New Year! Start your year right with our brand new custom calendars." }
+    "2026-01-14_2026-01-14": { key: "sankranti", name: "Makar Sankranti / Pongal", subject: "Happy Makar Sankranti! Festive Sweet Offers!", message: "Wishing you a joyful harvest season filled with warmth and sweet moments! Enjoy flat 15% off on all prints today." },
+    "2026-01-26_2026-01-26": { key: "republic_day", name: "Republic Day", subject: "Happy Republic Day: Celebrate with Pride!", message: "Honor the spirit of our nation with special patriotic prints and exclusive flat deals!" },
+    "2026-01-23_2026-01-23": { key: "vasant_panchami", name: "Vasant Panchami", subject: "Happy Vasant Panchami: Wisdom & Creativity!", message: "May Goddess Saraswati bring wisdom and creativity into your life. Celebrate with exclusive study prints!" },
+    "2026-02-14_2026-02-14": { key: "valentine", name: "Valentine's Day", subject: "Happy Valentine's Day: Create Special Memories!", message: "Celebrate love and bonds with personalized photo prints, custom frames, and heartfelt gifts!" },
+    "2026-02-15_2026-02-15": { key: "shivaratri", name: "Maha Shivaratri", subject: "Blessed Maha Shivaratri: Special Blessings!", message: "Wishing you a blessed Maha Shivaratri! May Lord Shiva fulfill all your wishes and bring inner peace." },
+    "2026-03-19_2026-03-27": { key: "navratri", name: "Chaitra Navratri Start", subject: "Happy Chaitra Navratri: Auspicious Beginnings!", message: "May Maa Durga fill your home with strength, joy, and prosperity. Enjoy 9 days of special festive offers!" },
+    "2026-03-27_2026-03-27": { key: "ram_navami", name: "Ram Navami", subject: "Happy Ram Navami: Divine Blessings!", message: "Happy Ram Navami! May Lord Rama shower his divine blessings of peace and righteousness upon you." },
+    "2026-03-30_2026-03-30": { key: "gudi_padwa", name: "Gudi Padwa / Ugadi", subject: "Happy New Year Greetings & Prosperity!", message: "Wishing you a prosperous and bright New Year! May this year bring immense joy and success." },
+    "2026-04-14_2026-04-14": { key: "baisakhi", name: "Baisakhi & Ambedkar Jayanti", subject: "Joyous Baisakhi & Ambedkar Jayanti Greetings!", message: "Warmest greetings on the joyous occasion of Baisakhi! Celebrate with our fast delivery services." },
+    "2026-05-10_2026-05-10": { key: "akshaya_tritiya", name: "Akshaya Tritiya", subject: "Happy Akshaya Tritiya: Endless Prosperity!", message: "May this auspicious day bring endless prosperity and good fortune to your home and business." },
+    "2026-06-07_2026-06-07": { key: "eid", name: "Eid-ul-Adha", subject: "Blessed Eid-ul-Adha Greetings!", message: "Wishing you and your loved ones a blessed Eid filled with peace, happiness, and sweet gatherings." },
+    "2026-08-14_2026-08-15": { key: "independence_day", name: "Independence Day", subject: "Happy Independence Day: Special Freedom Deals!", message: "Celebrate the spirit of freedom with special patriotic prints and flat delivery discounts." },
+    "2026-08-27_2026-08-27": { key: "ganesh_chaturthi", name: "Ganesh Chaturthi", subject: "Happy Ganesh Chaturthi: Blessings of Bappa!", message: "May Lord Ganesha remove all obstacles and shower your home with wisdom and luck!" },
+    "2026-09-05_2026-09-05": { key: "teachers_day", name: "Teachers' Day", subject: "Happy Teachers' Day: Honor Your Mentors!", message: "Show gratitude to your teachers with custom-printed greeting cards, photo frames, and certificates." },
+    "2026-10-05_2026-10-05": { key: "dussehra", name: "Dussehra (Vijayadashami)", subject: "Happy Dussehra: Triumph of Good over Evil!", message: "Wishing you a victorious and joyful Dussehra! May righteousness always prevail in your life." },
+    "2026-10-11_2026-10-22": { key: "diwali_season", name: "Navratri to Diwali Festive Season", subject: "Exclusive Festive Printing & Gift Deals!", message: "Light up your celebrations! Enjoy exclusive discounts on custom photo calendars and gifts this festive season." },
+    "2026-10-22_2026-10-22": { key: "bhai_dooj", name: "Bhai Dooj", subject: "Happy Bhai Dooj: Celebrate Sibling Bonds!", message: "Celebrate the sacred bond of love and protection with special personalized gifts delivered in 15 minutes!" },
+    "2026-10-27_2026-10-27": { key: "chhath", name: "Chhath Puja", subject: "Blessed Chhath Puja Greetings!", message: "Wishing you and your family a blessed Chhath Puja filled with purity, devotion, and divine grace." },
+    "2026-12-24_2026-12-25": { key: "christmas", name: "Christmas & Year-End", subject: "Merry Christmas & Happy Holidays!", message: "Merry Christmas from Print From Home! Enjoy special year-end discounts on all custom printing services." },
+    "2026-12-31_2027-01-01": { key: "new_year", name: "New Year Celebration", subject: "Happy New Year: Exclusive Calendar Offers!", message: "Happy New Year! Start your year right with our brand new custom calendars and planners." }
 };
-
 app.get('/api/admin/festival-templates', (req, res) => {
     try {
         res.json({ success: true, templates: festivalCalendar });
