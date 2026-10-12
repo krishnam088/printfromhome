@@ -1550,6 +1550,53 @@
                 console.warn("Stream warning:", err);
             }
         }
+        let adminPrintServiceActive = true;
+
+        async function fetchAdminPrintStatus() {
+            try {
+                const res = await fetch('/api/store-status');
+                const data = await res.json();
+                if (data.success !== undefined && data.printEnabled !== undefined) {
+                    adminPrintServiceActive = data.printEnabled;
+                    updatePrintSwitchButtonUI();
+                }
+            } catch (e) {}
+        }
+
+        async function toggleAdminPrintSwitch() {
+            const nextState = !adminPrintServiceActive;
+            try {
+                const res = await fetch('/api/admin/toggle-print', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ printEnabled: nextState })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    adminPrintServiceActive = data.printEnabled;
+                    updatePrintSwitchButtonUI();
+                }
+            } catch (e) {
+                adminPrintServiceActive = nextState;
+                updatePrintSwitchButtonUI();
+            }
+        }
+
+        function updatePrintSwitchButtonUI() {
+            const btn = document.getElementById('printToggleBtn');
+            const txt = document.getElementById('printSwitchStateText');
+            if (adminPrintServiceActive) {
+                if (btn) btn.className = "toggle-badge-btn btn-autoprint-on";
+                if (txt) txt.textContent = "ON";
+            } else {
+                if (btn) btn.className = "toggle-badge-btn btn-store-closed";
+                if (txt) txt.textContent = "OFF (Maintenance)";
+            }
+        }
+
+        // Call status sync on load
+        fetchAdminPrintStatus();
+        setInterval(fetchAdminPrintStatus, 4000);
 
         function buildOrderCardHtml(order) {
             let printFilesList = [];
