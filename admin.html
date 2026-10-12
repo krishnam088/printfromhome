@@ -599,6 +599,36 @@
     </div>
 
     <script>
+        async function fetchAdminRegisteredUsers() {
+    try {
+        const res = await fetch('/api/admin/users');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.users)) {
+            const badge = document.getElementById('adminUsersCountBadge');
+            if (badge) badge.textContent = `Total Users: ${data.count}`;
+            
+            const tbody = document.getElementById('adminUsersTableBody');
+            if (!tbody) return;
+            
+            if (data.users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-sub); padding: 30px;">No registered users found yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.users.map((u, idx) => `
+                <tr>
+                    <td><b>${idx + 1}</b></td>
+                    <td style="font-weight: 800; color: white;">👤 ${u.name || 'N/A'}</td>
+                    <td><code>${u.identity || 'N/A'}</code></td>
+                    <td style="color: #38bdf8;">📧 ${u.email || 'Not Provided'}</td>
+                    <td style="color: var(--text-sub); font-size: 0.78rem;">${u.dateCreated || 'N/A'}</td>
+                </tr>
+            `).join('');
+        }
+    } catch (err) {
+        console.error("Failed to load users:", err);
+    }
+}
         let cachedInventoryList = [];
         let html5QrCodeScanner = null;
         let globalLiveOrdersCache = [];
