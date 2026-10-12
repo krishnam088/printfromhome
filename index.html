@@ -17,81 +17,113 @@
     <!-- Real Google Maps API with Places Library -->
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD0sBBjAZe6d-4BJFyS9GygJPyT9Vun80Q&libraries=places"></script>
     
-    
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const todayStr = `${year}-${month}-${day}`;
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const todayStr = `${year}-${month}-${day}`;
 
-        // Define Festive Ranges (StartDate to EndDate) with automatic 11:59 PM rollover behavior
-        const activeFestiveRanges = [
-            {
-                start: "2026-10-11", end: "2026-10-22",
-                name: "Navratri & Diwali Fest 🪔",
-                bg: "linear-gradient(135deg, #78350f 0%, #b45309 100%)",
-                manifest: "/manifest-festive.json",
-                greeting: "🪔✨ Festive Season Live! Special Discounts on Custom Prints & Gifts!"
-            },
-            {
-                start: "2026-03-19", end: "2026-03-27",
-                name: "Chaitra Navratri 🌸",
-                bg: "linear-gradient(135deg, #b45309 0%, #9333ea 100%)",
-                manifest: "/manifest-festive.json",
-                greeting: "🌸🙏 Happy Navratri! Special Auspicious Blessings & Offers Active!"
-            },
-            {
-                start: "2026-08-14", end: "2026-08-15",
-                name: "Independence Day 🇮🇳",
-                bg: "linear-gradient(135deg, #1e3a8a 0%, #065f46 100%)",
-                manifest: "/manifest.json",
-                greeting: "🇮🇳✨ Happy Independence Day! Special Patriotic Deals Live!"
-            },
-            {
-                start: "2026-12-24", end: "2026-12-25",
-                name: "Christmas 🎄",
-                bg: "linear-gradient(135deg, #991b1b 0%, #065f46 100%)",
-                manifest: "/manifest.json",
-                greeting: "🎄🎁 Merry Christmas! Enjoy Year-End Special Discounts!"
-            },
-            {
-                start: "2026-12-31", end: "2027-01-01",
-                name: "New Year 🌟",
-                bg: "linear-gradient(135deg, #0f172a 0%, #b45309 100%)",
-                manifest: "/manifest.json",
-                greeting: "🌟✨ Happy New Year! Grab Your Custom Calendars & Planners!"
+            // Define Festive Ranges with corresponding CSS theme class names and animation triggers
+            const activeFestiveRanges = [
+                {
+                    start: "2026-10-11", end: "2026-10-22",
+                    name: "Navratri & Diwali Fest 🪔",
+                    bg: "linear-gradient(135deg, #78350f 0%, #b45309 100%)",
+                    themeClass: "theme-festive-diwali",
+                    manifest: "/manifest-festive.json",
+                    greeting: "🪔✨ Festive Season Live! Special Discounts on Custom Prints & Gifts!"
+                },
+                {
+                    start: "2026-03-19", end: "2026-03-27",
+                    name: "Chaitra Navratri 🌸",
+                    bg: "linear-gradient(135deg, #b45309 0%, #9333ea 100%)",
+                    themeClass: "theme-festive-diwali",
+                    manifest: "/manifest-festive.json",
+                    greeting: "🌸🙏 Happy Navratri! Special Auspicious Blessings & Offers Active!"
+                },
+                {
+                    start: "2026-08-14", end: "2026-08-15",
+                    name: "Independence Day 🇮🇳",
+                    bg: "linear-gradient(135deg, #1e3a8a 0%, #065f46 100%)",
+                    themeClass: "theme-festive-republic",
+                    manifest: "/manifest.json",
+                    greeting: "🇮🇳✨ Happy Independence Day! Special Patriotic Deals Live!"
+                },
+                {
+                    start: "2026-12-24", end: "2026-12-25",
+                    name: "Christmas 🎄",
+                    bg: "linear-gradient(135deg, #991b1b 0%, #065f46 100%)",
+                    themeClass: "theme-festive-christmas",
+                    manifest: "/manifest.json",
+                    greeting: "🎄🎁 Merry Christmas! Enjoy Year-End Special Discounts!"
+                },
+                {
+                    start: "2026-12-31", end: "2027-01-01",
+                    name: "New Year 🌟",
+                    bg: "linear-gradient(135deg, #0f172a 0%, #b45309 100%)",
+                    themeClass: "theme-festive-diwali",
+                    manifest: "/manifest.json",
+                    greeting: "🌟✨ Happy New Year! Grab Your Custom Calendars & Planners!"
+                }
+            ];
+
+            let currentActiveFestival = activeFestiveRanges.find(fest => {
+                return todayStr >= fest.start && todayStr <= fest.end;
+            });
+
+            // Handle Manifest Tag Injection
+            const manifestTag = document.createElement('link');
+            manifestTag.rel = 'manifest';
+            manifestTag.href = currentActiveFestival ? currentActiveFestival.manifest : '/manifest.json';
+            document.head.appendChild(manifestTag);
+
+            if (currentActiveFestival) {
+                // Apply CSS Theme Class for Background & Card Overrides
+                document.body.classList.add(currentActiveFestival.themeClass);
+
+                const headerEl = document.querySelector('.brand-premium-header');
+                if (headerEl) {
+                    headerEl.style.background = currentActiveFestival.bg;
+                    headerEl.style.color = '#ffffff';
+                }
+
+                const greetingEl = document.getElementById('userGreeting');
+                if (greetingEl) {
+                    greetingEl.innerHTML = `🎉 ${currentActiveFestival.name} ACTIVE!`;
+                }
+
+                // 🔥 Trigger Floating Particle Animations (Fireworks for Diwali / Snow for Christmas)
+                let animContainer = document.getElementById('festivalAnimationContainer');
+                if (!animContainer) {
+                    animContainer = document.createElement('div');
+                    animContainer.id = 'festivalAnimationContainer';
+                    document.body.appendChild(animContainer);
+                }
+
+                const particleCount = currentActiveFestival.themeClass === 'theme-festive-diwali' ? 30 : 40;
+                for (let i = 0; i < particleCount; i++) {
+                    const p = document.createElement('div');
+                    p.className = currentActiveFestival.themeClass === 'theme-festive-diwali' ? 'firework-spark' : 'festive-particle';
+                    p.style.left = `${Math.random() * 100}vw`;
+                    p.style.top = `${Math.random() * -50}vh`;
+                    p.style.animationDuration = `${1.5 + Math.random() * 3}s`;
+                    p.style.animationDelay = `${Math.random() * 2}s`;
+                    if(p.className === 'festive-particle') {
+                        p.style.width = `${3 + Math.random() * 4}px`;
+                        p.style.height = p.style.width;
+                    }
+                    animContainer.appendChild(p);
+                }
+
+                window.isFestiveModeActive = true;
+                window.activeFestiveThemeName = currentActiveFestival.name;
             }
-        ];
-
-        let currentActiveFestival = activeFestiveRanges.find(fest => {
-            return todayStr >= fest.start && todayStr <= fest.end;
         });
+    </script>    
+    
 
-        // Handle Manifest Tag Injection
-        const manifestTag = document.createElement('link');
-        manifestTag.rel = 'manifest';
-        manifestTag.href = currentActiveFestival ? currentActiveFestival.manifest : '/manifest.json';
-        document.head.appendChild(manifestTag);
-
-        if (currentActiveFestival) {
-            const headerEl = document.querySelector('.brand-premium-header');
-            if (headerEl) {
-                headerEl.style.background = currentActiveFestival.bg;
-                headerEl.style.color = '#ffffff';
-            }
-
-            const greetingEl = document.getElementById('userGreeting');
-            if (greetingEl) {
-                greetingEl.innerHTML = `🎉 ${currentActiveFestival.name} ACTIVE!`;
-            }
-
-            window.isFestiveModeActive = true;
-            window.activeFestiveThemeName = currentActiveFestival.name;
-        }
-    });
-</script>
     <meta name="theme-color" content="#F4C430">
     <meta name="mobile-web-app-capable" content="yes">
     
