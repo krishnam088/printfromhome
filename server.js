@@ -273,7 +273,7 @@ app.get('/manifest-delivery.json', (req, res) => {
 app.get('/sw-admin.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw-admin.js')); });
 app.get('/sw.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw.js')); });
 
-// 🔥 Fully completed /api/store-status route (Fixed truncation)
+// 🔥 Fully completed /api/store-status route
 app.get('/api/store-status', async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
@@ -290,15 +290,19 @@ app.get('/api/store-status', async (req, res) => {
         const isTimeWithinOperatingHours = istHours >= 7 && istHours < 22;
         const finalIsOpen = isTimeWithinOperatingHours && config.isOpen;
 
-       res.json({ 
+        res.json({ 
             success: true, 
             isOpen: finalIsOpen, 
-            printEnabled: config.printEnabled, // 🔥 Send print status to frontend
+            printEnabled: config.printEnabled !== false, // Send print status to frontend
             manualOverride: config.isOpen, 
             rainSurgeActive: config.rainSurgeActive, 
             currentIstHour: istHours 
         });
-        const handlePrintToggle = async (req, res) => {
+    } catch (err) {
+        res.status(500).json({ success: false, isOpen: true, error: err.message });
+    }
+});
+const handlePrintToggle = async (req, res) => {
     try {
         const { printEnabled } = req.body;
         let config = await StoreConfig.findOne();
@@ -313,10 +317,6 @@ app.get('/api/store-status', async (req, res) => {
 };
 
 app.post('/api/admin/toggle-print', handlePrintToggle);
-    } catch (err) {
-        res.status(500).json({ success: false, isOpen: true, error: err.message });
-    }
-});
 
 const handleStoreToggle = async (req, res) => {
     try {
