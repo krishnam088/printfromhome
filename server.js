@@ -1322,6 +1322,16 @@ const handleStatusUpdate = async (req, res) => {
 app.post('/api/admin/orders/update-status', handleStatusUpdate);
 app.post('/api/admin/orders/:orderId/status', handleStatusUpdate);
 
+// 🔥 Admin Route to View All Registered Users
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        const users = await User.find({}).select('-password'); // Exclude passwords for security
+        res.json({ success: true, count: users.length, users });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // 🔥 Persistent Database-Backed Admin Store Settings & Fees Schema
 const storeSettingsSchema = new mongoose.Schema({
     key: { type: String, unique: true, default: 'global_settings' },
