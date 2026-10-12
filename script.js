@@ -984,6 +984,17 @@ let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || fina
 // ==========================================
 if (fileUpload) {
     fileUpload.addEventListener('change', async (event) => {
+        // 🔥 Print Service Maintenance Check
+        try {
+            const statusRes = await fetch('/api/store-status');
+            const statusData = await statusRes.json();
+            if (statusData.success && statusData.printEnabled === false) {
+                alert("⚠️ Printing service is currently temporarily OFF due to technical maintenance. Please try again later.");
+                event.target.value = '';
+                return;
+            }
+        } catch (e) {}
+
         const files = event.target.files;
         if (!files || files.length === 0) return;
         
@@ -1375,7 +1386,17 @@ window.removeCurrentStudioFile = function() {
     }
 };
 
-window.addStudioJobToCart = function() {
+window.addStudioJobToCart = async function() {
+    // 🔥 Print Service Maintenance Check for Print Studio
+    try {
+        const statusRes = await fetch('/api/store-status');
+        const statusData = await statusRes.json();
+        if (statusData.success && statusData.printEnabled === false) {
+            alert("⚠️ Printing service is currently temporarily OFF due to technical maintenance. Please try again later.");
+            return;
+        }
+    } catch (e) {}
+
     if (!window.studioMasterFiles || window.studioMasterFiles.length === 0) return;
 
     window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
