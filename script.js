@@ -3827,7 +3827,7 @@ window.initiatePasswordReset = async function() {
     const identity = identityInput ? identityInput.value.trim() : '';
     
     if (!identity) {
-        alert("⚠️ Please enter your registered mobile number first!");
+        alert("⚠️ Please enter your registered mobile number or Gmail first!");
         if (identityInput) identityInput.focus();
         return;
     }
@@ -3847,7 +3847,9 @@ window.initiatePasswordReset = async function() {
         const data = await response.json();
 
         if (data.success) {
-            alert("✅ Password updated successfully in database! You can now log in.");
+            alert("✅ Password updated successfully in database! Please log in with your new password.");
+            // Reset hone ke baad page reload kar dein taaki user login screen par aa jaye
+            location.reload();
         } else {
             alert(`❌ ${data.message || 'Failed to reset password'}`);
         }

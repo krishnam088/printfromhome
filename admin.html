@@ -356,13 +356,14 @@
         <div class="sidebar-brand">
             <h2>Print<span>Admin</span></h2>
         </div>
-        <ul class="sidebar-menu">
-            <li class="sidebar-item active" id="nav_dashboard" onclick="switchAdminTab('dashboard')">📊 Dashboard</li>
-            <li class="sidebar-item" id="nav_orders" onclick="switchAdminTab('orders')">📦 Orders Queue</li>
-            <li class="sidebar-item" id="nav_inventory" onclick="switchAdminTab('inventory')">📦 Inventory</li>
-            <li class="sidebar-item" id="nav_marketing" onclick="switchAdminTab('marketing')">📢 Marketing & Alerts</li>
-            <li class="sidebar-item" id="nav_fees" onclick="switchAdminTab('fees')">⚙️ Fee & Coupons Setup</li>
-        </ul>
+      <ul class="sidebar-menu">
+    <li class="sidebar-item active" id="nav_dashboard" onclick="switchAdminTab('dashboard')">📊 Dashboard</li>
+    <li class="sidebar-item" id="nav_orders" onclick="switchAdminTab('orders')">📦 Orders Queue</li>
+    <li class="sidebar-item" id="nav_inventory" onclick="switchAdminTab('inventory')">📦 Inventory</li>
+    <li class="sidebar-item" id="nav_users" onclick="switchAdminTab('users')">👥 Registered Users</li>
+    <li class="sidebar-item" id="nav_marketing" onclick="switchAdminTab('marketing')">📢 Marketing & Alerts</li>
+    <li class="sidebar-item" id="nav_fees" onclick="switchAdminTab('fees')">⚙️ Fee & Coupons Setup</li>
+</ul>
     </nav>
 
     <div class="admin-main-content">
@@ -498,6 +499,32 @@
             </div>
         </div>
 
+        <!-- TAB: REGISTERED USERS MANAGEMENT -->
+<div id="section_users" class="admin-section">
+    <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 style="font-size: 1.15rem; font-weight: 800;">👥 Registered App Users Directory</h3>
+            <span id="adminUsersCountBadge" style="background: rgba(0, 112, 243, 0.15); color: #38bdf8; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.8rem;">Total Users: 0</span>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>User Name</th>
+                        <th>Mobile Number (Identity)</th>
+                        <th>Gmail Address</th>
+                        <th>Account Created On</th>
+                    </tr>
+                </thead>
+                <tbody id="adminUsersTableBody">
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-sub); padding: 30px;">Loading users directory...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
         <!-- TAB 4: MARKETING SECTION -->
         <div id="section_marketing" class="admin-section">
             <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; max-width: 750px;">
@@ -602,12 +629,16 @@
                 document.getElementById('nav_inventory').classList.add('active');
                 document.getElementById('section_inventory').classList.add('active');
                 fetchInventoryReport();
+            } else if (tabName === 'users') {
+                document.getElementById('nav_users').classList.add('active');
+                document.getElementById('section_users').classList.add('active');
+                fetchAdminRegisteredUsers();
             } else if (tabName === 'marketing') {
                 document.getElementById('nav_marketing').classList.add('active');
                 document.getElementById('section_marketing').classList.add('active');
                 loadFestivalTemplatesFromServer();
                 loadPermanentDraft();
-                } else if (tabName === 'fees') {
+            } else if (tabName === 'fees') {
                 document.getElementById('nav_fees').classList.add('active');
                 document.getElementById('section_fees').classList.add('active');
             }
