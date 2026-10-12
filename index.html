@@ -1272,20 +1272,30 @@
             }
         }
 
-        async function checkLocalWeatherAndApplyRainSurge() {
+       async function checkLocalWeatherAndApplyRainSurge() {
             try {
+                // 1. Pehle backend ka admin manual override check karein
                 const statusRes = await fetch('/api/store-status');
                 const statusData = await statusRes.json();
                 let adminRainForced = statusData.success && statusData.rainSurgeActive === true;
 
                 let isRaining = adminRainForced;
+
+                // 2. Agar admin ne force nahi kiya, toh auto-search weather API se check karein
                 if (!adminRainForced) {
-                    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.3176&longitude=82.9739&current=precipitation,weather_code');
-                    const data = await res.json();
-                    if (data && data.current) {
-                        const precipitation = data.current.precipitation || 0; 
-                        const weatherCode = data.current.weather_code || 0;
-                        isRaining = precipitation > 0 || (weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 99);
+                    try {
+                        const weatherRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.3176&longitude=82.9739&current=precipitation,weather_code');
+                        if (weatherRes.ok) {
+                            const data = await weatherRes.json();
+                            if (data && data.current) {
+                                const precipitation = data.current.precipitation || 0; 
+                                const weatherCode = data.current.weather_code || 0;
+                                // Rain codes & precipitation check for Varanasi
+                                isRaining = precipitation > 0 || (weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 99);
+                            }
+                        }
+                    } catch (apiErr) {
+                        // Agar open-meteo down ya 503 ho, toh silent fail hone dega aur app crash nahi hogi
                     }
                 }
 
@@ -1297,14 +1307,16 @@
                     if (rainSurgeRow) rainSurgeRow.style.display = 'flex';
                     window.isRainSurgeActive = true;
                     window.rainSurgeFee = 15; 
-                    initRealRainAnimation();
+                    if (typeof initRealRainAnimation === 'function') initRealRainAnimation();
                 } else {
                     bodyEl.classList.remove('theme-rainy-season');
                     if (rainSurgeRow) rainSurgeRow.style.display = 'none';
                     window.isRainSurgeActive = false;
                     window.rainSurgeFee = 0;
                 }
-            } catch (e) {}
+            } catch (e) {
+                // Global error suppression
+            }
         }
 
         window.addEventListener('DOMContentLoaded', () => {
