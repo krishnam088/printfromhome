@@ -3821,20 +3821,41 @@ document.addEventListener('DOMContentLoaded', () => {
 // 🔥 BULLETPROOF FIXES FOR AUTH & WHITE SCREEN
 // ==========================================
 
-// 1. Missing Password Reset Function Fix
-if (typeof window.initiatePasswordReset !== 'function') {
-    window.initiatePasswordReset = function() {
-        const emailInput = document.getElementById('authEmailInput') || document.getElementById('authIdentity');
-        const email = emailInput ? emailInput.value.trim() : '';
-        
-        if (!email) {
-            alert("⚠️ Please enter your email or phone number first to reset password!");
-            if (emailInput) emailInput.focus();
-            return;
+// 🔥 Real Database Password Reset Function
+window.initiatePasswordReset = async function() {
+    const identityInput = document.getElementById('authIdentity') || document.getElementById('authEmailInput');
+    const identity = identityInput ? identityInput.value.trim() : '';
+    
+    if (!identity) {
+        alert("⚠️ Please enter your registered mobile number first!");
+        if (identityInput) identityInput.focus();
+        return;
+    }
+
+    const newPassword = prompt("Enter your new password:");
+    if (!newPassword || newPassword.trim() === "") {
+        alert("⚠️ Password cannot be empty!");
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identity, newPassword: newPassword.trim() })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            alert("✅ Password updated successfully in database! You can now log in.");
+        } else {
+            alert(`❌ ${data.message || 'Failed to reset password'}`);
         }
-        alert(`✅ Password reset instructions sent to ${email} (Demo Mode).`);
-    };
-}
+    } catch (err) {
+        console.error("Reset Password Error:", err);
+        alert("❌ Server connection error during password reset.");
+    }
+};
 
 // 2. Fix Hidden Invalid Form Control Focus Errors
 document.addEventListener('DOMContentLoaded', () => {
