@@ -364,6 +364,7 @@
     <li class="sidebar-item" id="nav_marketing" onclick="switchAdminTab('marketing')">📢 Marketing & Alerts</li>
     <li class="sidebar-item" id="nav_fees" onclick="switchAdminTab('fees')">⚙️ Fee & Coupons Setup</li>
     <li class="sidebar-item" id="nav_payouts" onclick="switchAdminTab('payouts')">🏦 Rider Payouts</li>
+   
 </ul>
     </nav>
 
@@ -404,6 +405,29 @@
                     <span class="stat-title">Total Orders (Selected Date)</span>
                     <span class="stat-num" id="statDashTotalOrders">0</span>
                 </div>
+                <!-- 🛵 Live Delivery Partners Status Card (Admin Dashboard mein add karein) -->
+<div class="admin-section active" id="section_active_riders" style="background: var(--surface-card); border-radius: 16px; padding: 22px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="font-size: 1.15rem; font-weight: 800;">🛵 Delivery Partners Live Status (Online / Offline)</h3>
+        <button type="button" onclick="fetchAdminActiveRiders()" style="background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.75rem; cursor: pointer;">🔄 Refresh Status</button>
+    </div>
+    <div style="overflow-x: auto;">
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th>Partner Name</th>
+                    <th>Mobile</th>
+                    <th>Duty Status</th>
+                    <th>Today Earnings</th>
+                    <th>Action / Quick Alert</th>
+                </tr>
+            </thead>
+            <tbody id="adminActiveRidersTableBody">
+                <tr><td colspan="5" style="text-align: center; color: var(--text-sub); padding: 20px;">Loading delivery partners...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
                 <div class="stat-card">
                     <span class="stat-title">Total Sales</span>
                     <span class="stat-num" id="statDashTotalSales" style="color: #38bdf8;">₹0</span>
@@ -1934,6 +1958,52 @@
         `).join('');
     }
 }
+
+async function fetchAdminActiveRiders() {
+    try {
+        const res = await fetch('/api/admin/riders-payouts');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.riders)) {
+            const tbody = document.getElementById('adminActiveRidersTableBody');
+            if (!tbody) return;
+            if (data.riders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-sub);">No delivery partners registered yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.riders.map(r => {
+                const onlineBadge = r.isOnline 
+                    ? `<span style="background: rgba(16,185,129,0.15); color: #10b981; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.72rem;">🟢 ONLINE</span>` 
+                    : `<span style="background: rgba(239,68,68,0.15); color: #ef4444; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.72rem;">🔴 OFFLINE</span>`;
+                
+                const whatsappMsg = encodeURIComponent(`Hello ${r.name}, please come ONLINE on the Print From Home delivery app immediately. New orders are waiting for delivery!`);
+                const whatsappLink = `https://api.whatsapp.com/send?phone=91${r.phone}&text=${whatsappMsg}`;
+
+                return `
+                    <tr>
+                        <td style="font-weight: 800; color: white;">🛵 ${r.name}</td>
+                        <td><code>${r.phone}</code></td>
+                        <td>${onlineBadge}</td>
+                        <td style="color: #38bdf8; font-weight: 700;">₹${r.earningsToday || 0}</td>
+                        <td>
+                            <a href="${whatsappLink}" target="_blank" style="background: #25D366; color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; text-decoration: none; display: inline-block;">
+                                💬 Remind on WhatsApp
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    } catch (e) {
+        console.error("Error fetching riders live status:", e);
+    }
+}
+
+// Admin panel load hote hi aur har 10 seconds mein auto-refresh ho
+window.addEventListener('DOMContentLoaded', () => {
+    fetchAdminActiveRiders();
+    setInterval(fetchAdminActiveRiders, 10000);
+});
     </script>
 </body>
 </html>
