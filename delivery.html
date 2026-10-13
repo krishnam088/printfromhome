@@ -506,19 +506,33 @@ async function saveRiderBankDetails() {
         alert("❌ Error saving bank details.");
     }
 }
-function getGoogleMapsLink(addressStr) {
-    if (!addressStr) return "https://maps.google.com";
+function getGoogleMapsLink(orderOrStr) {
+    if (!orderOrStr) return "https://maps.google.com";
     
-    // Agar address string mein lat/lng coordinates maujood hain toh unhe extract karein
-    const match = addressStr.match(/Location:\s*([-\d.]+),\s*([-\d.]+)/i);
-    if (match && match[1] && match[2]) {
-        const lat = match[1];
-        const lng = match[2];
-        // Seedha exact latitude aur longitude ka pin link bhejein
+    let addressStr = "";
+    let lat = null, lng = null;
+    
+    // Agar order object pass hua hai toh coordinates aur address nikal lein
+    if (typeof orderOrStr === 'object') {
+        lat = orderOrStr.userLat;
+        lng = orderOrStr.userLng;
+        addressStr = orderOrStr.address || "";
+    } else {
+        addressStr = String(orderOrStr);
+    }
+
+    // Agar direct lat/lng maujood hain toh wahi use karein
+    if (lat && lng) {
         return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
     }
     
-    // Fallback: Agar coordinates na mile toh text address pass karein
+    // Agar address string mein coordinates hain toh unhe extract karein
+    const match = addressStr.match(/Location:\s*([-\d.]+),\s*([-\d.]+)/i);
+    if (match && match[1] && match[2]) {
+        return `https://www.google.com/maps/search/?api=1&query=${match[1]},${match[2]}`;
+    }
+    
+    // Fallback: Text address pass karein
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressStr)}`;
 }
     </script>
