@@ -7,7 +7,11 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 
-// 🔥 Bulletproof CloudinaryStorage Import (Har version ke liye safe)
+// 🔥 Sabse pehle express app initialize karein
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Cloudinary Storage Safe Import
 const multerStorageModule = require('multer-storage-cloudinary');
 const CloudinaryStorage = multerStorageModule.CloudinaryStorage || 
                           (multerStorageModule.default && multerStorageModule.default.CloudinaryStorage) || 
