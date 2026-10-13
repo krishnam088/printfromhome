@@ -145,7 +145,8 @@
 
     <script>
         let currentAgentPhone = localStorage.getItem('delivery_agent_phone') || '';
-        let isRiderOnline = false;
+let isRiderOnline = false;
+let lastSeenOrderIdForRider = null; // 👈 Yeh line yahan add kar dein
 
         window.addEventListener('DOMContentLoaded', () => {
             if (currentAgentPhone) {
