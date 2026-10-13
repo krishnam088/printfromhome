@@ -584,7 +584,7 @@ async function sendBroadcastEmail(subject, message) {
                         <p style="font-size: 1rem; color: #0f172a; margin-top: 0;">Hello <strong>${user.name || 'Valued Customer'}</strong>,</p>
                         <p style="font-size: 0.95rem; line-height: 1.6; color: #475569; white-space: pre-line;">${message}</p>
                         <div style="margin: 25px 0; text-align: center;">
-                            <a href="https://printfromhome.onrender.com" style="background-color: #0070f3; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.95rem; display: inline-block;">Visit Store & Order Now</a>
+                            <a href="https://printfromhomes.com" style="background-color: #0070f3; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.95rem; display: inline-block;">Visit Store & Order Now</a>
                         </div>
                         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
                         <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 0;">Print From Home, Varanasi | You are receiving this update as a registered user.</p>
@@ -592,21 +592,16 @@ async function sendBroadcastEmail(subject, message) {
                 </div>
             `;
 
-            await fetch('https://api.brevo.com/v3/smtp/email', {
-                method: 'POST',
-                headers: {
-                    'accept': 'application/json',
-                    'api-key': process.env.SMTP_PASS,
-                    'content-type': 'application/json'
-                },
-                body: JSON.stringify({
-                  sender: { name: "Print From Home", email: "support@printfromhomes.com" },
-                    to: [{ email: user.email, name: user.name || 'Customer' }],
-                    subject: subject,
-                    htmlContent: personalizedHTML
-                })
+            // 🔥 Hostinger SMTP Transporter ke zariye broadcast email bhejna
+            await transporter.sendMail({
+                from: '"Print From Home Support" <support@printfromhomes.com>',
+                to: user.email,
+                subject: subject,
+                html: personalizedHTML
             });
-        } catch (innerErr) {}
+        } catch (innerErr) {
+            console.error(`Failed to send broadcast to ${user.email}:`, innerErr.message);
+        }
     }
 }
 
