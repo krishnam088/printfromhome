@@ -405,29 +405,7 @@
                     <span class="stat-title">Total Orders (Selected Date)</span>
                     <span class="stat-num" id="statDashTotalOrders">0</span>
                 </div>
-                <!-- 🛵 Live Delivery Partners Status Card (Admin Dashboard mein add karein) -->
-<div class="admin-section active" id="section_active_riders" style="background: var(--surface-card); border-radius: 16px; padding: 22px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-        <h3 style="font-size: 1.15rem; font-weight: 800;">🛵 Delivery Partners Live Status (Online / Offline)</h3>
-        <button type="button" onclick="fetchAdminActiveRiders()" style="background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.75rem; cursor: pointer;">🔄 Refresh Status</button>
-    </div>
-    <div style="overflow-x: auto;">
-        <table class="inventory-table">
-            <thead>
-                <tr>
-                    <th>Partner Name</th>
-                    <th>Mobile</th>
-                    <th>Duty Status</th>
-                    <th>Today Earnings</th>
-                    <th>Action / Quick Alert</th>
-                </tr>
-            </thead>
-            <tbody id="adminActiveRidersTableBody">
-                <tr><td colspan="5" style="text-align: center; color: var(--text-sub); padding: 20px;">Loading delivery partners...</td></tr>
-            </tbody>
-        </table>
-    </div>
-</div>
+              
                 <div class="stat-card">
                     <span class="stat-title">Total Sales</span>
                     <span class="stat-num" id="statDashTotalSales" style="color: #38bdf8;">₹0</span>
@@ -472,6 +450,29 @@
                 <div style="text-align: center; padding: 40px; color: var(--text-sub);">⏳ Connecting to live orders stream...</div>
             </div>
         </div>
+          <!-- 🛵 Live Delivery Partners Status Card (Admin Dashboard mein add karein) -->
+<div class="admin-section active" id="section_active_riders" style="background: var(--surface-card); border-radius: 16px; padding: 22px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="font-size: 1.15rem; font-weight: 800;">🛵 Delivery Partners Live Status (Online / Offline)</h3>
+        <button type="button" onclick="fetchAdminActiveRiders()" style="background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.75rem; cursor: pointer;">🔄 Refresh Status</button>
+    </div>
+    <div style="overflow-x: auto;">
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th>Partner Name</th>
+                    <th>Mobile</th>
+                    <th>Duty Status</th>
+                    <th>Today Earnings</th>
+                    <th>Action / Quick Alert</th>
+                </tr>
+            </thead>
+            <tbody id="adminActiveRidersTableBody">
+                <tr><td colspan="5" style="text-align: center; color: var(--text-sub); padding: 20px;">Loading delivery partners...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
         <!-- TAB 3: INVENTORY MANAGEMENT SECTION -->
         <div id="section_inventory" class="admin-section">
