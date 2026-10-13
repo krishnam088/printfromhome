@@ -1780,7 +1780,7 @@ app.get('/api/admin/riders-payouts', async (req, res) => {
     }
 });
 // ==========================================
-// 🛵 RIDER ASSIGNMENT, ACCEPT & DASHBOARD APIS (FIXED)
+// 🛵 RIDER ASSIGNMENT, ACCEPT & DASHBOARD APIS (VERIFIED)
 // ==========================================
 
 // 1. Admin Manual Order Assign / Status Update Route
@@ -1796,7 +1796,7 @@ app.post('/api/admin/orders/:id/status', async (req, res) => {
         if (assignedDeliveryBoy) {
             order.assignedDeliveryBoy = assignedDeliveryBoy;
             
-            // Rider ke paas bhi currentOrderId set karein taaki uske app par active order dikhe
+            // Rider ke paas bhi currentOrderId set karein taaki uske app par active order turant dikhe
             let rider = await DeliveryPartner.findOne({ phone: assignedDeliveryBoy });
             if (rider) {
                 rider.currentOrderId = order.orderId;
@@ -1827,19 +1827,20 @@ app.post('/api/rider/accept-order', async (req, res) => {
         rider.currentOrderId = orderId;
         await rider.save();
 
-        res.json({ success: true, message: "Order accepted successfully!" });
+        res.json({ success: true, message: `✅ Order #${orderId} accepted successfully!` });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// 3. Rider Dashboard Data Feed Route (Flexible Query for Incoming Orders)
+// 3. Rider Dashboard Data Feed Route
 app.get('/api/rider/dashboard/:phone', async (req, res) => {
     try {
         const { phone } = req.params;
         let rider = await DeliveryPartner.findOne({ phone });
         if (!rider) {
-            return res.status(404).json({ success: false, message: "Rider not found" });
+            rider = new DeliveryPartner({ phone, name: "Partner " + phone.slice(-4), isOnline: false });
+            await rider.save();
         }
 
         let activeOrder = null;
