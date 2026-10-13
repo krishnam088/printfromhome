@@ -36,10 +36,13 @@
 </head>
 <body>
 
-    <header class="delivery-header">
-        <div class="delivery-brand">🛵 Delivery Partner App</div>
+   <header class="delivery-header">
+    <div class="delivery-brand">🛵 Delivery Partner App</div>
+    <div style="display: flex; align-items: center; gap: 10px;">
         <div id="deliveryAgentNameBadge" style="font-size: 0.82rem; font-weight: 700; color: #94a3b8;"></div>
-    </header>
+        <button type="button" onclick="logoutDeliveryExecutive()" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">Logout</button>
+    </div>
+</header>
 
     <div id="riderOrderPopupModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:99999; align-items:center; justify-content:center; padding:20px;">
     <div style="background:#1e293b; border-radius:20px; padding:24px; width:100%; max-width:400px; text-align:center; border:2px solid #10b981;">
@@ -373,6 +376,14 @@ async function submitDeliveryAuth() {
             document.getElementById('deliveryAgentNameBadge').textContent = `Agent: ${data.name} (${data.phone})`;
             fetchRiderDashboard();
         } else { alert(`⚠️ ${data.message}`); }
+    }
+}
+function logoutDeliveryExecutive() {
+    if (confirm("⚠️ Are you sure you want to log out?")) {
+        // LocalStorage se delivery agent ka phone number remove kar dein
+        localStorage.removeItem('delivery_agent_phone');
+        // Page reload karke wapas login screen par aa jayein
+        location.reload();
     }
 }
     </script>
