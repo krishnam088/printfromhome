@@ -167,19 +167,13 @@ const razorpay = new Razorpay({
 });
 
 const transporter = nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 465,
-    secure: true,
+    host: process.env.EMAIL_HOST || 'smtp.hostinger.com',
+    port: Number(process.env.EMAIL_PORT || 465),
+    secure: process.env.EMAIL_SECURE !== 'false',
     auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    },
-    tls: {
-        rejectUnauthorized: false
-    },
-    connectionTimeout: 60000,
-    greetingTimeout: 30000,
-    socketTimeout: 60000
+        user: process.env.EMAIL_USER || 'support@printfromhomes.com',
+        pass: process.env.EMAIL_PASS || 'Ownerkrishna@2006'
+    }
 });
 
 // 🏪 10-Second Rolling Store QR Token Engine
@@ -597,7 +591,7 @@ async function sendBroadcastEmail(subject, message) {
                     'content-type': 'application/json'
                 },
                 body: JSON.stringify({
-                    sender: { name: "Print From Home", email: "printfromhomesupport@gmail.com" },
+                  sender: { name: "Print From Home", email: "support@printfromhomes.com" },
                     to: [{ email: user.email, name: user.name || 'Customer' }],
                     subject: subject,
                     htmlContent: personalizedHTML
