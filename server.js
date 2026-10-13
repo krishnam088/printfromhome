@@ -5,16 +5,19 @@ const Razorpay = require('razorpay');
 const cors = require('cors'); 
 const fs = require('fs');
 const mongoose = require('mongoose');
-const cloudinary = require('cloudinary').v2; // 👈 Yeh line wapas add kardi hai
+const cloudinary = require('cloudinary').v2;
 
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
+// 🔥 Bulletproof CloudinaryStorage Import (Har version ke liye safe)
+const multerStorageModule = require('multer-storage-cloudinary');
+const CloudinaryStorage = multerStorageModule.CloudinaryStorage || 
+                          (multerStorageModule.default && multerStorageModule.default.CloudinaryStorage) || 
+                          multerStorageModule.default || 
+                          multerStorageModule;
+
 const nodemailer = require('nodemailer');
 const cron = require('node-cron');
 const webpush = require('web-push');
 require('dotenv').config();
-
-const app = express();
-const PORT = process.env.PORT || 3000;
 
 
 app.use(cors());
