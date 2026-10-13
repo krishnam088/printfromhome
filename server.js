@@ -1442,23 +1442,86 @@ app.listen(PORT, () => {
 });
 
 // ==========================================
-// 🛵 RIDER / DELIVERY PARTNER BACKEND APIS
+// 🛵 RIDER / DELIVERY PARTNER ADVANCED SCHEMA & APIS
 // ==========================================
-
 const deliveryPartnerSchema = new mongoose.Schema({
-    phone: { type: String, unique: true },
     name: String,
-    email: { type: String, default: '' },
-    password: { type: String, default: '' },
+    phone: { type: String, unique: true },
+    email: String,
+    password: String,
     licenseNumber: { type: String, default: '' },
+    bankDetails: {
+        accountNumber: { type: String, default: '' },
+        ifscCode: { type: String, default: '' },
+        holderName: { type: String, default: '' }
+    },
     isOnline: { type: Boolean, default: false },
     currentOrderId: { type: String, default: null },
     earningsToday: { type: Number, default: 0 },
+    earningsWeekly: { type: Number, default: 0 },
     completedDeliveriesToday: { type: Number, default: 0 },
-    dateCreated: { type: String, default: '' }
+    deliveryHistory: { type: Array, default: [] }, // [{orderId, amount, date, timestamp}]
+    dateCreated: String
 });
 const DeliveryPartner = mongoose.model('DeliveryPartner', deliveryPartnerSchema);
 
+// 1. Save / Update Bank Account Details
+app.post('/api/rider/bank-details', async (req, res) => {
+    try {
+        const { phone, accountNumber, ifscCode, holderName } = req.body;
+        const rider = await DeliveryPartner.findOne({ phone });
+        if (!rider) return res.status(404).json({ success: false, message: "Rider not found" });
+
+        rider.bankDetails = { accountNumber, ifscCode, holderName };
+        await rider.save();
+        res.json({ success: true, message: "Bank details saved successfully!" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2. Complete Delivery & Record Earning (Per order earning e.g. ₹25)
+app.post('/api/rider/complete-order', async (req, res) => {
+    try {
+        const { phone, orderId } = req.body;
+        const rider = await DeliveryPartner.findOne({ phone });
+        if (!rider) return res.status(404).json({ success: false, message: "Rider not found" });
+
+        const order = await Order.findOne({ orderId });
+        let orderFee = 25; // Fixed delivery commission per order
+        if (order) {
+            order.status = 'Delivered 🟢';
+            await order.save();
+        }
+
+        rider.currentOrderId = null;
+        rider.earningsToday += orderFee;
+        rider.earningsWeekly += orderFee;
+        rider.completedDeliveriesToday += 1;
+        
+        rider.deliveryHistory.unshift({
+            orderId: orderId,
+            amount: orderFee,
+            date: new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }),
+            timestamp: new Date().toISOString()
+        });
+
+        await rider.save();
+        res.json({ success: true, message: `🎉 Delivery completed! Earned ₹${orderFee}.` });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 3. Admin Route: View All Riders Earnings & Bank Details for NEFT Payout
+app.get('/api/admin/riders-payouts', async (req, res) => {
+    try {
+        const riders = await DeliveryPartner.find({}).select('-password');
+        res.json({ success: true, riders });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 // 1. Rider Login Auth
 app.post('/api/rider/auth-login', async (req, res) => {
     try {
@@ -1660,6 +1723,43 @@ app.get('/api/rider/dashboard/:phone', async (req, res) => {
         }
 
         res.json({ success: true, rider, activeOrder, newOrders });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+// ==========================================
+// 🛵 RIDER PAYOUT & BANK DETAILS BACKEND APIS
+// ==========================================
+
+// Delivery Partner Schema Update (agar pehle se hai toh fields match kar lein)
+// Isme bankDetails aur deliveryHistory fields honi chahiye:
+/*
+  bankDetails: { accountNumber: String, ifscCode: String, holderName: String },
+  earningsToday: { type: Number, default: 0 },
+  earningsWeekly: { type: Number, default: 0 },
+  deliveryHistory: { type: Array, default: [] }
+*/
+
+// 1. Save / Update Bank Account Details
+app.post('/api/rider/bank-details', async (req, res) => {
+    try {
+        const { phone, accountNumber, ifscCode, holderName } = req.body;
+        const rider = await DeliveryPartner.findOne({ phone });
+        if (!rider) return res.status(404).json({ success: false, message: "Rider not found" });
+
+        rider.bankDetails = { accountNumber, ifscCode, holderName };
+        await rider.save();
+        res.json({ success: true, message: "Bank details saved successfully!" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2. Admin Route: View All Riders Earnings & Bank Details for NEFT Payout
+app.get('/api/admin/riders-payouts', async (req, res) => {
+    try {
+        const riders = await DeliveryPartner.find({}).select('-password');
+        res.json({ success: true, riders });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

@@ -32,7 +32,22 @@
         .btn-nav { flex: 1; background: #0284c7; color: white; padding: 10px; border-radius: 10px; border: none; font-weight: 700; font-size: 0.82rem; text-decoration: none; text-align: center; display: inline-block; }
         .btn-deliver { flex: 1; background: #10b981; color: white; padding: 10px; border-radius: 10px; border: none; font-weight: 800; font-size: 0.82rem; cursor: pointer; }
         .btn-reject { background: #ef4444; color: white; padding: 10px 16px; border-radius: 10px; border: none; font-weight: 800; font-size: 0.82rem; cursor: pointer; }
-    </style>
+   
+   body { background: #fdfbf7; color: #1e293b; }
+.delivery-header { background: #ffffff; border-bottom: 1px solid #e2e8f0; color: #0f172a; }
+.delivery-brand { color: #059669; }
+.auth-box, .order-card, .section-box { background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+.form-input { background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; }
+.customer-info { background: #f8fafc; border: 1px solid #e2e8f0; color: #334155; }
+
+.earnings-slider-container { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; margin-bottom: 16px; scrollbar-width: none; }
+.earnings-slider-container::-webkit-scrollbar { display: none; }
+.earning-card { min-width: 170px; flex: 1; background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%); border: 1px solid #fde047; border-radius: 16px; padding: 16px; scroll-snap-align: start; box-shadow: 0 3px 10px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between; }
+.earning-card.blue { background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border-color: #7dd3fc; }
+.earning-card.green { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-color: #86efac; }
+.earning-title { font-size: 0.72rem; font-weight: 800; color: #334155; text-transform: uppercase; }
+.earning-num { font-size: 1.3rem; font-weight: 900; color: #0f172a; margin-top: 6px; }
+   </style>
 </head>
 <body>
 
@@ -84,26 +99,47 @@
                 <button type="button" id="toggleDutyBtn" onclick="toggleRiderDuty()" style="background: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 10px; font-weight: 800; font-size: 0.82rem; cursor: pointer;">GO ONLINE</button>
             </div>
 
-            <!-- Earnings Stats Grid -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <span style="font-size: 0.72rem; font-weight: 700; color: #94a3b8;">TODAY'S EARNINGS</span>
-                    <div class="stat-num" id="riderEarningsText">₹0.00</div>
-                </div>
-                <div class="stat-card">
-                    <span style="font-size: 0.72rem; font-weight: 700; color: #94a3b8;">DELIVERIES DONE</span>
-                    <div class="stat-num" id="riderCompletedCountText">0</div>
-                </div>
-            </div>
+    <!-- 🔥 Earnings Slider Carousel -->
+<div class="earnings-slider-container">
+    <div class="earning-card">
+        <span class="earning-title">⚡ Live / Today</span>
+        <div class="earning-num" id="riderEarningsTodayText">₹0.00</div>
+    </div>
+    <div class="earning-card blue">
+        <span class="earning-title">📅 Weekly Earning</span>
+        <div class="earning-num" id="riderEarningsWeeklyText">₹0.00</div>
+    </div>
+    <div class="earning-card green">
+        <span class="earning-title">📦 Total Deliveries</span>
+        <div class="earning-num" id="riderCompletedCountText">0</div>
+    </div>
+</div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                <h3 style="font-size: 1.05rem; font-weight: 800;">📦 New & Active Deliveries</h3>
-                <button type="button" onclick="fetchRiderDashboard()" style="background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.75rem; cursor: pointer;">🔄 Refresh</button>
-            </div>
-            
-            <div id="riderOrdersListContainer">
-                <p style="text-align: center; color: #94a3b8; padding: 30px;">Go ONLINE above to receive delivery orders.</p>
-            </div>
+<!-- 🏦 Bank Account Setup for NEFT Payout -->
+<div class="section-box" style="padding: 16px; margin-bottom: 16px; border-radius: 16px;">
+    <h4 style="font-size: 0.9rem; font-weight: 800; margin-bottom: 8px; color: #0f172a;">🏦 Bank Account Details (For NEFT Payout)</h4>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+        <input type="text" id="bankHolderName" placeholder="Account Holder Name" class="form-input" style="margin-bottom:0; font-size:0.8rem; padding:8px;">
+        <input type="text" id="bankAccountNumber" placeholder="Account Number" class="form-input" style="margin-bottom:0; font-size:0.8rem; padding:8px;">
+        <input type="text" id="bankIfscCode" placeholder="IFSC Code" class="form-input" style="margin-bottom:0; font-size:0.8rem; padding:8px;">
+        <button type="button" onclick="saveRiderBankDetails()" style="background: #0284c7; color: white; border: none; padding: 8px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">Save Bank Details</button>
+    </div>
+</div>
+
+<!-- 📜 Date-wise Earnings & Order Breakdown History -->
+<div class="section-box" style="padding: 16px; margin-bottom: 16px; border-radius: 16px;">
+    <h4 style="font-size: 0.9rem; font-weight: 800; margin-bottom: 10px; color: #0f172a;">📜 Date-Wise Earnings Ledger</h4>
+    <div id="riderEarningsHistoryList" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+        <p style="font-size: 0.78rem; color: #64748b; text-align: center;">No completed deliveries recorded yet.</p>
+    </div>
+</div>
+
+<!-- 💬 Support & Help Section -->
+<div class="section-box" style="background: #f0fdf4; border-color: #bbf7d0; padding: 16px; margin-bottom: 16px; border-radius: 16px;">
+    <h4 style="font-size: 0.9rem; font-weight: 800; color: #16a34a; margin-bottom: 4px;">📞 Partner Support & Help</h4>
+    <p style="font-size: 0.75rem; color: #334155; margin-bottom: 8px;">Facing issues with order or store pickup? Contact support instantly.</p>
+    <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Support,%20I%20am%20a%20delivery%20partner." target="_blank" style="background: #25D366; color: white; padding: 8px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; text-decoration: none; display: inline-block;">💬 Chat on WhatsApp</a>
+</div>
         </div>
     </div>
 
@@ -199,9 +235,21 @@
                 // Update Rider stats
                 isRiderOnline = data.rider.isOnline;
                 updateDutyUI();
-                document.getElementById('riderEarningsText').textContent = `₹${(data.rider.earningsToday || 0).toFixed(2)}`;
-                document.getElementById('riderCompletedCountText').textContent = data.rider.completedDeliveriesToday || 0;
+             // Update Rider stats & Slider
+document.getElementById('riderEarningsTodayText').textContent = `₹${(data.rider.earningsToday || 0).toFixed(2)}`;
+document.getElementById('riderEarningsWeeklyText').textContent = `₹${(data.rider.earningsWeekly || 0).toFixed(2)}`;
+document.getElementById('riderCompletedCountText').textContent = data.rider.completedDeliveriesToday || 0;
 
+// Render Date-wise Earnings History Ledger
+const historyContainer = document.getElementById('riderEarningsHistoryList');
+if (historyContainer && data.rider.deliveryHistory && data.rider.deliveryHistory.length > 0) {
+    historyContainer.innerHTML = data.rider.deliveryHistory.map(h => `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.78rem; color: #1e293b;">
+            <div><b>Order #${h.orderId}</b><br><span style="color: #64748b; font-size: 0.7rem;">📅 ${h.date}</span></div>
+            <span style="color: #16a34a; font-weight: 800; font-size: 0.85rem;">+₹${h.amount}</span>
+        </div>
+    `).join('');
+}
                 const container = document.getElementById('riderOrdersListContainer');
                 if (!container) return;
 
@@ -384,6 +432,33 @@ function logoutDeliveryExecutive() {
         localStorage.removeItem('delivery_agent_phone');
         // Page reload karke wapas login screen par aa jayein
         location.reload();
+    }
+}
+// Save Bank Account Details for NEFT Payout
+async function saveRiderBankDetails() {
+    const holderName = document.getElementById('bankHolderName').value.trim();
+    const accountNumber = document.getElementById('bankAccountNumber').value.trim();
+    const ifscCode = document.getElementById('bankIfscCode').value.trim();
+
+    if (!holderName || !accountNumber || !ifscCode) {
+        alert("⚠️ Please fill in all bank account fields!");
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/rider/bank-details', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: currentAgentPhone, accountNumber, ifscCode, holderName })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ Bank details saved successfully!");
+        } else {
+            alert(`⚠️ ${data.message}`);
+        }
+    } catch (e) {
+        alert("❌ Error saving bank details.");
     }
 }
     </script>
