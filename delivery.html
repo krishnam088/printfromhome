@@ -49,14 +49,26 @@
     </div>
 </div>
     <div class="delivery-container">
-        <!-- 1. Real Auth Login Screen -->
-        <div id="deliveryAuthScreen" class="auth-box">
-            <h2 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 6px;">Delivery Executive Login</h2>
-            <p style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 20px;">Enter your registered 10-digit mobile number</p>
-            <input type="tel" id="deliveryMobileInput" placeholder="10-digit mobile number" maxlength="10" class="form-input">
-            <button type="button" onclick="loginDeliveryExecutive()" class="btn-main">Authenticate & Start</button>
-        </div>
+      <div id="deliveryAuthScreen" class="auth-box">
+    <h2 id="deliveryAuthTitle" style="font-size: 1.3rem; font-weight: 800; margin-bottom: 6px;">Delivery Executive Login</h2>
+    <p id="deliveryAuthSub" style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 20px;">Enter your credentials to continue</p>
+    
+    <div id="riderSignupFields" style="display:none;">
+        <input type="text" id="riderNameInput" placeholder="Full Name" class="form-input">
+        <input type="email" id="riderEmailInput" placeholder="Gmail Address" class="form-input">
+        <input type="text" id="riderLicenseInput" placeholder="Driving License Number (Optional)" class="form-input">
+    </div>
 
+    <input type="tel" id="deliveryMobileInput" placeholder="10-digit mobile number" maxlength="10" class="form-input">
+    <input type="password" id="deliveryPasswordInput" placeholder="Password" class="form-input">
+    
+    <button type="button" id="deliveryAuthSubmitBtn" onclick="submitDeliveryAuth()" class="btn-main">Log In</button>
+    
+    <p style="margin-top: 14px; font-size: 0.78rem; color: #94a3b8;">
+        <span id="riderToggleMsg">New delivery partner?</span> 
+        <a href="#" onclick="toggleRiderAuthMode(event)" style="color: #38bdf8; font-weight: 700; text-decoration: none;">Create Account</a>
+    </p>
+</div>
         <!-- 2. Dashboard Screen -->
         <div id="deliveryDashboardScreen" style="display: none;">
             
@@ -293,6 +305,75 @@
 
 function closeRiderPopup() {
     document.getElementById('riderOrderPopupModal').style.display = 'none';
+}
+
+let isRiderSignup = false;
+function toggleRiderAuthMode(e) {
+    e.preventDefault();
+    isRiderSignup = !isRiderSignup;
+    const title = document.getElementById('deliveryAuthTitle');
+    const sub = document.getElementById('deliveryAuthSub');
+    const btn = document.getElementById('deliveryAuthSubmitBtn');
+    const signupFields = document.getElementById('riderSignupFields');
+    const toggleMsg = document.getElementById('riderToggleMsg');
+
+    if (isRiderSignup) {
+        title.textContent = "Delivery Partner Signup";
+        sub.textContent = "Register with your documents for store verification";
+        btn.textContent = "Register & Create Account";
+        signupFields.style.display = 'block';
+        toggleMsg.textContent = "Already have an account?";
+        e.target.textContent = "Log In";
+    } else {
+        title.textContent = "Delivery Executive Login";
+        sub.textContent = "Enter your credentials to continue";
+        btn.textContent = "Log In";
+        signupFields.style.display = 'none';
+        toggleMsg.textContent = "New delivery partner?";
+        e.target.textContent = "Create Account";
+    }
+}
+
+async function submitDeliveryAuth() {
+    const phone = document.getElementById('deliveryMobileInput').value.trim();
+    const password = document.getElementById('deliveryPasswordInput').value.trim();
+    if (phone.length !== 10 || !password) {
+        alert("⚠️ Please enter a valid 10-digit mobile number and password!");
+        return;
+    }
+
+    if (isRiderSignup) {
+        const name = document.getElementById('riderNameInput').value.trim();
+        const email = document.getElementById('riderEmailInput').value.trim();
+        const licenseNumber = document.getElementById('riderLicenseInput').value.trim();
+        if (!name) { alert("⚠️ Please enter your name!"); return; }
+
+        const res = await fetch('/api/rider/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone, email, password, licenseNumber })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert("🎉 Account created successfully! Please log in.");
+            toggleRiderAuthMode({ preventDefault: () => {} });
+        } else { alert(`⚠️ ${data.message}`); }
+    } else {
+        const res = await fetch('/api/rider/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+            currentAgentPhone = data.phone;
+            localStorage.setItem('delivery_agent_phone', data.phone);
+            document.getElementById('deliveryAuthScreen').style.display = 'none';
+            document.getElementById('deliveryDashboardScreen').style.display = 'block';
+            document.getElementById('deliveryAgentNameBadge').textContent = `Agent: ${data.name} (${data.phone})`;
+            fetchRiderDashboard();
+        } else { alert(`⚠️ ${data.message}`); }
+    }
 }
     </script>
 </body>

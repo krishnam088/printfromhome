@@ -4326,3 +4326,56 @@ window.editCartPrintJob = function(idx) {
         openPrintStudioWithFilesArray(window.studioMasterFiles, 0);
     }
 };
+// 🔥 Geolocation Active Permission Wrapper
+window.requestUserGeolocationPermission = function() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                localStorage.setItem('user_lat', pos.coords.latitude);
+                localStorage.setItem('user_lng', pos.coords.longitude);
+            },
+            (err) => { console.warn("Location permission needed for live ETA."); },
+            { enableHighAccuracy: true }
+        );
+    }
+};
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(window.requestUserGeolocationPermission, 1000);
+});
+
+// 🔥 Multi-Address Database Synchronization Helpers
+window.saveUserAddressToDatabase = async function(formattedAddress) {
+    const identity = localStorage.getItem('printAppUserIdentity');
+    if (!identity) return;
+    try {
+        const res = await fetch('/api/user/addresses/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identity, address: formattedAddress })
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.savedUserAddresses = data.addresses;
+            localStorage.setItem('saved_addresses', JSON.stringify(data.addresses));
+            if (typeof renderSavedAddressesUI === 'function') renderSavedAddressesUI();
+        }
+    } catch (e) {}
+};
+
+window.deleteUserAddressFromDatabase = async function(addressText) {
+    const identity = localStorage.getItem('printAppUserIdentity');
+    if (!identity) return;
+    try {
+        const res = await fetch('/api/user/addresses/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identity, address: addressText })
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.savedUserAddresses = data.addresses;
+            localStorage.setItem('saved_addresses', JSON.stringify(data.addresses));
+            if (typeof renderSavedAddressesUI === 'function') renderSavedAddressesUI();
+        }
+    } catch (e) {}
+};

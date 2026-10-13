@@ -63,12 +63,12 @@ const localDiskStorage = multer.diskStorage({
     }
 });
 const uploadLocal = multer({ storage: localDiskStorage });
-
 const userSchema = new mongoose.Schema({
     name: String,
     identity: { type: String, unique: true }, // Mobile Number
     email: { type: String, default: '' },      // Gmail Address
     password: String,
+    addresses: { type: Array, default: [] },   // 👈 Yahan add karein (Multi-address support)
     dateCreated: String
 });
 const User = mongoose.model('User', userSchema);
@@ -1448,10 +1448,14 @@ app.listen(PORT, () => {
 const deliveryPartnerSchema = new mongoose.Schema({
     phone: { type: String, unique: true },
     name: String,
+    email: { type: String, default: '' },
+    password: { type: String, default: '' },
+    licenseNumber: { type: String, default: '' },
     isOnline: { type: Boolean, default: false },
     currentOrderId: { type: String, default: null },
     earningsToday: { type: Number, default: 0 },
-    completedDeliveriesToday: { type: Number, default: 0 }
+    completedDeliveriesToday: { type: Number, default: 0 },
+    dateCreated: { type: String, default: '' }
 });
 const DeliveryPartner = mongoose.model('DeliveryPartner', deliveryPartnerSchema);
 
@@ -1559,6 +1563,74 @@ app.post('/api/rider/complete-order', async (req, res) => {
         await rider.save();
 
         res.json({ success: true, message: `🎉 Delivery completed! Earned ₹25.` });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+// ==========================================
+// 🛵 RIDER AUTH & USER MULTI-ADDRESS APIS
+// ==========================================
+
+app.post('/api/rider/signup', async (req, res) => {
+    try {
+        const { name, phone, email, password, licenseNumber } = req.body;
+        const normalizedPhone = phone.replace(/\D/g, '').slice(-10);
+        const existing = await DeliveryPartner.findOne({ phone: normalizedPhone });
+        if (existing) return res.status(400).json({ success: false, message: "Already registered!" });
+
+        const newRider = new DeliveryPartner({ name: name.trim(), phone: normalizedPhone, email: email ? email.trim().toLowerCase() : '', password, licenseNumber: licenseNumber || '', dateCreated: new Date().toLocaleString() });
+        await newRider.save();
+        res.status(201).json({ success: true, message: "Account created successfully!" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/rider/login', async (req, res) => {
+    try {
+        const { phone, password } = req.body;
+        const normalizedPhone = phone.replace(/\D/g, '').slice(-10);
+        const rider = await DeliveryPartner.findOne({ phone: normalizedPhone, password });
+        if (!rider) return res.status(401).json({ success: false, message: "Invalid credentials!" });
+        res.json({ success: true, name: rider.name, phone: rider.phone });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get('/api/user/addresses/:identity', async (req, res) => {
+    try {
+        const user = await User.findOne({ identity: req.params.identity });
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        res.json({ success: true, addresses: user.addresses || [] });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/user/addresses/save', async (req, res) => {
+    try {
+        const { identity, address } = req.body;
+        const user = await User.findOne({ identity });
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        if (!user.addresses.includes(address)) {
+            user.addresses.push(address);
+            await user.save();
+        }
+        res.json({ success: true, addresses: user.addresses });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/user/addresses/delete', async (req, res) => {
+    try {
+        const { identity, address } = req.body;
+        const user = await User.findOne({ identity });
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        user.addresses = user.addresses.filter(a => a !== address);
+        await user.save();
+        res.json({ success: true, addresses: user.addresses });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
