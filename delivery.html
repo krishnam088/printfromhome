@@ -225,84 +225,100 @@
         }
 
         // Fetch Dashboard Data & Orders
-        async function fetchRiderDashboard() {
-            if (!currentAgentPhone) return;
-            try {
-                const res = await fetch(`/api/rider/dashboard/${currentAgentPhone}`);
-                const data = await res.json();
-                if (!data.success) return;
+    async function fetchRiderDashboard() {
+        if (!currentAgentPhone) return;
+        try {
+            const res = await fetch(`/api/rider/dashboard/${currentAgentPhone}`);
+            const data = await res.json();
+            if (!data.success) return;
 
-                // Update Rider stats
-                isRiderOnline = data.rider.isOnline;
-                updateDutyUI();
-             // Update Rider stats & Slider
-document.getElementById('riderEarningsTodayText').textContent = `₹${(data.rider.earningsToday || 0).toFixed(2)}`;
-document.getElementById('riderEarningsWeeklyText').textContent = `₹${(data.rider.earningsWeekly || 0).toFixed(2)}`;
-document.getElementById('riderCompletedCountText').textContent = data.rider.completedDeliveriesToday || 0;
+            // Update Rider stats
+            isRiderOnline = data.rider.isOnline;
+            updateDutyUI();
+            
+            // Update Rider stats & Slider
+            document.getElementById('riderEarningsTodayText').textContent = `₹${(data.rider.earningsToday || 0).toFixed(2)}`;
+            document.getElementById('riderEarningsWeeklyText').textContent = `₹${(data.rider.earningsWeekly || 0).toFixed(2)}`;
+            document.getElementById('riderCompletedCountText').textContent = data.rider.completedDeliveriesToday || 0;
 
-// Render Date-wise Earnings History Ledger
-const historyContainer = document.getElementById('riderEarningsHistoryList');
-if (historyContainer && data.rider.deliveryHistory && data.rider.deliveryHistory.length > 0) {
-    historyContainer.innerHTML = data.rider.deliveryHistory.map(h => `
-        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.78rem; color: #1e293b;">
-            <div><b>Order #${h.orderId}</b><br><span style="color: #64748b; font-size: 0.7rem;">📅 ${h.date}</span></div>
-            <span style="color: #16a34a; font-weight: 800; font-size: 0.85rem;">+₹${h.amount}</span>
-        </div>
-    `).join('');
-}
-                const container = document.getElementById('riderOrdersListContainer');
-                if (!container) return;
+            // Render Date-wise Earnings History Ledger
+            const historyContainer = document.getElementById('riderEarningsHistoryList');
+            if (historyContainer && data.rider.deliveryHistory && data.rider.deliveryHistory.length > 0) {
+                historyContainer.innerHTML = data.rider.deliveryHistory.map(h => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.78rem; color: #1e293b;">
+                        <div><b>Order #${h.orderId}</b><br><span style="color: #64748b; font-size: 0.7rem;">📅 ${h.date}</span></div>
+                        <span style="color: #16a34a; font-weight: 800; font-size: 0.85rem;">+₹${h.amount}</span>
+                    </div>
+                `).join('');
+            }
 
-                let htmlContent = '';
+            // 🔥 Check for New Incoming Order Popup Trigger
+            if (data.newOrders && data.newOrders.length > 0) {
+                const firstNewOrder = data.newOrders[0];
+                if (firstNewOrder.orderId !== lastSeenOrderIdForRider) {
+                    lastSeenOrderIdForRider = firstNewOrder.orderId;
+                    const popupModal = document.getElementById('riderOrderPopupModal');
+                    const popupMeta = document.getElementById('popupOrderMeta');
+                    if (popupModal && popupMeta) {
+                        popupMeta.innerHTML = `<b>Order #${firstNewOrder.orderId}</b><br>📍 Drop: ${firstNewOrder.address}<br>💰 Earning: ₹25`;
+                        popupModal.style.display = 'flex';
+                    }
+                }
+            }
 
-                // 1. Show Active Assigned Order if exists
-                if (data.activeOrder) {
-                    const order = data.activeOrder;
+            const container = document.getElementById('riderOrdersListContainer');
+            if (!container) return;
+
+            let htmlContent = '';
+
+            // 1. Show Active Assigned Order if exists
+            if (data.activeOrder) {
+                const order = data.activeOrder;
+                htmlContent += `
+                    <div class="order-card" style="border-color: #10b981;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="order-badge">Active Order #${order.orderId}</span>
+                            <span style="font-size: 0.95rem; font-weight: 900; color: #10b981;">₹${order.totalAmount || order.amount || 0}</span>
+                        </div>
+                        <div class="customer-info">
+                            <p style="font-weight: 800; color: #38bdf8; margin-bottom: 4px;">👤 ${order.customerName} (<a href="tel:${order.phone}" style="color: #38bdf8;">📞 ${order.phone}</a>)</p>
+                            <p style="color: #cbd5e1;">📍 <b>Drop Address:</b> ${order.address}</p>
+                            <p style="color: #94a3b8; font-size: 0.75rem; margin-top: 4px;">Status: <b>${order.status}</b></p>
+                        </div>
+                        <div class="btn-row">
+                            <a href="${getGoogleMapsLink(order.address)}" target="_blank" class="btn-nav">🗺️ Navigate</a>
+                            <button type="button" onclick="markOrderAsDelivered('${order.orderId}')" class="btn-deliver">✅ Complete Delivery</button>
+                        </div>
+                    </div>
+                `;
+            } else if (isRiderOnline && data.newOrders && data.newOrders.length > 0) {
+                // 2. Show New Incoming Orders with Accept / Reject
+                data.newOrders.forEach(order => {
                     htmlContent += `
-                        <div class="order-card" style="border-color: #10b981;">
+                        <div class="order-card">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span class="order-badge">Active Order #${order.orderId}</span>
-                                <span style="font-size: 0.95rem; font-weight: 900; color: #10b981;">₹${order.totalAmount || order.amount || 0}</span>
+                                <span class="order-badge">New Delivery Request #${order.orderId}</span>
+                                <span style="font-size: 0.95rem; font-weight: 900; color: #38bdf8;">Delivery Earning: ₹25</span>
                             </div>
                             <div class="customer-info">
-                                <p style="font-weight: 800; color: #38bdf8; margin-bottom: 4px;">👤 ${order.customerName} (<a href="tel:${order.phone}" style="color: #38bdf8;">📞 ${order.phone}</a>)</p>
-                                <p style="color: #cbd5e1;">📍 <b>Drop Address:</b> ${order.address}</p>
-                                <p style="color: #94a3b8; font-size: 0.75rem; margin-top: 4px;">Status: <b>${order.status}</b></p>
+                                <p style="color: #cbd5e1;">📍 <b>Pickup:</b> Print From Home Store (Varanasi)</p>
+                                <p style="color: #cbd5e1; margin-top: 4px;">📍 <b>Drop:</b> ${order.address}</p>
                             </div>
                             <div class="btn-row">
-                               <a href="${getGoogleMapsLink(order.address)}" target="_blank" class="btn-nav">🗺️ Navigate</a>
-                                <button type="button" onclick="markOrderAsDelivered('${order.orderId}')" class="btn-deliver">✅ Complete Delivery</button>
+                                <button type="button" onclick="acceptDeliveryOrder('${order.orderId}')" class="btn-deliver" style="background: #3b82f6;">ACCEPT ORDER</button>
                             </div>
                         </div>
                     `;
-                } else if (isRiderOnline && data.newOrders && data.newOrders.length > 0) {
-                    // 2. Show New Incoming Orders with Accept / Reject
-                    data.newOrders.forEach(order => {
-                        htmlContent += `
-                            <div class="order-card">
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span class="order-badge">New Delivery Request #${order.orderId}</span>
-                                    <span style="font-size: 0.95rem; font-weight: 900; color: #38bdf8;">Delivery Earning: ₹25</span>
-                                </div>
-                                <div class="customer-info">
-                                    <p style="color: #cbd5e1;">📍 <b>Pickup:</b> Print From Home Store (Varanasi)</p>
-                                    <p style="color: #cbd5e1; margin-top: 4px;">📍 <b>Drop:</b> ${order.address}</p>
-                                </div>
-                                <div class="btn-row">
-                                    <button type="button" onclick="acceptDeliveryOrder('${order.orderId}')" class="btn-deliver" style="background: #3b82f6;">ACCEPT ORDER</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                } else {
-                    htmlContent = `<div style="text-align: center; color: #94a3b8; padding: 30px; background: #1e293b; border-radius: 16px;">📭 No orders in queue. Stay online to receive incoming requests!</div>`;
-                }
-
-                container.innerHTML = htmlContent;
-            } catch (e) {
-                console.error("Dashboard fetch error:", e);
+                });
+            } else {
+                htmlContent = `<div style="text-align: center; color: #94a3b8; padding: 30px; background: #1e293b; border-radius: 16px;">📭 No orders in queue. Stay online to receive incoming requests!</div>`;
             }
+
+            container.innerHTML = htmlContent;
+        } catch (e) {
+            console.error("Dashboard fetch error:", e);
         }
+    }
 
         async function acceptDeliveryOrder(orderId) {
             try {

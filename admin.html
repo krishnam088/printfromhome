@@ -364,6 +364,7 @@
     <li class="sidebar-item" id="nav_marketing" onclick="switchAdminTab('marketing')">📢 Marketing & Alerts</li>
     <li class="sidebar-item" id="nav_fees" onclick="switchAdminTab('fees')">⚙️ Fee & Coupons Setup</li>
     <li class="sidebar-item" id="nav_payouts" onclick="switchAdminTab('payouts')">🏦 Rider Payouts</li>
+    <li class="sidebar-item" id="nav_riders" onclick="switchAdminTab('riders')">🛵 Live Riders Monitor</li>
    
 </ul>
     </nav>
@@ -450,10 +451,10 @@
                 <div style="text-align: center; padding: 40px; color: var(--text-sub);">⏳ Connecting to live orders stream...</div>
             </div>
         </div>
-          <!-- 🛵 Live Delivery Partners Status Card (Admin Dashboard mein add karein) -->
-<div class="admin-section active" id="section_active_riders" style="background: var(--surface-card); border-radius: 16px; padding: 22px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+        <!-- TAB: LIVE RIDERS MONITOR -->
+<div id="section_riders" class="admin-section" style="background: var(--surface-card); border-radius: 16px; padding: 22px; border: 1px solid var(--border-color);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-        <h3 style="font-size: 1.15rem; font-weight: 800;">🛵 Delivery Partners Live Status (Online / Offline)</h3>
+        <h3 style="font-size: 1.15rem; font-weight: 800;">🛵 Delivery Partners Live Status & Quick Reminders</h3>
         <button type="button" onclick="fetchAdminActiveRiders()" style="background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.75rem; cursor: pointer;">🔄 Refresh Status</button>
     </div>
     <div style="overflow-x: auto;">
@@ -719,7 +720,12 @@
                 document.getElementById('nav_payouts').classList.add('active');
                 document.getElementById('section_payouts').classList.add('active');
                 fetchAdminRidersPayouts();
-            }
+                } else if (tabName === 'riders') {
+    document.getElementById('nav_riders').classList.add('active');
+    document.getElementById('section_riders').classList.add('active');
+    fetchAdminActiveRiders();
+}
+            
         }
         // 🔥 Load Live Settings into Admin Inputs on Panel Open
         async function loadAdminPanelSettings() {
