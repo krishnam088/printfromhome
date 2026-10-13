@@ -1572,9 +1572,24 @@ app.get('/api/rider/dashboard/:phone', async (req, res) => {
 
         let newOrders = [];
         if (rider.isOnline && !rider.currentOrderId) {
+            // 🔥 Flexible query taaki koi bhi active/ready order miss na ho
             newOrders = await Order.find({ 
-                status: 'Ready for Print', 
-                $or: [{ assignedDeliveryBoy: {$exists: false } }, { assignedDeliveryBoy: null }, { assignedDeliveryBoy: "" }] 
+                $and: [
+                    {
+                        $or: [
+                            { status: { $regex: /ready|print|pending|new|paid|success/i } },
+                            { status: { $exists: false } },
+                            { status: "" }
+                        ]
+                    },
+                    {
+                        $or: [
+                            { assignedDeliveryBoy: { $exists: false } }, 
+                            { assignedDeliveryBoy: null }, 
+                            { assignedDeliveryBoy: "" }
+                        ]
+                    }
+                ]
             }).limit(5);
         }
 
