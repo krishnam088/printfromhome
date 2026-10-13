@@ -86,6 +86,8 @@ const orderSchema = new mongoose.Schema({
     printType: String,
     binding: String,
     address: String,
+    userLat: { type: Number, default: 25.3451 }, // 👈 Yahan add karein
+    userLng: { type: Number, default: 83.0012 }, // 👈 Yahan add karein
     amount: String,
     totalAmount: String,
     status: String,

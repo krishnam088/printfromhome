@@ -3252,6 +3252,21 @@ window.executeFinalCartOrderPlacement = async function() {
     const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
     const userPhone = localStorage.getItem('printAppUserIdentity') || 'N/A';
 
+    // 🔥 FETCH USER LATITUDE & LONGITUDE BEFORE SENDING ORDER
+    let userLat = STORE_LOCATION.lat;
+    let userLng = STORE_LOCATION.lng;
+    
+    try {
+        const position = await new Promise((resolve, reject) => {
+            if (!navigator.geolocation) reject("Geolocation not supported");
+            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+        });
+        userLat = position.coords.latitude;
+        userLng = position.coords.longitude;
+    } catch (e) {
+        console.warn("Using store location fallback for order coordinates.");
+    }
+
     const formData = new FormData();
     window.cartPrintJobsArray.forEach(job => {
         if (job.fileData) formData.append('document', job.fileData);
@@ -3264,7 +3279,12 @@ window.executeFinalCartOrderPlacement = async function() {
     formData.append('phone', userPhone);
     formData.append('deliveryTip', window.currentDeliveryTip || 0);
     formData.append('paymentMode', paymentMode);
+    
+    // 👈 Yahan coordinates formData mein append ho gaye hain
+    formData.append('userLat', userLat);
+    formData.append('userLng', userLng);
 
+    // ... Baaki ka order placement / payment gateway code waisa hi rahega ...
     let initialOrderStatus = (window.cartPrintJobsArray.length > 0) ? "Ready for Print" : "Order Placed & Picking";
 
     const finalizeOrderSuccess = async (orderId) => {
