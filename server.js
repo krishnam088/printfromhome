@@ -176,13 +176,15 @@ const razorpay = new Razorpay({
 });
 
 const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.hostinger.com',
-    port: Number(process.env.EMAIL_PORT || 465),
-    secure: process.env.EMAIL_SECURE !== 'false',
+    host: 'smtp.hostinger.com',
+    port: 465,
+    secure: true, // true for 465
     auth: {
-        user: process.env.EMAIL_USER || 'support@printfromhomes.com',
-        pass: process.env.EMAIL_PASS || 'Ownerkrishna@2006'
-    }
+        user: process.env.EMAIL_USER, // support@printfromhomes.com
+        pass: process.env.EMAIL_PASS  // Hostinger email password
+    },
+    connectionTimeout: 15000, // 15 seconds timeout
+    socketTimeout: 15000
 });
 
 // 🏪 10-Second Rolling Store QR Token Engine
