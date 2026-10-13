@@ -114,6 +114,8 @@
         <div class="earning-num" id="riderCompletedCountText">0</div>
     </div>
 </div>
+<!-- Yeh container earnings slider aur history ke baad dashboard screen mein add kar dein -->
+<div id="riderOrdersListContainer"></div>
 
 <!-- 🏦 Bank Account Setup for NEFT Payout -->
 <div class="section-box" style="padding: 16px; margin-bottom: 16px; border-radius: 16px;">
@@ -144,9 +146,9 @@
     </div>
 
     <script>
-        let currentAgentPhone = localStorage.getItem('delivery_agent_phone') || '';
+       let currentAgentPhone = localStorage.getItem('delivery_agent_phone') || '';
 let isRiderOnline = false;
-let lastSeenOrderIdForRider = null; // 👈 Yeh line yahan add kar dein
+let lastSeenOrderIdForRider = localStorage.getItem('last_dismissed_popup_order') || '';
 
         window.addEventListener('DOMContentLoaded', () => {
             if (currentAgentPhone) {
@@ -282,12 +284,28 @@ let lastSeenOrderIdForRider = null; // 👈 Yeh line yahan add kar dein
                             <span style="font-size: 0.95rem; font-weight: 900; color: #10b981;">₹${order.totalAmount || order.amount || 0}</span>
                         </div>
                         <div class="customer-info">
+                            ${(() => {
+                                let configItemsHtml = '';
+                                if (order.configDetails) {
+                                    try {
+                                        const items = typeof order.configDetails === 'string' ? JSON.parse(order.configDetails) : order.configDetails;
+                                        if (Array.isArray(items)) {
+                                            configItemsHtml = items.map(item => `
+                                                <div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px;">📦 ${item.fileName || item.name || 'Print/Item'} (Qty: ${item.copies || item.qty || 1})</div>
+                                            `).join('');
+                                        }
+                                    } catch (e) {
+                                        console.error('Failed to parse order configDetails', e);
+                                    }
+                                }
+                                return configItemsHtml;
+                            })()}
                             <p style="font-weight: 800; color: #38bdf8; margin-bottom: 4px;">👤 ${order.customerName} (<a href="tel:${order.phone}" style="color: #38bdf8;">📞 ${order.phone}</a>)</p>
                             <p style="color: #cbd5e1;">📍 <b>Drop Address:</b> ${order.address}</p>
                             <p style="color: #94a3b8; font-size: 0.75rem; margin-top: 4px;">Status: <b>${order.status}</b></p>
                         </div>
                         <div class="btn-row">
-                            <a href="${getGoogleMapsLink(order.address)}" target="_blank" class="btn-nav">🗺️ Navigate</a>
+                           <a href="${getGoogleMapsLink(order)}" target="_blank" class="btn-nav">🗺️ Navigate</a>
                             <button type="button" onclick="markOrderAsDelivered('${order.orderId}')" class="btn-deliver">✅ Complete Delivery</button>
                         </div>
                     </div>
@@ -359,7 +377,7 @@ let lastSeenOrderIdForRider = null; // 👈 Yeh line yahan add kar dein
                 alert("❌ Connection error.");
             }
         }
-        if (navigator.geolocation) {
+       if (navigator.geolocation) {
     navigator.geolocation.watchPosition((pos) => {
         if (currentAgentPhone && isRiderOnline) {
             fetch('/api/admin/update-location', {
@@ -367,12 +385,22 @@ let lastSeenOrderIdForRider = null; // 👈 Yeh line yahan add kar dein
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude })
             });
+            fetch('/api/rider/update-location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: currentAgentPhone, lat: pos.coords.latitude, lng: pos.coords.longitude })
+            });
         }
     }, null, { enableHighAccuracy: true });
 }
 
+
 function closeRiderPopup() {
-    document.getElementById('riderOrderPopupModal').style.display = 'none';
+    const popup = document.getElementById('riderOrderPopupModal');
+    if (popup) popup.style.display = 'none';
+    if (lastSeenOrderIdForRider) {
+        localStorage.setItem('last_dismissed_popup_order', lastSeenOrderIdForRider);
+    }
 }
 
 let isRiderSignup = false;

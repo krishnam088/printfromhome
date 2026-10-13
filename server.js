@@ -1875,3 +1875,33 @@ app.get('/api/rider/dashboard/:phone', async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+// ==========================================
+// 📍 RIDER LIVE GPS LOCATION TRACKING
+// ==========================================
+let activeRiderLocations = {}; // { phone: { lat, lng, timestamp } }
+
+app.post('/api/rider/update-location', async (req, res) => {
+    try {
+        const { phone, lat, lng } = req.body;
+        if (phone && lat && lng) {
+            activeRiderLocations[phone] = { lat: Number(lat), lng: Number(lng), timestamp: Date.now() };
+            return res.json({ success: true });
+        }
+        res.status(400).json({ success: false, message: "Missing data" });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+app.get('/api/rider/live-location/:phone', async (req, res) => {
+    try {
+        const { phone } = req.params;
+        const loc = activeRiderLocations[phone];
+        if (loc) {
+            return res.json({ success: true, lat: loc.lat, lng: loc.lng });
+        }
+        res.json({ success: false, message: "Location not available" });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
