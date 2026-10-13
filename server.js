@@ -1440,3 +1440,126 @@ app.get('/api/admin/live-location', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+// ==========================================
+// 🛵 RIDER / DELIVERY PARTNER BACKEND APIS
+// ==========================================
+
+const deliveryPartnerSchema = new mongoose.Schema({
+    phone: { type: String, unique: true },
+    name: String,
+    isOnline: { type: Boolean, default: false },
+    currentOrderId: { type: String, default: null },
+    earningsToday: { type: Number, default: 0 },
+    completedDeliveriesToday: { type: Number, default: 0 }
+});
+const DeliveryPartner = mongoose.model('DeliveryPartner', deliveryPartnerSchema);
+
+// 1. Rider Login Auth
+app.post('/api/rider/auth-login', async (req, res) => {
+    try {
+        const { phone } = req.body;
+        if (!phone || phone.length !== 10) {
+            return res.status(400).json({ success: false, message: "Valid 10-digit mobile number required!" });
+        }
+        let rider = await DeliveryPartner.findOne({ phone });
+        if (!rider) {
+            rider = new DeliveryPartner({ phone, name: "Partner " + phone.slice(-4), isOnline: false });
+            await rider.save();
+        }
+        res.json({ success: true, message: "Login successful", rider });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2. Toggle Rider Duty (Online / Offline)
+app.post('/api/rider/toggle-duty', async (req, res) => {
+    try {
+        const { phone, isOnline } = req.body;
+        let rider = await DeliveryPartner.findOne({ phone });
+        if (!rider) {
+            return res.status(404).json({ success: false, message: "Rider not found" });
+        }
+        rider.isOnline = Boolean(isOnline);
+        await rider.save();
+        res.json({ success: true, isOnline: rider.isOnline });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 3. Rider Dashboard Data Feed
+app.get('/api/rider/dashboard/:phone', async (req, res) => {
+    try {
+        const { phone } = req.params;
+        let rider = await DeliveryPartner.findOne({ phone });
+        if (!rider) {
+            return res.status(404).json({ success: false, message: "Rider not found" });
+        }
+
+        let activeOrder = null;
+        if (rider.currentOrderId) {
+            activeOrder = await Order.findOne({ orderId: rider.currentOrderId });
+        }
+
+        let newOrders = [];
+        if (rider.isOnline && !rider.currentOrderId) {
+            newOrders = await Order.find({ 
+                status: 'Ready for Print', 
+                $or: [{ assignedDeliveryBoy: {$exists: false } }, { assignedDeliveryBoy: null }, { assignedDeliveryBoy: "" }] 
+            }).limit(5);
+        }
+
+        res.json({ success: true, rider, activeOrder, newOrders });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 4. Accept Delivery Order
+app.post('/api/rider/accept-order', async (req, res) => {
+    try {
+        const { phone, orderId } = req.body;
+        const rider = await DeliveryPartner.findOne({ phone });
+        if (!rider) return res.status(404).json({ success: false, message: "Rider not found" });
+
+        const order = await Order.findOne({ orderId });
+        if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+        order.assignedDeliveryBoy = phone;
+        order.status = 'Out for Delivery';
+        await order.save();
+
+        rider.currentOrderId = orderId;
+        await rider.save();
+
+        res.json({ success: true, message: `✅ Order #${orderId} accepted successfully!` });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 5. Complete Delivery
+app.post('/api/rider/complete-order', async (req, res) => {
+    try {
+        const { phone, orderId } = req.body;
+        const rider = await DeliveryPartner.findOne({ phone });
+        if (!rider) return res.status(404).json({ success: false, message: "Rider not found" });
+
+        const order = await Order.findOne({ orderId });
+        if (order) {
+            order.status = 'Delivered 🟢';
+            await order.save();
+        }
+
+        rider.currentOrderId = null;
+        rider.earningsToday += 25; // ₹25 fixed delivery earning
+        rider.completedDeliveriesToday += 1;
+        await rider.save();
+
+        res.json({ success: true, message: `🎉 Delivery completed! Earned ₹25.` });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
