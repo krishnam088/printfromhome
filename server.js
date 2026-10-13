@@ -1556,23 +1556,70 @@ app.post('/api/rider/toggle-duty', async (req, res) => {
     }
 });
 
-// 3. Rider Dashboard Data Feed
+// 1. Rider Accept Order Route (Single active order enforcement)
+app.post('/api/rider/accept-order', async (req, res) => {
+    try {
+        const { phone, orderId } = req.body;
+        let rider = await DeliveryPartner.findOne({ phone });
+        if (!rider) return res.status(404).json({ success: false, message: "Rider not found" });
+
+        // Check agar rider ke paas pehle se active order hai, toh naya order khud se accept nahi karne dega
+        if (rider.currentOrderId) {
+            return res.status(400).json({ success: false, message: "⚠️ You already have an active order! Deliver it first before accepting a new one." });
+        }
+
+        let order = await Order.findOne({ orderId });
+        if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+        order.assignedDeliveryBoy = phone;
+        order.status = 'Out for Delivery';
+        await order.save();
+
+        rider.currentOrderId = orderId;
+        await rider.save();
+
+        res.json({ success: true, message: `✅ Order #${orderId} accepted successfully!` });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2. Rider Dashboard Data Feed Route (Primary Active Order + Admin Queued Secondary Orders)
 app.get('/api/rider/dashboard/:phone', async (req, res) => {
     try {
         const { phone } = req.params;
         let rider = await DeliveryPartner.findOne({ phone });
         if (!rider) {
-            return res.status(404).json({ success: false, message: "Rider not found" });
+            rider = new DeliveryPartner({ phone, name: "Partner " + phone.slice(-4), isOnline: false });
+            await rider.save();
         }
 
+        // Sabhi orders nikalein jo is delivery boy ko assigned hain aur deliver nahi hue hain
+        let assignedOrders = await Order.find({ 
+            assignedDeliveryBoy: phone, 
+            status: { $regex: /out for delivery\vert{}ready\vert{}processing/i },$and: [{ status: { $not: /delivered|cancelled/i } }]
+        }).sort({ timestamp: 1 });
+
         let activeOrder = null;
-        if (rider.currentOrderId) {
-            activeOrder = await Order.findOne({ orderId: rider.currentOrderId });
+        let secondaryOrders = [];
+
+        if (assignedOrders.length > 0) {
+            activeOrder = assignedOrders[0]; // Pehla order primary active hoga
+            secondaryOrders = assignedOrders.slice(1); // Baaki orders queued rahenge
+            
+            // Sync rider currentOrderId with the true primary active order
+            if (rider.currentOrderId !== activeOrder.orderId) {
+                rider.currentOrderId = activeOrder.orderId;
+                await rider.save();
+            }
+        } else if (rider.currentOrderId) {
+            rider.currentOrderId = null;
+            await rider.save();
         }
 
         let newOrders = [];
-        if (rider.isOnline && !rider.currentOrderId) {
-            // 🔥 Flexible query taaki koi bhi active/ready order miss na ho
+        // Agar rider ke paas koi active order nahi hai, tabhi use naye open orders dikhein
+        if (rider.isOnline && assignedOrders.length === 0) {
             newOrders = await Order.find({ 
                 $and: [
                     {
@@ -1593,36 +1640,13 @@ app.get('/api/rider/dashboard/:phone', async (req, res) => {
             }).limit(5);
         }
 
-        res.json({ success: true, rider, activeOrder, newOrders });
+        res.json({ success: true, rider, activeOrder, secondaryOrders, newOrders });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// 4. Accept Delivery Order
-app.post('/api/rider/accept-order', async (req, res) => {
-    try {
-        const { phone, orderId } = req.body;
-        const rider = await DeliveryPartner.findOne({ phone });
-        if (!rider) return res.status(404).json({ success: false, message: "Rider not found" });
-
-        const order = await Order.findOne({ orderId });
-        if (!order) return res.status(404).json({ success: false, message: "Order not found" });
-
-        order.assignedDeliveryBoy = phone;
-        order.status = 'Out for Delivery';
-        await order.save();
-
-        rider.currentOrderId = orderId;
-        await rider.save();
-
-        res.json({ success: true, message: `✅ Order #${orderId} accepted successfully!` });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
-
-// 5. Complete Delivery
+// 3. Complete Delivery Route (Automatic Next Order Activation)
 app.post('/api/rider/complete-order', async (req, res) => {
     try {
         const { phone, orderId } = req.body;
@@ -1630,17 +1654,37 @@ app.post('/api/rider/complete-order', async (req, res) => {
         if (!rider) return res.status(404).json({ success: false, message: "Rider not found" });
 
         const order = await Order.findOne({ orderId });
+        let orderFee = 25;
         if (order) {
             order.status = 'Delivered 🟢';
             await order.save();
         }
 
-        rider.currentOrderId = null;
-        rider.earningsToday += 25; // ₹25 fixed delivery earning
+        rider.earningsToday += orderFee;
+        rider.earningsWeekly += orderFee;
         rider.completedDeliveriesToday += 1;
-        await rider.save();
+        
+        rider.deliveryHistory.unshift({
+            orderId: orderId,
+            amount: orderFee,
+            date: new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }),
+            timestamp: new Date().toISOString()
+        });
 
-        res.json({ success: true, message: `🎉 Delivery completed! Earned ₹25.` });
+        // Check karo ki kya koi aur order admin ne assign kiya hua hai queue mein
+        let nextAssignedOrder = await Order.findOne({ 
+            assignedDeliveryBoy: phone, 
+            orderId: { $ne: orderId },$and: [{ status: { $not: /delivered|cancelled/i } }]
+        }).sort({ timestamp: 1 });
+
+        if (nextAssignedOrder) {
+            rider.currentOrderId = nextAssignedOrder.orderId;
+        } else {
+            rider.currentOrderId = null;
+        }
+
+        await rider.save();
+        res.json({ success: true, message: `🎉 Delivery completed! Earned ₹25.${nextAssignedOrder ? ' Next queued order is now active!' : ''}` });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
