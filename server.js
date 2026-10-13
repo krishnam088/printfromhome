@@ -1635,3 +1635,32 @@ app.post('/api/user/addresses/delete', async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+// 🔥 Rider Dashboard Data Feed API Route
+app.get('/api/rider/dashboard/:phone', async (req, res) => {
+    try {
+        const { phone } = req.params;
+        let rider = await DeliveryPartner.findOne({ phone });
+        if (!rider) {
+            // Agar rider database mein nahi mila toh auto-create kar dein
+            rider = new DeliveryPartner({ phone, name: "Partner " + phone.slice(-4), isOnline: false });
+            await rider.save();
+        }
+
+        let activeOrder = null;
+        if (rider.currentOrderId) {
+            activeOrder = await Order.findOne({ orderId: rider.currentOrderId });
+        }
+
+        let newOrders = [];
+        if (rider.isOnline && !rider.currentOrderId) {
+            newOrders = await Order.find({ 
+                status: 'Ready for Print', 
+                $or: [{ assignedDeliveryBoy: { $exists: false } }, { assignedDeliveryBoy: null }, { assignedDeliveryBoy: "" }] 
+            }).limit(5);
+        }
+
+        res.json({ success: true, rider, activeOrder, newOrders });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
