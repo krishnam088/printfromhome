@@ -7,8 +7,7 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2; // 👈 Yeh line wapas add kardi hai
 
-const multerStorageCloudinary = require('multer-storage-cloudinary');
-const CloudinaryStorage = multerStorageCloudinary.CloudinaryStorage;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const nodemailer = require('nodemailer');
 const cron = require('node-cron');
 const webpush = require('web-push');
