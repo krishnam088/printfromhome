@@ -594,15 +594,30 @@ async function sendBroadcastEmail(subject, message) {
                 </div>
             `;
 
-            // 🔥 Hostinger SMTP Transporter ke zariye broadcast email bhejna
-            await transporter.sendMail({
-                from: '"Print From Home Support" <support@printfromhomes.com>',
-                to: user.email,
-                subject: subject,
-                html: personalizedHTML
+            // 🔥 Brevo HTTP API ka use (Render par kabhi block nahi hoti)
+            const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'api-key': process.env.SMTP_PASS, // Yahan aapki Brevo API key rahegi
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sender: { name: "Print From Home Support", email: "support@printfromhomes.com" },
+                    to: [{ email: user.email, name: user.name || 'Customer' }],
+                    subject: subject,
+                    htmlContent: personalizedHTML
+                })
             });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                console.error(`❌ Failed for ${user.email}:`, JSON.stringify(errData));
+            } else {
+                console.log(`✅ Successfully sent via Brevo API to: ${user.email}`);
+            }
         } catch (innerErr) {
-            console.error(`Failed to send broadcast to ${user.email}:`, innerErr.message);
+            console.error(`❌ Error sending to ${user.email}:`, innerErr.message);
         }
     }
 }
