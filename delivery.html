@@ -270,7 +270,7 @@ if (historyContainer && data.rider.deliveryHistory && data.rider.deliveryHistory
                                 <p style="color: #94a3b8; font-size: 0.75rem; margin-top: 4px;">Status: <b>${order.status}</b></p>
                             </div>
                             <div class="btn-row">
-                                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.address)}" target="_blank" class="btn-nav">🗺️ Navigate</a>
+                               <a href="${getGoogleMapsLink(order.address)}" target="_blank" class="btn-nav">🗺️ Navigate</a>
                                 <button type="button" onclick="markOrderAsDelivered('${order.orderId}')" class="btn-deliver">✅ Complete Delivery</button>
                             </div>
                         </div>
@@ -460,6 +460,21 @@ async function saveRiderBankDetails() {
     } catch (e) {
         alert("❌ Error saving bank details.");
     }
+}
+function getGoogleMapsLink(addressStr) {
+    if (!addressStr) return "https://maps.google.com";
+    
+    // Agar address string mein lat/lng coordinates maujood hain toh unhe extract karein
+    const match = addressStr.match(/Location:\s*([-\d.]+),\s*([-\d.]+)/i);
+    if (match && match[1] && match[2]) {
+        const lat = match[1];
+        const lng = match[2];
+        // Seedha exact latitude aur longitude ka pin link bhejein
+        return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    }
+    
+    // Fallback: Agar coordinates na mile toh text address pass karein
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressStr)}`;
 }
     </script>
 </body>
