@@ -93,8 +93,17 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
             history = [];
         }
 
+        // 🔥 Yeh raha Home Button top bar
+        const homeTopBar = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 4px;">
+                <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0;">Your Orders</h3>
+                <button type="button" onclick="navigateDrawerSection('store')" style="background: #f1f5f9; color: #065f46; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">🏠 Home</button>
+            </div>
+        `;
+
         if (!Array.isArray(history) || history.length === 0) {
             container.innerHTML = `
+                ${homeTopBar}
                 <div style="text-align:center; padding:40px 20px; font-family:'Poppins', sans-serif;">
                     <div style="font-size:3rem; margin-bottom:10px;">📦</div>
                     <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:4px;">No orders found</h3>
@@ -109,7 +118,7 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
             history = [...history].sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
         }
 
-        container.innerHTML = history.map(order => {
+        container.innerHTML = homeTopBar + history.map(order => {
             if (!order) return '';
             let safeId = order.orderId || order.id || 'N/A';
             let safeAmount = Number(order.amount || order.totalAmount || 0).toFixed(2);
@@ -2375,21 +2384,33 @@ window.renderCartDrawerContents = function() {
     
     container.innerHTML = '';
     
-    const activeUser = localStorage.getItem('printAppUser') || 'Customer';
-    const activePhone = localStorage.getItem('printAppUserIdentity') || '7398746551';
-    const activeAddress = localStorage.getItem('selected_active_address') || 'No delivery address added yet.';
+    // 🔥 Selected active address se name aur phone dynamically fetch karna
+    const activeAddress = localStorage.getItem('selected_active_address') || '';
+    let extractedName = localStorage.getItem('printAppUser') || 'Customer';
+    let extractedPhone = localStorage.getItem('printAppUserIdentity') || '7398746551';
+
+    if (activeAddress && activeAddress.includes('Contact:')) {
+        try {
+            let contactPart = activeAddress.split('Contact:')[1].trim();
+            let namePart = contactPart.split('(')[0].trim();
+            let phonePart = contactPart.split('(')[1].replace(')', '').trim();
+            if (namePart) extractedName = namePart;
+            if (phonePart) extractedPhone = phonePart;
+        } catch (e) {}
+    }
 
     if (identityBox) {
-        identityBox.textContent = `Order for User (${activeUser}) | (${activePhone})`;
+        identityBox.textContent = `Order for User (${extractedName}) | (${extractedPhone})`;
     }
 
     if (addressSummaryNode) {
-        addressSummaryNode.textContent = activeAddress;
+        addressSummaryNode.textContent = activeAddress || 'No delivery address added yet.';
     }
-    
+
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
     window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
-
+    
+    // ... Baaki ka cart code waisa hi rahega ...
     let hasItems = (window.cartSnacksArray.length > 0) || (window.cartPrintJobsArray.length > 0);
     
     if (!hasItems) {
