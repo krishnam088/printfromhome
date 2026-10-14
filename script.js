@@ -752,33 +752,30 @@ window.updateCartPaymentMode = function(mode) {
     }
 };
 
-// 🔥 Interactive Coupon & Offer Drawer Toggle
 window.toggleCouponDrawer = function() {
     let couponModal = document.getElementById('couponDropdownModal');
     if (!couponModal) {
         couponModal = document.createElement('div');
         couponModal.id = 'couponDropdownModal';
-        couponModal.style.cssText = "position:fixed; bottom:0; left:0; width:100vw; background:#ffffff; border-top-left-radius:20px; border-top-right-radius:20px; box-shadow:0 -10px 30px rgba(0,0,0,0.2); z-index:999999; padding:20px; display:flex; flex-direction:column; gap:12px; font-family:'Poppins', sans-serif; transition: transform 0.3s ease;";
+        couponModal.style.cssText = "position:fixed; bottom:0; left:0; width:100vw; background:#ffffff; border-top-left-radius:20px; border-top-right-radius:20px; box-shadow:0 -10px 30px rgba(0,0,0,0.2); z-index:999999; padding:20px; display:flex; flex-direction:column; gap:12px; font-family:'Poppins', sans-serif;";
+        
+        let couponsHTML = (window.adminCouponsList || []).map(c => `
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:800; font-size:0.8rem; color:#16a34a;">${c.code}</div>
+                    <div style="font-size:0.7rem; color:#475569;">${c.desc || 'Special Offer'} (Min order: ₹${c.minOrder || 0})</div>
+                </div>
+                <button type="button" onclick="applyCouponCode('${c.code}', ${c.minOrder || 0}, ${c.discount || 20})" style="background:#16a34a; color:white; border:none; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">Apply</button>
+            </div>
+        `).join('');
+
         couponModal.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
                 <h3 style="font-size:1rem; font-weight:800; color:#0f172a; margin:0;">Available Offers & Coupons</h3>
                 <span onclick="toggleCouponDrawer()" style="font-size:1.2rem; cursor:pointer; font-weight:bold; color:#64748b;">&times;</span>
             </div>
             <div style="display:flex; flex-direction:column; gap:10px; max-height:250px; overflow-y:auto;">
-                <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <div style="font-weight:800; font-size:0.8rem; color:#16a34a;">FREEDEL</div>
-                        <div style="font-size:0.7rem; color:#475569;">Free delivery on orders above ₹99</div>
-                    </div>
-                    <button type="button" onclick="alert('✅ FREEDEL Coupon Applied!')" style="background:#16a34a; color:white; border:none; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">Apply</button>
-                </div>
-                <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <div style="font-weight:800; font-size:0.8rem; color:#0f172a;">PRINT20</div>
-                        <div style="font-size:0.7rem; color:#475569;">Get flat ₹20 off on print orders above ₹150</div>
-                    </div>
-                    <button type="button" onclick="alert('✅ PRINT20 Coupon Applied!')" style="background:#065f46; color:white; border:none; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">Apply</button>
-                </div>
+                ${couponsHTML || '<p style="text-align:center; color:#64748b; font-size:0.8rem;">No active coupons available right now.</p>'}
             </div>
         `;
         document.body.appendChild(couponModal);
@@ -811,10 +808,42 @@ window.toggleCouponDrawer = function() {
     const LIVE_SERVER_URL = window.location.origin;
     window.globalRawOrdersCache = [];
 
-    // ==========================================
-    // 🧮 BULLETPROOF GRAND TOTAL CALCULATOR ENGINE
-    // ==========================================
-   window.calculateTotal = function() {
+  // 🔥 Dynamic Free Delivery Threshold (New User = ₹49, Regular = ₹99)
+window.getDynamicFreeDeliveryThreshold = function() {
+    const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+    let history = [];
+    try {
+        history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
+    } catch(e) {
+        history = [];
+    }
+    return (!Array.isArray(history) || history.length === 0) ? 49.00 : 99.00;
+};
+
+// 🔥 Active Coupon State Engine
+window.appliedActiveCoupon = null;
+
+window.applyCouponCode = function(code, minOrderValue, discountAmount) {
+    let snacksTotal = window.cartSnacksArray ? window.cartSnacksArray.reduce((acc, item) => acc + (parseFloat(item.price || 0) * parseInt(item.qty || 1)), 0) : 0;
+    let printJobsTotal = window.cartPrintJobsArray ? window.cartPrintJobsArray.reduce((acc, job) => acc + (parseInt(job.pages || 1) * (job.printType === 'bw' ? 3 : 10) * parseInt(job.copies || 1) + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0) : 0;
+
+    let productSubtotal = snacksTotal + printJobsTotal;
+
+    if (productSubtotal < (minOrderValue || 0)) {
+        alert(`⚠️ Minimum product subtotal of ₹${minOrderValue} required for coupon ${code}! (Current items total: ₹${productSubtotal})`);
+        return;
+    }
+
+    window.appliedActiveCoupon = { code: code, discount: discountAmount };
+    alert(`✅ Coupon "${code}" Applied Successfully! ₹${discountAmount} off.`);
+    if (typeof calculateTotal === 'function') calculateTotal();
+    if (typeof toggleCouponDrawer === 'function') toggleCouponDrawer();
+};
+
+// ==========================================
+// 🧮 BULLETPROOF GRAND TOTAL CALCULATOR ENGINE
+// ==========================================
+window.calculateTotal = function() {
     try {
         let totalPrintCost = 0; 
         let totalBindingCost = 0;
@@ -831,12 +860,11 @@ window.toggleCouponDrawer = function() {
         }
 
         let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal + printJobsTotal;
-        const freeDeliveryThreshold = 99.00;
+        const freeDeliveryThreshold = window.getDynamicFreeDeliveryThreshold();
         
-        
-       // 🔥 Strictly Admin Controlled Delivery Fee (No fallback to 25)
-let activeDeliveryFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 0;
-let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || finalDocumentCost === 0) ? 0.00 : activeDeliveryFee; 
+        // 🔥 Strictly Admin Controlled Delivery Fee
+        let activeDeliveryFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 0;
+        let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || finalDocumentCost === 0) ? 0.00 : activeDeliveryFee; 
      
         const progressBarBox = document.getElementById('freeDeliveryProgressBarBox');
         const messageText = document.getElementById('freeDeliveryMessageText');
@@ -844,25 +872,23 @@ let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || fina
 
         if (progressBarBox && messageText && fillBar) {
             if (finalDocumentCost >= freeDeliveryThreshold) {
-                messageText.innerHTML = "🎉 Yay! You have unlocked <b>FREE Delivery</b>!";
+                messageText.innerHTML = `🎉 Yay! Free delivery unlocked (Threshold ₹${freeDeliveryThreshold})!`;
                 fillBar.style.width = "100%";
             } else {
                 let neededMore = freeDeliveryThreshold - finalDocumentCost;
                 let progressPercent = Math.min(100, (finalDocumentCost / freeDeliveryThreshold) * 100);
-                messageText.innerHTML = `🎉 Add items worth <b>₹${neededMore.toFixed(2)}</b> more for FREE delivery!`;
+                messageText.innerHTML = `🎉 Add items worth <b>₹${neededMore.toFixed(2)}</b> more for FREE delivery (Threshold ₹${freeDeliveryThreshold})!`;
                 fillBar.style.width = `${progressPercent}%`;
             }
         }
 
-
-       // 🔥 Strictly Admin Controlled Fees Engine in calculateTotal
         let activeRainFee = window.adminRainFee !== undefined ? window.adminRainFee : 0;
         let rainFee = window.isRainSurgeActive ? activeRainFee : 0;
-
         let activeHandlingFee = window.adminHandlingFee !== undefined ? window.adminHandlingFee : 0;
+        let couponDiscount = window.appliedActiveCoupon ? window.appliedActiveCoupon.discount : 0;
 
-        // 🔥 Grand Total mein ab delivery, rain fee, aur admin handling fee properly add honge
-        let grandTotalCombined = finalDocumentCost + accurateDeliveryCharge + rainFee + activeHandlingFee + (window.currentDeliveryTip || 0);
+        let grandTotalCombined = finalDocumentCost + accurateDeliveryCharge + rainFee + activeHandlingFee + (window.currentDeliveryTip || 0) - couponDiscount;
+        grandTotalCombined = Math.max(0, grandTotalCombined);
 
         const updateUI = (id, val) => {
             const el = document.getElementById(id);
@@ -872,10 +898,8 @@ let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || fina
         updateUI('summaryPrint', `₹${(totalPrintCost + printJobsTotal).toFixed(2)}`);
         updateUI('summaryBinding', `₹${(totalBindingCost + snacksTotal).toFixed(2)}`);
         updateUI('summaryDelivery', accurateDeliveryCharge === 0 ? "FREE" : `₹${accurateDeliveryCharge.toFixed(2)}`);
-
         updateUI('cartHandlingFee', `₹${activeHandlingFee.toFixed(2)}`);
         
-        // Update Rain Surge UI text dynamically if element exists
         const rainFeeSpan = document.getElementById('cartRainFee');
         if (rainFeeSpan) rainFeeSpan.textContent = `₹${activeRainFee.toFixed(2)}`;
 
@@ -2380,11 +2404,11 @@ window.updateFloatingCartBar = function() {
 // 🔥 BULLETPROOF UNIVERSAL CART DRAWER RENDER ENGINE
 // ==========================================
 window.renderCartDrawerContents = function() {
-    const container = document.getElementById('cartDrawerItemsList');
-    const identityBox = document.getElementById('cartUserIdentitySummary');
-    const addressSummaryNode = document.getElementById('cartDrawerAddressSummary');
-    if (!container) return;
+    const container = document.getElementById('cartDrawerItemsList') || 
+                        document.getElementById('cartItemsListContainer') || 
+                        document.getElementById('cartItemsContainer');
     
+    if (!container) return;
     container.innerHTML = '';
     
     // 🔥 Selected active address se name aur phone dynamically fetch karna
@@ -2402,78 +2426,93 @@ window.renderCartDrawerContents = function() {
         } catch (e) {}
     }
 
+    const identityBox = document.getElementById('cartUserIdentitySummary');
     if (identityBox) {
         identityBox.textContent = `Order for User (${extractedName}) | (${extractedPhone})`;
     }
 
+    const addressSummaryNode = document.getElementById('cartDrawerAddressSummary');
     if (addressSummaryNode) {
         addressSummaryNode.textContent = activeAddress || 'No delivery address added yet.';
     }
 
+    // 🌟 Stylish Green & Yellow Cart Header (Search bar removed)
+    const stylishCartHeader = `
+        <div style="background: linear-gradient(135deg, #fef08a 0%, #bbf7d0 100%); border: 1px solid #16a34a; border-radius: 12px; padding: 10px 14px; text-align: center; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+            <h2 style="font-size: 0.95rem; font-weight: 900; color: #065f46; margin: 0; letter-spacing: 0.5px;">🌱 Print From Home Cart 🛒</h2>
+        </div>
+    `;
+
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
     window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
-    
-    // ... Baaki ka cart code waisa hi rahega ...
+
     let hasItems = (window.cartSnacksArray.length > 0) || (window.cartPrintJobsArray.length > 0);
     
     if (!hasItems) {
-        container.innerHTML = `<p style="font-size:0.8rem; color:#64748b; text-align:center; padding:15px; width:100%;">Your cart is empty.</p>`;
+        container.innerHTML = stylishCartHeader + `<p style="font-size:0.82rem; color:#64748b; text-align:center; padding:20px;">Your cart is empty.</p>`;
         if (typeof calculateTotal === 'function') calculateTotal();
         if (typeof renderUpsellingGridSafely === 'function') renderUpsellingGridSafely();
         return;
     }
 
-    let totalPagesCount = 0;
-    let totalItemsCount = 0;
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
+    wrapper.innerHTML = stylishCartHeader;
 
-    // 1. Render Print Jobs in Horizontal Cards with Edit Button
+    // 1. Render Print Jobs in Cart
     window.cartPrintJobsArray.forEach((job, idx) => {
         let rate = (job.printType === 'bw') ? 3 : 10;
         let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
-        totalPagesCount += job.pages * job.copies;
-        totalItemsCount += 1;
 
         const card = document.createElement('div');
-        card.style.cssText = "min-width:130px; max-width:130px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
+        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02);";
 
         card.innerHTML = `
-            <div style="font-size:1.8rem; margin-bottom:2px;">📄</div>
-            <div title="${job.fileName}" style="font-weight:700; font-size:0.72rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${job.fileName}</div>
-            <div style="font-size:0.6rem; color:#64748b; font-weight:600; margin-bottom:6px;">${job.pages} pgs | ${job.printType.toUpperCase()}</div>
-            <div style="display:flex; align-items:center; gap:6px; width:100%; justify-content:center;">
-                <button type="button" onclick="editCartPrintJob(${idx})" style="background:#fef08a; border:1px solid #fde047; padding:3px 8px; border-radius:6px; font-size:0.68rem; font-weight:800; cursor:pointer; color:#713f12;">Edit</button>
-                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fee2e2; color:#ef4444; border:none; width:22px; height:22px; border-radius:50%; font-weight:bold; cursor:pointer; font-size:0.75rem; display:flex; align-items:center; justify-content:center;">&times;</button>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                    <div style="font-size:1.6rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px; flex-shrink:0;">📄</div>
+                    <div style="overflow:hidden; flex:1;">
+                        <div title="${job.fileName}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
+                        <div style="font-size:0.68rem; color:#64748b; font-weight:600; margin-top:2px;">${job.pages} pgs | ${job.printType.toUpperCase()} | Copies: ${job.copies}</div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+                    <div style="font-weight:900; font-size:0.85rem; color:#065f46;">₹${jobTotal}</div>
+                    <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:5px 8px; font-size:0.7rem; cursor:pointer;" title="Remove Print Job">🗑️</button>
+                </div>
             </div>
         `;
-        container.appendChild(card);
+        wrapper.appendChild(card);
     });
 
-    // 2. Render Snacks / Store Products in Horizontal Cards with +/- Stepper
+    // 2. Render Snacks / Store Products in Cart
     window.cartSnacksArray.forEach((snack, idx) => {
-        totalItemsCount += snack.qty;
-        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; margin-bottom:4px;" />` : `<div style="font-size:1.8rem; margin-bottom:4px;">📦</div>`;
-        let itemTotal = snack.price * snack.qty;
-
         const card = document.createElement('div');
-        card.style.cssText = "min-width:125px; max-width:125px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
+        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.02); gap:10px;";
+        
+        const thumbImg = snack.imageUrl ? `<img src="${snack.imageUrl}" style="width:42px; height:42px; object-fit:contain; border-radius:8px;" />` : `<div style="font-size:1.5rem; width:42px; height:42px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px;">📦</div>`;
 
         card.innerHTML = `
-            ${thumbImg}
-            <div title="${snack.name}" style="font-weight:700; font-size:0.72rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${snack.name}</div>
-            <div style="font-size:0.68rem; color:#065f46; font-weight:800; margin-bottom:6px;">₹${itemTotal}</div>
-            <div style="display:flex; align-items:center; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:6px; padding:2px 6px; gap:6px; width:100%; justify-content:center;">
-                <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; cursor:pointer; font-size:0.85rem;">-</button>
-                <span style="font-weight:800; font-size:0.72rem; color:#0f172a;">${snack.qty}</span>
-                <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; cursor:pointer; color:#065f46; font-size:0.85rem;">+</button>
+            <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                ${thumbImg}
+                <div style="overflow:hidden; flex:1;">
+                    <div title="${snack.name}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${snack.name}</div>
+                    <div style="font-size:0.72rem; color:#059669; font-weight:800; margin-top:2px;">₹${snack.price * snack.qty} <span style="color:#64748b; font-weight:500; font-size:0.65rem;">(₹${snack.price} ea)</span></div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+                <div style="display:flex; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:2px 6px; gap:8px;">
+                    <button type="button" onclick="adjustSnackQty(${idx}, -1)" style="background:none; border:none; font-weight:bold; font-size:0.95rem; cursor:pointer; color:#0f172a;">-</button>
+                    <span style="font-weight:800; font-size:0.82rem; color:#0f172a;">${snack.qty}</span>
+                    <button type="button" onclick="adjustSnackQty(${idx}, 1)" style="background:none; border:none; font-weight:bold; font-size:0.95rem; cursor:pointer; color:#065f46;">+</button>
+                </div>
+                <button type="button" onclick="removeSnackItemCompletely(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:6px 8px; font-size:0.7rem; cursor:pointer;" title="Remove Item">🗑️</button>
             </div>
         `;
-        container.appendChild(card);
+        wrapper.appendChild(card);
     });
 
-    const shipmentTextNode = document.getElementById('shipmentItemsCountText');
-    if (shipmentTextNode) {
-        shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
-    }
+    container.appendChild(wrapper);
 
     if (typeof renderUpsellingGridSafely === 'function') {
         renderUpsellingGridSafely();
@@ -3379,6 +3418,37 @@ window.executeFinalCartOrderPlacement = async function() {
     
     let grandTotal = subtotal + delivery + rainFee + activeHandlingFee + (window.currentDeliveryTip || 0);
 
+    // 🔥 Yahan paste karein (Delivery Instruction Capture)
+    const selectedInstructionNode = document.querySelector('.delivery-instruction-chip.active, [style*="border-color: rgb(22, 163, 74)"] span:first-child, [style*="border-color:#16a34a"]');
+    let deliveryInstructionText = "Standard Delivery";
+    const activeCheckedInstruction = document.querySelector('input[name="deliveryInstruction"]:checked');
+    if (activeCheckedInstruction) {
+        deliveryInstructionText = activeCheckedInstruction.value;
+    } else {
+        const highlightedInstruction = document.querySelector('[style*="background: rgb(240, 253, 244)"]');
+        if (highlightedInstruction) {
+            deliveryInstructionText = highlightedInstruction.innerText.replace('✔', '').trim();
+        }
+    }
+
+    const formData = new FormData();
+    window.cartPrintJobsArray.forEach(job => {
+        if (job.fileData) formData.append('document', job.fileData);
+    });
+
+    formData.append('totalAmount', grandTotal.toFixed(2));
+    formData.append('configDetails', JSON.stringify(finalMetaConfig));
+    formData.append('address', activeAddress);
+    formData.append('customerName', sessionActiveUser);
+    formData.append('phone', userPhone);
+    formData.append('deliveryTip', window.currentDeliveryTip || 0);
+    formData.append('paymentMode', paymentMode);
+    formData.append('userLat', userLat);
+    formData.append('userLng', userLng);
+    
+    // 🔥 FormData mein instruction append karein
+    formData.append('deliveryInstruction', deliveryInstructionText);
+
     const paymentSelect = document.getElementById('cartDrawerPaymentSelect');
     const selectedRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
     let paymentMode = selectedRadio ? selectedRadio.value.toLowerCase() : (paymentSelect ? paymentSelect.value.toLowerCase() : 'online');
@@ -3429,10 +3499,12 @@ window.executeFinalCartOrderPlacement = async function() {
             status: initialOrderStatus, 
             details: finalMetaConfig, 
             address: activeAddress,
+            deliveryInstruction: deliveryInstructionText, // 🔥 Yahan add karein (Saved for delivery boy / admin view)
             deliveryTip: window.currentDeliveryTip || 0
         });
         
         localStorage.setItem(historyKey, JSON.stringify(currentHistoryArray));
+        // ... baaki ka code waisa hi rahega ...
 
         try {
             await fetch('/api/admin/inventory/decrement', {
