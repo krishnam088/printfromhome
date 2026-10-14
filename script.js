@@ -79,6 +79,7 @@ window.navigateDrawerSection = function(targetId) {
 };
 
 // 🔥 100% BULLETPROOF ORDER HISTORY RENDER ENGINE
+// 🔥 Clean & Professional Order History Render Engine (Production Ready)
 window.renderOrderHistoryUI = function(username, showRecent = true) {
     try {
         const container = document.getElementById('ordersHistoryContainer');
@@ -93,7 +94,6 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
             history = [];
         }
 
-        // 🔥 Guaranteed Visible Home Top Bar
         const homeTopBar = `
             <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px;">
                 <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0;">Your Orders</h3>
