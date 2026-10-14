@@ -1413,9 +1413,15 @@ app.post('/api/admin/settings/update', async (req, res) => {
             settings = new StoreSetting({ key: 'global_settings' });
         }
 
-        if (deliveryFee !== undefined) settings.deliveryFee = parseFloat(deliveryFee) || 25;
-        if (handlingFee !== undefined) settings.handlingFee = parseFloat(handlingFee) || 5;
-        if (rainFee !== undefined) settings.rainFee = parseFloat(rainFee) || 15;
+if (deliveryFee !== undefined && deliveryFee !== null && deliveryFee !== '') {
+            settings.deliveryFee = parseFloat(deliveryFee);
+        }
+        if (handlingFee !== undefined && handlingFee !== null && handlingFee !== '') {
+            settings.handlingFee = parseFloat(handlingFee);
+        }
+        if (rainFee !== undefined && rainFee !== null && rainFee !== '') {
+            settings.rainFee = parseFloat(rainFee);
+        }
         if (coupons !== undefined && Array.isArray(coupons)) settings.coupons = coupons;
         
         await settings.save();
