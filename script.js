@@ -3407,7 +3407,7 @@ window.executeFinalCartOrderPlacement = async function() {
     });
 
     let subtotal = totalPrintVal + totalSnacksVal;
-    const freeDeliveryThreshold = 99.00;
+    const freeDeliveryThreshold = window.getDynamicFreeDeliveryThreshold ? window.getDynamicFreeDeliveryThreshold() : 99.00;
     let activeDelFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 0;
     let delivery = (subtotal >= freeDeliveryThreshold || subtotal === 0) ? 0 : activeDelFee;
     
@@ -3415,39 +3415,10 @@ window.executeFinalCartOrderPlacement = async function() {
     let rainFee = window.isRainSurgeActive ? activeRainFee : 0;
     
     let activeHandlingFee = window.adminHandlingFee !== undefined ? window.adminHandlingFee : 0;
+    let couponDiscount = window.appliedActiveCoupon ? window.appliedActiveCoupon.discount : 0;
     
-    let grandTotal = subtotal + delivery + rainFee + activeHandlingFee + (window.currentDeliveryTip || 0);
-
-    // 🔥 Yahan paste karein (Delivery Instruction Capture)
-    const selectedInstructionNode = document.querySelector('.delivery-instruction-chip.active, [style*="border-color: rgb(22, 163, 74)"] span:first-child, [style*="border-color:#16a34a"]');
-    let deliveryInstructionText = "Standard Delivery";
-    const activeCheckedInstruction = document.querySelector('input[name="deliveryInstruction"]:checked');
-    if (activeCheckedInstruction) {
-        deliveryInstructionText = activeCheckedInstruction.value;
-    } else {
-        const highlightedInstruction = document.querySelector('[style*="background: rgb(240, 253, 244)"]');
-        if (highlightedInstruction) {
-            deliveryInstructionText = highlightedInstruction.innerText.replace('✔', '').trim();
-        }
-    }
-
-    const formData = new FormData();
-    window.cartPrintJobsArray.forEach(job => {
-        if (job.fileData) formData.append('document', job.fileData);
-    });
-
-    formData.append('totalAmount', grandTotal.toFixed(2));
-    formData.append('configDetails', JSON.stringify(finalMetaConfig));
-    formData.append('address', activeAddress);
-    formData.append('customerName', sessionActiveUser);
-    formData.append('phone', userPhone);
-    formData.append('deliveryTip', window.currentDeliveryTip || 0);
-    formData.append('paymentMode', paymentMode);
-    formData.append('userLat', userLat);
-    formData.append('userLng', userLng);
-    
-    // 🔥 FormData mein instruction append karein
-    formData.append('deliveryInstruction', deliveryInstructionText);
+    let grandTotal = subtotal + delivery + rainFee + activeHandlingFee + (window.currentDeliveryTip || 0) - couponDiscount;
+    grandTotal = Math.max(0, grandTotal);
 
     const paymentSelect = document.getElementById('cartDrawerPaymentSelect');
     const selectedRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
@@ -3455,6 +3426,18 @@ window.executeFinalCartOrderPlacement = async function() {
 
     const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
     const userPhone = localStorage.getItem('printAppUserIdentity') || 'N/A';
+
+    // 🔥 Capture Selected Delivery Instruction safely
+    let deliveryInstructionText = "Standard Delivery";
+    const activeCheckedInstruction = document.querySelector('input[name="deliveryInstruction"]:checked');
+    if (activeCheckedInstruction) {
+        deliveryInstructionText = activeCheckedInstruction.value;
+    } else {
+        const highlightedInstruction = document.querySelector('[style*="background: rgb(240, 253, 244)"], [style*="background:#f0fdf4"]');
+        if (highlightedInstruction) {
+            deliveryInstructionText = highlightedInstruction.innerText.replace('✔', '').trim();
+        }
+    }
 
     // 🔥 FETCH USER LATITUDE & LONGITUDE BEFORE SENDING ORDER
     let userLat = STORE_LOCATION.lat;
@@ -3485,6 +3468,7 @@ window.executeFinalCartOrderPlacement = async function() {
     formData.append('paymentMode', paymentMode);
     formData.append('userLat', userLat);
     formData.append('userLng', userLng);
+    formData.append('deliveryInstruction', deliveryInstructionText);
 
     let initialOrderStatus = (window.cartPrintJobsArray.length > 0) ? "Ready for Print" : "Order Placed & Picking";
 
@@ -3499,12 +3483,14 @@ window.executeFinalCartOrderPlacement = async function() {
             status: initialOrderStatus, 
             details: finalMetaConfig, 
             address: activeAddress,
-            deliveryInstruction: deliveryInstructionText, // 🔥 Yahan add karein (Saved for delivery boy / admin view)
+            deliveryInstruction: deliveryInstructionText, 
             deliveryTip: window.currentDeliveryTip || 0
         });
         
         localStorage.setItem(historyKey, JSON.stringify(currentHistoryArray));
-        // ... baaki ka code waisa hi rahega ...
+
+        // 🔥 Clear used coupon after successful order (One-time validity rule)
+        window.appliedActiveCoupon = null;
 
         try {
             await fetch('/api/admin/inventory/decrement', {
@@ -3551,13 +3537,13 @@ window.executeFinalCartOrderPlacement = async function() {
         
         if (!data.success) {
             if (data.isDiwaliHold) {
-                // 🔥 Professional notification popup
                 showDiwaliPreLaunchNotice(data.message);
             } else {
                 alert(`⚠️ Error: ${data.message || 'Failed to create order'}`);
             }
             return;
         }
+
         // 1️⃣ CASH ON DELIVERY (COD) ROUTE
         if (paymentMode === 'cod' || paymentMode === 'cash') {
             alert('🎉 Order Placed Successfully via Cash on Delivery!');
@@ -3632,6 +3618,8 @@ window.executeFinalCartOrderPlacement = async function() {
         alert('❌ Connection Breakdown during order checkout.');
     }
 };
+
+
  // --- AUTH FORM (Login & Signup) ---
 
 // 🔥 UNIFIED & BULLETPROOF NAVIGATION ROUTER (Fixes White Screen & Overlaps)
