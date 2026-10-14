@@ -80,6 +80,7 @@ window.navigateDrawerSection = function(targetId) {
 
 // 🔥 100% BULLETPROOF ORDER HISTORY RENDER ENGINE
 // 🔥 Clean & Professional Order History Render Engine (Production Ready)
+// 🔥 Professional & Commercial-Grade Order History Render Engine
 window.renderOrderHistoryUI = function(username, showRecent = true) {
     try {
         const container = document.getElementById('ordersHistoryContainer');
@@ -101,14 +102,15 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
             </div>
         `;
 
+        // 🌟 Check if user is new (No order history found)
         if (!Array.isArray(history) || history.length === 0) {
             container.innerHTML = `
                 ${homeTopBar}
-                <div style="text-align:center; padding:40px 20px; font-family:'Poppins', sans-serif;">
-                    <div style="font-size:3rem; margin-bottom:10px;">📦</div>
-                    <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:4px;">No orders found</h3>
-                    <p style="font-size:0.78rem; color:#64748b; margin-bottom:16px;">You haven't placed any print orders or purchases yet.</p>
-                    <button type="button" onclick="navigateDrawerSection('store')" style="background:#065f46; color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:800; font-size:0.8rem; cursor:pointer;">Start Printing Now &rarr;</button>
+                <div style="text-align:center; padding:45px 20px; font-family:'Poppins', sans-serif;">
+                    <div style="font-size:3.5rem; margin-bottom:12px;">📦✨</div>
+                    <h3 style="font-size:1.15rem; font-weight:900; color:#0f172a; margin-bottom:6px;">No orders found</h3>
+                    <p style="font-size:0.82rem; color:#64748b; line-height:1.5; margin-bottom:20px; max-width:280px; margin-left:auto; margin-right:auto;">You haven't placed any orders yet. Place your first order now and enjoy special first-order delivery perks!</p>
+                    <button type="button" onclick="navigateDrawerSection('store')" style="background:#065f46; color:white; border:none; padding:12px 24px; border-radius:12px; font-weight:900; font-size:0.85rem; cursor:pointer; box-shadow:0 4px 12px rgba(6,95,70,0.2);">Start Your First Order &rarr;</button>
                 </div>
             `;
             return;
