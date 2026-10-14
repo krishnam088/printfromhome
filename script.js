@@ -338,83 +338,86 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(calculateRealtimeDistanceAndEta, 1000);
 });
 
-    // 🔥 REAL GOOGLE MAPS INTEGRATION STATE
-    let googleDeliveryMap = null;
-    let deliveryMarker = null;
+   // 🔥 REAL GOOGLE MAPS INTEGRATION STATE
+    let googleDeliveryMap = null;
+    let deliveryMarker = null;
 
-    window.initRealGoogleMap = function() {
-        const mapContainer = document.getElementById('userDeliveryMap');
-        const addressInput = document.getElementById('mapSelectedAddressInput');
-        if (!mapContainer) return;
+    window.initRealGoogleMap = function() {
+        const mapContainer = document.getElementById('userDeliveryMap');
+        const addressInput = document.getElementById('mapSelectedAddressInput');
+        if (!mapContainer) return;
 
-        const varanasiCoords = { lat: STORE_LOCATION.lat, lng: STORE_LOCATION.lng };
+        const varanasiCoords = { lat: STORE_LOCATION.lat, lng: STORE_LOCATION.lng };
 
-        googleDeliveryMap = new google.maps.Map(mapContainer, {
-            center: varanasiCoords,
-            zoom: 16,
-            mapTypeControl: false,
-            streetViewControl: false,
-            fullscreenControl: false,
-            zoomControl: true
-        });
+        googleDeliveryMap = new google.maps.Map(mapContainer, {
+            center: varanasiCoords,
+            zoom: 16,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            zoomControl: true
+        });
 
-        deliveryMarker = new google.maps.Marker({
-            position: varanasiCoords,
-            map: googleDeliveryMap,
-            draggable: true,
-            animation: google.maps.Animation.DROP,
-            title: 'Drag pin to your exact delivery spot'
-        });
+        deliveryMarker = new google.maps.Marker({
+            position: varanasiCoords,
+            map: googleDeliveryMap,
+            draggable: true,
+            animation: google.maps.Animation.DROP,
+            title: 'Drag pin to your exact delivery spot'
+        });
 
-        const geocoder = new google.maps.Geocoder();
+        const geocoder = new google.maps.Geocoder();
 
-        google.maps.event.addListener(deliveryMarker, 'dragend', function() {
-            const position = deliveryMarker.getPosition();
-            updateAddressFromLatLng(geocoder, position, addressInput);
-        });
+        google.maps.event.addListener(deliveryMarker, 'dragend', function() {
+            const position = deliveryMarker.getPosition();
+            updateAddressFromLatLng(geocoder, position, addressInput);
+        });
 
-        googleDeliveryMap.addListener('click', function(event) {
-            deliveryMarker.setPosition(event.latLng);
-            googleDeliveryMap.panTo(event.latLng);
-            updateAddressFromLatLng(geocoder, event.latLng, addressInput);
-        });
+        googleDeliveryMap.addListener('click', function(event) {
+            deliveryMarker.setPosition(event.latLng);
+            googleDeliveryMap.panTo(event.latLng);
+            updateAddressFromLatLng(geocoder, event.latLng, addressInput);
+        });
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const userPos = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude,
-                    };
-                    googleDeliveryMap.setCenter(userPos);
-                    deliveryMarker.setPosition(userPos);
-                    updateAddressFromLatLng(geocoder, userPos, addressInput);
-                },
-                () => {
-                    updateAddressFromLatLng(geocoder, varanasiCoords, addressInput);
-                }
-            );
-        } else {
-            updateAddressFromLatLng(geocoder, varanasiCoords, addressInput);
-        }
-    };
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userPos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+                    googleDeliveryMap.setCenter(userPos);
+                    deliveryMarker.setPosition(userPos);
+                    updateAddressFromLatLng(geocoder, userPos, addressInput);
+                },
+                () => {
+                    updateAddressFromLatLng(geocoder, varanasiCoords, addressInput);
+                }
+            );
+        } else {
+            updateAddressFromLatLng(geocoder, varanasiCoords, addressInput);
+        }
+    };
 
-    function updateAddressFromLatLng(geocoder, latLng, inputElement) {
-        geocoder.geocode({ location: latLng }, (results, status) => {
-            if (status === "OK" && results[0]) {
-                if (inputElement) {
-                    inputElement.value = results[0].formatted_address;
-                    inputElement.removeAttribute('readonly');
-                }
-            } else {
-                if (inputElement) {
-                    inputElement.value = `Location: ${latLng.lat().toFixed(5)}, ${latLng.lng().toFixed(5)}`;
-                    inputElement.removeAttribute('readonly');
-                }
-            }
-        });
-    }
+    // 🔥 Bulletproof Address Updater (Handles both Google LatLng object and plain {lat, lng} object)
+    function updateAddressFromLatLng(geocoder, latLng, inputElement) {
+        const latVal = (typeof latLng.lat === 'function') ? latLng.lat() : latLng.lat;
+        const lngVal = (typeof latLng.lng === 'function') ? latLng.lng() : latLng.lng;
 
+        geocoder.geocode({ location: latLng }, (results, status) => {
+            if (status === "OK" && results[0]) {
+                if (inputElement) {
+                    inputElement.value = results[0].formatted_address;
+                    inputElement.removeAttribute('readonly');
+                }
+            } else {
+                if (inputElement) {
+                    inputElement.value = `Location: ${Number(latVal).toFixed(5)}, ${Number(lngVal).toFixed(5)}`;
+                    inputElement.removeAttribute('readonly');
+                }
+            }
+        });
+    }
  
 // 🔥 100% Bulletproof Order History UI Render Engine (Stops White Screen Crashes)
 window.renderOrderHistoryUI = function(username, showRecent = true) {
