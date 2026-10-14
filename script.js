@@ -1,3 +1,27 @@
+// 🔥 Diwali Pre-Launch Notice Popup Helper Function
+window.showDiwaliPreLaunchNotice = function(message) {
+    let existingModal = document.getElementById('diwaliPreLaunchModal');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'diwaliPreLaunchModal';
+    modal.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:999999; display:flex; align-items:center; justify-content:center; padding:16px; font-family:'Poppins', sans-serif;";
+    
+    modal.innerHTML = `
+        <div style="background:#ffffff; border-radius:20px; width:100%; max-width:380px; padding:24px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.2); position:relative;">
+            <div style="font-size:3rem; margin-bottom:10px;">🪔</div>
+            <h3 style="font-size:1.15rem; font-weight:800; color:#0f172a; margin-bottom:8px;">Diwali Pre-Launch Notice</h3>
+            <p style="font-size:0.85rem; color:#475569; line-height:1.5; margin-bottom:20px;">${message}</p>
+            <button type="button" onclick="document.getElementById('diwaliPreLaunchModal').remove()" style="width:100%; padding:12px; background:#065f46; color:white; border:none; border-radius:12px; font-weight:800; font-size:0.9rem; cursor:pointer;">Got it, thanks!</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+};
+
+// 🔥 ABSOLUTE WHITE SCREEN & ERROR BOUNDARY DEFENDER
+window.onerror = function(msg, url, lineNo, columnNo, error) {
+    ...
+
 // 🔥 ABSOLUTE WHITE SCREEN & ERROR BOUNDARY DEFENDER
 window.onerror = function(msg, url, lineNo, columnNo, error) {
     console.error("❌ App Crash Prevented:", msg, "at line:", lineNo);
@@ -4353,4 +4377,25 @@ window.deleteUserAddressFromDatabase = async function(addressText) {
             if (typeof renderSavedAddressesUI === 'function') renderSavedAddressesUI();
         }
     } catch (e) {}
+};
+// ... (apka baaki ka purana code yahan khatam hota hai)
+
+// 🔥 Diwali Pre-Launch Notice Popup Helper Function
+window.showDiwaliPreLaunchNotice = function(message) {
+    let existingModal = document.getElementById('diwaliPreLaunchModal');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'diwaliPreLaunchModal';
+    modal.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:999999; display:flex; align-items:center; justify-content:center; padding:16px; font-family:'Poppins', sans-serif;";
+    
+    modal.innerHTML = `
+        <div style="background:#ffffff; border-radius:20px; width:100%; max-width:380px; padding:24px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.2); position:relative;">
+            <div style="font-size:3rem; margin-bottom:10px;">🪔</div>
+            <h3 style="font-size:1.15rem; font-weight:800; color:#0f172a; margin-bottom:8px;">Diwali Pre-Launch Notice</h3>
+            <p style="font-size:0.85rem; color:#475569; line-height:1.5; margin-bottom:20px;">${message}</p>
+            <button type="button" onclick="document.getElementById('diwaliPreLaunchModal').remove()" style="width:100%; padding:12px; background:#065f46; color:white; border:none; border-radius:12px; font-weight:800; font-size:0.9rem; cursor:pointer;">Got it, thanks!</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
 };
