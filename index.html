@@ -514,17 +514,19 @@
 
 </div> <!-- Modal poori tarah yahan close hoga -->
 
-    <!-- 💬 NEED HELP & CUSTOMER CARE MODAL -->
+    <!-- 💬 HELP & SUPPORT HUB MODAL (Business Email & Call Support) -->
     <div id="helpCenterModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 21000; display: none; justify-content: center; align-items: center; padding: 20px;">
         <div style="background: #ffffff; border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
-            <div style="font-size: 3rem; margin-bottom: 8px;">💬</div>
+            <div style="font-size: 3rem; margin-bottom: 8px;">🎧</div>
             <h3 style="font-size: 1.2rem; font-weight: 900; color: #0f172a; margin-bottom: 6px;">Customer Support Hub</h3>
             <p style="font-size: 0.78rem; color: #64748b; margin-bottom: 16px;">We are available 24/7 for print orders and delivery inquiries.</p>
             
             <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
-                <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Print%20From%20Home" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #25D366; color: white; padding: 12px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.85rem;">
-                    <span>💬</span> Chat on WhatsApp (+91 7007626731)
+                <!-- 🔥 Personal WhatsApp ki jagah Official Business Email -->
+                <a href="mailto:support@printfromhomes.com?subject=Customer%20Support%20Inquiry" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #0070f3; color: white; padding: 12px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.85rem;">
+                    <span>📧</span> Email Support (support@printfromhomes.com)
                 </a>
+                <!-- Support Helpline (Optional, or leave if professional business line) -->
                 <a href="tel:7007626731" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #0f172a; color: white; padding: 12px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.85rem;">
                     <span>📞</span> Call Support Helpline
                 </a>
@@ -572,7 +574,8 @@
             <button type="button" onclick="sendAiPresetQuery('Where is my order?')" style="background: #ffffff; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 16px; font-size: 0.72rem; font-weight: 700; cursor: pointer; white-space: nowrap;">📦 Track Order</button>
             <button type="button" onclick="sendAiPresetQuery('How to cancel my order?')" style="background: #ffffff; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 16px; font-size: 0.72rem; font-weight: 700; cursor: pointer; white-space: nowrap;">❌ Cancel Order</button>
             <button type="button" onclick="sendAiPresetQuery('What are your prices?')" style="background: #ffffff; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 16px; font-size: 0.72rem; font-weight: 700; cursor: pointer; white-space: nowrap;">💰 Pricing</button>
-            <button type="button" onclick="connectToHumanSupport()" style="background: #25D366; color: white; border: none; padding: 6px 10px; border-radius: 16px; font-size: 0.72rem; font-weight: 700; cursor: pointer; white-space: nowrap;">📞 Support</button>
+            <!-- 🔥 AI Preset Button mein WhatsApp ki jagah Email Support -->
+            <button type="button" onclick="connectToHumanSupport()" style="background: #0070f3; color: white; border: none; padding: 6px 10px; border-radius: 16px; font-size: 0.72rem; font-weight: 700; cursor: pointer; white-space: nowrap;">📧 Support</button>
         </div>
 
         <div style="padding: 12px 16px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center;">

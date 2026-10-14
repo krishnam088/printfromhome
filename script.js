@@ -3031,115 +3031,124 @@ window.forceReturnToUploadView = function() {
     if(multiFilesContainer) multiFilesContainer.innerHTML = '';
     refreshInvoiceTabState(); calculateTotal();
 };
-    // 🤖 BILINGUAL AI ASSISTANT & SUPPORT LOGIC (ENGLISH & HINDI)
-    let currentAiLang = 'en'; // Default English
+   // 🤖 BILINGUAL AI ASSISTANT & SUPPORT LOGIC (ENGLISH & HINDI)
+    let currentAiLang = 'en'; // Default English
 
-    window.changeAiLanguage = function(lang) {
-        currentAiLang = lang;
-        const welcomeBubble = document.getElementById('aiWelcomeMessageBubble');
-        if (welcomeBubble) {
-            if (lang === 'hi') {
-                welcomeBubble.textContent = "👋 नमस्ते! मैं Print From Home का AI सहायक हूँ। आपको ऑर्डर ट्रैकिंग, कैंसिलेशन, प्राइसिंग या अकाउंट से जुड़ी किस बात में सहायता चाहिए?";
-            } else {
-                welcomeBubble.textContent = "👋 Hello! I am the AI Assistant for Print From Home. How can I help you with order tracking, cancellation, pricing, or your account?";
-            }
-        }
-    };
+    window.changeAiLanguage = function(lang) {
+        currentAiLang = lang;
+        const welcomeBubble = document.getElementById('aiWelcomeMessageBubble');
+        if (welcomeBubble) {
+            if (lang === 'hi') {
+                welcomeBubble.textContent = "👋 नमस्ते! मैं Print From Home का AI सहायक हूँ। आपको ऑर्डर ट्रैकिंग, कैंसिलेशन, प्राइसिंग या अकाउंट से जुड़ी किस बात में सहायता चाहिए?";
+            } else {
+                welcomeBubble.textContent = "👋 Hello! I am the AI Assistant for Print From Home. How can I help you with order tracking, cancellation, pricing, or your account?";
+            }
+        }
+    };
 
-    window.toggleAiChatModal = function(open) {
-        const modal = document.getElementById('aiChatModal');
-        if (modal) {
-            modal.style.display = open ? 'flex' : 'none';
-        }
-    };
+    window.toggleAiChatModal = function(open) {
+        const modal = document.getElementById('aiChatModal');
+        if (modal) {
+            modal.style.display = open ? 'flex' : 'none';
+        }
+    };
 
-    window.handleAiChatKeyPress = function(e) {
-        if (e.key === 'Enter') {
-            sendUserMessageToAi();
-        }
-    };
+    window.handleAiChatKeyPress = function(e) {
+        if (e.key === 'Enter') {
+            sendUserMessageToAi();
+        }
+    };
 
-    window.sendAiPresetQuery = function(queryText) {
-        const input = document.getElementById('aiUserChatInput');
-        if (input) {
-            input.value = queryText;
-            sendUserMessageToAi();
-        }
-    };
+    window.sendAiPresetQuery = function(queryText) {
+        const input = document.getElementById('aiUserChatInput');
+        if (input) {
+            input.value = queryText;
+            sendUserMessageToAi();
+        }
+    };
 
-    window.sendUserMessageToAi = function() {
-        const input = document.getElementById('aiUserChatInput');
-        const msgBox = document.getElementById('aiChatMessagesBox');
-        if (!input || !msgBox) return;
+    window.sendUserMessageToAi = function() {
+        const input = document.getElementById('aiUserChatInput');
+        const msgBox = document.getElementById('aiChatMessagesBox');
+        if (!input || !msgBox) return;
 
-        const userText = input.value.trim();
-        if (!userText) return;
+        const userText = input.value.trim();
+        if (!userText) return;
 
-        // 1. Append User Message Bubble
-        const userBubble = document.createElement('div');
-        userBubble.style.cssText = "background: #065f46; color: white; padding: 10px 14px; border-radius: 12px; font-size: 0.82rem; max-width: 80%; align-self: flex-end; font-weight: 500;";
-        userBubble.textContent = userText;
-        msgBox.appendChild(userBubble);
+        // 1. Append User Message Bubble
+        const userBubble = document.createElement('div');
+        userBubble.style.cssText = "background: #065f46; color: white; padding: 10px 14px; border-radius: 12px; font-size: 0.82rem; max-width: 80%; align-self: flex-end; font-weight: 500;";
+        userBubble.textContent = userText;
+        msgBox.appendChild(userBubble);
 
-        input.value = "";
-        msgBox.scrollTop = msgBox.scrollHeight;
+        input.value = "";
+        msgBox.scrollTop = msgBox.scrollHeight;
 
-        // 2. Process App-Related FAQs via AI Assistant in English / Hindi
-        setTimeout(() => {
-            const aiBubble = document.createElement('div');
-            aiBubble.style.cssText = "background: #e2e8f0; color: #0f172a; padding: 10px 14px; border-radius: 12px; font-size: 0.82rem; max-width: 80%; align-self: flex-start; font-weight: 500; line-height: 1.4;";
-            
-            const lower = userText.toLowerCase();
+        // 2. Process App-Related FAQs with Real User & Order Context
+        setTimeout(() => {
+            const aiBubble = document.createElement('div');
+            aiBubble.style.cssText = "background: #e2e8f0; color: #0f172a; padding: 10px 14px; border-radius: 12px; font-size: 0.82rem; max-width: 80%; align-self: flex-start; font-weight: 500; line-height: 1.4;";
+            
+            const lower = userText.toLowerCase();
+            const activeUser = localStorage.getItem('printAppUser') || 'Customer';
+            let history = [];
+            try {
+                history = JSON.parse(localStorage.getItem(`history_${activeUser}`) || '[]');
+            } catch(e) { history = []; }
 
-            if (lower.includes('order') || lower.includes('track') || lower.includes('status') || lower.includes('kahan') || lower.includes('where')) {
-                if (currentAiLang === 'hi') {
-                    aiBubble.innerHTML = `📦 <b>मेरा ऑर्डर कहाँ है?</b><br>अपने ऑर्डर की लाइव स्टेटस देखने के लिए ऐप के मेनू (<span style="color:#065f46; font-weight:700;">👤 icon</span>) पर क्लिक करें और <b>'Your orders'</b> सेक्शन में जाएं!`;
-                } else {
-                    aiBubble.innerHTML = `📦 <b>Where is my order?</b><br>You can check your live order tracking by clicking the menu (<span style="color:#065f46; font-weight:700;">👤 icon</span>) in the top right and opening the <b>'Your orders'</b> section!`;
-                }
-            } 
-            else if (lower.includes('cancel') || lower.includes('cancellation') || lower.includes('रद्द')) {
-                if (currentAiLang === 'hi') {
-                    aiBubble.innerHTML = `❌ <b>ऑर्डर कैसे कैंसिल करें?</b><br>यदि आपका ऑर्डर प्रोसेसिंग में है, तो कृपया इसे रद्द करने के लिए तुरंत हमारे कस्टमर सपोर्ट एग्जीक्यूटिव को कॉल या WhatsApp पर संपर्क करें।`;
-                } else {
-                    aiBubble.innerHTML = `❌ <b>How to cancel my order?</b><br>If your print job or order is currently in processing, please contact our support executive immediately via phone or WhatsApp call to cancel it.`;
-                }
-            } 
-            else if (lower.includes('account') || lower.includes('login') || lower.includes('register') || lower.includes('profile')) {
-                if (currentAiLang === 'hi') {
-                    aiBubble.innerHTML = `👤 <b>यूज़र अकाउंट सहायता:</b><br>आप ऊपर दिए गए <b>Profile/Avatar icon</b> पर क्लिक करके अपनी अकाउंट डिटेल्स मैनेज कर सकते हैं। यहाँ से आप एड्रेस बुक और अपनी जानकारी अपडेट कर सकते हैं।`;
-                } else {
-                    aiBubble.innerHTML = `👤 <b>User Account Help:</b><br>You can manage your account details by clicking the <b>Profile/Avatar icon</b> in the top right corner. From there, you can update your Address Book or edit your profile.`;
-                }
-            } 
-            else if (lower.includes('price') || lower.includes('rate') || lower.includes('cost') || lower.includes('kitna') || lower.includes('page') || lower.includes('कीमत')) {
-                if (currentAiLang === 'hi') {
-                    aiBubble.innerHTML = `💰 <b>प्रिंटिंग रेट्स और प्राइसिंग:</b><br>• ब्लैक एंड व्हाइट: ₹3 प्रति पेज<br>• रंगीन (Coloured): ₹10 प्रति पेज<br>• स्पाइरल बाइंडिंग: +₹30<br>• ₹99 से ऊपर के ऑर्डर पर <b>फ्री डिलीवरी</b>!`;
-                } else {
-                    aiBubble.innerHTML = `💰 <b>Printing Rates & Pricing:</b><br>• Black & White: ₹3 per page<br>• Coloured: ₹10 per page<br>• Spiral Binding: +₹30<br>• Orders above ₹99 get <b>FREE Delivery</b>!`;
-                }
-            } 
-            else if (lower.includes('delivery') || lower.includes('time') || lower.includes('समय') || lower.includes('der')) {
-                if (currentAiLang === 'hi') {
-                    aiBubble.innerHTML = `⏱️ <b>डिलीवरी का समय:</b><br>हम वाराणसी में आपके घर तक प्रिंट और स्टोर के सामान की डिलीवरी मात्र <b>15 मिनट</b> के अंदर करते हैं!`;
-                } else {
-                    aiBubble.innerHTML = `⏱️ <b>Delivery Time:</b><br>We deliver prints and store items right to your doorstep in Varanasi within <b>15 minutes</b>!`;
-                }
-            } 
-            else {
-                if (currentAiLang === 'hi') {
-                    aiBubble.innerHTML = `🤖 मुझे आपके इस सवाल का सटीक उत्तर नहीं मिला। क्या आप हमारे ह्यूमन कस्टमर सपोर्ट से बात करना चाहेंगे?<br><br>
-                        <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Support,%20I%20need%20help%20with:%20${encodeURIComponent(userText)}" target="_blank" style="display:inline-block; background:#25D366; color:white; padding:6px 12px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:4px;">💬 कस्टमर सपोर्ट से चैट करें</a>`;
-                } else {
-                    aiBubble.innerHTML = `🤖 I couldn't quite understand your query. Would you like to connect with our human customer support?<br><br>
-                        <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Support,%20I%20need%20help%20with:%20${encodeURIComponent(userText)}" target="_blank" style="display:inline-block; background:#25D366; color:white; padding:6px 12px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:4px;">💬 Connect to Customer Support</a>`;
-                }
-            }
+            if (lower.includes('order') || lower.includes('track') || lower.includes('status') || lower.includes('kahan') || lower.includes('where')) {
+                if (history.length > 0) {
+                    let latestOrder = history[0];
+                    if (currentAiLang === 'hi') {
+                        aiBubble.innerHTML = `📦 <b>आपका हालिया ऑर्डर मिल गया है!</b><br>
+                        • ऑर्डर आईडी: #${latestOrder.orderId || latestOrder.id}<br>
+                        • स्टेटस: <b style="color:#2563eb;">${latestOrder.status}</b><br>
+                        • कुल राशि: ₹${latestOrder.amount || latestOrder.totalAmount}<br><br>
+                        आप इसे अपने <b>'Your orders'</b> सेक्शन से लाइव ट्रैक कर सकते हैं!`;
+                    } else {
+                        aiBubble.innerHTML = `📦 <b>Latest Order Found!</b><br>
+                        • Order ID: #${latestOrder.orderId || latestOrder.id}<br>
+                        • Status: <b style="color:#2563eb;">${latestOrder.status}</b><br>
+                        • Amount: ₹${latestOrder.amount || latestOrder.totalAmount}<br><br>
+                        You can track it live from your <b>'Your orders'</b> section!`;
+                    }
+                } else {
+                    if (currentAiLang === 'hi') {
+                        aiBubble.innerHTML = `📦 आपके अकाउंट में कोई हालिया ऑर्डर नहीं मिला। आप होम स्क्रीन से अपना पहला प्रिंट ऑर्डर शुरू कर सकते हैं!`;
+                    } else {
+                        aiBubble.innerHTML = `📦 No active orders found in your account. You can start your first print order from the home screen!`;
+                    }
+                }
+            } 
+            else if (lower.includes('cancel') || lower.includes('cancellation') || lower.includes('रद्द')) {
+                if (currentAiLang === 'hi') {
+                    aiBubble.innerHTML = `❌ <b>ऑर्डर कैंसिलेशन नीति:</b><br>यदि आपका प्रिंट जॉब शुरू नहीं हुआ है, तो आप इसे ऑर्डर हिस्ट्री से रद्द कर सकते हैं। अधिक सहायता के लिए नीचे दिए गए बटन से सीधे हमारे सपोर्ट ईमेल पर संपर्क करें।`;
+                } else {
+                    aiBubble.innerHTML = `❌ <b>Order Cancellation Policy:</b><br>If your print job has not started yet, you can cancel it from your order history. For urgent assistance, reach out directly to our support email below.`;
+                }
+            } 
+            else if (lower.includes('price') || lower.includes('rate') || lower.includes('cost') || lower.includes('kitna') || lower.includes('कीमत')) {
+                if (currentAiLang === 'hi') {
+                    aiBubble.innerHTML = `💰 <b>प्रिंटिंग रेट्स और प्राइसिंग:</b><br>• ब्लैक एंड व्हाइट: ₹3 प्रति पेज<br>• रंगीन (Coloured): ₹10 प्रति पेज<br>• स्पाइरल बाइंडिंग: +₹30<br>• ₹99 से ऊपर के ऑर्डर पर <b>फ्री डिलीवरी</b>!`;
+                } else {
+                    aiBubble.innerHTML = `💰 <b>Printing Rates & Pricing:</b><br>• Black & White: ₹3 per page<br>• Coloured: ₹10 per page<br>• Spiral Binding: +₹30<br>• Orders above ₹99 get <b>FREE Delivery</b>!`;
+                }
+            } 
+            else {
+                // 🔥 Professional Business Email Handoff (No Personal WhatsApp)
+                if (currentAiLang === 'hi') {
+                    aiBubble.innerHTML = `🤖 मुझे आपके इस सवाल का सटीक उत्तर स्वतः नहीं मिला। मैंने आपकी यह क्वेरी हमारे <b>सपोर्ट विभाग (Help Department)</b> को भेज दी है। आप चाहें तो नीचे दिए गए बटन पर क्लिक करके सीधे हमारी व्यावसायिक ईमेल पर संपर्क कर सकते हैं:<br><br>
+                        <a href="mailto:support@printfromhomes.com?subject=Support%20Inquiry:%20${encodeURIComponent(userText)}&body=Hello%20Support%20Team,%0A%0AMy%20Query:%20${encodeURIComponent(userText)}" target="_blank" style="display:inline-block; background:#0070f3; color:white; padding:8px 14px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:4px;">📧 सपोर्ट टीम को ईमेल भेजें</a>`;
+                } else {
+                    aiBubble.innerHTML = `🤖 I have routed your query to our <b>Help Support Department</b>. You can also drop us a direct email at our official business desk for prompt assistance:<br><br>
+                        <a href="mailto:support@printfromhomes.com?subject=Support%20Inquiry:%20${encodeURIComponent(userText)}&body=Hello%20Support%20Team,%0A%0AMy%20Query:%20${encodeURIComponent(userText)}" target="_blank" style="display:inline-block; background:#0070f3; color:white; padding:8px 14px; border-radius:8px; text-decoration:none; font-weight:700; margin-top:4px;">📧 Email Support Department</a>`;
+                }
+            }
 
-            msgBox.appendChild(aiBubble);
-            msgBox.scrollTop = msgBox.scrollHeight;
-        }, 500);
-    };
+            msgBox.appendChild(aiBubble);
+            msgBox.scrollTop = msgBox.scrollHeight;
+        }, 500);
+    };
 
 // 🔥 Live Admin Settings Sync Engine (No Hardcoded Defaults - Strictly Admin Controlled)
 window.adminDeliveryFee = parseFloat(localStorage.getItem('cached_delivery_fee')) || 0;
