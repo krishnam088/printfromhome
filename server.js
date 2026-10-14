@@ -126,8 +126,10 @@ const storeConfigSchema = new mongoose.Schema({
     isOpen: { type: Boolean, default: true },
     printEnabled: { type: Boolean, default: true }, 
     rainSurgeActive: { type: Boolean, default: false },
-    diwaliLaunchMode: { type: Boolean, default: false }, // 🔥 Add this
-    diwaliMessage: { type: String, default: "🚀 Launching on Diwali! Service starts from Diwali. Thanks for downloading Print From Home! 🙏" }, // 🔥 Add this
+    diwaliLaunchMode: { type: Boolean, default: false },
+    diwaliMessage: { type: String, default: "🚀 Launching on Diwali! Service starts from Diwali. Thanks for downloading Print From Home! 🙏" },
+    openTime: { type: String, default: "07:00" },  // 🔥 Yeh naya field add karein
+    closeTime: { type: String, default: "22:00" }, // 🔥 Yeh naya field add karein
     updatedAt: String
 });
 const StoreConfig = mongoose.model('StoreConfig', storeConfigSchema);
@@ -287,7 +289,7 @@ app.get('/api/store-status', async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
         if (!config) {
-            config = await StoreConfig.create({ isOpen: true, rainSurgeActive: false, updatedAt: new Date().toISOString() });
+            config = await StoreConfig.create({ isOpen: true, rainSurgeActive: false, openTime: "07:00", closeTime: "22:00", updatedAt: new Date().toISOString() });
         }
 
         const now = new Date();
@@ -295,22 +297,35 @@ app.get('/api/store-status', async (req, res) => {
         const utcMinutes = now.getUTCMinutes();
         const istTotalMinutes = (utcHours * 60 + utcMinutes) + (5 * 60 + 30);
         const istHours = Math.floor(istTotalMinutes / 60) % 24;
+        const istMins = istTotalMinutes % 60;
+        const currentMinutesOfDay = istHours * 60 + istMins;
 
-        const isTimeWithinOperatingHours = istHours >= 7 && istHours < 22;
+        const openTimeStr = config.openTime || "07:00";
+        const closeTimeStr = config.closeTime || "22:00";
+
+        const [openH, openM] = openTimeStr.split(':').map(Number);
+        const [closeH, closeM] = closeTimeStr.split(':').map(Number);
+        const openMinutesOfDay = openH * 60 + openM;
+        const closeMinutesOfDay = closeH * 60 + closeM;
+
+        const isTimeWithinOperatingHours = currentMinutesOfDay >= openMinutesOfDay && currentMinutesOfDay < closeMinutesOfDay;
         const finalIsOpen = isTimeWithinOperatingHours && config.isOpen;
 
         res.json({ 
             success: true, 
             isOpen: finalIsOpen, 
-            printEnabled: config.printEnabled !== false, // Send print status to frontend
+            printEnabled: config.printEnabled !== false,
             manualOverride: config.isOpen, 
             rainSurgeActive: config.rainSurgeActive, 
+            openTime: openTimeStr,   // 🔥 Client ke liye open time bhej rahe hain
+            closeTime: closeTimeStr, // 🔥 Client ke liye close time bhej rahe hain
             currentIstHour: istHours 
         });
     } catch (err) {
         res.status(500).json({ success: false, isOpen: true, error: err.message });
     }
 });
+
 const handlePrintToggle = async (req, res) => {
     try {
         const { printEnabled } = req.body;
@@ -1406,14 +1421,14 @@ app.get('/api/admin/settings', async (req, res) => {
 
 app.post('/api/admin/settings/update', async (req, res) => {
     try {
-        const { deliveryFee, handlingFee, rainFee, coupons } = req.body;
+        const { deliveryFee, handlingFee, rainFee, coupons, openTime, closeTime } = req.body;
         
         let settings = await StoreSetting.findOne({ key: 'global_settings' });
         if (!settings) {
             settings = new StoreSetting({ key: 'global_settings' });
         }
 
-if (deliveryFee !== undefined && deliveryFee !== null && deliveryFee !== '') {
+        if (deliveryFee !== undefined && deliveryFee !== null && deliveryFee !== '') {
             settings.deliveryFee = parseFloat(deliveryFee);
         }
         if (handlingFee !== undefined && handlingFee !== null && handlingFee !== '') {
@@ -1423,9 +1438,19 @@ if (deliveryFee !== undefined && deliveryFee !== null && deliveryFee !== '') {
             settings.rainFee = parseFloat(rainFee);
         }
         if (coupons !== undefined && Array.isArray(coupons)) settings.coupons = coupons;
-        
         await settings.save();
-        res.json({ success: true, message: "Settings saved permanently to database!", settings });
+
+        // 🔥 Admin dwara set kiye gaye store timings ko StoreConfig mein permanent save karne ke liye
+        if (openTime !== undefined || closeTime !== undefined) {
+            let config = await StoreConfig.findOne();
+            if (!config) config = new StoreConfig();
+            if (openTime !== undefined) config.openTime = openTime;
+            if (closeTime !== undefined) config.closeTime = closeTime;
+            config.updatedAt = new Date().toISOString();
+            await config.save();
+        }
+
+        res.json({ success: true, message: "Settings and timings saved permanently to database!", settings });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
