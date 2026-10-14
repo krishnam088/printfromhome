@@ -3153,9 +3153,11 @@ window.loadAdminConfiguredFeesAndCoupons = async function() {
         if (res && res.ok) {
             const data = await res.json();
             if (data && data.success && data.settings) {
-                window.adminDeliveryFee = parseFloat(data.settings.deliveryFee) || 0;
-                window.adminHandlingFee = parseFloat(data.settings.handlingFee) || 0;
-                window.adminRainFee = parseFloat(data.settings.rainFee) || 0;
+                // 🔥 Strict check so that '0' is correctly retained instead of falling back
+                window.adminDeliveryFee = (data.settings.deliveryFee !== undefined && data.settings.deliveryFee !== null && data.settings.deliveryFee !== '') ? parseFloat(data.settings.deliveryFee) : 0;
+                window.adminHandlingFee = (data.settings.handlingFee !== undefined && data.settings.handlingFee !== null && data.settings.handlingFee !== '') ? parseFloat(data.settings.handlingFee) : 0;
+                window.adminRainFee = (data.settings.rainFee !== undefined && data.settings.rainFee !== null && data.settings.rainFee !== '') ? parseFloat(data.settings.rainFee) : 0;
+                
                 window.adminCouponsList = data.settings.coupons || [];
 
                 // 💾 Save to localStorage so refresh shows it instantly without waiting
@@ -3376,6 +3378,14 @@ window.executeFinalCartOrderPlacement = async function() {
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
     window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
+    // 🔥 Strict LocalStorage Fetch (Allows 0 correctly)
+const cachedDel = localStorage.getItem('cached_delivery_fee');
+const cachedHan = localStorage.getItem('cached_handling_fee');
+const cachedRai = localStorage.getItem('cached_rain_fee');
+
+window.adminDeliveryFee = (cachedDel !== null && cachedDel !== undefined && cachedDel !== '') ? parseFloat(cachedDel) : 0;
+window.adminHandlingFee = (cachedHan !== null && cachedHan !== undefined && cachedHan !== '') ? parseFloat(cachedHan) : 0;
+window.adminRainFee = (cachedRai !== null && cachedRai !== undefined && cachedRai !== '') ? parseFloat(cachedRai) : 0;
     let totalItemsCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0) + window.cartPrintJobsArray.length;
     if (totalItemsCount === 0) {
         alert("⚠️ Your cart is empty! Please add print jobs or store products first.");
