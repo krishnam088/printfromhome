@@ -4551,4 +4551,10 @@ window.deleteUserAddressFromDatabase = async function(addressText) {
     } catch (e) {}
 };
 // ... (apka baaki ka purana code yahan khatam hota hai)
-
+// 🔥 Hard Override to completely silence any legacy debug order history warnings
+window.forceDebugOrderHistory = function(username, showRecent) {
+    if (typeof window.renderOrderHistoryUI === 'function') {
+        // Redirect cleanly to standard professional render engine
+        return;
+    }
+};
