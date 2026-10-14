@@ -4578,3 +4578,54 @@ window.forceDebugOrderHistory = function(username, showRecent) {
         return;
     }
 };
+window.openEditProfileModal = function() {
+    const modal = document.getElementById('editProfileModal');
+    const sessionUser = localStorage.getItem('printAppUserIdentity') || localStorage.getItem('printAppUser') || '';
+    const emailField = document.getElementById('modalEditEmailInput');
+    const nameField = document.getElementById('modalEditNameInput');
+    
+    const currentName = localStorage.getItem(`user_name_${sessionUser}`) || localStorage.getItem('printAppUser') || '';
+    const currentEmail = localStorage.getItem(`user_email_${sessionUser}`) || '';
+
+    if(nameField) nameField.value = currentName !== 'Customer' ? currentName : '';
+    if(emailField) emailField.value = currentEmail;
+    if(modal) modal.style.display = 'flex';
+};
+
+window.submitProfileUpdates = async function(e) {
+    e.preventDefault();
+    const sessionUser = localStorage.getItem('printAppUserIdentity') || localStorage.getItem('printAppUser');
+    const newName = document.getElementById('modalEditNameInput').value.trim();
+    const newEmail = document.getElementById('modalEditEmailInput').value.trim();
+    const newPass = document.getElementById('modalEditPasswordInput').value.trim();
+
+    if (!newName || !newEmail) {
+        alert("⚠️ Name and Gmail address cannot be empty!");
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/auth/update-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identity: sessionUser, name: newName, newPassword: newPass || undefined })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            localStorage.setItem('printAppUser', newName);
+            localStorage.setItem(`user_name_${sessionUser}`, newName);
+            localStorage.setItem(`user_email_${sessionUser}`, newEmail);
+            
+            const greetingEl = document.getElementById('userGreeting');
+            if(greetingEl) greetingEl.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${newName}</span>`;
+
+            showAppToast("✅ Profile & Gmail updated successfully!", "success");
+            closeEditProfileModal();
+        } else {
+            alert(`❌ ${data.message || 'Failed to update profile'}`);
+        }
+    } catch(err) {
+        alert("❌ Server connection error while updating profile.");
+    }
+};
