@@ -176,14 +176,14 @@ const razorpay = new Razorpay({
 });
 
 const transporter = nodemailer.createTransport({
-    host: 'smtp.hostinger.com',
-    port: 465,
-    secure: true, // true for 465
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false, // true for 465, false for 587
     auth: {
-        user: process.env.EMAIL_USER, // support@printfromhomes.com
-        pass: process.env.EMAIL_PASS  // Hostinger email password
+        user: 'support@printfromhomes.com', // Aapka Brevo account login email
+        pass: process.env.SMTP_PASS         // Wahi Brevo API Key / SMTP Password jo Render par saved hai
     },
-    connectionTimeout: 15000, // 15 seconds timeout
+    connectionTimeout: 15000,
     socketTimeout: 15000
 });
 
@@ -593,31 +593,17 @@ async function sendBroadcastEmail(subject, message) {
                     </div>
                 </div>
             `;
-console.log("Checking Brevo Key:", process.env.SMTP_PASS ? "Key Exists (Length: " + process.env.SMTP_PASS.length + ")" : "KEY IS MISSING!");
-            // 🔥 Brevo HTTP API ka use (Render par kabhi block nahi hoti)
-            const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-                method: 'POST',
-                headers: {
-                    'accept': 'application/json',
-                    'api-key': process.env.SMTP_PASS, // Yahan aapki Brevo API key rahegi
-                    'content-type': 'application/json'
-                },
-                body: JSON.stringify({
-                    sender: { name: "Print From Home Support", email: "support@printfromhomes.com" },
-                    to: [{ email: user.email, name: user.name || 'Customer' }],
-                    subject: subject,
-                    htmlContent: personalizedHTML
-                })
+
+            await transporter.sendMail({
+                from: '"Print From Home Support" <support@printfromhomes.com>',
+                to: user.email,
+                subject: subject,
+                html: personalizedHTML
             });
 
-            if (!response.ok) {
-                const errData = await response.json();
-                console.error(`❌ Failed for ${user.email}:`, JSON.stringify(errData));
-            } else {
-                console.log(`✅ Successfully sent via Brevo API to: ${user.email}`);
-            }
+            console.log(`✅ Successfully sent via Brevo SMTP to: ${user.email}`);
         } catch (innerErr) {
-            console.error(`❌ Error sending to ${user.email}:`, innerErr.message);
+            console.error(`❌ Failed for ${user.email}:`, innerErr.message);
         }
     }
 }
