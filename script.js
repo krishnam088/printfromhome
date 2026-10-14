@@ -3450,6 +3450,18 @@ window.executeFinalCartOrderPlacement = async function() {
         alert('❌ Connection Breakdown during online checkout.');
     }
 };
+const response = await fetch('/api/create-order', { method: 'POST', body: formData });
+        const data = await response.json();
+        
+        if (!data.success) {
+            // 🔥 Agar Diwali launch hold active hai, toh seedha clean message dikhayein bina "Error:" ke
+            if (data.isDiwaliHold) {
+                alert(data.message);
+            } else {
+                alert(`⚠️ Error: ${data.message || 'Failed to initialize payment gateway'}`);
+            }
+            return;
+        }
 
  // --- AUTH FORM (Login & Signup) ---
 

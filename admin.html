@@ -451,6 +451,8 @@
                 <div style="text-align: center; padding: 40px; color: var(--text-sub);">⏳ Connecting to live orders stream...</div>
             </div>
         </div>
+        <!-- 🔥 Diwali Launch Mode Toggle Button -->
+<button type="button" id="diwaliToggleBtn" class="toggle-badge-btn btn-rain-off" onclick="toggleAdminDiwaliLaunch()">🪔 Diwali Launch: <span id="diwaliSwitchStateText">OFF</span></button>
         <!-- TAB: LIVE RIDERS MONITOR -->
 <div id="section_riders" class="admin-section" style="background: var(--surface-card); border-radius: 16px; padding: 22px; border: 1px solid var(--border-color);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
@@ -2011,6 +2013,53 @@ window.addEventListener('DOMContentLoaded', () => {
     fetchAdminActiveRiders();
     setInterval(fetchAdminActiveRiders, 10000);
 });
+let adminDiwaliLaunchActive = false;
+
+async function fetchAdminDiwaliStatus() {
+    try {
+        const res = await fetch('/api/store-status');
+        const data = await res.json();
+        if (data.success !== undefined && data.diwaliLaunchMode !== undefined) {
+            adminDiwaliLaunchActive = data.diwaliLaunchMode;
+            updateDiwaliSwitchButtonUI();
+        }
+    } catch (e) {}
+}
+
+async function toggleAdminDiwaliLaunch() {
+    const nextState = !adminDiwaliLaunchActive;
+    try {
+        const res = await fetch('/api/admin/toggle-diwali-launch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ diwaliLaunchMode: nextState })
+        });
+        const data = await res.json();
+        if (data.success) {
+            adminDiwaliLaunchActive = data.diwaliLaunchMode;
+            updateDiwaliSwitchButtonUI();
+        }
+    } catch (e) {
+        adminDiwaliLaunchActive = nextState;
+        updateDiwaliSwitchButtonUI();
+    }
+}
+
+function updateDiwaliSwitchButtonUI() {
+    const btn = document.getElementById('diwaliToggleBtn');
+    const txt = document.getElementById('diwaliSwitchStateText');
+    if (adminDiwaliLaunchActive) {
+        if (btn) btn.className = "toggle-badge-btn btn-store-open";
+        if (txt) txt.textContent = "ON (Hold Orders)";
+    } else {
+        if (btn) btn.className = "toggle-badge-btn btn-rain-off";
+        if (txt) txt.textContent = "OFF";
+    }
+}
+
+// Page load par aur har 4 seconds mein status sync karne ke liye
+fetchAdminDiwaliStatus();
+setInterval(fetchAdminDiwaliStatus, 4000);
     </script>
 </body>
 </html>

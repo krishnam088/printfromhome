@@ -124,8 +124,10 @@ const DeliveryBoy = mongoose.model('DeliveryBoy', deliveryBoySchema);
 
 const storeConfigSchema = new mongoose.Schema({
     isOpen: { type: Boolean, default: true },
-    printEnabled: { type: Boolean, default: true }, // 🔥 New Print Switch Flag
+    printEnabled: { type: Boolean, default: true }, 
     rainSurgeActive: { type: Boolean, default: false },
+    diwaliLaunchMode: { type: Boolean, default: false }, // 🔥 Add this
+    diwaliMessage: { type: String, default: "🚀 Launching on Diwali! Service starts from Diwali. Thanks for downloading Print From Home! 🙏" }, // 🔥 Add this
     updatedAt: String
 });
 const StoreConfig = mongoose.model('StoreConfig', storeConfigSchema);
@@ -324,6 +326,26 @@ const handlePrintToggle = async (req, res) => {
 };
 
 app.post('/api/admin/toggle-print', handlePrintToggle);
+
+// 🔥 YAHAN APNA NEW DIWALI LAUNCH TOGGLE ROUTE DAL DEIN:
+app.post('/api/admin/toggle-diwali-launch', async (req, res) => {
+    try {
+        const { diwaliLaunchMode, diwaliMessage } = req.body;
+        let config = await StoreConfig.findOne();
+        if (!config) { config = new StoreConfig(); }
+        
+        if (diwaliLaunchMode !== undefined) config.diwaliLaunchMode = Boolean(diwaliLaunchMode);
+        if (diwaliMessage) config.diwaliMessage = diwaliMessage;
+        
+        config.updatedAt = new Date().toISOString();
+        await config.save();
+        res.json({ success: true, diwaliLaunchMode: config.diwaliLaunchMode, diwaliMessage: config.diwaliMessage });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+    // ... baaki ka purana code ...
 
 const handleStoreToggle = async (req, res) => {
     try {
@@ -1060,6 +1082,15 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
         
+        // 🔥 DIWALI LAUNCH HOLD CHECK (Sabse upar)
+        if (config && config.diwaliLaunchMode) {
+            return res.status(403).json({ 
+                success: false, 
+                isDiwaliHold: true,
+                message: config.diwaliMessage || "🚀 Launching on Diwali! Service starts from Diwali. Thanks for downloading Print From Home! 🙏" 
+            });
+        }
+
         const now = new Date();
         const utcHours = now.getUTCHours();
         const utcMinutes = now.getUTCMinutes();
@@ -1082,7 +1113,7 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             parsedConfig = [];
         }
 
-        // 🔥 YAHAN PAR PRINT SERVICE TOGGLE CHECK ADD KAREIN:
+        // 🔥 Print Service Toggle Check:
         const hasPrintJobs = Array.isArray(parsedConfig) && parsedConfig.some(item => item.printType !== 'snack' && item.printType !== 'product' && (!item.fileName || !item.fileName.startsWith('Product:')));
         const isPrintAllowed = config ? config.printEnabled !== false : true;
 
@@ -1132,7 +1163,6 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
         let calculatedDeliveryFee = finalAmountNumeric >= 99 ? 0 : 25;
 
         if (selectedPaymentMode === 'cod' || selectedPaymentMode === 'wallet') {
-            // Stock deduction is handled by the frontend decrement call or explicit confirmation
             const newOrder = new Order({
                 orderId: numericId,
                 customerName: customerName || 'Customer',
