@@ -18,22 +18,54 @@
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD0sBBjAZe6d-4BJFyS9GygJPyT9Vun80Q&libraries=places"></script>
     
 <script>
-        document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
             const todayStr = `${year}-${month}-${day}`;
 
-            // Define Festive Ranges with corresponding CSS theme class names and animation triggers
+            // 🔥 Backend calendar ke saare festivals yahan mapped hain
             const activeFestiveRanges = [
                 {
-                    start: "2026-10-11", end: "2026-10-22",
-                    name: "Navratri & Diwali Fest 🪔",
-                    bg: "linear-gradient(135deg, #78350f 0%, #b45309 100%)",
+                    start: "2026-01-14", end: "2026-01-14",
+                    name: "Makar Sankranti & Pongal 🌾",
+                    bg: "linear-gradient(135deg, #b45309 0%, #d97706 100%)",
                     themeClass: "theme-festive-diwali",
                     manifest: "/manifest-festive.json",
-                    greeting: "🪔✨ Festive Season Live! Special Discounts on Custom Prints & Gifts!"
+                    greeting: "🌾✨ Happy Makar Sankranti! Enjoy Sweet Festive Offers!"
+                },
+                {
+                    start: "2026-01-23", end: "2026-01-23",
+                    name: "Vasant Panchami 🌼",
+                    bg: "linear-gradient(135deg, #d97706 0%, #f59e0b 100%)",
+                    themeClass: "theme-festive-diwali",
+                    manifest: "/manifest-festive.json",
+                    greeting: "🌼🙏 Blessed Vasant Panchami! Wisdom & Creativity Blessings!"
+                },
+                {
+                    start: "2026-01-26", end: "2026-01-26",
+                    name: "Republic Day 🇮🇳",
+                    bg: "linear-gradient(135deg, #1e3a8a 0%, #065f46 100%)",
+                    themeClass: "theme-festive-republic",
+                    manifest: "/manifest.json",
+                    greeting: "🇮🇳✨ Happy Republic Day! Celebrate with Special Deals!"
+                },
+                {
+                    start: "2026-02-14", end: "2026-02-14",
+                    name: "Valentine's Day 💖",
+                    bg: "linear-gradient(135deg, #be123c 0%, #e11d48 100%)",
+                    themeClass: "theme-festive-christmas",
+                    manifest: "/manifest.json",
+                    greeting: "💖🌹 Happy Valentine's Day! Create Special Memories!"
+                },
+                {
+                    start: "2026-02-15", end: "2026-02-15",
+                    name: "Maha Shivaratri 🔱",
+                    bg: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
+                    themeClass: "theme-festive-diwali",
+                    manifest: "/manifest-festive.json",
+                    greeting: "🔱🙏 Blessed Maha Shivaratri! Lord Shiva's Blessings!"
                 },
                 {
                     start: "2026-03-19", end: "2026-03-27",
@@ -44,12 +76,100 @@
                     greeting: "🌸🙏 Happy Navratri! Special Auspicious Blessings & Offers Active!"
                 },
                 {
+                    start: "2026-03-27", end: "2026-03-27",
+                    name: "Ram Navami 🏹",
+                    bg: "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
+                    themeClass: "theme-festive-diwali",
+                    manifest: "/manifest-festive.json",
+                    greeting: "🏹✨ Happy Ram Navami! Divine Blessings & Joy!"
+                },
+                {
+                    start: "2026-03-30", end: "2026-03-30",
+                    name: "Gudi Padwa / Ugadi 🌱",
+                    bg: "linear-gradient(135deg, #065f46 0%, #10b981 100%)",
+                    themeClass: "theme-festive-diwali",
+                    manifest: "/manifest-festive.json",
+                    greeting: "🌱✨ Happy New Year Greetings & Prosperity!"
+                },
+                {
+                    start: "2026-04-14", end: "2026-04-14",
+                    name: "Baisakhi & Ambedkar Jayanti 🌾",
+                    bg: "linear-gradient(135deg, #d97706 0%, #f59e0b 100%)",
+                    themeClass: "theme-festive-diwali",
+                    manifest: "/manifest-festive.json",
+                    greeting: "🌾✨ Joyous Baisakhi & Ambedkar Jayanti Greetings!"
+                },
+                {
+                    start: "2026-05-10", end: "2026-05-10",
+                    name: "Akshaya Tritiya ✨",
+                    bg: "linear-gradient(135deg, #b45309 0%, #f59e0b 100%)",
+                    themeClass: "theme-festive-diwali",
+                    manifest: "/manifest-festive.json",
+                    greeting: "✨💛 Happy Akshaya Tritiya: Endless Prosperity!"
+                },
+                {
+                    start: "2026-06-07", end: "2026-06-07",
+                    name: "Eid-ul-Adha 🌙",
+                    bg: "linear-gradient(135deg, #065f46 0%, #047857 100%)",
+                    themeClass: "theme-festive-republic",
+                    manifest: "/manifest.json",
+                    greeting: "🌙✨ Blessed Eid-ul-Adha Greetings & Peace!"
+                },
+                {
                     start: "2026-08-14", end: "2026-08-15",
                     name: "Independence Day 🇮🇳",
                     bg: "linear-gradient(135deg, #1e3a8a 0%, #065f46 100%)",
                     themeClass: "theme-festive-republic",
                     manifest: "/manifest.json",
                     greeting: "🇮🇳✨ Happy Independence Day! Special Patriotic Deals Live!"
+                },
+                {
+                    start: "2026-08-27", end: "2026-08-27",
+                    name: "Ganesh Chaturthi 🌺",
+                    bg: "linear-gradient(135deg, #d97706 0%, #ea580c 100%)",
+                    themeClass: "theme-festive-diwali",
+                    manifest: "/manifest-festive.json",
+                    greeting: "🌺🙏 Happy Ganesh Chaturthi: Blessings of Bappa!"
+                },
+                {
+                    start: "2026-09-05", end: "2026-09-05",
+                    name: "Teachers' Day 📚",
+                    bg: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)",
+                    themeClass: "theme-festive-republic",
+                    manifest: "/manifest.json",
+                    greeting: "📚✨ Happy Teachers' Day: Honor Your Mentors!"
+                },
+                {
+                    start: "2026-10-05", end: "2026-10-05",
+                    name: "Dussehra 🏹",
+                    bg: "linear-gradient(135deg, #b45309 0%, #78350f 100%)",
+                    themeClass: "theme-festive-diwali",
+                    manifest: "/manifest-festive.json",
+                    greeting: "🏹🔥 Happy Dussehra: Triumph of Good over Evil!"
+                },
+                {
+                    start: "2026-10-11", end: "2026-10-22",
+                    name: "Navratri & Diwali Fest 🪔",
+                    bg: "linear-gradient(135deg, #78350f 0%, #b45309 100%)",
+                    themeClass: "theme-festive-diwali",
+                    manifest: "/manifest-festive.json",
+                    greeting: "🪔✨ Festive Season Live! Special Discounts on Custom Prints & Gifts!"
+                },
+                {
+                    start: "2026-10-22", end: "2026-10-22",
+                    name: "Bhai Dooj 🎁",
+                    bg: "linear-gradient(135deg, #991b1b 0%, #b45309 100%)",
+                    themeClass: "theme-festive-diwali",
+                    manifest: "/manifest-festive.json",
+                    greeting: "🎁✨ Happy Bhai Dooj: Celebrate Sibling Bonds!"
+                },
+                {
+                    start: "2026-10-27", end: "2026-10-27",
+                    name: "Chhath Puja 🌅",
+                    bg: "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
+                    themeClass: "theme-festive-diwali",
+                    manifest: "/manifest-festive.json",
+                    greeting: "🌅🙏 Blessed Chhath Puja Greetings & Devotion!"
                 },
                 {
                     start: "2026-12-24", end: "2026-12-25",
@@ -94,26 +214,44 @@
                     greetingEl.innerHTML = `🎉 ${currentActiveFestival.name} ACTIVE!`;
                 }
 
-                // 🔥 Trigger Floating Particle Animations (Fireworks for Diwali / Snow for Christmas)
+                // 🔥 Trigger Dynamic Festival-Specific Falling Rain Animations
                 let animContainer = document.getElementById('festivalAnimationContainer');
                 if (!animContainer) {
                     animContainer = document.createElement('div');
                     animContainer.id = 'festivalAnimationContainer';
                     document.body.appendChild(animContainer);
                 }
+                animContainer.innerHTML = '';
 
-                const particleCount = currentActiveFestival.themeClass === 'theme-festive-diwali' ? 30 : 40;
+                // Smart Festival Icon Mapper for all festivals
+                let festivalIcons = ['✨', '🌟'];
+                let festNameLower = currentActiveFestival.name.toLowerCase();
+
+                if (festNameLower.includes('diwali') || festNameLower.includes('navratri') || festNameLower.includes('shivaratri') || festNameLower.includes('akshaya') || festNameLower.includes('baisakhi') || festNameLower.includes('sankranti') || festNameLower.includes('panchami') || festNameLower.includes('chhath') || festNameLower.includes('dussehra') || festNameLower.includes('ram')) {
+                    festivalIcons = ['🪔', '✨', '🌟', '🎇', '🪷'];
+                } else if (festNameLower.includes('republic') || festNameLower.includes('independence') || festNameLower.includes('teachers')) {
+                    festivalIcons = ['🇮🇳', '⭐', '🎈', '🕊️', '📚'];
+                } else if (festNameLower.includes('christmas') || festNameLower.includes('valentine')) {
+                    festivalIcons = ['❄️', '🎁', '🎄', '💖', '🌹'];
+                } else if (festNameLower.includes('new year')) {
+                    festivalIcons = ['🌟', '✨', '🎆', '🥂', '🎉'];
+                } else if (festNameLower.includes('eid')) {
+                    festivalIcons = ['🌙', '⭐', '✨', '🏮'];
+                } else if (festNameLower.includes('ganesh')) {
+                    festivalIcons = ['🌺', '🍬', '✨', '🟡'];
+                }
+
+                // Continuous Falling Rain Generation
+                const particleCount = 40;
                 for (let i = 0; i < particleCount; i++) {
                     const p = document.createElement('div');
-                    p.className = currentActiveFestival.themeClass === 'theme-festive-diwali' ? 'firework-spark' : 'festive-particle';
+                    p.className = 'festival-rain-drop';
+                    p.innerHTML = festivalIcons[Math.floor(Math.random() * festivalIcons.length)];
                     p.style.left = `${Math.random() * 100}vw`;
                     p.style.top = `${Math.random() * -50}vh`;
-                    p.style.animationDuration = `${1.5 + Math.random() * 3}s`;
-                    p.style.animationDelay = `${Math.random() * 2}s`;
-                    if(p.className === 'festive-particle') {
-                        p.style.width = `${3 + Math.random() * 4}px`;
-                        p.style.height = p.style.width;
-                    }
+                    p.style.animationDuration = `${2.5 + Math.random() * 3.5}s`;
+                    p.style.animationDelay = `${Math.random() * 4}s`;
+                    p.style.fontSize = `${1.1 + Math.random() * 0.9}rem`;
                     animContainer.appendChild(p);
                 }
 
@@ -340,6 +478,46 @@
         }
         .profile-wallet-row {
             gap: 6px !important;
+        }
+    }
+    /* 🔥 Light, Bright & Attractive Festive Theme (No Dark Backgrounds to Prevent Text Hiding) */
+    body.theme-festive-diwali,
+    body.theme-festive-republic,
+    body.theme-festive-christmas {
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fde68a 100%) !important;
+        color: #451a03 !important;
+    }
+
+    .brand-premium-header {
+        transition: background 0.3s ease;
+    }
+
+    /* 🌧️ Universal Falling Festival Rain Animation */
+    #festivalAnimationContainer {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        pointer-events: none; z-index: 999; overflow: hidden;
+    }
+
+    .festival-rain-drop {
+        position: absolute;
+        animation: fallFestivalParticle linear infinite;
+        pointer-events: none;
+        z-index: 999;
+        filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.15));
+        user-select: none;
+    }
+
+    @keyframes fallFestivalParticle {
+        0% { 
+            transform: translateY(-40px) rotate(0deg) scale(0.8); 
+            opacity: 0; 
+        }
+        15% { opacity: 1; }
+        85% { opacity: 1; }
+        100% { 
+            transform: translateY(105vh) rotate(360deg) scale(1.1); 
+            opacity: 0; 
         }
     }
 </style>
