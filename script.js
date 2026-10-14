@@ -4629,3 +4629,28 @@ window.submitProfileUpdates = async function(e) {
         alert("❌ Server connection error while updating profile.");
     }
 };
+// 🔥 Bulletproof User Account Slider Drawer Toggle Engine
+window.toggleUserDrawer = function(open) {
+    const drawer = document.getElementById('userSideDrawer');
+    const overlay = document.getElementById('drawerOverlay');
+    if (!drawer) return;
+    
+    if (open) {
+        drawer.style.right = '0';
+        if (overlay) { 
+            overlay.classList.add('active'); 
+            overlay.style.display = 'block'; 
+        }
+        const sessionUser = localStorage.getItem('printAppUser') || 'Customer';
+        const sessionIdentity = localStorage.getItem('printAppUserIdentity') || '7398746551';
+        
+        const mobileText = document.getElementById('drawerUserMobileText');
+        if (mobileText) mobileText.textContent = sessionIdentity;
+    } else {
+        drawer.style.right = '-100%';
+        if (overlay) { 
+            overlay.classList.remove('active'); 
+            overlay.style.display = 'none'; 
+        }
+    }
+};
