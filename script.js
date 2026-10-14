@@ -4654,3 +4654,14 @@ window.toggleUserDrawer = function(open) {
         }
     }
 };
+// 🔥 Universal Global Click Listener for Profile Icon Trigger
+document.addEventListener('click', function(e) {
+    const target = e.target;
+    // Agar user ne avatar icon par click kiya hai
+    if (target.classList.contains('avatar-circle-trigger') || target.closest('.avatar-circle-trigger')) {
+        e.preventDefault();
+        if (typeof toggleUserDrawer === 'function') {
+            toggleUserDrawer(true);
+        }
+    }
+});

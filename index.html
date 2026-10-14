@@ -606,6 +606,25 @@
         </div>
     </div>
 
+    <div id="userSideDrawer" style="position: fixed; top: 0; right: -100%; width: 300px; height: 100vh; background: #ffffff; z-index: 17000; box-shadow: -5px 0 25px rgba(0,0,0,0.15); transition: right 0.3s ease; display: flex; flex-direction: column; padding: 20px; font-family: 'Poppins', sans-serif;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+            <h3 style="font-size: 1.1rem; font-weight: 900; color: #0f172a; margin: 0;">Account</h3>
+            <span onclick="toggleUserDrawer(false)" style="font-size: 1.4rem; cursor: pointer; color: #64748b; font-weight: bold;">&times;</span>
+        </div>
+        
+        <div style="margin-bottom: 20px; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Logged In Mobile</div>
+            <div id="drawerUserMobileText" style="font-size: 0.9rem; font-weight: 800; color: #065f46; margin-top: 2px;">N/A</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button type="button" onclick="toggleUserDrawer(false); navigateDrawerSection('history')" style="background: #f1f5f9; border: none; padding: 12px; border-radius: 10px; text-align: left; font-weight: 800; font-size: 0.85rem; cursor: pointer; color: #0f172a;">📦 My Orders & History</button>
+            <button type="button" onclick="toggleUserDrawer(false); openEditProfileModal()" style="background: #f1f5f9; border: none; padding: 12px; border-radius: 10px; text-align: left; font-weight: 800; font-size: 0.85rem; cursor: pointer; color: #0f172a;">⚙️ Edit Profile & Gmail</button>
+            <button type="button" onclick="toggleUserDrawer(false); toggleHelpModal(true)" style="background: #f1f5f9; border: none; padding: 12px; border-radius: 10px; text-align: left; font-weight: 800; font-size: 0.85rem; cursor: pointer; color: #0f172a;">🎧 Help & Support Hub</button>
+            <button type="button" id="logoutBtn" style="background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; padding: 12px; border-radius: 10px; text-align: left; font-weight: 800; font-size: 0.85rem; cursor: pointer; margin-top: 10px;">🚪 Log Out</button>
+        </div>
+    </div>
+
     <div id="iosInstallModal" onclick="closeIosInstallModal(event)" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(5px); z-index: 100000; justify-content: center; align-items: flex-end; padding: 0;">
         <div onclick="event.stopPropagation()" style="background: #1e293b; color: #f8fafc; width: 100%; max-width: 460px; border-radius: 24px 24px 0 0; padding: 24px; border-top: 1px solid #334155; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); text-align: center; animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1); position: relative;">
             <div style="width: 42px; height: 5px; background: #475569; border-radius: 4px; margin: 0 auto 16px auto;"></div>
