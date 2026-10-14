@@ -3279,12 +3279,9 @@ window.executeFinalCartOrderPlacement = async function() {
     formData.append('phone', userPhone);
     formData.append('deliveryTip', window.currentDeliveryTip || 0);
     formData.append('paymentMode', paymentMode);
-    
-    // 👈 Yahan coordinates formData mein append ho gaye hain
     formData.append('userLat', userLat);
     formData.append('userLng', userLng);
 
-    // ... Baaki ka order placement / payment gateway code waisa hi rahega ...
     let initialOrderStatus = (window.cartPrintJobsArray.length > 0) ? "Ready for Print" : "Order Placed & Picking";
 
     const finalizeOrderSuccess = async (orderId) => {
@@ -3313,7 +3310,6 @@ window.executeFinalCartOrderPlacement = async function() {
             console.error("Inventory decrement sync error:", e);
         }
 
-        // Clear cart after success
         window.cartPrintJobsArray = [];
         window.cartSnacksArray = [];
         window.currentDeliveryTip = 0;
@@ -3327,7 +3323,6 @@ window.executeFinalCartOrderPlacement = async function() {
             renderOrderHistoryUI(sessionActiveUser);
         }
 
-        // 🔥 100% Safe Routing to History View (Never Blank)
         if (typeof navigateDrawerSection === 'function') {
             navigateDrawerSection('history');
         } else {
@@ -3343,66 +3338,45 @@ window.executeFinalCartOrderPlacement = async function() {
         }
     };
 
-    // 1️⃣ CASH ON DELIVERY (COD) ROUTE -> Directly saves and redirects to history
-    if (paymentMode === 'cod' || paymentMode === 'cash') {
-        try {
-            const response = await fetch('/api/create-order', { method: 'POST', body: formData });
-            const data = await response.json();
-            if (data.success) {
-                alert('🎉 Order Placed Successfully via Cash on Delivery!');
-                await finalizeOrderSuccess(data.order_id);
-                return;
-            } else {
-                alert(`⚠️ Error: ${data.message || 'Failed to create order'}`);
-                return;
-            }
-        } catch (err) {
-            alert("❌ Connection error during COD order placement.");
-            return;
-        }
-    }
-
-    // 2️⃣ PRINT WALLET ROUTE
-    if (paymentMode === 'wallet') {
-        let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
-        if (currentWalletCash < grandTotal) {
-            alert(`❌ Insufficient wallet balance! You have ₹${currentWalletCash.toFixed(2)}, but grand total is ₹${grandTotal.toFixed(2)}. Please recharge your wallet.`);
-            return;
-        }
-
-        let newBalance = currentWalletCash - grandTotal;
-        localStorage.setItem(`wallet_cash_${sessionActiveUser}`, newBalance.toFixed(2));
-        if (typeof synchronizeWalletInterfaceBalance === 'function') synchronizeWalletInterfaceBalance();
-        formData.append('paymentMode', 'wallet');
-
-        try {
-            const response = await fetch('/api/create-order', { method: 'POST', body: formData });
-            const data = await response.json();
-            if (data.success) {
-                alert('🎉 Order Placed Successfully using Print Wallet!');
-                await finalizeOrderSuccess(data.order_id);
-                return;
-            } else {
-                alert(`⚠️ Error: ${data.message || 'Failed to create wallet order'}`);
-                return;
-            }
-        } catch (err) {
-            alert("❌ Wallet order placement error.");
-            return;
-        }
-    }
-
-    // 3️⃣ ONLINE PAYMENT ROUTE (🔥 FIXED: Order is created on server, but finalized ONLY on payment success)
+    // 🔥 CREATE ORDER ON SERVER & HANDLE DIWALI LAUNCH MODE HOLD
     try {
-        formData.append('paymentMode', 'online');
         const response = await fetch('/api/create-order', { method: 'POST', body: formData });
         const data = await response.json();
         
         if (!data.success) {
-            alert(`⚠️ Error: ${data.message || 'Failed to initialize payment gateway'}`);
+            if (data.isDiwaliHold) {
+                alert(data.message);
+            } else {
+                alert(`⚠️ Error: ${data.message || 'Failed to create order'}`);
+            }
             return;
         }
 
+        // 1️⃣ CASH ON DELIVERY (COD) ROUTE
+        if (paymentMode === 'cod' || paymentMode === 'cash') {
+            alert('🎉 Order Placed Successfully via Cash on Delivery!');
+            await finalizeOrderSuccess(data.order_id);
+            return;
+        }
+
+        // 2️⃣ PRINT WALLET ROUTE
+        if (paymentMode === 'wallet') {
+            let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
+            if (currentWalletCash < grandTotal) {
+                alert(`❌ Insufficient wallet balance! You have ₹${currentWalletCash.toFixed(2)}, but grand total is ₹${grandTotal.toFixed(2)}. Please recharge your wallet.`);
+                return;
+            }
+
+            let newBalance = currentWalletCash - grandTotal;
+            localStorage.setItem(`wallet_cash_${sessionActiveUser}`, newBalance.toFixed(2));
+            if (typeof synchronizeWalletInterfaceBalance === 'function') synchronizeWalletInterfaceBalance();
+
+            alert('🎉 Order Placed Successfully using Print Wallet!');
+            await finalizeOrderSuccess(data.order_id);
+            return;
+        }
+
+        // 3️⃣ ONLINE PAYMENT ROUTE (Razorpay)
         const options = {
             key: data.key_id,
             amount: data.amount,
@@ -3446,23 +3420,12 @@ window.executeFinalCartOrderPlacement = async function() {
         } else {
             alert('⚠️ Razorpay SDK not loaded.');
         }
+
     } catch (error) {
-        alert('❌ Connection Breakdown during online checkout.');
+        console.error("Order placement exception:", error);
+        alert('❌ Connection Breakdown during order checkout.');
     }
 };
-const response = await fetch('/api/create-order', { method: 'POST', body: formData });
-        const data = await response.json();
-        
-        if (!data.success) {
-            // 🔥 Agar Diwali launch hold active hai, toh seedha clean message dikhayein bina "Error:" ke
-            if (data.isDiwaliHold) {
-                alert(data.message);
-            } else {
-                alert(`⚠️ Error: ${data.message || 'Failed to initialize payment gateway'}`);
-            }
-            return;
-        }
-
  // --- AUTH FORM (Login & Signup) ---
 
 // 🔥 UNIFIED & BULLETPROOF NAVIGATION ROUTER (Fixes White Screen & Overlaps)
