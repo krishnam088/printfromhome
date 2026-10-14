@@ -593,7 +593,7 @@ async function sendBroadcastEmail(subject, message) {
                     </div>
                 </div>
             `;
-
+console.log("Checking Brevo Key:", process.env.SMTP_PASS ? "Key Exists (Length: " + process.env.SMTP_PASS.length + ")" : "KEY IS MISSING!");
             // 🔥 Brevo HTTP API ka use (Render par kabhi block nahi hoti)
             const response = await fetch('https://api.brevo.com/v3/smtp/email', {
                 method: 'POST',
