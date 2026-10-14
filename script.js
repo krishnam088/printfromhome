@@ -3332,9 +3332,10 @@ window.addEventListener('DOMContentLoaded', () => {
     loadAdminConfiguredFeesAndCoupons();
 });
 
-    window.connectToHumanSupport = function() {
-        window.open('https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Print%20From%20Home%20Support,%20I%20need%20assistance.', '_blank');
-    };
+    // 🔥 WhatsApp ya phone ki jagah seedha business email par redirect karne ke liye
+window.connectToHumanSupport = function() {
+    window.location.href = "mailto:support@printfromhomes.com?subject=Customer%20Support%20Assistance&body=Hello%20Support%20Team,%0A%0AI%20need%20help%20with%20my%20order.";
+};
 
     // 🔥 TIMEOUT BOOTSTRAP INITIALIZATION (WITH FORCE BYPASS)
     setTimeout(() => {
