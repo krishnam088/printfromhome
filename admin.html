@@ -323,12 +323,17 @@
                 </div>
 
                 <div style="margin-bottom:12px;">
-                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">Category / Type *</label>
-                    <select id="adminProdCategory" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); background:var(--bg-dark); color:white; border-radius:8px; font-size:0.85rem;">
-                        <option value="munchies">Munchies & Chips</option>
-                        <option value="snacks">Snacks & Beverages</option>
-                        <option value="socks">Socks & Apparel</option>
-                    </select>
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">Category / Department *</label>
+                    <input type="text" id="adminProdCategory" placeholder="e.g. Munchies, Pharma, Milk, Dairy, Bakery" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); background:var(--bg-dark); color:white; border-radius:8px; font-size:0.85rem;" list="categorySuggestions" required>
+                    <datalist id="categorySuggestions">
+                        <option value="munchies">
+                        <option value="snacks">
+                        <option value="socks">
+                        <option value="dairy">
+                        <option value="pharma">
+                        <option value="bakery">
+                        <option value="beverages">
+                    </datalist>
                 </div>
 
                 <!-- 📝 Optional Description -->
