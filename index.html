@@ -945,6 +945,16 @@
                             <span id="userShopStatus" class="shop-status-text-badge open">OPEN 🟢</span>
                             <span class="shop-timing-subtext">7AM - 10PM</span>
                         </div>
+                        <!-- 🔥 Quick Home Button Added Here -->
+                        <button type="button" onclick="navigateDrawerSection('store')" style="background: #065f46; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 0.68rem; cursor: pointer; display: flex; align-items: center; gap: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">🏠 Home</button>
+
+                        <div class="profile-wallet-row">
+                            <div class="wallet-micro-badge" onclick="toggleWalletPopupGrid(true, event)">
+                                <span>💵</span> <span class="wallet-cash-value" id="headerWalletDisplayBalance">₹0.00</span>
+                            </div>
+                            <div class="avatar-circle-trigger" onclick="toggleUserDrawer(true)">👤</div>
+                        </div>
+                        
                         <div class="profile-wallet-row">
                             <div class="wallet-micro-badge" onclick="toggleWalletPopupGrid(true, event)">
                                 <span>💵</span> <span class="wallet-cash-value" id="headerWalletDisplayBalance">₹0.00</span>
