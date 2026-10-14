@@ -93,11 +93,11 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
             history = [];
         }
 
-        // 🔥 Yeh raha Home Button top bar
+        // 🔥 Guaranteed Visible Home Top Bar
         const homeTopBar = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px;">
                 <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0;">Your Orders</h3>
-                <button type="button" onclick="navigateDrawerSection('store')" style="background: #f1f5f9; color: #065f46; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">🏠 Home</button>
+                <button type="button" onclick="navigateDrawerSection('store')" style="background: #065f46; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">🏠 Home</button>
             </div>
         `;
 
@@ -2824,7 +2824,97 @@ window.selectActiveAddressByIndex = function(idx) {
         renderSavedAddressesUI();
     }
 };
+// 🔥 Use Current Location GPS Fetch Function
 
+window.fetchUserCurrentGpsLocation = function() {
+
+    if (!navigator.geolocation) {
+
+        alert("⚠️ Geolocation is not supported by your browser.");
+
+        return;
+
+    }
+
+
+
+    alert("📍 Fetching your current GPS location...");
+
+
+
+    navigator.geolocation.getCurrentPosition(
+
+        (position) => {
+
+            const lat = position.coords.latitude;
+
+            const lng = position.coords.longitude;
+
+            
+
+            if (typeof google !== 'undefined' && google.maps && google.maps.Geocoder) {
+
+                const geocoder = new google.maps.Geocoder();
+
+                const latLng = { lat: lat, lng: lng };
+
+                
+
+                geocoder.geocode({ location: latLng }, (results, status) => {
+
+                    if (status === "OK" && results[0]) {
+
+                        const formattedAddr = results[0].formatted_address;
+
+                        const addressInput = document.getElementById('mapSelectedAddressInput');
+
+                        if (addressInput) {
+
+                            addressInput.value = formattedAddr;
+
+                        }
+
+                        if (typeof googleDeliveryMap !== 'undefined' && googleDeliveryMap) {
+
+                            googleDeliveryMap.setCenter(latLng);
+
+                            if (typeof deliveryMarker !== 'undefined' && deliveryMarker) {
+
+                                deliveryMarker.setPosition(latLng);
+
+                            }
+
+                        }
+
+                        alert("✅ Current location fetched successfully!");
+
+                    } else {
+
+                        alert("⚠️ Could not retrieve address from coordinates.");
+
+                    }
+
+                });
+
+            } else {
+
+                alert(`✅ GPS coords fetched: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+
+            }
+
+        },
+
+        (error) => {
+
+            alert("⚠️ Unable to retrieve your location. Please check location permissions.");
+
+        },
+
+        { timeout: 10000, enableHighAccuracy: true }
+
+    );
+
+}; 
 window.openAddressManagerModal = function() {
     const modal = document.getElementById('addressManagerModal');
     if (modal) {
