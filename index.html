@@ -514,7 +514,7 @@
 
 </div> <!-- Modal poori tarah yahan close hoga -->
 
-   <!-- 💬 HELP & SUPPORT HUB MODAL (Clean & Professional - Business Email) -->
+<!-- 💬 HELP & SUPPORT HUB MODAL (Business Email & AI PrintBot Access) -->
     <div id="helpCenterModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 21000; display: none; justify-content: center; align-items: center; padding: 20px;">
         <div style="background: #ffffff; border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
             <div style="font-size: 3rem; margin-bottom: 8px;">🎧</div>
@@ -526,6 +526,11 @@
                 <a href="mailto:support@printfromhomes.com?subject=Customer%20Support%20Inquiry" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #0070f3; color: white; padding: 12px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.85rem;">
                     <span>📧</span> Email Support (support@printfromhomes.com)
                 </a>
+                
+                <!-- 🔥 AI Assistant Open Button Inside Support Hub -->
+                <button type="button" onclick="toggleHelpModal(false); toggleAiChatModal(true);" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #065f46; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 0.85rem; width: 100%;">
+                    <span>🤖</span> Ask PrintBot (AI Assistant)
+                </button>
             </div>
             <button type="button" onclick="toggleHelpModal(false)" style="background: #e2e8f0; color: #334155; border: none; padding: 10px; border-radius: 10px; font-weight: 700; width: 100%; cursor: pointer;">Close</button>
         </div>
@@ -574,9 +579,7 @@
             </div>
 
         </div>
-    </div>
-
-   
+    </div>   
 
     <!-- ⚙️ EDIT PROFILE & GMAIL MODAL -->
     <div id="editProfileModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 22000; display: none; justify-content: center; align-items: center; padding: 20px;">
