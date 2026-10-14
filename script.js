@@ -3345,13 +3345,13 @@ window.executeFinalCartOrderPlacement = async function() {
         
         if (!data.success) {
             if (data.isDiwaliHold) {
-                alert(data.message);
+                // 🔥 Professional notification popup
+                showDiwaliPreLaunchNotice(data.message);
             } else {
                 alert(`⚠️ Error: ${data.message || 'Failed to create order'}`);
             }
             return;
         }
-
         // 1️⃣ CASH ON DELIVERY (COD) ROUTE
         if (paymentMode === 'cod' || paymentMode === 'cash') {
             alert('🎉 Order Placed Successfully via Cash on Delivery!');
