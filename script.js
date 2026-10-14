@@ -1509,64 +1509,80 @@ if (slider) {
     });
 }
 
-    // 🔥 STORE STATUS & NOTIFICATIONS
-    let isStoreCurrentlyOpen = true;
+   // 🔥 STORE STATUS & NOTIFICATIONS
+    let isStoreCurrentlyOpen = true;
 
-    async function checkStoreStatusRealtime() {
-        try {
-            const res = await fetch('/api/store-status');
-            const data = await res.json();
-            
-            const storeClosedNotice = document.getElementById('storeClosedNoticeBox');
-            const storeClosedModal = document.getElementById('storeClosedPopupModal');
-            const submitOrderBtn = document.getElementById('submitOrderBtn');
-            const userShopStatus = document.getElementById('userShopStatus');
-            
-            if (data.success) {
-                isStoreCurrentlyOpen = data.isOpen === true;
+    async function checkStoreStatusRealtime() {
+        try {
+            const res = await fetch('/api/store-status');
+            const data = await res.json();
+            
+            const storeClosedNotice = document.getElementById('storeClosedNoticeBox');
+            const storeClosedModal = document.getElementById('storeClosedPopupModal');
+            const submitOrderBtn = document.getElementById('submitOrderBtn');
+            const userShopStatus = document.getElementById('userShopStatus');
+            
+            if (data.success) {
+                isStoreCurrentlyOpen = data.isOpen === true;
 
-                if (!isStoreCurrentlyOpen) {
-                    if (storeClosedNotice) storeClosedNotice.classList.remove('hidden');
-                    if (storeClosedModal && sessionStorage.getItem('storeModalDismissed') !== 'true') {
-                        storeClosedModal.style.display = 'flex';
-                    }
-                    if (userShopStatus) {
-                        userShopStatus.textContent = 'CLOSED 🔴';
-                        userShopStatus.className = 'shop-status-text-badge closed';
-                    }
-                    if (submitOrderBtn) {
-                        submitOrderBtn.disabled = true;
-                        submitOrderBtn.style.background = '#94a3b8';
-                        submitOrderBtn.textContent = 'Store is Closed 🚫';
-                    }
-                } else {
-                    if (storeClosedNotice) storeClosedNotice.classList.add('hidden');
-                    if (storeClosedModal) storeClosedModal.style.display = 'none';
-                    sessionStorage.removeItem('storeModalDismissed');
-                    if (userShopStatus) {
-                        userShopStatus.textContent = 'OPEN 🟢';
-                        userShopStatus.className = 'shop-status-text-badge open';
-                    }
-                    if (submitOrderBtn) {
-                        submitOrderBtn.disabled = false;
-                        submitOrderBtn.style.background = 'var(--blinkit-green)';
-                        submitOrderBtn.textContent = 'Add Print Job to Cart';
-                    }
-                }
-            }
-        } catch (e) {}
-    }
+                // 🔥 Dynamic Store Timings Sync Code
+                if (data.openTime && data.closeTime) {
+                    const formatTime12h = (timeStr) => {
+                        let [hours, mins] = timeStr.split(':');
+                        let h = parseInt(hours);
+                        let ampm = h >= 12 ? 'PM' : 'AM';
+                        h = h % 12 || 12;
+                        return `${h}:${mins} ${ampm}`;
+                    };
 
-    setInterval(checkStoreStatusRealtime, 3000);
-    checkStoreStatusRealtime();
+                    const timingSubtext = document.getElementById('shopTimingSubtext');
+                    if (timingSubtext) {
+                        timingSubtext.textContent = `${formatTime12h(data.openTime)} - ${formatTime12h(data.closeTime)}`;
+                    }
+                }
 
-    window.dismissStoreClosedNotice = function() {
-        const storeClosedNotice = document.getElementById('storeClosedNoticeBox');
-        const storeClosedModal = document.getElementById('storeClosedPopupModal');
-        if (storeClosedNotice) storeClosedNotice.classList.add('hidden');
-        if (storeClosedModal) storeClosedModal.style.display = 'none';
-        sessionStorage.setItem('storeModalDismissed', 'true');
-    };
+                if (!isStoreCurrentlyOpen) {
+                    if (storeClosedNotice) storeClosedNotice.classList.remove('hidden');
+                    if (storeClosedModal && sessionStorage.getItem('storeModalDismissed') !== 'true') {
+                        storeClosedModal.style.display = 'flex';
+                    }
+                    if (userShopStatus) {
+                        userShopStatus.textContent = 'CLOSED 🔴';
+                        userShopStatus.className = 'shop-status-text-badge closed';
+                    }
+                    if (submitOrderBtn) {
+                        submitOrderBtn.disabled = true;
+                        submitOrderBtn.style.background = '#94a3b8';
+                        submitOrderBtn.textContent = 'Store is Closed 🚫';
+                    }
+                } else {
+                    if (storeClosedNotice) storeClosedNotice.classList.add('hidden');
+                    if (storeClosedModal) storeClosedModal.style.display = 'none';
+                    sessionStorage.removeItem('storeModalDismissed');
+                    if (userShopStatus) {
+                        userShopStatus.textContent = 'OPEN 🟢';
+                        userShopStatus.className = 'shop-status-text-badge open';
+                    }
+                    if (submitOrderBtn) {
+                        submitOrderBtn.disabled = false;
+                        submitOrderBtn.style.background = 'var(--blinkit-green)';
+                        submitOrderBtn.textContent = 'Add Print Job to Cart';
+                    }
+                }
+            }
+        } catch (e) {}
+    }
+
+    setInterval(checkStoreStatusRealtime, 3000);
+    checkStoreStatusRealtime();
+
+    window.dismissStoreClosedNotice = function() {
+        const storeClosedNotice = document.getElementById('storeClosedNoticeBox');
+        const storeClosedModal = document.getElementById('storeClosedPopupModal');
+        if (storeClosedNotice) storeClosedNotice.classList.add('hidden');
+        if (storeClosedModal) storeClosedModal.style.display = 'none';
+        sessionStorage.setItem('storeModalDismissed', 'true');
+    };
 
     // 🔥 LIVE TIMELINE STEPPER
     window.executeLiveTimelineStateStepper = function(statusText, assignedDeliveryBoyPhone) {
