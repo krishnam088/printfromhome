@@ -754,9 +754,6 @@
         window.addEventListener('DOMContentLoaded', () => {
             loadAdminPanelSettings();
         });
-```[cite: 3]
-
-Isme `data.settings.deliveryFee !== ''` check karne ki wajah se agar database se `0` (ya `"0"`) aata hai, toh wo condition pass ho jati hai aur input field mein `0` hi set hota hai, default `25` wapas override nahi karega. Aap ise replace karke check kar sakte hain[cite: 3]!
 
         // 🔥 Admin Store Settings & Fees Save Engine
         window.saveAdminStoreSettings = async function() {
