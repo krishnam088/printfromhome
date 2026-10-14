@@ -1111,10 +1111,16 @@
 
     <!-- 2. Order History Section -->
     <div id="user_section_history" class="view-section" style="display: none; width: 100%;">
-        <div style="background:var(--surface); border:1px solid var(--border-color); padding:24px; border-radius:18px; width:100%;">
-            <h3 style="font-weight:800; font-size:1.3rem; margin-bottom:4px;">📋 Your Printing Jobs & Delivery Status</h3>
-            <div id="ordersHistoryContainer" style="width:100%;">
-                <p style="text-align:center; padding:20px; color:var(--text-sub);">No print jobs recorded yet.</p>
+        <div style="background: var(--surface); border: 1px solid var(--border-color); padding: 20px 16px; border-radius: 18px; width: 100%; box-sizing: border-box;">
+            
+            <div id="ordersHistoryContainer" style="width: 100%;">
+                <!-- 🌟 Stylish & Attractive Commercial Empty State -->
+                <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px dashed #16a34a; border-radius: 20px; padding: 36px 20px; text-align: center; font-family: 'Poppins', sans-serif; box-shadow: 0 4px 15px rgba(22, 163, 74, 0.05); margin-top: 10px;">
+                    <div style="font-size: 3.2rem; margin-bottom: 12px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.06));">📦✨</div>
+                    <h3 style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin-bottom: 6px; letter-spacing: -0.3px;">No orders found yet</h3>
+                    <p style="font-size: 0.8rem; color: #64748b; line-height: 1.5; margin-bottom: 22px; max-width: 290px; margin-left: auto; margin-right: auto; font-weight: 500;">You haven't placed any print orders or store purchases. Kickstart your first order and get superfast doorstep delivery!</p>
+                    <button type="button" onclick="navigateDrawerSection('store')" style="background: #065f46; color: white; border: none; padding: 12px 28px; border-radius: 14px; font-weight: 900; font-size: 0.85rem; cursor: pointer; box-shadow: 0 6px 20px rgba(6, 95, 70, 0.25); transition: transform 0.2s ease;">Start Your First Order &rarr;</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1273,7 +1279,7 @@
             }
         }
 
-       async function checkLocalWeatherAndApplyRainSurge() {
+      async function checkLocalWeatherAndApplyRainSurge() {
             try {
                 // 1. Pehle backend ka admin manual override check karein
                 const statusRes = await fetch('/api/store-status');
@@ -1282,7 +1288,7 @@
 
                 let isRaining = adminRainForced;
 
-                // 2. Agar admin ne force nahi kiya, toh auto-search weather API se check karein
+                // 2. Agar admin ne force nahi kiya, toh auto-search weather API se check karein (With 503 fallback)
                 if (!adminRainForced) {
                     try {
                         const weatherRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.3176&longitude=82.9739&current=precipitation,weather_code');
@@ -1291,12 +1297,12 @@
                             if (data && data.current) {
                                 const precipitation = data.current.precipitation || 0; 
                                 const weatherCode = data.current.weather_code || 0;
-                                // Rain codes & precipitation check for Varanasi
                                 isRaining = precipitation > 0 || (weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 99);
                             }
                         }
                     } catch (apiErr) {
-                        // Agar open-meteo down ya 503 ho, toh silent fail hone dega aur app crash nahi hogi
+                        // 🔥 Graceful Fallback: Open-Meteo 503 down hone par silent fail hoga, app unaffected rahegi
+                        isRaining = false;
                     }
                 }
 
@@ -1316,7 +1322,7 @@
                     window.rainSurgeFee = 0;
                 }
             } catch (e) {
-                // Global error suppression
+                window.isRainSurgeActive = false;
             }
         }
 
