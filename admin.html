@@ -367,6 +367,11 @@
     <li class="sidebar-item" id="nav_inventory" onclick="switchAdminTab('inventory')">📦 Inventory</li>
     <li class="sidebar-item" id="nav_users" onclick="switchAdminTab('users')">👥 Registered Users</li>
     <li class="sidebar-item" id="nav_marketing" onclick="switchAdminTab('marketing')">📢 Marketing & Alerts</li>
+    <!-- 🔥 Yahan Store Timings ka item add karein -->
+        <li class="sidebar-item" id="nav_timings" onclick="switchAdminTab('timings')">⏰ Store Timings</li>
+        <li class="sidebar-item" id="nav_payouts" onclick="switchAdminTab('payouts')">🏦 Rider Payouts</li>
+        <li class="sidebar-item" id="nav_riders" onclick="switchAdminTab('riders')">🛵 Live Riders Monitor</li>
+    
     <li class="sidebar-item" id="nav_fees" onclick="switchAdminTab('fees')">⚙️ Fee & Coupons Setup</li>
     <li class="sidebar-item" id="nav_payouts" onclick="switchAdminTab('payouts')">🏦 Rider Payouts</li>
     <li class="sidebar-item" id="nav_riders" onclick="switchAdminTab('riders')">🛵 Live Riders Monitor</li>
@@ -595,6 +600,24 @@
                 </div>
             </div>
         </div>
+        <!-- TAB: STORE TIMINGS SETUP -->
+<div id="section_timings" class="admin-section" style="background: var(--surface-card); border-radius: 16px; padding: 28px; border: 1px solid var(--border-color); max-width: 650px;">
+    <h3 style="font-size: 1.25rem; font-weight: 900; color: white; margin-bottom: 6px;">⏰ Store Operating Timings</h3>
+    <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 22px;">Set daily opening and closing hours for the store. Orders will be restricted outside these hours if auto-timing is enforced.</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+        <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
+            <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Opening Time</label>
+            <input type="time" id="adminStoreOpenTime" value="07:00" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
+        </div>
+        <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
+            <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Closing Time</label>
+            <input type="time" id="adminStoreCloseTime" value="22:00" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
+        </div>
+    </div>
+
+    <button type="button" onclick="saveAdminStoreTimings()" style="width: 100%; padding: 14px; background: var(--accent-green); color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">Save Store Timings</button>
+</div>
 
         <!-- TAB 5: DEDICATED STORE FEES & COUPONS SETUP PANEL -->
         <div id="section_fees" class="admin-section">
@@ -651,6 +674,42 @@
     </div>
 
     <script>
+        async function loadAdminStoreTimings() {
+    try {
+        const res = await fetch('/api/admin/settings');
+        const data = await res.json();
+        if (data.success && data.settings) {
+            if (data.settings.openTime) document.getElementById('adminStoreOpenTime').value = data.settings.openTime;
+            if (data.settings.closeTime) document.getElementById('adminStoreCloseTime').value = data.settings.closeTime;
+        }
+    } catch (e) {}
+}
+
+async function saveAdminStoreTimings() {
+    const openTime = document.getElementById('adminStoreOpenTime').value;
+    const closeTime = document.getElementById('adminStoreCloseTime').value;
+
+    try {
+        const res = await fetch('/api/admin/settings/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ openTime, closeTime })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert('✅ Store timings updated successfully!');
+        } else {
+            alert('❌ Failed to update store timings.');
+        }
+    } catch (e) {
+        alert('❌ Server connection error.');
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    loadAdminStoreTimings();
+});
+
         async function fetchAdminRegisteredUsers() {
     try {
         const res = await fetch('/api/admin/users');
@@ -720,18 +779,24 @@
                 document.getElementById('section_marketing').classList.add('active');
                 loadFestivalTemplatesFromServer();
                 loadPermanentDraft();
+            } else if (tabName === 'timings') {
+                document.getElementById('nav_timings').classList.add('active');
+                document.getElementById('section_timings').classList.add('active');
+                loadAdminStoreTimings();
             } else if (tabName === 'fees') {
                 document.getElementById('nav_fees').classList.add('active');
                 document.getElementById('section_fees').classList.add('active');
-            } else if (tabName === 'payouts') { // 🔥 YEH NAYA ADD KRNA HAI
+            } else if (tabName === 'payouts') {
                 document.getElementById('nav_payouts').classList.add('active');
                 document.getElementById('section_payouts').classList.add('active');
                 fetchAdminRidersPayouts();
-                } else if (tabName === 'riders') {
-    document.getElementById('nav_riders').classList.add('active');
-    document.getElementById('section_riders').classList.add('active');
-    fetchAdminActiveRiders();
-}
+            } else if (tabName === 'riders') {
+                document.getElementById('nav_riders').classList.add('active');
+                document.getElementById('section_riders').classList.add('active');
+                fetchAdminActiveRiders();
+            }
+        }
+
             
         }
         // 🔥 Load Live Settings into Admin Inputs on Panel Open
