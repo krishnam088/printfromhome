@@ -4748,3 +4748,80 @@ window.handleSendSignupOtp = async function() {
         alert("❌ Server connection error.");
     }
 };
+// 🔥 COMPLETE AUTH FORM SUBMIT HANDLER (MANDATORY FOR SAVING USER TO MONGODB)
+document.addEventListener('DOMContentLoaded', () => {
+    const authForm = document.getElementById('authForm');
+    
+    if (authForm) {
+        authForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const identityInput = document.getElementById('authIdentity');
+            const passwordInput = document.getElementById('authPassword');
+            
+            const identity = identityInput ? identityInput.value.trim() : '';
+            const password = passwordInput ? passwordInput.value.trim() : '';
+
+            if (!identity || !password) {
+                alert("⚠️ Please enter mobile number and password!");
+                return;
+            }
+
+            try {
+                if (window.isSignupActive) {
+                    // --- SIGNUP FLOW & OTP VERIFICATION ---
+                    const otpInputNode = document.getElementById('authEmailOtpInput');
+                    const otpInput = otpInputNode ? otpInputNode.value.trim() : '';
+
+                    if (!window.isOtpStepActive) {
+                        alert("⚠️ Please click 'Send OTP' first and verify your Gmail address!");
+                        return;
+                    }
+
+                    if (!otpInput || otpInput.length !== 6) {
+                        alert("⚠️ Please enter the valid 6-digit OTP received on your Gmail!");
+                        return;
+                    }
+
+                    // 🔥 Yeh route backend par jaakar TempSignup se data User collection mein permanent save karega
+                    const response = await fetch('/api/auth/verify-signup-otp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ identity, otpInput })
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        alert("🎉 Gmail verified and account successfully created! Please log in.");
+                        location.reload(); // Refresh to switch to login view
+                    } else {
+                        alert(`❌ ${data.message || 'Verification failed'}`);
+                    }
+
+                } else {
+                    // --- LOGIN FLOW ---
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ identity, password })
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        localStorage.setItem('printAppUser', data.name);
+                        localStorage.setItem('printAppUserIdentity', data.identity);
+                        if (data.email) localStorage.setItem('printAppUserEmail', data.email);
+
+                        alert("✅ Login Successful!");
+                        location.reload();
+                    } else {
+                        alert(`❌ ${data.message || 'Invalid mobile number or password!'}`);
+                    }
+                }
+            } catch (err) {
+                console.error("Auth Error:", err);
+                alert("❌ Server connection error during authentication.");
+            }
+        });
+    }
+});
