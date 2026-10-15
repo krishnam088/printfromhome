@@ -97,12 +97,24 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
         if (!container) return;
         
         const activeUser = username || localStorage.getItem('printAppUser') || 'Customer';
-        let history = [];
+        const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
         
-        try {
-            history = JSON.parse(localStorage.getItem(`history_${activeUser}`) || '[]');
-        } catch (e) {
-            history = [];
+        let history = [];
+        const possibleKeys = [
+            `history_${activeUser}`,
+            `history_${activeIdentity}`,
+            'history_Customer'
+        ];
+
+        // Sabhi possible keys mein se dhoondein kahan order save hua hai
+        for (let key of possibleKeys) {
+            try {
+                let data = JSON.parse(localStorage.getItem(key) || '[]');
+                if (Array.isArray(data) && data.length > 0) {
+                    history = data;
+                    break;
+                }
+            } catch (e) {}
         }
 
         const homeTopBar = `
@@ -112,7 +124,6 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
             </div>
         `;
 
-        // 🌟 Check if user is new (No order history found)
         if (!Array.isArray(history) || history.length === 0) {
             container.innerHTML = `
                 ${homeTopBar}
