@@ -448,45 +448,56 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
         const container = document.getElementById('ordersHistoryContainer');
         if (!container) return;
         
-        const activeUser = username || localStorage.getItem('printAppUser') || 'Customer';
-        const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
-        
-        let history = [];
-        const possibleKeys = [
-            `history_${activeUser}`,
-            `history_${activeIdentity}`,
-            'history_Customer'
-        ];
+        let allOrdersMap = new Map();
 
-        for (let key of possibleKeys) {
-            try {
-                let data = JSON.parse(localStorage.getItem(key) || '[]');
-                if (Array.isArray(data) && data.length > 0) {
-                    history = data;
-                    break;
-                }
-            } catch (e) {}
+        // localStorage ki saari 'history_' keys ko automatic scan karega
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key && key.startsWith('history_')) {
+                try {
+                    let items = JSON.parse(localStorage.getItem(key) || '[]');
+                    if (Array.isArray(items)) {
+                        items.forEach(ord => {
+                            if (ord) {
+                                let uniqueId = ord.orderId || ord.id || JSON.stringify(ord);
+                                allOrdersMap.set(uniqueId, ord);
+                            }
+                        });
+                    }
+                } catch (e) {}
+            }
         }
 
-        if (!Array.isArray(history) || history.length === 0) {
+        let history = Array.from(allOrdersMap.values());
+
+        const homeTopBar = `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px;">
+                <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0;">Your Orders</h3>
+                <button type="button" onclick="navigateDrawerSection('store')" style="background: #065f46; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">🏠 Home</button>
+            </div>
+        `;
+
+        if (history.length === 0) {
             container.innerHTML = `
-                <div style="text-align:center; padding:40px 20px; font-family:'Poppins', sans-serif;">
-                    <div style="font-size:3rem; margin-bottom:10px;">📦</div>
-                    <h3 style="font-size:1.1rem; font-weight:800; color:#0f172a; margin-bottom:4px;">No orders found</h3>
-                    <p style="font-size:0.78rem; color:#64748b; margin-bottom:16px;">You haven't placed any print orders or purchases yet.</p>
-                    <button type="button" onclick="navigateDrawerSection('store')" style="background:#065f46; color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:800; font-size:0.8rem; cursor:pointer;">Start Printing Now &rarr;</button>
+                ${homeTopBar}
+                <div style="text-align:center; padding:45px 20px; font-family:'Poppins', sans-serif;">
+                    <div style="font-size:3.5rem; margin-bottom:12px;">📦✨</div>
+                    <h3 style="font-size:1.15rem; font-weight:900; color:#0f172a; margin-bottom:6px;">No orders found</h3>
+                    <p style="font-size:0.82rem; color:#64748b; line-height:1.5; margin-bottom:20px; max-width:280px; margin-left:auto; margin-right:auto;">You haven't placed any orders yet. Place your first order now and enjoy special first-order delivery perks!</p>
+                    <button type="button" onclick="navigateDrawerSection('store')" style="background:#065f46; color:white; border:none; padding:12px 24px; border-radius:12px; font-weight:900; font-size:0.85rem; cursor:pointer; box-shadow:0 4px 12px rgba(6,95,70,0.2);">Start Your First Order &rarr;</button>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = history.map(order => {
+        if (showRecent !== false) {
+            history = history.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+        }
+
+        container.innerHTML = homeTopBar + history.map(order => {
             if (!order) return '';
-            
-            // 🔥 Safe fallback values for corrupted or missing localstorage fields
             let safeId = order.orderId || order.id || 'N/A';
-            let rawAmount = order.amount !== undefined ? order.amount : (order.totalAmount !== undefined ? order.totalAmount : 0);
-            let safeAmount = Number(rawAmount || 0).toFixed(2);
+            let safeAmount = Number(order.amount || order.totalAmount || 0).toFixed(2);
             let safeStatus = order.status || 'Processing';
             let safeDate = order.date || '';
 
@@ -506,10 +517,6 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
         }).join('');
     } catch (err) {
         console.error("Render Order History Error:", err);
-        const container = document.getElementById('ordersHistoryContainer');
-        if (container) {
-            container.innerHTML = `<p style="text-align:center; padding:20px; color:#ef4444; font-size:0.85rem;">⚠️ Error loading order history.</p>`;
-        }
     }
 };
 // ==========================================
