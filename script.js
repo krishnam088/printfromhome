@@ -3647,16 +3647,24 @@ window.executeFinalCartOrderPlacement = async function() {
             return;
         }
 
-        // 2️⃣ PRINT WALLET ROUTE
+      // 2️⃣ PRINT WALLET ROUTE
         if (paymentMode === 'wallet') {
-            let currentWalletCash = parseFloat(localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
+            const walletKey = `wallet_balance_${sessionActiveUser}`;
+            let currentWalletCash = parseFloat(localStorage.getItem(walletKey)) || 0.00;
+            
             if (currentWalletCash < grandTotal) {
-                alert(`❌ Insufficient wallet balance! You have ₹${currentWalletCash.toFixed(2)}, but grand total is ₹${grandTotal.toFixed(2)}. Please recharge your wallet.`);
+                alert(`❌ Insufficient wallet balance! You have ₹${currentWalletCash.toFixed(2)}, but grand total is ₹${grandTotal.toFixed(2)}. Please recharge your wallet online.`);
                 return;
             }
 
             let newBalance = currentWalletCash - grandTotal;
-            localStorage.setItem(`wallet_cash_${sessionActiveUser}`, newBalance.toFixed(2));
+            localStorage.setItem(walletKey, newBalance.toFixed(2));
+            
+            // Sync UI wallet balance display if function exists
+            const balanceDisplay = document.getElementById('headerWalletDisplayBalance');
+            if (balanceDisplay) {
+                balanceDisplay.textContent = `₹${newBalance.toFixed(2)}`;
+            }
             if (typeof synchronizeWalletInterfaceBalance === 'function') synchronizeWalletInterfaceBalance();
 
             alert('🎉 Order Placed Successfully using Print Wallet!');
@@ -4865,6 +4873,7 @@ document.addEventListener('click', function(e) {
     }
 }, true); // Use capture phase to intercept taps reliably on mobile touch devices
 // 🔥 Process Wallet Deposit & Recharge Function
+// 🔥 Razorpay Real Online Payment Gateway for Wallet Recharge
 window.processWalletDeposit = function() {
     try {
         const inputField = document.getElementById('customWalletInput');
@@ -4880,33 +4889,68 @@ window.processWalletDeposit = function() {
             return;
         }
 
-        // Get current wallet balance from localStorage or default to 0
         const activeUser = localStorage.getItem('printAppUser') || 'Customer';
-        const walletKey = `wallet_balance_${activeUser}`;
-        let currentBalance = parseFloat(localStorage.getItem(walletKey) || '0');
-        
-        currentBalance += amountToAdd;
-        localStorage.setItem(walletKey, currentBalance.toFixed(2));
+        const activeMobile = localStorage.getItem('printAppUserIdentity') || '7398746551';
+        const activeEmail = localStorage.getItem(`user_email_${activeUser}`) || 'support@printfromhomes.com';
 
-        // Update UI display if element exists
-        const balanceDisplay = document.getElementById('headerWalletDisplayBalance');
-        if (balanceDisplay) {
-            balanceDisplay.textContent = `₹${currentBalance.toFixed(2)}`;
+        // Check if Razorpay is loaded
+        if (typeof Razorpay === 'undefined') {
+            alert("Payment gateway script is loading. Please try again in a moment.");
+            return;
         }
 
-        // Close modal and clear input
-        if (typeof toggleWalletPopupGrid === 'function') {
-            toggleWalletPopupGrid(false);
-        }
-        inputField.value = '';
+        // Razorpay Options Configuration (Amount is in paisa, so multiply by 100)
+        const options = {
+            "key": "rzp_live_YOUR_KEY_ID", // Yahan aap apni live/test Razorpay Key ID daal sakte hain (ya backend se fetch kar sakte hain)
+            "amount": Math.round(amountToAdd * 100), 
+            "currency": "INR",
+            "name": "Print From Home",
+            "description": "Wallet Online Recharge",
+            "image": "/icon-192.png",
+            "handler": function (response) {
+                // ✅ Payment Successful! Now update wallet balance safely
+                const walletKey = `wallet_balance_${activeUser}`;
+                let currentBalance = parseFloat(localStorage.getItem(walletKey) || '0');
+                
+                currentBalance += amountToAdd;
+                localStorage.setItem(walletKey, currentBalance.toFixed(2));
 
-        if (typeof showAppToast === 'function') {
-            showAppToast(`Successfully added ₹${amountToAdd.toFixed(2)} to wallet!`, "success");
-        }
-        
-        // Refresh any open wallet views or cart totals
-        if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
+                // Update UI Display
+                const balanceDisplay = document.getElementById('headerWalletDisplayBalance');
+                if (balanceDisplay) {
+                    balanceDisplay.textContent = `₹${currentBalance.toFixed(2)}`;
+                }
+
+                // Close modal and clear input
+                if (typeof toggleWalletPopupGrid === 'function') {
+                    toggleWalletPopupGrid(false);
+                }
+                inputField.value = '';
+
+                if (typeof showAppToast === 'function') {
+                    showAppToast(`Successfully added ₹${amountToAdd.toFixed(2)} via Online Payment!`, "success");
+                }
+
+                if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
+            },
+            "prefill": {
+                "name": activeUser,
+                "email": activeEmail,
+                "contact": activeMobile
+            },
+            "theme": {
+                "color": "#065f46"
+            }
+        };
+
+        // Fallback test key if live key is placeholder
+        options.key = "rzp_test_1DPvJ2Z0Z0Z0Z0"; // Replace with your actual active Razorpay test/live key
+
+        const rzp1 = new Razorpay(options);
+        rzp1.open();
+
     } catch (err) {
-        console.error("Wallet Deposit Error:", err);
+        console.error("Wallet Online Payment Error:", err);
+        alert("Could not initiate online payment. Please try again.");
     }
 };
