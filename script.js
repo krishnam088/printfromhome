@@ -96,40 +96,35 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
         const container = document.getElementById('ordersHistoryContainer');
         if (!container) return;
         
-        // Active username detect karein (e.g. 'Bhavishya')
+        // Strict active user credentials
         const activeUser = username || localStorage.getItem('printAppUser') || 'Customer';
         const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
         
         let history = [];
         
-        // 1. Direct targeted keys check karein jo console mein dikh rahi hain
-        const possibleKeys = [
+        // 🔒 Sirf current logged-in user ki apni keys check hongi (Strict Isolation)
+        const targetKeys = [
             `history_${activeUser}`,
-            `history_Bhavishya`,
-            `history_${activeIdentity}`,
-            'history_Customer'
-        ];
+            activeIdentity ? `history_${activeIdentity}` : null
+        ].filter(Boolean);
 
-        // 2. Fallback: Universal scan for any key starting with 'history_'
-        let allOrdersMap = new Map();
-        for (let i = 0; i < localStorage.length; i++) {
-            let key = localStorage.key(i);
-            if (key && key.startsWith('history_')) {
-                try {
-                    let items = JSON.parse(localStorage.getItem(key) || '[]');
-                    if (Array.isArray(items)) {
-                        items.forEach(ord => {
-                            if (ord) {
-                                let uniqueId = ord.orderId || ord.id || JSON.stringify(ord);
-                                allOrdersMap.set(uniqueId, ord);
-                            }
-                        });
-                    }
-                } catch (e) {}
-            }
+        let uniqueOrdersMap = new Map();
+
+        for (let key of targetKeys) {
+            try {
+                let items = JSON.parse(localStorage.getItem(key) || '[]');
+                if (Array.isArray(items)) {
+                    items.forEach(ord => {
+                        if (ord) {
+                            let uniqueId = ord.orderId || ord.id || JSON.stringify(ord);
+                            uniqueOrdersMap.set(uniqueId, ord);
+                        }
+                    });
+                }
+            } catch (e) {}
         }
 
-        history = Array.from(allOrdersMap.values());
+        history = Array.from(uniqueOrdersMap.values());
 
         const homeTopBar = `
             <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px;">
@@ -138,7 +133,7 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
             </div>
         `;
 
-        if (!Array.isArray(history) || history.length === 0) {
+        if (history.length === 0) {
             container.innerHTML = `
                 ${homeTopBar}
                 <div style="text-align:center; padding:45px 20px; font-family:'Poppins', sans-serif;">
