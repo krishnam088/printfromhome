@@ -1,3 +1,13 @@
+window.currentCartDeliveryMode = 'doorstep'; // Default doorstep
+
+window.updateCartDeliveryMode = function(mode) {
+    window.currentCartDeliveryMode = mode;
+    if (typeof calculateTotal === 'function') {
+        calculateTotal();
+    }
+};
+
+
 // 🔥 Diwali Pre-Launch Notice Popup Helper Function
 window.showDiwaliPreLaunchNotice = function(message) {
     let existingModal = document.getElementById('diwaliPreLaunchModal');
@@ -864,9 +874,9 @@ window.calculateTotal = function() {
         let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal + printJobsTotal;
         const freeDeliveryThreshold = window.getDynamicFreeDeliveryThreshold();
         
-        // 🔥 Strictly Admin Controlled Delivery Fee
+        // 🔥 Strictly Admin Controlled Delivery Fee & Store Pickup Check
         let activeDeliveryFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 0;
-        let accurateDeliveryCharge = (finalDocumentCost >= freeDeliveryThreshold || finalDocumentCost === 0) ? 0.00 : activeDeliveryFee; 
+        let accurateDeliveryCharge = (window.currentCartDeliveryMode === 'pickup') ? 0.00 : ((finalDocumentCost >= freeDeliveryThreshold || finalDocumentCost === 0) ? 0.00 : activeDeliveryFee); 
      
         const progressBarBox = document.getElementById('freeDeliveryProgressBarBox');
         const messageText = document.getElementById('freeDeliveryMessageText');
@@ -2421,6 +2431,7 @@ window.updateFloatingCartBar = function() {
 // ==========================================
 // 🔥 BULLETPROOF UNIVERSAL CART DRAWER RENDER ENGINE
 // ==========================================
+
 window.renderCartDrawerContents = function() {
     const container = document.getElementById('cartDrawerItemsList') || 
                         document.getElementById('cartItemsListContainer') || 
@@ -2464,6 +2475,17 @@ window.renderCartDrawerContents = function() {
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
     window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
+    // 🔥 Print Job hone par COD/Wallet Lock karna (Online Payment Mandatory)
+    const hasPrintJobs = window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0;
+    const paymentSelect = document.getElementById('cartDrawerPaymentSelect');
+    if (hasPrintJobs && paymentSelect) {
+        paymentSelect.value = 'online';
+        paymentSelect.disabled = true; // Print job hone par COD/Wallet disable ho jayega
+        paymentSelect.title = "Online payment is mandatory for print orders";
+    } else if (paymentSelect) {
+        paymentSelect.disabled = false;
+    }
+
     let hasItems = (window.cartSnacksArray.length > 0) || (window.cartPrintJobsArray.length > 0);
     
     if (!hasItems) {
@@ -2503,7 +2525,7 @@ window.renderCartDrawerContents = function() {
         wrapper.appendChild(card);
     });
 
-    // 2. Render Snacks / Store Products in Cart
+    // 2. Render Snacks / Store Products in Cart (Fixed typo: snack.price * snack.qty)
     window.cartSnacksArray.forEach((snack, idx) => {
         const card = document.createElement('div');
         card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.02); gap:10px;";
@@ -3405,13 +3427,14 @@ window.executeFinalCartOrderPlacement = async function() {
     window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
     // 🔥 Strict LocalStorage Fetch (Allows 0 correctly)
-const cachedDel = localStorage.getItem('cached_delivery_fee');
-const cachedHan = localStorage.getItem('cached_handling_fee');
-const cachedRai = localStorage.getItem('cached_rain_fee');
+    const cachedDel = localStorage.getItem('cached_delivery_fee');
+    const cachedHan = localStorage.getItem('cached_handling_fee');
+    const cachedRai = localStorage.getItem('cached_rain_fee');
 
-window.adminDeliveryFee = (cachedDel !== null && cachedDel !== undefined && cachedDel !== '') ? parseFloat(cachedDel) : 0;
-window.adminHandlingFee = (cachedHan !== null && cachedHan !== undefined && cachedHan !== '') ? parseFloat(cachedHan) : 0;
-window.adminRainFee = (cachedRai !== null && cachedRai !== undefined && cachedRai !== '') ? parseFloat(cachedRai) : 0;
+    window.adminDeliveryFee = (cachedDel !== null && cachedDel !== undefined && cachedDel !== '') ? parseFloat(cachedDel) : 0;
+    window.adminHandlingFee = (cachedHan !== null && cachedHan !== undefined && cachedHan !== '') ? parseFloat(cachedHan) : 0;
+    window.adminRainFee = (cachedRai !== null && cachedRai !== undefined && cachedRai !== '') ? parseFloat(cachedRai) : 0;
+    
     let totalItemsCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0) + window.cartPrintJobsArray.length;
     if (totalItemsCount === 0) {
         alert("⚠️ Your cart is empty! Please add print jobs or store products first.");
@@ -3446,8 +3469,14 @@ window.adminRainFee = (cachedRai !== null && cachedRai !== undefined && cachedRa
 
     let subtotal = totalPrintVal + totalSnacksVal;
     const freeDeliveryThreshold = window.getDynamicFreeDeliveryThreshold ? window.getDynamicFreeDeliveryThreshold() : 99.00;
+    
+    // 🔥 Fetch Selected Delivery Mode ('doorstep' or 'pickup')
+    const selectedDeliveryModeRadio = document.querySelector('input[name="cartDeliveryModeRadio"]:checked');
+    let deliveryMode = selectedDeliveryModeRadio ? selectedDeliveryModeRadio.value : (window.currentCartDeliveryMode || 'doorstep');
+
     let activeDelFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 0;
-    let delivery = (subtotal >= freeDeliveryThreshold || subtotal === 0) ? 0 : activeDelFee;
+    // Agar Store Pickup hai toh delivery fee strictly 0 hogi!
+    let delivery = (deliveryMode === 'pickup') ? 0 : ((subtotal >= freeDeliveryThreshold || subtotal === 0) ? 0 : activeDelFee);
     
     let activeRainFee = window.adminRainFee !== undefined ? window.adminRainFee : 0;
     let rainFee = window.isRainSurgeActive ? activeRainFee : 0;
@@ -3504,6 +3533,7 @@ window.adminRainFee = (cachedRai !== null && cachedRai !== undefined && cachedRa
     formData.append('phone', userPhone);
     formData.append('deliveryTip', window.currentDeliveryTip || 0);
     formData.append('paymentMode', paymentMode);
+    formData.append('deliveryMode', deliveryMode); // 🔥 Delivery Mode appended here
     formData.append('userLat', userLat);
     formData.append('userLng', userLng);
     formData.append('deliveryInstruction', deliveryInstructionText);
@@ -3521,6 +3551,7 @@ window.adminRainFee = (cachedRai !== null && cachedRai !== undefined && cachedRa
             status: initialOrderStatus, 
             details: finalMetaConfig, 
             address: activeAddress,
+            deliveryMode: deliveryMode,
             deliveryInstruction: deliveryInstructionText, 
             deliveryTip: window.currentDeliveryTip || 0
         });
@@ -4681,3 +4712,39 @@ document.addEventListener('click', function(e) {
         }
     }
 });
+window.isOtpStepActive = false;
+
+window.handleSendSignupOtp = async function() {
+    const name = document.getElementById('authName').value.trim();
+    const identity = document.getElementById('authIdentity').value.trim();
+    const email = document.getElementById('authEmailInput').value.trim();
+    const password = document.getElementById('authPassword').value.trim();
+
+    if (!name || !identity || !email || !password) {
+        alert("⚠️ Kripya saari details (Name, Mobile, Gmail, Password) bharein!");
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/auth/send-signup-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, identity, email, password })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            alert("✅ Verification OTP aapke Gmail par bhej diya gaya hai!");
+            window.isOtpStepActive = true;
+            document.querySelector('.signup-otp-box').classList.remove('hidden');
+            document.getElementById('sendSignupOtpBtn').style.display = 'none';
+            document.getElementById('authEmailInput').setAttribute('readonly', true);
+            const authBtn = document.getElementById('authBtn');
+            if (authBtn) authBtn.textContent = "Verify & Complete Signup";
+        } else {
+            alert(`❌ ${data.message || 'OTP bhejne mein asafalta rahi.'}`);
+        }
+    } catch (e) {
+        alert("❌ Server connection error.");
+    }
+};

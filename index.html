@@ -804,14 +804,28 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
     </div>
 
-    <div id="authScreen" class="auth-container app-hidden">
+   <div id="authScreen" class="auth-container app-hidden">
         <div class="auth-card">
             <div class="auth-brand">print<span class="brand-green">from</span>home</div>
             <h2 id="authTitle">Welcome Back!</h2>
             <form id="authForm">
                 <div class="form-group signup-only hidden"><label>Full Name</label><input type="text" id="authName" placeholder="Enter your full name"></div>
                 <div class="form-group"><label>Mobile Number</label><input type="text" id="authIdentity" placeholder="Enter 10-digit mobile number" maxlength="10" required></div>
-                <div class="form-group signup-only hidden"><label>Gmail Address</label><input type="email" id="authEmailInput" placeholder="Enter your Gmail address"></div>
+                
+                <div class="form-group signup-only hidden">
+                    <label>Gmail Address</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="email" id="authEmailInput" placeholder="Enter your Gmail address" style="flex:1;">
+                        <button type="button" id="sendSignupOtpBtn" onclick="handleSendSignupOtp()" style="background:#065f46; color:white; border:none; padding:0 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">Send OTP</button>
+                    </div>
+                </div>
+
+                <!-- 🔥 OTP Verification Step (Initially Hidden during Signup) -->
+                <div class="form-group signup-otp-box hidden">
+                    <label>Enter 6-Digit Gmail OTP</label>
+                    <input type="text" id="authEmailOtpInput" placeholder="Enter 6-digit OTP received on email" maxlength="6">
+                </div>
+
                 <div class="form-group" id="passwordGroup"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters" required></div>
                 
                 <div style="text-align: right; margin-bottom: 12px;">
@@ -894,20 +908,12 @@ document.addEventListener('DOMContentLoaded', () => {
             <h2 style="font-size:1.15rem; font-weight:900; color:#0f172a; margin:0;">Review Your Cart</h2>
         </div>
 
-        <!-- Header Row 3: Search Bar -->
-        <div style="flex-shrink:0; background:#ffffff; padding:0 16px 12px 16px;">
-            <div style="position:relative; width:100%;">
-                <span style="position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:0.9rem; color:#64748b;">🔍</span>
-                <input type="text" id="cartHeaderSearchInput" placeholder="Search..." oninput="filterCartItemsSearch(this.value)" style="width:100%; padding:10px 16px 10px 38px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; font-size:0.82rem; font-weight:600; outline:none; box-sizing:border-box;" />
-            </div>
-        </div>
-
-      <!-- Scrollable Body Content -->
-        <div style="flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 16px 160px 16px; display:flex; flex-direction:column; gap:12px; box-sizing:border-box; background:#ffffff;">
+       <!-- Scrollable Body Content -->
+        <div style="flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:16px 16px 160px 16px; display:flex; flex-direction:column; gap:12px; box-sizing:border-box; background:#ffffff;">
             
-            <!-- User Identity Card -->
-            <div id="cartUserIdentitySummary" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 6px rgba(0,0,0,0.02); flex-shrink:0; font-size:0.82rem; font-weight:800; color:#0f172a;">
-                Order for User (Loading...) | (...)
+            <!-- 🔥 Highlited & Attractive Green-Yellow Cart Title -->
+            <div style="background: linear-gradient(135deg, #fef08a 0%, #bbf7d0 100%); border: 1.5px solid #16a34a; border-radius: 14px; padding: 12px 16px; text-align: center; box-shadow: 0 3px 10px rgba(22, 163, 74, 0.1); flex-shrink: 0;">
+                <h2 style="font-size: 1.05rem; font-weight: 900; color: #065f46; margin: 0; letter-spacing: 0.5px;">🌱 Print From Home Cart 🛒</h2>
             </div>
 
             <!-- Delivery ETA & Shipment Info Badge -->
@@ -947,7 +953,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
 
-            <!-- Bill Details Box -->
+           <!-- Bill Details Box -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:16px; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
                 <h4 style="font-size:0.88rem; font-weight:900; color:#0f172a; margin-bottom:12px;">Bill details</h4>
                 <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#64748b; margin-bottom:8px;">
@@ -963,12 +969,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span id="cartRainFee" style="font-weight:700; color:#d97706;">₹0.00</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:#64748b; margin-bottom:12px;">
-    <span>Handling & Platform charge</span>
-    <span id="cartHandlingFee" style="font-weight:700; color:#0f172a;">₹0.00</span>
-</div>
+                    <span>Handling & Platform charge</span>
+                    <span id="cartHandlingFee" style="font-weight:700; color:#0f172a;">₹0.00</span>
+                </div>
                 <div style="border-top:1px dashed #cbd5e1; padding-top:10px; display:flex; justify-content:space-between; font-size:0.95rem; font-weight:900; color:#0f172a;">
                     <span>Grand total</span>
                     <span id="cartGrandTotalSummary" style="color:#0f172a;">₹0.00</span>
+                </div>
+            </div>
+
+            <!-- 🏪 Doorstep Delivery vs Store Pickup Selector Box (Bill details aur Delivery instructions ke beech mein) -->
+            <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:16px; padding:14px; flex-shrink:0; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                <h4 style="font-size:0.88rem; font-weight:900; color:#0f172a; margin-bottom:8px;">📦 Select Delivery Mode</h4>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <label style="display:flex; align-items:center; gap:6px; background:#f0fdf4; border:1.5px solid #16a34a; padding:10px; border-radius:10px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+                        <input type="radio" name="cartDeliveryModeRadio" value="doorstep" checked onchange="updateCartDeliveryMode('doorstep')"> 🚚 Doorstep
+                    </label>
+                    <label style="display:flex; align-items:center; gap:6px; background:#ffffff; border:1.5px solid #cbd5e1; padding:10px; border-radius:10px; font-size:0.75rem; font-weight:800; cursor:pointer;">
+                        <input type="radio" name="cartDeliveryModeRadio" value="pickup" onchange="updateCartDeliveryMode('pickup')"> 🏪 Store Pickup <span style="color:#16a34a; font-size:0.65rem;">(FREE)</span>
+                    </label>
                 </div>
             </div>
 

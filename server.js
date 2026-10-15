@@ -72,12 +72,17 @@ const localDiskStorage = multer.diskStorage({
     }
 });
 const uploadLocal = multer({ storage: localDiskStorage });
+
+// 🔥 Yahan purane userSchema ki jagah yeh updated schema rakhein
 const userSchema = new mongoose.Schema({
     name: String,
     identity: { type: String, unique: true }, // Mobile Number
     email: { type: String, default: '' },      // Gmail Address
     password: String,
-    addresses: { type: Array, default: [] },   // 👈 Yahan add karein (Multi-address support)
+    emailOtp: String,                          // 🔥 naya field (OTP ke liye)
+    otpExpires: Date,                          // 🔥 naya field (OTP expiry ke liye)
+    isEmailVerified: { type: Boolean, default: false }, // 🔥 naya field (verification status)
+    addresses: { type: Array, default: [] },   // Multi-address support
     dateCreated: String
 });
 const User = mongoose.model('User', userSchema);
@@ -86,6 +91,7 @@ const orderSchema = new mongoose.Schema({
     orderId: { type: String, unique: true },
     customerName: String,
     phone: String,
+    deliveryMode: { type: String, default: 'doorstep' }, // 🔥 Yahan add kiya gaya hai ('doorstep' ya 'pickup')[cite: 4]
     files: Array,
     fileUrl: String,
     fileName: String,
@@ -95,8 +101,8 @@ const orderSchema = new mongoose.Schema({
     printType: String,
     binding: String,
     address: String,
-    userLat: { type: Number, default: 25.3451 }, // 👈 Yahan add karein
-    userLng: { type: Number, default: 83.0012 }, // 👈 Yahan add karein
+    userLat: { type: Number, default: 25.3451 }, 
+    userLng: { type: Number, default: 83.0012 }, 
     amount: String,
     totalAmount: String,
     status: String,
@@ -104,14 +110,35 @@ const orderSchema = new mongoose.Schema({
     timestamp: String,
     paymentId: String,
     verifiedItems: { type: Array, default: [] },
-    assignedDeliveryBoy: { type: String, default: '' }, // Delivery Executive Mobile Number
-    needsStockRestockScan: { type: Boolean, default: false }, // 🔥 Picker cancellation restock flag
+    assignedDeliveryBoy: { type: String, default: '' }, 
+    needsStockRestockScan: { type: Boolean, default: false }, 
     netProfitRecorded: { type: Number, default: 0 },
     deliveryFeeCharged: { type: Number, default: 0 },
     isRefundableAmount: { type: Number, default: 0 },
     manualNeftRefundRequired: { type: Boolean, default: false }
 });
 const Order = mongoose.model('Order', orderSchema);
+
+// Yahan userSchema aur baaki schemas ke niche paste karein:
+const tempSignupSchema = new mongoose.Schema({
+    name: String,
+    identity: String,
+    email: String,
+    password: String,
+    emailOtp: String,
+    otpExpires: Date
+});
+const TempSignup = mongoose.model('TempSignup', tempSignupSchema);
+
+const emailChangeSessionSchema = new mongoose.Schema({
+    identity: String,
+    oldEmail: String,
+    oldOtp: String,
+    newEmail: String,
+    newOtp: String,
+    step: String
+});
+const EmailChangeSession = mongoose.model('EmailChangeSession', emailChangeSessionSchema);
 
 const deliveryBoySchema = new mongoose.Schema({
     phone: { type: String, unique: true },
@@ -482,7 +509,8 @@ cron.schedule('*/30 * * * *', () => {
     autoTriggerRainSurgeNotification();
 });
 
-app.post('/api/auth/signup', async (req, res) => {
+// --- 1. SIGNUP: SEND EMAIL OTP ---
+app.post('/api/auth/send-signup-otp', async (req, res) => {
     try {
         const { name, identity, email, password } = req.body;
         if (!email) {
@@ -497,18 +525,64 @@ app.post('/api/auth/signup', async (req, res) => {
             return res.status(400).json({ success: false, message: "This mobile number or Gmail is already registered!" });
         }
 
-        const newUser = new User({ 
-            name: name.trim(), 
-            identity: normalizedIdentity, 
-            email: normalizedEmail,
-            password, 
-            dateCreated: new Date().toLocaleString() 
+        const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 mins expiry
+
+        // Real Email bhejna Brevo/Nodemailer transporter ke zariye
+        await transporter.sendMail({
+            from: 'Print From Home <support@printfromhomes.com>',
+            to: normalizedEmail,
+            subject: '🔒 Verify Your Gmail - Print From Home',
+            text: `Hello ${name},\n\nYour Gmail verification OTP is: ${emailOtp}\nThis OTP is valid for 5 minutes.`
         });
-        
-        await newUser.save();
-        res.status(201).json({ success: true, userId: newUser.identity, name: newUser.name, email: newUser.email });
+
+        await TempSignup.findOneAndUpdate(
+            { identity: normalizedIdentity },
+            { name: name.trim(), identity: normalizedIdentity, email: normalizedEmail, password, emailOtp, otpExpires },
+            { upsert: true, new: true }
+        );
+
+        res.json({ success: true, message: "Verification OTP sent successfully to your Gmail!" });
     } catch (err) {
-        res.status(500).json({ success: false, message: "Server error" });
+        console.error(err);
+        res.status(500).json({ success: false, message: "Failed to send email OTP." });
+    }
+});
+
+// --- 2. SIGNUP: VERIFY OTP & CREATE USER ---
+app.post('/api/auth/verify-signup-otp', async (req, res) => {
+    try {
+        const { identity, otpInput } = req.body;
+        const normalizedIdentity = identity.replace(/\D/g, '').slice(-10);
+
+        const tempData = await TempSignup.findOne({ identity: normalizedIdentity });
+        if (!tempData) {
+            return res.status(400).json({ success: false, message: "Session expired or invalid request. Please start again." });
+        }
+
+        if (tempData.otpExpires < new Date()) {
+            return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
+        }
+
+        if (tempData.emailOtp !== otpInput) {
+            return res.status(400).json({ success: false, message: "Invalid OTP! Please enter correct 6-digit code." });
+        }
+
+        const newUser = new User({
+            name: tempData.name,
+            identity: tempData.identity,
+            email: tempData.email,
+            password: tempData.password,
+            isEmailVerified: true,
+            dateCreated: new Date().toLocaleString()
+        });
+        await newUser.save();
+
+        await TempSignup.deleteOne({ identity: normalizedIdentity });
+
+        res.status(201).json({ success: true, message: "Gmail verified and account successfully created!", userId: newUser.identity, name: newUser.name, email: newUser.email });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Verification failed." });
     }
 });
 
@@ -525,24 +599,84 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-app.post('/api/auth/update-email', async (req, res) => {
+// --- EDIT PROFILE: SEND OLD EMAIL OTP ---
+app.post('/api/auth/change-email/send-old-otp', async (req, res) => {
     try {
-        const { identity, email } = req.body;
-        if (!identity || !email) {
-            return res.status(400).json({ success: false, message: "Identity and Email are required!" });
-        }
+        const { identity, currentEmail } = req.body;
         const normalizedIdentity = identity.replace(/\D/g, '').slice(-10);
-        const user = await User.findOne({ identity: normalizedIdentity });
+        const oldOtp = Math.floor(100000 + Math.random() * 900000).toString();
         
-        if (!user) {
-            return res.status(404).json({ success: false, message: "User not found!" });
+        await transporter.sendMail({
+            from: 'Print From Home <support@printfromhomes.com>',
+            to: currentEmail,
+            subject: '🔐 Verify Current Gmail to Change Email',
+            text: `Your OTP to authorize email change is: ${oldOtp}\nValid for 5 minutes.`
+        });
+
+        await EmailChangeSession.findOneAndUpdate(
+            { identity: normalizedIdentity },
+            { oldEmail: currentEmail, oldOtp, step: 'VERIFY_OLD' },
+            { upsert: true, new: true }
+        );
+
+        res.json({ success: true, message: "OTP sent to your current (old) Gmail address." });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Failed to send OTP to old email." });
+    }
+});
+
+// --- EDIT PROFILE: VERIFY OLD OTP & SEND NEW EMAIL OTP ---
+app.post('/api/auth/change-email/verify-old-and-send-new', async (req, res) => {
+    try {
+        const { identity, oldOtpInput, newEmail } = req.body;
+        const normalizedIdentity = identity.replace(/\D/g, '').slice(-10);
+        
+        const session = await EmailChangeSession.findOne({ identity: normalizedIdentity });
+        if (!session || session.oldOtp !== oldOtpInput) {
+            return res.status(400).json({ success: false, message: "Invalid OTP for current email!" });
         }
 
-        user.email = email.trim().toLowerCase();
-        await user.save();
-        res.json({ success: true, message: "Gmail updated successfully!" });
+        const emailExists = await User.findOne({ email: newEmail.trim().toLowerCase() });
+        if (emailExists) {
+            return res.status(400).json({ success: false, message: "This new Gmail address is already in use by another account." });
+        }
+
+        const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        await transporter.sendMail({
+            from: 'Print From Home <support@printfromhomes.com>',
+            to: newEmail,
+            subject: '✨ Verify Your New Gmail Address',
+            text: `Your OTP to verify your new Gmail is: ${newOtp}\nValid for 5 minutes.`
+        });
+
+        session.newEmail = newEmail.trim().toLowerCase();
+        session.newOtp = newOtp;
+        session.step = 'VERIFY_NEW';
+        await session.save();
+
+        res.json({ success: true, message: "Old email verified! OTP has been sent to your new Gmail address." });
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        res.status(500).json({ success: false, message: "Process failed." });
+    }
+});
+
+// --- EDIT PROFILE: VERIFY NEW OTP & UPDATE DB ---
+app.post('/api/auth/change-email/verify-new-and-update', async (req, res) => {
+    try {
+        const { identity, newOtpInput } = req.body;
+        const normalizedIdentity = identity.replace(/\D/g, '').slice(-10);
+
+        const session = await EmailChangeSession.findOne({ identity: normalizedIdentity });
+        if (!session || session.newOtp !== newOtpInput) {
+            return res.status(400).json({ success: false, message: "Invalid OTP for new email!" });
+        }
+
+        await User.findOneAndUpdate({ identity: normalizedIdentity }, { email: session.newEmail });
+        await EmailChangeSession.deleteOne({ identity: normalizedIdentity });
+
+        res.json({ success: true, message: "Gmail address successfully updated and verified!" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Failed to update email." });
     }
 });
 
@@ -1116,7 +1250,8 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
         const isOpen = config ? (isTimeWithinOperatingHours && config.isOpen) : isTimeWithinOperatingHours;
         if (!isOpen) return res.status(403).json({ success: false, message: "Store is closed" });
 
-        const { totalAmount, configDetails, address, customerName, phone, paymentMode } = req.body;
+        // 🔥 deliveryMode ko bhi req.body se destructure karein ('doorstep' ya 'pickup')
+        const { totalAmount, configDetails, address, customerName, phone, paymentMode, deliveryMode } = req.body;
         
         let finalAmountNumeric = parseFloat(String(totalAmount || '42').replace(/[₹,]/g, ''));
         if (isNaN(finalAmountNumeric) || finalAmountNumeric <= 0) finalAmountNumeric = 42;
@@ -1138,6 +1273,17 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
                 message: "⚠️ Printing service is currently temporarily OFF due to technical maintenance. Please try again later." 
             });
         }
+
+        const selectedPaymentMode = paymentMode || "online";
+
+        // 🚨 RULE 1: Print Orders ke liye Online Payment Mandatory Check
+        if (hasPrintJobs && selectedPaymentMode !== 'online') {
+            return res.status(400).json({ 
+                success: false, 
+                message: "⚠️ Print orders ke liye sirf Online Payment mandatory hai taaki false orders aur paper waste ka risk na ho!" 
+            });
+        }
+
         if (Array.isArray(parsedConfig)) {
             for (const item of parsedConfig) {
                 if (item.printType === 'snack' || item.printType === 'product' || (item.fileName && String(item.fileName).startsWith('Product:'))) {
@@ -1159,8 +1305,21 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             }
         }
 
-        const selectedPaymentMode = paymentMode || "online";
         const numericId = String(Math.floor(100000 + Math.random() * 900000));
+
+        // 📋 RULE 2: Print Jobs ke sath Summary / Advertising Cover Slip attach karna
+        if (hasPrintJobs) {
+            parsedConfig.push({
+                fileName: `📋 SUMMARY COVER SLIP [Order ID: #${numericId}]`,
+                pages: 1,
+                copies: 1,
+                printType: 'bw',
+                isCoverSlip: true,
+                customerName: customerName || 'Customer',
+                phone: phone || 'N/A',
+                tagline: "Print From Home - India's Last Minute Printing App | www.printfromhomes.com"
+            });
+        }
 
         const host = req.get('host');
         const docFiles = req.files ? req.files.filter(f => f.fieldname === 'document') : [];
@@ -1175,13 +1334,15 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
 
         const initialOrderStatus = hasPrintJobs ? 'Ready for Print' : 'Processing';
 
-        let calculatedDeliveryFee = finalAmountNumeric >= 99 ? 0 : 25;
+        // 🏪 RULE 3: Store Pickup hone par Delivery Fee strictly ₹0 (FREE) karna
+        let calculatedDeliveryFee = (deliveryMode === 'pickup') ? 0 : (finalAmountNumeric >= 99 ? 0 : 25);
 
         if (selectedPaymentMode === 'cod' || selectedPaymentMode === 'wallet') {
             const newOrder = new Order({
                 orderId: numericId,
                 customerName: customerName || 'Customer',
                 phone: phone || 'N/A',
+                deliveryMode: deliveryMode || 'doorstep', // 🔥 Yeh save hoga
                 files: filesMappedList,
                 fileUrl: primaryUrl,
                 fileName: primaryName,
@@ -1190,7 +1351,7 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
                 copies: parsedConfig.length > 0 ? (parsedConfig[0].copies || 1) : 1,
                 printType: parsedConfig.length > 0 ? (parsedConfig[0].isColor ? 'Color' : 'Black & White') : 'Black & White',
                 binding: parsedConfig.length > 0 ? (parsedConfig[0].binding || 'None') : 'None',
-                address: address || 'N/A',
+                address: (deliveryMode === 'pickup') ? '🏪 Store Pickup (Self-Service)' : (address || 'N/A'),
                 amount: finalAmountNumeric.toFixed(2),
                 totalAmount: finalAmountNumeric.toFixed(2),
                 status: initialOrderStatus,
@@ -1227,7 +1388,7 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             copies: parsedConfig.length > 0 ? (parsedConfig[0].copies || 1) : 1,
             printType: parsedConfig.length > 0 ? (parsedConfig[0].isColor ? 'Color' : 'Black & White') : 'Black & White',
             binding: parsedConfig.length > 0 ? (parsedConfig[0].binding || 'None') : 'None',
-            address: address || 'N/A',
+            address: (deliveryMode === 'pickup') ? '🏪 Store Pickup (Self-Service)' : (address || 'N/A'),
             amount: finalAmountNumeric.toFixed(2),
             totalAmount: finalAmountNumeric.toFixed(2),
             status: 'Pending Payment',

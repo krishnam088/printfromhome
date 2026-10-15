@@ -1834,12 +1834,17 @@ window.addEventListener('DOMContentLoaded', () => {
 
             const assignedBoy = order.assignedDeliveryBoy;
 
+            // 🔥 Store Pickup vs Doorstep Delivery Badge Logic
+            let deliveryBadge = (order.deliveryMode === 'pickup') 
+                ? `<span style="background:#fef3c7; color:#b45309; padding:3px 8px; border-radius:6px; font-weight:800; font-size:0.7rem;">🏪 Store Pickup (Self-Service)</span>`
+                : `<span style="background:#dbeafe; color:#1e40af; padding:3px 8px; border-radius:6px; font-weight:800; font-size:0.7rem;">🚚 Doorstep Delivery</span>`;
+
             return `
                 <div class="order-card ${isCancelled ? 'cancelled' : ''}" id="card_${order.orderId}">
                     <div class="order-card-header">
                         <div class="order-id-meta">
                             <h3>Order #${cleanId} <span style="font-size:0.7rem; color:var(--text-sub); font-weight:normal;">(Ref: ${order.orderId})</span></h3>
-                            <div class="order-time">Received: ${istString} | <b style="color:var(--accent-yellow);">Status: ${currentStatus}</b></div>
+                            <div class="order-time">Received: ${istString} | <b style="color:var(--accent-yellow);">Status: ${currentStatus}</b> | ${deliveryBadge}</div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <div style="font-size: 1.25rem; font-weight: 800; color: ${isCancelled ? 'var(--accent-red)' : 'var(--accent-green)'};">₹${order.totalAmount || order.amount || 0}</div>
@@ -1850,11 +1855,13 @@ window.addEventListener('DOMContentLoaded', () => {
                     <!-- 🛵 Delivery Assignment Banner -->
                     <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid ${assignedBoy ? 'var(--accent-green)' : 'var(--border-color)'}; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                         <div style="font-size: 0.8rem; font-weight: 700;">
-                            🛵 Delivery Executive: <span style="color: ${assignedBoy ? 'var(--accent-green)' : 'var(--accent-yellow)'};">${assignedBoy ? 'Assigned (' + assignedBoy + ')' : 'Not Assigned Yet'}</span>
+                            🛵 Delivery Executive: <span style="color: ${assignedBoy ? 'var(--accent-green)' : 'var(--accent-yellow)'};">${assignedBoy ? 'Assigned (' + assignedBoy + ')' : (order.deliveryMode === 'pickup' ? 'Store Pickup (No Rider Needed)' : 'Not Assigned Yet')}</span>
                         </div>
-                        <button type="button" onclick="assignOrderToDeliveryBoy('${order.orderId}')" style="background: #3b82f6; color: white; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">
-                            ${assignedBoy ? '🔄 Reassign' : '👉 Assign Boy'}
-                        </button>
+                        ${order.deliveryMode !== 'pickup' ? `
+                            <button type="button" onclick="assignOrderToDeliveryBoy('${order.orderId}')" style="background: #3b82f6; color: white; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">
+                                ${assignedBoy ? '🔄 Reassign' : '👉 Assign Boy'}
+                            </button>
+                        ` : ''}
                     </div>
 
                     ${isCancelled ? `
@@ -1874,7 +1881,7 @@ window.addEventListener('DOMContentLoaded', () => {
                         <div class="order-customer-box" style="margin-bottom: 12px;">
                             <div class="cust-field"><b>Customer Name</b><span>${order.customerName || 'Customer'}</span></div>
                             <div class="cust-field"><b>Contact Number</b><span><a href="tel:${order.phone || ''}" style="color: #38bdf8; text-decoration: none;">${order.phone || 'N/A'}</a></span></div>
-                            <div class="cust-field" style="grid-column: 1 / -1;"><b>📍 Address</b><span>${order.address || 'N/A'}</span></div>
+                            <div class="cust-field" style="grid-column: 1 / -1;"><b>📍 Address / Mode</b><span>${order.address || 'N/A'}</span></div>
                         </div>
 
                         ${printFilesList.length > 0 ? `
