@@ -510,31 +510,47 @@ cron.schedule('*/30 * * * *', () => {
 });
 
 // --- 1. SIGNUP: SEND EMAIL OTP ---
-app.post('/api/auth/send-signup-otp', async (req, res) => {
+
+app.post('/api/auth/signup', async (req, res) => {
     try {
         const { name, identity, email, password } = req.body;
-        if (!email) {
-            return res.status(400).json({ success: false, message: "Gmail address is mandatory for signup!" });
+        if (!name || !identity || !email || !password) {
+            return res.status(400).json({ success: false, message: "Name, mobile number, email, and password are required." });
         }
 
-        const normalizedIdentity = identity.replace(/\D/g, '').slice(-10); 
+        const normalizedIdentity = identity.replace(/\D/g, '').slice(-10);
         const normalizedEmail = email.trim().toLowerCase();
-        
-        const existingUser = await User.findOne({ $or: [{ identity: normalizedIdentity }, { email: normalizedEmail }] });
+        const existingUser = await User.findOne({
+            $or: [{ identity: normalizedIdentity }, { email: normalizedEmail }]
+        });
         if (existingUser) {
-            return res.status(400).json({ success: false, message: "This mobile number or Gmail is already registered!" });
+            return res.status(409).json({ success: false, message: "An account with this mobile number or email already exists." });
         }
 
         const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 mins expiry
+        const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
 
-        // Real Email bhejna Brevo/Nodemailer transporter ke zariye
-        await transporter.sendMail({
-            from: 'Print From Home <support@printfromhomes.com>',
-            to: normalizedEmail,
-            subject: '🔒 Verify Your Gmail - Print From Home',
-            text: `Hello ${name},\n\nYour Gmail verification OTP is: ${emailOtp}\nThis OTP is valid for 5 minutes.`
+        // 🔥 Brevo HTTP API (Port 443 - Render par kabhi block nahi hoti)
+        const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': process.env.SMTP_PASS, // Render par saved aapki Brevo key
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                sender: { name: "Print From Home", email: "support@printfromhomes.com" },
+                to: [{ email: normalizedEmail, name: name.trim() }],
+                subject: '🔒 Verify Your Gmail - Print From Home',
+                textContent: `Hello ${name},\n\nYour Gmail verification OTP is: ${emailOtp}\nThis OTP is valid for 5 minutes.`
+            })
         });
+
+        const brevoData = await brevoRes.json();
+        if (!brevoRes.ok) {
+            console.error('❌ Brevo HTTP API Error:', brevoData);
+            return res.status(500).json({ success: false, message: "Failed to send email OTP via gateway.", error: brevoData.message });
+        }
 
         await TempSignup.findOneAndUpdate(
             { identity: normalizedIdentity },
@@ -544,8 +560,8 @@ app.post('/api/auth/send-signup-otp', async (req, res) => {
 
         res.json({ success: true, message: "Verification OTP sent successfully to your Gmail!" });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: "Failed to send email OTP." });
+        console.error("❌ Signup Route Error:", err);
+        res.status(500).json({ success: false, message: "Failed to send email OTP: " + err.message });
     }
 });
 
@@ -606,12 +622,16 @@ app.post('/api/auth/change-email/send-old-otp', async (req, res) => {
         const normalizedIdentity = identity.replace(/\D/g, '').slice(-10);
         const oldOtp = Math.floor(100000 + Math.random() * 900000).toString();
         
-        await transporter.sendMail({
-            from: 'Print From Home <support@printfromhomes.com>',
-            to: currentEmail,
-            subject: '🔐 Verify Current Gmail to Change Email',
-            text: `Your OTP to authorize email change is: ${oldOtp}\nValid for 5 minutes.`
-        });
+        // 🔥 Yahan transporter.sendMail ki jagah naya Brevo API function call karein
+        const emailSent = await sendEmailViaBrevoApi(
+            currentEmail,
+            '🔐 Verify Current Gmail to Change Email',
+            `Your OTP to authorize email change is: ${oldOtp}\nValid for 5 minutes.`
+        );
+
+        if (!emailSent) {
+            return res.status(500).json({ success: false, message: "Failed to send OTP to old email via gateway." });
+        }
 
         await EmailChangeSession.findOneAndUpdate(
             { identity: normalizedIdentity },
@@ -621,6 +641,7 @@ app.post('/api/auth/change-email/send-old-otp', async (req, res) => {
 
         res.json({ success: true, message: "OTP sent to your current (old) Gmail address." });
     } catch (err) {
+        console.error("❌ Send Old OTP Error:", err);
         res.status(500).json({ success: false, message: "Failed to send OTP to old email." });
     }
 });
@@ -1834,7 +1855,7 @@ app.get('/api/rider/dashboard/:phone', async (req, res) => {
         // Sabhi orders nikalein jo is delivery boy ko assigned hain aur deliver nahi hue hain
         let assignedOrders = await Order.find({ 
             assignedDeliveryBoy: phone, 
-            status: { $regex: /out for delivery\vert{}ready\vert{}processing/i },$and: [{ status: { $not: /delivered|cancelled/i } }]
+            status: { $regex: /out for delivery|ready|processing/i },$and: [{ status: { $not: /delivered|cancelled/i } }]
         }).sort({ timestamp: 1 });
 
         let activeOrder = null;
