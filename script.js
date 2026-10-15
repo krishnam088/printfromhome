@@ -4855,3 +4855,49 @@ document.addEventListener('click', function(e) {
         }
     }
 }, true); // Use capture phase to intercept taps reliably on mobile touch devices
+// 🔥 Process Wallet Deposit & Recharge Function
+window.processWalletDeposit = function() {
+    try {
+        const inputField = document.getElementById('customWalletInput');
+        if (!inputField) return;
+        
+        const amountToAdd = parseFloat(inputField.value);
+        if (isNaN(amountToAdd) || amountToAdd <= 0) {
+            if (typeof showAppToast === 'function') {
+                showAppToast("Please enter a valid recharge amount", "error");
+            } else {
+                alert("Please enter a valid recharge amount");
+            }
+            return;
+        }
+
+        // Get current wallet balance from localStorage or default to 0
+        const activeUser = localStorage.getItem('printAppUser') || 'Customer';
+        const walletKey = `wallet_balance_${activeUser}`;
+        let currentBalance = parseFloat(localStorage.getItem(walletKey) || '0');
+        
+        currentBalance += amountToAdd;
+        localStorage.setItem(walletKey, currentBalance.toFixed(2));
+
+        // Update UI display if element exists
+        const balanceDisplay = document.getElementById('headerWalletDisplayBalance');
+        if (balanceDisplay) {
+            balanceDisplay.textContent = `₹${currentBalance.toFixed(2)}`;
+        }
+
+        // Close modal and clear input
+        if (typeof toggleWalletPopupGrid === 'function') {
+            toggleWalletPopupGrid(false);
+        }
+        inputField.value = '';
+
+        if (typeof showAppToast === 'function') {
+            showAppToast(`Successfully added ₹${amountToAdd.toFixed(2)} to wallet!`, "success");
+        }
+        
+        // Refresh any open wallet views or cart totals
+        if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
+    } catch (err) {
+        console.error("Wallet Deposit Error:", err);
+    }
+};
