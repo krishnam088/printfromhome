@@ -623,19 +623,27 @@ app.post('/api/auth/signup', async (req, res) => {
 app.post('/api/auth/verify-signup-otp', async (req, res) => {
     try {
         const { identity, otpInput } = req.body;
+        if (!identity || !otpInput) {
+            return res.status(400).json({ success: false, message: "Mobile number aur OTP dono zaroori hain." });
+        }
+
         const normalizedIdentity = identity.replace(/\D/g, '').slice(-10);
+        console.log("🔍 Verifying OTP for Identity:", normalizedIdentity, "OTP:", otpInput);
 
         const tempData = await TempSignup.findOne({ identity: normalizedIdentity });
         if (!tempData) {
-            return res.status(400).json({ success: false, message: "Session expired or invalid request. Please start again." });
+            console.warn("⚠️ TempSignup record nahi mila is number ke liye:", normalizedIdentity);
+            return res.status(400).json({ success: false, message: "Session expired ya invalid request. Kripya dobara OTP bhejein." });
         }
 
-        if (tempData.otpExpires < new Date()) {
-            return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
+        if (new Date() > new Date(tempData.otpExpires)) {
+            console.warn("⚠️ OTP expire ho chuka hai.");
+            return res.status(400).json({ success: false, message: "OTP expire ho chuka hai. Kripya naya OTP request karein." });
         }
 
-        if (tempData.emailOtp !== otpInput) {
-            return res.status(400).json({ success: false, message: "Invalid OTP! Please enter correct 6-digit code." });
+        if (String(tempData.emailOtp).trim() !== String(otpInput).trim()) {
+            console.warn("⚠️ Galat OTP enter kiya gaya hai.");
+            return res.status(400).json({ success: false, message: "Galat OTP! Kripya sahi 6-digit code daalein." });
         }
 
         const newUser = new User({
@@ -646,13 +654,22 @@ app.post('/api/auth/verify-signup-otp', async (req, res) => {
             isEmailVerified: true,
             dateCreated: new Date().toLocaleString()
         });
+        
         await newUser.save();
+        console.log("✅ User successfully MongoDB mein save ho gaya:", newUser.email);
 
         await TempSignup.deleteOne({ identity: normalizedIdentity });
 
-        res.status(201).json({ success: true, message: "Gmail verified and account successfully created!", userId: newUser.identity, name: newUser.name, email: newUser.email });
+        res.status(201).json({ 
+            success: true, 
+            message: "Gmail verify ho gaya aur account successfully ban gaya!", 
+            userId: newUser.identity, 
+            name: newUser.name, 
+            email: newUser.email 
+        });
     } catch (err) {
-        res.status(500).json({ success: false, message: "Verification failed." });
+        console.error("❌ Verify Signup OTP Exception:", err);
+        res.status(500).json({ success: false, message: "Verification failed: " + err.message });
     }
 });
 
