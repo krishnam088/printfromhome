@@ -528,7 +528,9 @@ app.post('/api/auth/send-signup-otp', async (req, res) => {
         const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
         const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 mins expiry
 
-        // 🔥 Brevo HTTP API (Port 443 - Render par kabhi block nahi hoti, no timeout)
+        console.log("📨 Attempting to send OTP via Brevo HTTP API to:", normalizedEmail);
+
+        // 🔥 Brevo HTTP API Call
         const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: {
@@ -546,9 +548,11 @@ app.post('/api/auth/send-signup-otp', async (req, res) => {
 
         const brevoData = await brevoRes.json();
         if (!brevoRes.ok) {
-            console.error('❌ Brevo HTTP API Error:', brevoData);
-            return res.status(500).json({ success: false, message: "Failed to send email OTP via gateway.", error: brevoData.message });
+            console.error('❌ Brevo HTTP API Failed Response:', brevoData);
+            return res.status(500).json({ success: false, message: "Failed to send email OTP via gateway.", error: brevoData.message || JSON.stringify(brevoData) });
         }
+
+        console.log('✅ Brevo HTTP API Success for:', normalizedEmail);
 
         await TempSignup.findOneAndUpdate(
             { identity: normalizedIdentity },
@@ -558,7 +562,7 @@ app.post('/api/auth/send-signup-otp', async (req, res) => {
 
         res.json({ success: true, message: "Verification OTP sent successfully to your Gmail!" });
     } catch (err) {
-        console.error("❌ Send Signup OTP Error:", err);
+        console.error("❌ Send Signup OTP Exception:", err);
         res.status(500).json({ success: false, message: "Failed to send email OTP: " + err.message });
     }
 });
