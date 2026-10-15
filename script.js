@@ -4844,3 +4844,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+// 🔥 Bulletproof Wallet Click & Tap Handler
+document.addEventListener('click', function(e) {
+    // Check if click/tap is on wallet balance or any wallet micro badge
+    if (e.target.id === 'headerWalletDisplayBalance' || e.target.closest('.wallet-micro-badge') || e.target.id === 'walletDrawerBalanceText') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof toggleWalletPopupGrid === 'function') {
+            toggleWalletPopupGrid(true, e);
+        }
+    }
+}, true); // Use capture phase to intercept taps reliably on mobile touch devices

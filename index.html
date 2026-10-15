@@ -686,6 +686,28 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
     </div>
 
+    <!-- 💰 Wallet Deposit & Recharge Modal -->
+<div id="walletDepositModal" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:999999; display:none; justify-content:center; align-items:center; padding:20px; font-family:'Poppins',sans-serif;">
+    <div style="background:#ffffff; border-radius:24px; padding:24px; max-width:380px; width:100%; text-align:center; box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+        <div style="font-size:3rem; margin-bottom:8px;">💰</div>
+        <h3 style="font-size:1.2rem; font-weight:900; color:#0f172a; margin-bottom:4px;">Add Money to Wallet</h3>
+        <p style="font-size:0.75rem; color:#64748b; margin-bottom:16px;">Instantly recharge your wallet for 1-click lightning fast checkout.</p>
+        
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+            <button type="button" onclick="document.getElementById('customWalletInput').value='50'" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:8px; font-weight:700; background:#f8fafc; cursor:pointer;">+₹50</button>
+            <button type="button" onclick="document.getElementById('customWalletInput').value='100'" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:8px; font-weight:700; background:#f8fafc; cursor:pointer;">+₹100</button>
+            <button type="button" onclick="document.getElementById('customWalletInput').value='500'" style="flex:1; padding:8px; border:1px solid #cbd5e1; border-radius:8px; font-weight:700; background:#f8fafc; cursor:pointer;">+₹500</button>
+        </div>
+
+        <div style="margin-bottom:16px;">
+            <input type="number" id="customWalletInput" placeholder="Enter amount (₹)" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; font-size:0.9rem; font-weight:700; text-align:center; outline:none;" />
+        </div>
+
+        <button type="button" onclick="processWalletDeposit()" style="background:#065f46; color:white; border:none; padding:12px; border-radius:12px; font-weight:800; width:100%; cursor:pointer; margin-bottom:8px;">Proceed to Add</button>
+        <button type="button" onclick="toggleWalletPopupGrid(false)" style="background:#e2e8f0; color:#334155; border:none; padding:10px; border-radius:10px; font-weight:700; width:100%; cursor:pointer;">Cancel</button>
+    </div>
+</div>
+
     <!-- 🤖 REALISTIC AI ASSISTANT MODAL (Triggered via Account / Help Menu) -->
     <div id="aiChatModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 25000; display: none; justify-content: center; align-items: flex-end; padding: 0;">
         <div style="background: #ffffff; width: 100%; max-width: 420px; height: 82vh; border-radius: 24px 24px 0 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -10px 30px rgba(0,0,0,0.2);">
