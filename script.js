@@ -4874,18 +4874,14 @@ document.addEventListener('click', function(e) {
 }, true); // Use capture phase to intercept taps reliably on mobile touch devices
 // 🔥 Process Wallet Deposit & Recharge Function
 // 🔥 Razorpay Real Online Payment Gateway for Wallet Recharge
-window.processWalletDeposit = function() {
+window.processWalletDeposit = async function() {
     try {
         const inputField = document.getElementById('customWalletInput');
         if (!inputField) return;
         
         const amountToAdd = parseFloat(inputField.value);
         if (isNaN(amountToAdd) || amountToAdd <= 0) {
-            if (typeof showAppToast === 'function') {
-                showAppToast("Please enter a valid recharge amount", "error");
-            } else {
-                alert("Please enter a valid recharge amount");
-            }
+            alert("Please enter a valid recharge amount");
             return;
         }
 
@@ -4893,35 +4889,51 @@ window.processWalletDeposit = function() {
         const activeMobile = localStorage.getItem('printAppUserIdentity') || '7398746551';
         const activeEmail = localStorage.getItem(`user_email_${activeUser}`) || 'support@printfromhomes.com';
 
-        // Check if Razorpay is loaded
         if (typeof Razorpay === 'undefined') {
-            alert("Payment gateway script is loading. Please try again in a moment.");
+            alert("Payment gateway script is loading. Please try again.");
             return;
         }
 
-        // Razorpay Options Configuration (Amount is in paisa, so multiply by 100)
+        // 🔥 Backend se live key aur order details fetch karein taaki test mode na aaye
+        const res = await fetch('/api/create-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                totalAmount: amountToAdd.toFixed(2),
+                configDetails: JSON.stringify([{ name: "Wallet Recharge", price: amountToAdd, copies: 1 }]),
+                customerName: activeUser,
+                phone: activeMobile,
+                paymentMode: "online",
+                deliveryMode: "pickup"
+            })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+            alert(`⚠️ Error: ${data.message || 'Could not initiate wallet recharge'}`);
+            return;
+        }
+
         const options = {
-            "key": "rzp_live_YOUR_KEY_ID", // Yahan aap apni live/test Razorpay Key ID daal sakte hain (ya backend se fetch kar sakte hain)
-            "amount": Math.round(amountToAdd * 100), 
+            "key": data.key_id, // Server ki live key yahan automatic lag jayegi
+            "amount": data.amount,
             "currency": "INR",
             "name": "Print From Home",
             "description": "Wallet Online Recharge",
             "image": "/icon-192.png",
-            "handler": function (response) {
-                // ✅ Payment Successful! Now update wallet balance safely
+            "order_id": data.rzp_order_id,
+            "handler": async function (response) {
                 const walletKey = `wallet_balance_${activeUser}`;
                 let currentBalance = parseFloat(localStorage.getItem(walletKey) || '0');
                 
                 currentBalance += amountToAdd;
                 localStorage.setItem(walletKey, currentBalance.toFixed(2));
 
-                // Update UI Display
                 const balanceDisplay = document.getElementById('headerWalletDisplayBalance');
                 if (balanceDisplay) {
                     balanceDisplay.textContent = `₹${currentBalance.toFixed(2)}`;
                 }
 
-                // Close modal and clear input
                 if (typeof toggleWalletPopupGrid === 'function') {
                     toggleWalletPopupGrid(false);
                 }
@@ -4929,6 +4941,8 @@ window.processWalletDeposit = function() {
 
                 if (typeof showAppToast === 'function') {
                     showAppToast(`Successfully added ₹${amountToAdd.toFixed(2)} via Online Payment!`, "success");
+                } else {
+                    alert(`Successfully added ₹${amountToAdd.toFixed(2)} to wallet!`);
                 }
 
                 if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
@@ -4942,9 +4956,6 @@ window.processWalletDeposit = function() {
                 "color": "#065f46"
             }
         };
-
-        // Fallback test key if live key is placeholder
-        options.key = "rzp_test_1DPvJ2Z0Z0Z0Z0"; // Replace with your actual active Razorpay test/live key
 
         const rzp1 = new Razorpay(options);
         rzp1.open();
