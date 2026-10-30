@@ -77,11 +77,10 @@ const uploadLocal = multer({ storage: localDiskStorage });
 const userSchema = new mongoose.Schema({
     name: String,
     identity: { type: String, unique: true }, // Mobile Number
-    email: { type: String, default: '' },      // Gmail Address
-    password: String,
-    emailOtp: String,                          // 🔥 naya field (OTP ke liye)
-    otpExpires: Date,                          // 🔥 naya field (OTP expiry ke liye)
-    isEmailVerified: { type: Boolean, default: false }, // 🔥 naya field (verification status)
+    email: { type: String, unique: true, required: true }, // Gmail Address (Unique & Required for OTP Login)
+    emailOtp: String,                            // OTP ke liye
+    otpExpires: Date,                            // OTP expiry ke liye
+    isEmailVerified: { type: Boolean, default: false }, // Verification status
     addresses: { type: Array, default: [] },   // Multi-address support
     dateCreated: String
 });

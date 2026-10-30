@@ -4187,6 +4187,7 @@ document.addEventListener('click', function(e) {
 // ==========================================
 
 window.isSignupActive = false;
+window.isOtpVerified = false; // Track karega ki OTP verify ho chuka hai ya nahi
 
 document.addEventListener('DOMContentLoaded', () => {
     const authForm = document.getElementById('authForm');
@@ -4195,86 +4196,131 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleAuthLink = document.getElementById('toggleAuthLink');
     const toggleMsg = document.getElementById('toggleMsg');
     const signupOnlyFields = document.querySelectorAll('.signup-only');
+    const otpBoxNode = document.querySelector('.signup-otp-box');
 
     // 1. Toggle between Login and Signup Mode smoothly
     if (toggleAuthLink) {
         toggleAuthLink.addEventListener('click', function(e) {
             e.preventDefault();
             window.isSignupActive = !window.isSignupActive;
+            window.isOtpVerified = false;
 
             if (window.isSignupActive) {
                 if (authTitle) authTitle.textContent = "Create Account";
-                if (authBtn) authBtn.textContent = "Sign Up";
+                if (authBtn) authBtn.textContent = "Verify & Sign Up";
                 if (toggleMsg) toggleMsg.textContent = "Already have an account?";
-                toggleAuthLink.textContent = "Log In";
+                if (toggleAuthLink) toggleAuthLink.textContent = "Log In";
                 signupOnlyFields.forEach(el => el.classList.remove('hidden'));
+                if (otpBoxNode) otpBoxNode.classList.remove('hidden');
             } else {
-                if (authTitle) authTitle.textContent = "Welcome Back!";
-                if (authBtn) authBtn.textContent = "Log In";
+                if (authTitle) authTitle.textContent = "Log In with Gmail OTP";
+                if (authBtn) authBtn.textContent = "Send / Verify OTP Login";
                 if (toggleMsg) toggleMsg.textContent = "New to Print From Home?";
-                toggleAuthLink.textContent = "Create Account";
+                if (toggleAuthLink) toggleAuthLink.textContent = "Create Account";
                 signupOnlyFields.forEach(el => el.classList.add('hidden'));
+                if (otpBoxNode) otpBoxNode.classList.remove('hidden');
             }
         });
     }
 
-    // 2. Handle Form Submission for Database Login & Signup
+    // 2. Handle Send OTP Button Click (For both Signup & Login)
+    window.handleSendSignupOtp = async function() {
+        const identityInput = document.getElementById('authIdentity');
+        const emailInput = document.getElementById('authEmailInput');
+        const nameInput = document.getElementById('authName');
+
+        const identity = identityInput ? identityInput.value.trim() : '';
+        const email = emailInput ? emailInput.value.trim() : '';
+        const name = nameInput ? nameInput.value.trim() : 'Customer';
+
+        if (!identity || identity.length !== 10) {
+            alert("⚠️ Kripya valid 10-digit mobile number daalein!");
+            return;
+        }
+
+        if (!email || !email.includes('@gmail.com')) {
+            alert("⚠️ Kripya ek valid Gmail address daalein!");
+            return;
+        }
+
+        if (window.isSignupActive && !name) {
+            alert("⚠️ Kripya apna Full Name daalein!");
+            return;
+        }
+
+        try {
+            const endpoint = window.isSignupActive ? '/api/auth/send-signup-otp' : '/api/auth/send-login-otp';
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, identity, email })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                alert("✅ Verification OTP aapke Gmail par bhej diya gaya hai!");
+                const otpBox = document.querySelector('.signup-otp-box');
+                if (otpBox) otpBox.classList.remove('hidden');
+            } else {
+                alert(`❌ ${data.message || 'OTP bhejne mein asafalta rahi.'}`);
+            }
+        } catch (err) {
+            console.error("OTP Send Error:", err);
+            alert("❌ Server connection error while sending OTP.");
+        }
+    };
+
+    // 3. Handle Form Submission (Final OTP Verification & Direct Login/Signup)
     if (authForm) {
         authForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const identityInput = document.getElementById('authIdentity');
-            const passwordInput = document.getElementById('authPassword');
+            const emailInput = document.getElementById('authEmailInput');
+            const otpInputNode = document.getElementById('authEmailOtpInput');
+            const nameInput = document.getElementById('authName');
             
             const identity = identityInput ? identityInput.value.trim() : '';
-            const password = passwordInput ? passwordInput.value.trim() : '';
+            const email = emailInput ? emailInput.value.trim() : '';
+            const otp = otpInputNode ? otpInputNode.value.trim() : '';
+            const name = nameInput ? nameInput.value.trim() : 'Customer';
 
-            if (!identity || !password) {
-                alert("⚠️ Please enter mobile number and password!");
+            if (!identity || !email) {
+                alert("⚠️ Kripya Mobile number aur Gmail address bharein!");
+                return;
+            }
+
+            if (!otp || otp.length !== 6) {
+                alert("⚠️ Kripya apne Gmail par aaya hua 6-digit OTP daalein!");
                 return;
             }
 
             try {
                 if (window.isSignupActive) {
-                    // --- SIGNUP FLOW ---
-                    const nameInput = document.getElementById('authName');
-                    const emailInput = document.getElementById('authEmailInput');
-                    
-                    const name = nameInput ? nameInput.value.trim() : 'Customer';
-                    const email = emailInput ? emailInput.value.trim() : '';
-
-                    if (!email) {
-                        alert("⚠️ Please enter your Gmail address for notifications!");
-                        return;
-                    }
-
-                    const response = await fetch('/api/auth/signup', {
+                    // --- SIGNUP VERIFY FLOW ---
+                    const response = await fetch('/api/auth/verify-signup-otp', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, identity, email, password })
+                        body: JSON.stringify({ name, identity, email, otpInput: otp })
                     });
                     const data = await response.json();
 
                     if (data.success) {
-                        alert("🎉 Account created successfully! Please log in with your number and password.");
-                        // Switch back to login view automatically
-                        window.isSignupActive = false;
-                        if (authTitle) authTitle.textContent = "Welcome Back!";
-                        if (authBtn) authBtn.textContent = "Log In";
-                        if (toggleMsg) toggleMsg.textContent = "New to Print From Home?";
-                        if (toggleAuthLink) toggleAuthLink.textContent = "Create Account";
-                        signupOnlyFields.forEach(el => el.classList.add('hidden'));
-                        authForm.reset();
+                        alert("🎉 Welcome to Print From Home! Account created successfully.");
+                        localStorage.setItem('printAppUser', data.name || name);
+                        localStorage.setItem('printAppUserIdentity', data.userId || identity);
+                        localStorage.setItem('printAppUserEmail', email);
+                        location.reload(); // Direct enter main app dashboard
                     } else {
-                        alert(`❌ ${data.message || 'Signup failed'}`);
+                        alert(`❌ ${data.message || 'Invalid OTP verification failed.'}`);
                     }
 
                 } else {
-                    // --- LOGIN FLOW ---
-                    const response = await fetch('/api/auth/login', {
+                    // --- LOGIN VERIFY FLOW ---
+                    const response = await fetch('/api/auth/verify-login-otp', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ identity, password })
+                        body: JSON.stringify({ identity, email, otpInput: otp })
                     });
                     const data = await response.json();
 
@@ -4283,15 +4329,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         localStorage.setItem('printAppUserIdentity', data.identity);
                         if (data.email) localStorage.setItem('printAppUserEmail', data.email);
 
-                        alert("✅ Login Successful!");
-                        location.reload(); // Reload to enter main app dashboard
+                        alert(`🎉 Welcome back to Print From Home, ${data.name}! Login Successful.`);
+                        location.reload(); // Direct enter main app dashboard
                     } else {
-                        alert(`❌ ${data.message || 'Invalid mobile number or password!'}`);
+                        alert(`❌ ${data.message || 'Invalid OTP!'}`);
                     }
                 }
             } catch (err) {
-                console.error("Auth Error:", err);
-                alert("❌ Server connection error during authentication.");
+                console.error("Auth Verification Error:", err);
+                alert("❌ Server connection error during verification.");
             }
         });
     }

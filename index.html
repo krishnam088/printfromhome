@@ -291,44 +291,63 @@ document.addEventListener('DOMContentLoaded', () => {
         color: #0f172a !important;
     }
 
-    /* --- 🍞 MODERN TOAST NOTIFICATION CONTAINER --- */
+    /* --- MODERN TOAST NOTIFICATION CONTAINER --- */
     #appToastContainer {
         position: fixed;
-        bottom: 85px;
+        bottom: 24px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 999999;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
         align-items: center;
         pointer-events: none;
-        width: 90%;
-        max-width: 400px;
-    }
-
-    .app-toast-item {
-        background: rgba(254, 249, 195, 0.95);
-        color: #713f12;
-        padding: 10px 16px;
-        border-radius: 10px;
-        font-size: 0.82rem;
-        font-weight: 700;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        backdrop-filter: blur(6px);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        pointer-events: auto;
-        text-align: center;
-        border: 1px solid rgba(202, 138, 4, 0.3);
+        width: 92%;
+        max-width: 420px;
         font-family: 'Poppins', sans-serif;
     }
 
+    .app-toast-item {
+        background: #0f172a;
+        color: #f8fafc;
+        padding: 14px 18px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        pointer-events: auto;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .app-toast-item.success {
+        background: #065f46;
+        border-color: #34d399;
+        color: #ffffff;
+    }
+
+    .app-toast-item.error {
+        background: #991b1b;
+        border-color: #f87171;
+        color: #ffffff;
+    }
+
+    .app-toast-item.special {
+        background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+        border-color: #a78bfa;
+        color: #ffffff;
+    }
+
     @keyframes toastSlideUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     /* --- 🌧️ REAL ANIMATED RAIN & LIGHTNING STYLES --- */
@@ -523,34 +542,75 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 </div>
     <script>
-        window.showAppToast = function(message, type = 'info') {
+        // Professional Clean Toast Notification Engine (English Only, No Unnecessary Emojis)
+        window.showAppToast = function(message, type = 'info', isSpecial = false) {
             const container = document.getElementById('appToastContainer');
             if (!container) return;
 
             const toast = document.createElement('div');
-            toast.className = 'app-toast-item';
             
-            let icon = 'ℹ️';
-            if (type === 'success') icon = '✅';
-            if (type === 'error') icon = '⚠️';
+            let cssClass = 'app-toast-item';
+            if (isSpecial) {
+                cssClass += ' special';
+            } else if (type === 'success') {
+                cssClass += ' success';
+            } else if (type === 'error') {
+                cssClass += ' error';
+            }
+            
+            toast.className = cssClass;
 
-            toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+            let iconHtml = '';
+            if (isSpecial) {
+                iconHtml = '<span style="font-size: 1.2rem;">✨</span>';
+            } else if (type === 'success') {
+                iconHtml = '<span style="font-size: 1.1rem; color: #34d399;">✓</span>';
+            } else if (type === 'error') {
+                iconHtml = '<span style="font-size: 1.1rem; color: #f87171;">⚠️</span>';
+            }
+
+            toast.innerHTML = `
+                ${iconHtml}
+                <div style="flex: 1; line-height: 1.4;">${message}</div>
+            `;
+
             container.appendChild(toast);
 
             setTimeout(() => {
                 toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-10px)';
+                toast.style.transform = 'translateY(-10px) scale(0.95)';
                 toast.style.transition = 'all 0.3s ease';
                 setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            }, 3500);
         };
 
+        // Global Alert Override for Real Online App Look (English & Clean)
         window.alert = function(msg) {
-            let cleanMsg = msg;
-            if (typeof msg === 'string') {
-                if (msg.includes('password')) cleanMsg = "Please enter a valid password.";
+            let cleanMsg = String(msg || "").trim();
+            
+            // Auto-translate any remaining Hinglish/Hindi alerts to professional English
+            if (cleanMsg.includes('Kripya') || cleanMsg.includes('bharein')) {
+                cleanMsg = "Please fill in all required details correctly.";
+            } else if (cleanMsg.includes('Galat OTP') || cleanMsg.includes('asafalta')) {
+                cleanMsg = "Invalid verification code. Please recheck and try again.";
+            } else if (cleanMsg.includes('Store is closed')) {
+                cleanMsg = "Store is currently closed. Orders cannot be accepted right now.";
             }
-            showAppToast(cleanMsg, 'error');
+
+            let msgType = 'info';
+            let specialFlag = false;
+
+            if (cleanMsg.toLowerCase().includes('success') || cleanMsg.toLowerCase().includes('welcome') || cleanMsg.toLowerCase().includes('saved') || cleanMsg.toLowerCase().includes('verified')) {
+                msgType = 'success';
+            } else if (cleanMsg.toLowerCase().includes('error') || cleanMsg.toLowerCase().includes('warning') || cleanMsg.toLowerCase().includes('invalid') || cleanMsg.toLowerCase().includes('insufficient') || cleanMsg.toLowerCase().includes('failed')) {
+                msgType = 'error';
+            }
+
+            if (cleanMsg.toLowerCase().includes('welcome') || cleanMsg.toLowerCase().includes('diwali') || cleanMsg.toLowerCase().includes('congratulations')) {
+                specialFlag = true;
+            }
+
+            showAppToast(cleanMsg, msgType, specialFlag);
         };
     </script>
 
@@ -826,39 +886,46 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
     </div>
 
-   <div id="authScreen" class="auth-container app-hidden">
-        <div class="auth-card">
-            <div class="auth-brand">print<span class="brand-green">from</span>home</div>
-            <h2 id="authTitle">Welcome Back!</h2>
-            <form id="authForm">
-                <div class="form-group signup-only hidden"><label>Full Name</label><input type="text" id="authName" placeholder="Enter your full name"></div>
-                <div class="form-group"><label>Mobile Number</label><input type="text" id="authIdentity" placeholder="Enter 10-digit mobile number" maxlength="10" required></div>
-                
-                <div class="form-group signup-only hidden">
-                    <label>Gmail Address</label>
-                    <div style="display:flex; gap:8px;">
-                        <input type="email" id="authEmailInput" placeholder="Enter your Gmail address" style="flex:1;">
-                        <button type="button" id="sendSignupOtpBtn" onclick="handleSendSignupOtp()" style="background:#065f46; color:white; border:none; padding:0 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">Send OTP</button>
-                    </div>
-                </div>
+   
+    <div id="authScreen" class="auth-container app-hidden">
+    <div class="auth-card">
+        <div class="auth-brand">print<span class="brand-green">from</span>home</div>
+        <h2 id="authTitle">Welcome Back!</h2>
+        <form id="authForm">
+            <!-- Full Name (Sirf Signup ke waqt dikhega) -->
+            <div class="form-group signup-only hidden">
+                <label>Full Name</label>
+                <input type="text" id="authName" placeholder="Enter your full name">
+            </div>
 
-                <!-- 🔥 OTP Verification Step (Initially Hidden during Signup) -->
-                <div class="form-group signup-otp-box hidden">
-                    <label>Enter 6-Digit Gmail OTP</label>
-                    <input type="text" id="authEmailOtpInput" placeholder="Enter 6-digit OTP received on email" maxlength="6">
+            <!-- Mobile Number -->
+            <div class="form-group">
+                <label>Mobile Number</label>
+                <input type="text" id="authIdentity" placeholder="Enter 10-digit mobile number" maxlength="10" required>
+            </div>
+            
+            <!-- Gmail Address + Send OTP Button (Login ya Signup dono ke liye ya signup-only rakh sakte hain) -->
+            <div class="form-group" id="gmailGroup">
+                <label>Gmail Address</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="email" id="authEmailInput" placeholder="Enter your Gmail address" style="flex:1;" required>
+                    <button type="button" id="sendSignupOtpBtn" onclick="handleSendSignupOtp()" style="background:#065f46; color:white; border:none; padding:0 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">Send OTP</button>
                 </div>
+            </div>
 
-                <div class="form-group" id="passwordGroup"><label>Password</label><input type="password" id="authPassword" placeholder="Minimum 6 characters" required></div>
-                
-                <div style="text-align: right; margin-bottom: 12px;">
-                    <button type="button" onclick="initiatePasswordReset()" style="background: none; border: none; color: #2563eb; font-size: 0.78rem; font-weight: 700; cursor: pointer; padding: 0;">Forgot Password?</button>
-                </div>
+            <!-- 🔥 OTP Verification Step (Initially Hidden) -->
+            <div class="form-group signup-otp-box hidden">
+                <label>Enter 6-Digit Gmail OTP</label>
+                <input type="text" id="authEmailOtpInput" placeholder="Enter 6-digit OTP received on email" maxlength="6">
+            </div>
 
-                <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
-            </form>
-            <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
-        </div>
+            <!-- ❌ Password field yahan se poori tarah hata di gayi hai -->
+
+            <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
+        </form>
+        <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
     </div>
+</div>
 
     <div id="drawerOverlay" class="drawer-overlay" onclick="toggleUserDrawer(false)"></div>
 
