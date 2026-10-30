@@ -2821,16 +2821,22 @@ window.removePrintJobFromCart = function(index) {
 };
 
 window.clearEntireCartData = function() {
-    if (!confirm("⚠️ Are you sure you want to clear your cart?")) return;
-    window.cartPrintJobsArray = [];
-    window.cartSnacksArray = [];
-    window.currentDeliveryTip = 0;
-    persistCartStateData();
-    renderCartDrawerContents();
-    calculateTotal();
-    updateFloatingCartBar();
-    toggleCartDrawer(false);
-    alert("✅ Cart cleared successfully!");
+    showAppConfirm(
+        "Clear Cart?", 
+        "Are you sure you want to clear all items from your cart?", 
+        function() {
+            window.cartPrintJobsArray = [];
+            window.cartSnacksArray = [];
+            window.currentDeliveryTip = 0;
+            persistCartStateData();
+            renderCartDrawerContents();
+            calculateTotal();
+            updateFloatingCartBar();
+            toggleCartDrawer(false);
+            showAppToast("Cart cleared successfully!", "success");
+        }, 
+        "🛒"
+    );
 };
 
 window.persistCartStateData = function() {
@@ -4988,3 +4994,39 @@ window.processWalletDeposit = async function() {
         alert("Could not initiate online payment. Please try again.");
     }
 }; // 👈 Sirf ek closing brace aur semicolon hona chahiye
+
+
+// 🛑 Professional Confirmation Modal (Replaces browser confirm())
+window.showAppConfirm = function(title, description, onConfirm, icon = "⚠️") {
+    const modal = document.getElementById('appConfirmModal');
+    const titleEl = document.getElementById('confirmModalTitle');
+    const descEl = document.getElementById('confirmModalDesc');
+    const iconEl = document.getElementById('confirmModalIcon');
+    const okBtn = document.getElementById('confirmModalOkBtn');
+    const cancelBtn = document.getElementById('confirmModalCancelBtn');
+
+    if (!modal) {
+        if (confirm(description)) onConfirm();
+        return;
+    }
+
+    if (titleEl) titleEl.textContent = title;
+    if (descEl) descEl.textContent = description;
+    if (iconEl) iconEl.textContent = icon;
+    modal.style.display = 'flex';
+
+    // Purane event listeners saaf karne ke liye clone node use karte hain
+    const newOkBtn = okBtn.cloneNode(true);
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    if (okBtn && okBtn.parentNode) okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+    if (cancelBtn && cancelBtn.parentNode) cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+    newOkBtn.onclick = function() {
+        modal.style.display = 'none';
+        if (typeof onConfirm === 'function') onConfirm();
+    };
+
+    newCancelBtn.onclick = function() {
+        modal.style.display = 'none';
+    };
+};
