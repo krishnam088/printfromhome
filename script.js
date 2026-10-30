@@ -115,7 +115,6 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
             let safeStatus = order.status || 'Processing';
             let safeDate = order.date || '';
             
-            // Render items list safely
             let itemsHtml = '';
             if (Array.isArray(order.details)) {
                 itemsHtml = order.details.map(item => `<div style="font-size: 0.75rem; color: #334155; margin-top: 2px;">• ${item.name || 'Item'} (Qty: ${item.qty || 1})</div>`).join('');
@@ -153,24 +152,17 @@ document.addEventListener("click", (e) => {
     }
 });
 
-// Run automatically on load and every 1 second to prevent blank screens
+// Safe background watcher to keep history container filled
 window.addEventListener('DOMContentLoaded', () => {
-    setInterval(window.forceFixWhiteScreen, 1000);
+    setInterval(() => {
+        const container = document.getElementById('ordersHistoryContainer');
+        if (container && (container.innerHTML.includes('No orders found') || container.innerHTML.trim() === '')) {
+            if (typeof renderOrderHistoryUI === 'function') {
+                renderOrderHistoryUI();
+            }
+        }
+    }, 1000);
 });
-// 🔥 GLOBAL ERROR BOUNDARY (Prevents White Blank Screen Crashes)
-window.onerror = function(msg, url, lineNo, columnNo, error) {
-    console.error("❌ App Crash Prevented:", msg, "at line:", lineNo);
-    const mainApp = document.getElementById('mainApp');
-    const authScreen = document.getElementById('authScreen');
-    const splashScreen = document.getElementById('splashScreen');
-    
-    if (splashScreen) splashScreen.style.display = 'none';
-    if (authScreen && localStorage.getItem('printAppUser')) {
-        authScreen.style.display = 'none';
-        if (mainApp) mainApp.style.display = 'block';
-    }
-    return false;
-};
 
 
 document.addEventListener('DOMContentLoaded', () => {
