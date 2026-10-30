@@ -146,6 +146,43 @@
     </div>
 
     <script>
+
+       // 🔥 Real-time GPS Background Broadcaster for Delivery Partner
+if (navigator.geolocation) {
+    navigator.geolocation.watchPosition((pos) => {
+        if (typeof currentAgentPhone !== 'undefined' && currentAgentPhone && isRiderOnline) {
+            // Get active order ID if available from dashboard data
+            const activeOrderId = window.currentActiveAssignedOrderId || null;
+            
+            fetch('/api/admin/update-location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    orderId: activeOrderId,
+                    lat: pos.coords.latitude, 
+                    lng: pos.coords.longitude,
+                    phone: currentAgentPhone 
+                })
+            }).catch(err => console.error("GPS Sync Error:", err));
+
+            fetch('/api/rider/update-location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    phone: currentAgentPhone, 
+                    lat: pos.coords.latitude, 
+                    lng: pos.coords.longitude 
+                })
+            }).catch(err => console.error("Rider GPS Sync Error:", err));
+        }
+    }, (err) => {
+        console.warn("Geolocation watch error:", err);
+    }, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 });
+}
+
+
+
+
        let currentAgentPhone = localStorage.getItem('delivery_agent_phone') || '';
 let isRiderOnline = false;
 let lastSeenOrderIdForRider = localStorage.getItem('last_dismissed_popup_order') || '';
@@ -274,43 +311,51 @@ let lastSeenOrderIdForRider = localStorage.getItem('last_dismissed_popup_order')
 
            let htmlContent = '';
 
-            // 1. Show Active Assigned Order if exists
-            if (data.activeOrder) {
-                const order = data.activeOrder;
-                htmlContent += `
-                    <div class="order-card" style="border-color: #10b981;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span class="order-badge">1. Primary Active Order #${order.orderId}</span>
-                            <span style="font-size: 0.95rem; font-weight: 900; color: #10b981;">₹${order.totalAmount || order.amount || 0}</span>
-                        </div>
-                        <div class="customer-info">
-                            ${(() => {
-                                let configItemsHtml = '';
-                                if (order.configDetails) {
-                                    try {
-                                        const items = typeof order.configDetails === 'string' ? JSON.parse(order.configDetails) : order.configDetails;
-                                        if (Array.isArray(items)) {
-                                            configItemsHtml = items.map(item => `
-                                                <div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px;">📦 ${item.fileName || item.name || 'Print/Item'} (Qty:${item.copies || item.qty || 1})</div>
-                                            `).join('');
-                                        }
-                                    } catch (e) {
-                                        console.error('Failed to parse order configDetails', e);
-                                    }
-                                }
-                                return configItemsHtml;
-                            })()}
-                            <p style="font-weight: 800; color: #38bdf8; margin-bottom: 4px;">👤 ${order.customerName} (<a href="tel:${order.phone}" style="color: #38bdf8;">📞 ${order.phone}</a>)</p>
-                            <p style="color: #cbd5e1;">📍 <b>Drop Address:</b> ${order.address}</p>
-                            <p style="color: #94a3b8; font-size: 0.75rem; margin-top: 4px;">Status: <b>${order.status}</b> (Must deliver this first)</p>
-                        </div>
-                        <div class="btn-row">
-                             <a href="${getGoogleMapsLink(order)}" target="_blank" class="btn-nav">🗺️ Navigate</a>
-                            <button type="button" onclick="markOrderAsDelivered('${order.orderId}')" class="btn-deliver">✅ Complete Delivery</button>
-                        </div>
-                    </div>
-                `;
+                    // 1. Show Active Assigned Order and any queued orders
+                if (data.activeOrder || (data.secondaryOrders && data.secondaryOrders.length > 0)) {
+        if (data.activeOrder) {
+            const order = data.activeOrder;
+            
+            // 🔥 Bind active assigned order ID for precise GPS live tracking
+            window.currentActiveAssignedOrderId = order.orderId;
 
+            htmlContent += `
+                <div class="order-card" style="border-color: #10b981;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="order-badge">1. Primary Active Order #${order.orderId}</span>
+                        <span style="font-size: 0.95rem; font-weight: 900; color: #10b981;">₹${order.totalAmount || order.amount || 0}</span>
+                    </div>
+                    <div class="customer-info">
+                        ${(() => {
+                            let configItemsHtml = '';
+                            if (order.configDetails) {
+                                try {
+                                    const items = typeof order.configDetails === 'string' ? JSON.parse(order.configDetails) : order.configDetails;
+                                    if (Array.isArray(items)) {
+                                        configItemsHtml = items.map(item => `
+                                            <div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px;">📦 ${item.fileName || item.name || 'Print/Item'} (Qty:${item.copies || item.qty || 1})</div>
+                                        `).join('');
+                                    }
+                                } catch (e) {
+                                    console.error('Failed to parse order configDetails', e);
+                                }
+                            }
+                            return configItemsHtml;
+                        })()}
+                        <p style="font-weight: 800; color: #38bdf8; margin-bottom: 4px;">👤 ${order.customerName} (<a href="tel:${order.phone}" style="color: #38bdf8;">📞 ${order.phone}</a>)</p>
+                        <p style="color: #cbd5e1;">📍 <b>Drop Address:</b> ${order.address}</p>
+                        <p style="color: #94a3b8; font-size: 0.75rem; margin-top: 4px;">Status: <b>${order.status}</b> (Must deliver this first)</p>
+                    </div>
+                    <div class="btn-row">
+                         <a href="${getGoogleMapsLink(order)}" target="_blank" class="btn-nav">🗺️ Navigate</a>
+                        <button type="button" onclick="markOrderAsDelivered('${order.orderId}')" class="btn-deliver">✅ Complete Delivery</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            window.currentActiveAssignedOrderId = null;
+        }
+        
                 // 🔥 2. Show Admin Queued / Secondary Assigned Orders
                 if (data.secondaryOrders && data.secondaryOrders.length > 0) {
                     data.secondaryOrders.forEach((secOrder, index) => {

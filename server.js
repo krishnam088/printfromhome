@@ -2375,3 +2375,59 @@ app.get('/api/rider/live-location/:phone', async (req, res) => {
         res.status(500).json({ success: false, error: e.message });
     }
 });
+
+// ==========================================
+// 📍 RIDER & ADMIN LIVE GPS LOCATION TRACKING
+// ==========================================
+// Reuse activeRiderLocations declared above for rider location updates.
+
+// 1. Rider ya Admin apni current GPS location update karega
+app.post('/api/admin/update-location', async (req, res) => {
+    try {
+        const { orderId, lat, lng } = req.body;
+        if (lat && lng) {
+            const targetKey = orderId || 'default';
+            activeRiderLocations[targetKey] = { 
+                lat: Number(lat), 
+                lng: Number(lng), 
+                timestamp: Date.now() 
+            };
+            return res.json({ success: true, message: "Location updated successfully" });
+        }
+        res.status(400).json({ success: false, message: "Latitude and Longitude are required" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2. User tracking page rider ki latest live coordinates fetch karega
+app.get('/api/admin/live-location', async (req, res) => {
+    try {
+        const { orderId } = req.query;
+        let locationData = (orderId && activeRiderLocations[orderId]) ? activeRiderLocations[orderId] : null;
+
+        if (!locationData) {
+            const keys = Object.keys(activeRiderLocations);
+            if (keys.length > 0) {
+                locationData = activeRiderLocations[keys[keys.length - 1]];
+            }
+        }
+
+        if (locationData) {
+            return res.json({
+                success: true,
+                lat: locationData.lat,
+                lng: locationData.lng
+            });
+        }
+
+        // Fallback: Default Varanasi Store coordinates
+        res.json({
+            success: true,
+            lat: 25.3451,
+            lng: 83.0012
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});

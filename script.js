@@ -5277,7 +5277,7 @@ if (typeof window.navigateDrawerSection === 'function') {
 }
 
 // ==========================================
-// 🚀 ULTRA-PROFESSIONAL REAL-TIME POPUP TRACKING ENGINE
+// 🚀 ULTRA-PROFESSIONAL REAL-TIME POPUP TRACKING ENGINE (WITH LIVE SERVER POLLING)
 // ==========================================
 window.openOrderTrackingView = function(orderId) {
     try {
@@ -5394,7 +5394,7 @@ window.openOrderTrackingView = function(orderId) {
                                 <span style="width: 8px; height: 8px; background: #059669; border-radius: 50%; display: inline-block; animation: pulseDot 1.5s infinite;"></span>
                                 <span style="font-size: 0.75rem; font-weight: 800; color: #047857; text-transform: uppercase; letter-spacing: 0.5px;">${currentStatus}</span>
                             </div>
-                            <div id="popupRealLiveEtaBadge" style="font-size: 1.3rem; font-weight: 900; color: #065f46; margin: 2px 0;">Calculating live GPS route...</div>
+                            <div id="popupRealLiveEtaBadge" style="font-size: 1.3rem; font-weight: 900; color: #065f46; margin: 2px 0;">Connecting to live GPS...</div>
                             <div style="font-size: 0.75rem; color: #059669; font-weight: 600;">⚡ Placed on: ${targetOrder.date || 'N/A'}</div>
                         </div>
                         <div style="background: #065f46; color: white; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 12px rgba(6,95,70,0.3);">
@@ -5484,32 +5484,18 @@ window.openOrderTrackingView = function(orderId) {
 
         document.body.appendChild(modalOverlay);
 
-        // Real-Time GPS Tracking & Live Distance Calculation
+        // Real-Time GPS Tracking & Server Polling Initialization
         setTimeout(() => {
             const mapEl = document.getElementById('popupRealGoogleMapContainer');
             const distBadge = document.getElementById('popupRealLiveEtaBadge');
             if (!mapEl || typeof google === 'undefined') return;
 
             const storeLatLng = { lat: STORE_LOCATION.lat, lng: STORE_LOCATION.lng };
-            
-            // Get user's live browser location if possible, otherwise use order location
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        initMapWithCoords(storeLatLng, { lat: pos.coords.latitude, lng: pos.coords.longitude }, mapEl, distBadge, targetOrder);
-                    },
-                    () => {
-                        const fallbackLatLng = targetOrder.userLat && targetOrder.userLng ? 
-                            { lat: Number(targetOrder.userLat), lng: Number(targetOrder.userLng) } : 
-                            { lat: STORE_LOCATION.lat + 0.015, lng: STORE_LOCATION.lng + 0.012 };
-                        initMapWithCoords(storeLatLng, fallbackLatLng, mapEl, distBadge, targetOrder);
-                    },
-                    { timeout: 7000, enableHighAccuracy: true }
-                );
-            } else {
-                const fallbackLatLng = { lat: STORE_LOCATION.lat + 0.015, lng: STORE_LOCATION.lng + 0.012 };
-                initMapWithCoords(storeLatLng, fallbackLatLng, mapEl, distBadge, targetOrder);
-            }
+            const userLatLng = targetOrder.userLat && targetOrder.userLng ? 
+                { lat: Number(targetOrder.userLat), lng: Number(targetOrder.userLng) } : 
+                { lat: STORE_LOCATION.lat + 0.015, lng: STORE_LOCATION.lng + 0.012 };
+
+            initLiveServerPollingMap(storeLatLng, userLatLng, mapEl, distBadge, targetOrder);
         }, 350);
 
     } catch (err) {
@@ -5517,8 +5503,8 @@ window.openOrderTrackingView = function(orderId) {
     }
 };
 
-// Helper to initialize Google Map & Real-time Distance
-function initMapWithCoords(storeLatLng, userLatLng, mapEl, distBadge, targetOrder) {
+// Helper: Initialize Google Map & Poll Server for Live Rider GPS
+function initLiveServerPollingMap(storeLatLng, userLatLng, mapEl, distBadge, targetOrder) {
     const map = new google.maps.Map(mapEl, {
         center: storeLatLng,
         zoom: 14,
@@ -5543,33 +5529,44 @@ function initMapWithCoords(storeLatLng, userLatLng, mapEl, distBadge, targetOrde
         icon: { url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png" }
     });
 
-    // Rider Marker (Motorcycle)
+    // Rider Live Marker (Motorcycle)
     let riderPos = { ...storeLatLng };
     const riderMarker = new google.maps.Marker({
         position: riderPos,
         map: map,
-        title: "Delivery Executive",
+        title: "Delivery Executive Live",
         icon: { url: "https://maps.google.com/mapfiles/ms/icons/motorcycle.png" }
     });
 
-    // Real-time Haversine Distance Calculation
-    const distanceKm = Math.sqrt(Math.pow(storeLatLng.lat - userLatLng.lat, 2) + Math.pow(storeLatLng.lng - userLatLng.lng, 2)) * 111;
-    let etaMins = Math.max(3, Math.round(distanceKm * 3.2));
+    // Poll server every 4 seconds for live rider coordinates
+    const orderId = targetOrder.orderId || targetOrder.id;
+    if (window.adminTrackingInterval) clearInterval(window.adminTrackingInterval);
 
-    if (distBadge) {
-        distBadge.innerHTML = `🛵 ${distanceKm.toFixed(1)} km away &bull; ~${etaMins} mins ETA`;
-    }
+    window.adminTrackingInterval = setInterval(async () => {
+        try {
+            const res = await fetch(`/api/admin/live-location?orderId=${encodeURIComponent(orderId)}`);
+            if (!res.ok) return;
+            const data = await res.json();
 
-    // Smooth Rider Animation
-    let step = 0;
-    const totalSteps = 50;
-    const interval = setInterval(() => {
-        step++;
-        riderPos.lat += (userLatLng.lat - storeLatLng.lat) / totalSteps;
-        riderPos.lng += (userLatLng.lng - storeLatLng.lng) / totalSteps;
-        riderMarker.setPosition(riderPos);
-        if (step >= totalSteps) clearInterval(interval);
-    }, 400);
+            if (data.success && data.lat && data.lng) {
+                const currentRiderPos = { lat: Number(data.lat), lng: Number(data.lng) };
+                riderMarker.setPosition(currentRiderPos);
+
+                // Haversine distance calculation
+                const distanceKm = Math.sqrt(
+                    Math.pow(currentRiderPos.lat - userLatLng.lat, 2) + 
+                    Math.pow(currentRiderPos.lng - userLatLng.lng, 2)
+                ) * 111;
+
+                let etaMins = Math.max(2, Math.round(distanceKm * 3.2));
+                if (distBadge) {
+                    distBadge.innerHTML = `🛵 ${distanceKm.toFixed(1)} km away &bull; ~${etaMins} mins ETA`;
+                }
+            }
+        } catch (e) {
+            console.error("Popup live polling error:", e);
+        }
+    }, 4000);
 }
 
 // 💖 Delivery Tip Selector Helper
