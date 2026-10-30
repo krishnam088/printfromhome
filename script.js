@@ -5233,3 +5233,48 @@ document.addEventListener('click', function(e) {
         }, 500); // Thoda delay taaki order successfully save ho jaye
     }
 }, true);
+
+// 🔥 ROUTER INTERCEPTOR: Redirect history navigation to direct tracking after order placement
+if (typeof window.navigateDrawerSection === 'function') {
+    const originalNavigate = window.navigateDrawerSection;
+    window.navigateDrawerSection = function(section, ...args) {
+        let normalizedSection = section === 'orders' ? 'history' : section;
+        
+        // Agar app history section par bhej raha hai, check karein ki kya koi naya order abhi bana hai
+        if (normalizedSection === 'history') {
+            let newestOrder = null;
+            let newestTime = 0;
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                let key = localStorage.key(i);
+                if (key && key.startsWith('history_')) {
+                    try {
+                        let items = JSON.parse(localStorage.getItem(key) || '[]');
+                        if (Array.isArray(items) && items.length > 0) {
+                            items.forEach(ord => {
+                                let ordTime = new Date(ord.date || 0).getTime();
+                                if (ordTime >= newestTime) {
+                                    newestTime = ordTime;
+                                    newestOrder = ord;
+                                }
+                            });
+                        }
+                    } catch (err) {}
+                }
+            }
+            
+            // Agar pichle 20 seconds mein order bana hai, toh history page kholne se rokein aur tracking modal dikhayein
+            if (newestOrder && newestOrder.orderId) {
+                let timeDiff = Date.now() - new Date(newestOrder.date || 0).getTime();
+                if (timeDiff < 20000 && typeof window.openOrderTrackingView === 'function') {
+                    console.log("🚀 Intercepted history redirect, showing tracking instead for order:", newestOrder.orderId);
+                    window.openOrderTrackingView(newestOrder.orderId);
+                    return; // Block navigation to history page
+                }
+            }
+        }
+        
+        // Normal case mein original navigation chalne dein
+        return originalNavigate.apply(this, [section, ...args]);
+    };
+}
