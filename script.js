@@ -4760,42 +4760,45 @@ window.handleSendSignupOtp = async function() {
 document.addEventListener('DOMContentLoaded', () => {
     const authForm = document.getElementById('authForm');
     
-    if (authForm) {
+ if (authForm) {
         authForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const identityInput = document.getElementById('authIdentity');
-            const passwordInput = document.getElementById('authPassword');
+            const emailInput = document.getElementById('authEmailInput');
+            const otpInputNode = document.getElementById('authEmailOtpInput');
             
-            const identity = identityInput ? identityInput.value.trim() : '';
-            const password = passwordInput ? passwordInput.value.trim() : '';
+            const email = emailInput ? emailInput.value.trim() : '';
+            const otp = otpInputNode ? otpInputNode.value.trim() : '';
 
-            if (!identity || !password) {
-                alert("⚠️ Please enter mobile number and password!");
+            if (!email) {
+                alert("⚠️ Please enter your Gmail address!");
+                if (emailInput) emailInput.focus();
+                return;
+            }
+
+            if (!otp || otp.length !== 6) {
+                alert("⚠️ Please enter the valid 6-digit OTP received on your Gmail!");
+                if (otpInputNode) otpInputNode.focus();
                 return;
             }
 
             try {
                 if (window.isSignupActive) {
                     // --- SIGNUP FLOW & OTP VERIFICATION ---
-                    const otpInputNode = document.getElementById('authEmailOtpInput');
-                    const otpInput = otpInputNode ? otpInputNode.value.trim() : '';
+                    const nameInput = document.getElementById('authName');
+                    const identityInput = document.getElementById('authIdentity');
+                    const name = nameInput ? nameInput.value.trim() : 'Customer';
+                    const identity = identityInput ? identityInput.value.trim() : '';
 
                     if (!window.isOtpStepActive) {
                         alert("⚠️ Please click 'Send OTP' first and verify your Gmail address!");
                         return;
                     }
 
-                    if (!otpInput || otpInput.length !== 6) {
-                        alert("⚠️ Please enter the valid 6-digit OTP received on your Gmail!");
-                        return;
-                    }
-
-                    // 🔥 Yeh route backend par jaakar TempSignup se data User collection mein permanent save karega
                     const response = await fetch('/api/auth/verify-signup-otp', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ identity, otpInput })
+                        body: JSON.stringify({ name, identity, email, otpInput: otp })
                     });
                     const data = await response.json();
 
@@ -4807,23 +4810,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                 } else {
-                    // --- LOGIN FLOW ---
-                    const response = await fetch('/api/auth/login', {
+                    // --- LOGIN FLOW (Sirf Gmail aur OTP se) ---
+                    const response = await fetch('/api/auth/verify-login-otp', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ identity, password })
+                        body: JSON.stringify({ email, otpInput: otp })
                     });
                     const data = await response.json();
 
                     if (data.success) {
                         localStorage.setItem('printAppUser', data.name);
-                        localStorage.setItem('printAppUserIdentity', data.identity);
+                        localStorage.setItem('printAppUserIdentity', data.identity || '');
                         if (data.email) localStorage.setItem('printAppUserEmail', data.email);
 
-                        alert("✅ Login Successful!");
+                        alert(`✅ Welcome back, ${data.name}! Login Successful.`);
                         location.reload();
                     } else {
-                        alert(`❌ ${data.message || 'Invalid mobile number or password!'}`);
+                        alert(`❌ ${data.message || 'Invalid verification code or unregistered Gmail!'}`);
                     }
                 }
             } catch (err) {
