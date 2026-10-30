@@ -5228,3 +5228,22 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }, 500);
 });
+
+// 🔥 FINAL BULLETPROOF TEMPLATE-WIPE DEFEATER
+if (typeof window.navigateDrawerSection === 'function') {
+    const originalNavigate = window.navigateDrawerSection;
+    window.navigateDrawerSection = function(targetId, ...args) {
+        originalNavigate(targetId, ...args);
+        let normalizedId = targetId === 'orders' ? 'history' : targetId;
+        if (normalizedId === 'history') {
+            // Template engine ke saare async wipes ko beat karne ke liye multiple staggered renders
+            [10, 50, 150, 300, 600, 1000].forEach(delay => {
+                setTimeout(() => {
+                    if (typeof window.renderOrderHistoryUI === 'function') {
+                        window.renderOrderHistoryUI();
+                    }
+                }, delay);
+            });
+        }
+    };
+}
