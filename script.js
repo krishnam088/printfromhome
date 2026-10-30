@@ -5009,7 +5009,6 @@ window.showAppConfirm = function(title, description, onConfirm, icon = "⚠️")
     if (iconEl) iconEl.textContent = icon;
     modal.style.display = 'flex';
 
-    // Purane event listeners saaf karne ke liye clone node use karte hain
     const newOkBtn = okBtn.cloneNode(true);
     const newCancelBtn = cancelBtn.cloneNode(true);
     if (okBtn && okBtn.parentNode) okBtn.parentNode.replaceChild(newOkBtn, okBtn);
@@ -5024,432 +5023,10 @@ window.showAppConfirm = function(title, description, onConfirm, icon = "⚠️")
         modal.style.display = 'none';
     };
 };
-// 🔥 Automatic trigger on page load & history navigation
-document.addEventListener("DOMContentLoaded", () => {
-    if (typeof renderOrderHistoryUI === 'function') {
-        renderOrderHistoryUI();
-    }
-});
 
-// 🔥 Bulletproof Auto-Healing Order History Watcher
-setInterval(() => {
-    const container = document.getElementById('ordersHistoryContainer');
-    if (container) {
-        let hasOrders = false;
-        for (let i = 0; i < localStorage.length; i++) {
-            let k = localStorage.key(i);
-            if (k && k.startsWith('history_')) {
-                try {
-                    let items = JSON.parse(localStorage.getItem(k) || '[]');
-                    if (Array.isArray(items) && items.length > 0) {
-                        hasOrders = true;
-                        break;
-                    }
-                } catch(e){}
-            }
-        }
-        
-        // Agar localStorage mein orders hain, lekin container khali hai ya "No orders found" dikha raha hai, toh auto-fix karo!
-        if (hasOrders && (container.innerHTML.includes('No orders found') || container.innerHTML.trim() === '')) {
-            if (typeof renderOrderHistoryUI === 'function') {
-                renderOrderHistoryUI();
-            }
-        }
-    }
-}, 1000);
-
-// 🔥 Ultimate MutationObserver Guard for Order History Container
-const historyGuardObserver = new MutationObserver((mutations) => {
-    const container = document.getElementById('ordersHistoryContainer');
-    if (!container) return;
-
-    // Check if localStorage has orders
-    let hasOrders = false;
-    for (let i = 0; i < localStorage.length; i++) {
-        let k = localStorage.key(i);
-        if (k && k.startsWith('history_')) {
-            try {
-                let items = JSON.parse(localStorage.getItem(k) || '[]');
-                if (Array.isArray(items) && items.length > 0) {
-                    hasOrders = true;
-                    break;
-                }
-            } catch(e){}
-        }
-    }
-
-    // Agar localStorage mein orders hain, par container khali ho gaya ya "No orders found" aa gaya
-    if (hasOrders && (container.innerHTML.includes('No orders found') || container.innerHTML.trim() === '')) {
-        if (typeof renderOrderHistoryUI === 'function') {
-            // Thoda delay dekar render karo taaki router ki race condition beat ho jaye
-            setTimeout(() => renderOrderHistoryUI(), 10);
-        }
-    }
-});
-
-// Container par nazar rakho
-document.addEventListener("DOMContentLoaded", () => {
-    const targetContainer = document.getElementById('ordersHistoryContainer');
-    if (targetContainer) {
-        historyGuardObserver.observe(targetContainer, { childList: true, subtree: true });
-    }
-});
-
-// 🔥 Foolproof Router Interceptor for History Section
-if (typeof window.navigateDrawerSection === 'function') {
-    const originalNav = window.navigateDrawerSection;
-    window.navigateDrawerSection = function(section, ...args) {
-        originalNav(section, ...args);
-        if (section === 'history') {
-            // Router ke saare re-loads ko beat karne ke liye multiple checkpoints par render chalayein
-            [10, 50, 150, 300, 600].forEach(delay => {
-                setTimeout(() => {
-                    if (typeof renderOrderHistoryUI === 'function') {
-                        renderOrderHistoryUI();
-                    }
-                }, delay);
-            });
-        }
-    };
-}
-
-// 🔥 Ultimate Persistent Mutation Observer for Order History
-const persistentHistoryWatcher = new MutationObserver(() => {
-    const container = document.getElementById('ordersHistoryContainer');
-    if (!container) return;
-
-    // Check if localStorage has any valid history keys with items
-    let hasOrders = false;
-    for (let i = 0; i < localStorage.length; i++) {
-        let k = localStorage.key(i);
-        if (k && k.startsWith('history_')) {
-            try {
-                let items = JSON.parse(localStorage.getItem(k) || '[]');
-                if (Array.isArray(items) && items.length > 0) {
-                    hasOrders = true;
-                    break;
-                }
-            } catch (e) {}
-        }
-    }
-
-    // Agar orders hain, aur container khali ho gaya ya "No orders found" dikhane laga, toh turant override karo
-    if (hasOrders && (container.innerHTML.includes('No orders found') || container.innerHTML.trim() === '')) {
-        if (typeof renderOrderHistoryUI === 'function') {
-            renderOrderHistoryUI();
-        }
-    }
-});
-
-// Start observing the whole document body for any changes to the history container
-document.addEventListener("DOMContentLoaded", () => {
-    const observerTarget = document.body;
-    if (observerTarget) {
-        persistentHistoryWatcher.observe(observerTarget, { childList: true, subtree: true });
-    }
-});
-
-// 🔥 MASTER OVERRIDE: Intercept and neutralize any other history render calls
-window.loadUserOrderHistory = function() { window.renderOrderHistoryUI(); };
-window.fetchUserOrders = function() { window.renderOrderHistoryUI(); };
-window.displayOrderHistory = function() { window.renderOrderHistoryUI(); };
-
-// 🔥 Instant DOM Observer to force render the moment history tab is shown
-const observer = new MutationObserver((mutations) => {
-    const container = document.getElementById('ordersHistoryContainer');
-    const historySection = document.getElementById('user_section_history');
-    
-    if (container && historySection && historySection.classList.contains('active')) {
-        if (container.innerHTML.includes('No orders found') || container.innerHTML.trim() === '') {
-            window.renderOrderHistoryUI();
-        }
-    }
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-    const target = document.getElementById('user_section_history') || document.body;
-    observer.observe(target, { childList: true, subtree: true, attributes: true });
-});
-
-// 🔥 API & FETCH INTERCEPTOR FOR ORDER HISTORY
-const originalFetch = window.fetch;
-window.fetch = async function(...args) {
-    const url = args[0] || '';
-    if (typeof url === 'string' && (url.includes('history') || url.includes('orders') || url.includes('get-orders'))) {
-        // Collect all orders from localStorage history keys
-        let allOrdersMap = new Map();
-        for (let i = 0; i < localStorage.length; i++) {
-            let key = localStorage.key(i);
-            if (key && key.startsWith('history_')) {
-                try {
-                    let items = JSON.parse(localStorage.getItem(key) || '[]');
-                    if (Array.isArray(items)) {
-                        items.forEach(ord => {
-                            if (ord) {
-                                let uniqueId = ord.orderId || ord.id || JSON.stringify(ord);
-                                allOrdersMap.set(uniqueId, ord);
-                            }
-                        });
-                    }
-                } catch (e) {}
-            }
-        }
-        let localHistory = Array.from(allOrdersMap.values());
-        
-        // Return a fake successful API response containing localStorage orders
-        return new Response(JSON.stringify({ success: true, orders: localHistory, data: localHistory }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-        });
-    }
-    return originalFetch.apply(this, args);
-};
-
-// 🔥 ULTIMATE SAFETY OVERRIDE: Listen to any click on History tab/button and force-render merged data
-document.addEventListener('click', function(e) {
-    const target = e.target.closest('button, a, [onclick], [id*="history"], [class*="history"]');
-    if (target) {
-        const text = (target.textContent || target.getAttribute('onclick') || '').toLowerCase();
-        if (text.includes('history') || text.includes('order')) {
-            setTimeout(() => {
-                if (typeof window.renderOrderHistoryUI === 'function') {
-                    window.renderOrderHistoryUI();
-                }
-            }, 100);
-        }
-    }
-}, true);
-
-// Run immediately on script load if history container is already visible
-window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        if (typeof window.renderOrderHistoryUI === 'function') {
-            window.renderOrderHistoryUI();
-        }
-    }, 500);
-});
-
-// 🔥 FINAL BULLETPROOF TEMPLATE-WIPE DEFEATER
-if (typeof window.navigateDrawerSection === 'function') {
-    const originalNavigate = window.navigateDrawerSection;
-    window.navigateDrawerSection = function(targetId, ...args) {
-        originalNavigate(targetId, ...args);
-        let normalizedId = targetId === 'orders' ? 'history' : targetId;
-        if (normalizedId === 'history') {
-            // Template engine ke saare async wipes ko beat karne ke liye multiple staggered renders
-            [10, 50, 150, 300, 600, 1000].forEach(delay => {
-                setTimeout(() => {
-                    if (typeof window.renderOrderHistoryUI === 'function') {
-                        window.renderOrderHistoryUI();
-                    }
-                }, delay);
-            });
-        }
-    };
-}
-// 🔥 POST-MAPS INITIALIZATION RENDER HOOK
-// Google Maps load hone ke baad container ko ensure karne ke liye
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        if (typeof window.renderOrderHistoryUI === 'function') {
-            window.renderOrderHistoryUI();
-        }
-    }, 1000);
-});
-
-// Aur jab bhi user history tab par click kare, Google Maps ke conflict ke baad render ho
-document.addEventListener('click', (e) => {
-    const target = e.target.closest('[onclick*="history"], [href*="history"], button');
-    if (target) {
-        setTimeout(() => {
-            if (typeof window.renderOrderHistoryUI === 'function') {
-                window.renderOrderHistoryUI();
-            }
-        }, 300);
-    }
-}, true);
-
-// 🔥 MULTI-CONTAINER FORCE-INJECT ENGINE (Handles duplicate IDs in DOM)
+// 🔥 STRICTLY CONTAINED ORDER HISTORY RENDER ENGINE
 window.renderOrderHistoryUI = function() {
     try {
-        // 1. Force show ALL sections and containers related to history
-        document.querySelectorAll('[id*="history"], .view-section').forEach(el => {
-            if (el.id && (el.id.includes('history') || el.id.includes('section'))) {
-                el.style.setProperty('display', 'block', 'important');
-                el.classList.add('active');
-            }
-        });
-
-        // 2. Gather ALL matching containers to prevent duplicate ID mismatch
-        const containers = document.querySelectorAll('#ordersHistoryContainer, [id*="ordersHistory"], [id*="history"]');
-        if (!containers || containers.length === 0) return;
-
-        let allOrdersMap = new Map();
-        for (let i = 0; i < localStorage.length; i++) {
-            let key = localStorage.key(i);
-            if (key && key.startsWith('history_')) {
-                try {
-                    let items = JSON.parse(localStorage.getItem(key) || '[]');
-                    if (Array.isArray(items)) {
-                        items.forEach(ord => {
-                            if (ord) {
-                                let uniqueId = ord.orderId || ord.id || JSON.stringify(ord);
-                                allOrdersMap.set(uniqueId, ord);
-                            }
-                        });
-                    }
-                } catch (e) {}
-            }
-        }
-
-        let history = Array.from(allOrdersMap.values());
-        history = history.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
-
-        const htmlContent = `
-            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 2px solid #065f46; border-radius: 12px; padding: 14px 18px; margin-bottom: 16px;">
-                <h3 style="font-size: 1.1rem; font-weight: 900; color: #065f46; margin: 0;">📦 Your Orders (${history.length})</h3>
-                <button type="button" onclick="navigateDrawerSection('store')" style="background: #065f46; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 0.75rem; cursor: pointer;">🏠 Home</button>
-            </div>
-            ${history.length === 0 ? '<div style="text-align:center; padding:30px;"><p style="color:#64748b;">No orders found.</p></div>' : history.map(order => {
-                if (!order) return '';
-                let safeId = order.orderId || order.id || 'N/A';
-                let safeAmount = Number(order.amount || order.totalAmount || 0).toFixed(2);
-                let safeStatus = order.status || 'Processing';
-                let safeDate = order.date || '';
-                
-                let itemsHtml = '';
-                if (Array.isArray(order.details)) {
-                    itemsHtml = order.details.map(item => `<div style="font-size: 0.75rem; color: #334155; margin-top: 2px;">• ${item.name || 'Item'} (Qty: ${item.qty || 1})</div>`).join('');
-                }
-
-                return `
-                    <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; padding:14px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
-                        <div style="display:flex; justify-content:space-between; font-weight:800; font-size:0.85rem; color:#0f172a;">
-                            <span>Order #${safeId}</span>
-                            <span style="color:#065f46;">₹${safeAmount}</span>
-                        </div>
-                        <div style="margin: 6px 0;">${itemsHtml}</div>
-                        <p style="font-size:0.75rem; color:#64748b; margin:4px 0;">Status: <b style="color:#2563eb;">${safeStatus}</b></p>
-                        <p style="font-size:0.7rem; color:#94a3b8; margin-bottom:10px;">${safeDate}</p>
-                    </div>
-                `;
-            }).join('')}
-        `;
-
-        // 3. Inject into EVERY SINGLE found container
-        containers.forEach(cnt => {
-            cnt.innerHTML = htmlContent;
-            cnt.style.setProperty('display', 'block', 'important');
-            cnt.style.setProperty('visibility', 'visible', 'important');
-        });
-    } catch (err) {
-        console.error("Multi-Container Render Error:", err);
-    }
-};
-
-// Continuous background watcher to keep all containers populated
-setInterval(() => {
-    const containers = document.querySelectorAll('#ordersHistoryContainer, [id*="ordersHistory"]');
-    containers.forEach(cnt => {
-        if (cnt && (cnt.innerHTML.includes('No orders found') || cnt.innerHTML.trim() === '' || !cnt.innerHTML.includes('Your Orders'))) {
-            window.renderOrderHistoryUI();
-        }
-    });
-}, 300);
-// 🔥 BULLETPROOF ORDER TRACKING POPUP ENGINE
-window.openOrderTrackingView = function(orderId) {
-    try {
-        // 1. Search across all localStorage history keys for this specific order ID
-        let targetOrder = null;
-        for (let i = 0; i < localStorage.length; i++) {
-            let key = localStorage.key(i);
-            if (key && key.startsWith('history_')) {
-                try {
-                    let items = JSON.parse(localStorage.getItem(key) || '[]');
-                    if (Array.isArray(items)) {
-                        let found = items.find(o => (o.orderId === orderId || o.id === orderId));
-                        if (found) {
-                            targetOrder = found;
-                            break;
-                        }
-                    }
-                } catch (e) {}
-            }
-        }
-
-        // Fallback agar direct object na mile
-        if (!targetOrder) {
-            alert("Order details not found for ID: " + orderId);
-            return;
-        }
-
-        // 2. Remove existing modal if any
-        let existingModal = document.getElementById('customOrderTrackingModal');
-        if (existingModal) existingModal.remove();
-
-        // 3. Build Items List HTML
-        let itemsHtml = '';
-        if (Array.isArray(targetOrder.details)) {
-            itemsHtml = targetOrder.details.map(item => `
-                <div style="display: flex; align-items: center; gap: 10px; background: #f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
-                    ${item.imageUrl ? `<img src="${item.imageUrl}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px;" />` : ''}
-                    <div style="flex: 1;">
-                        <div style="font-weight: 800; font-size: 0.82rem; color: #0f172a;">${item.name || 'Product'}</div>
-                        <div style="font-size: 0.72rem; color: #64748b;">Qty: ${item.qty || 1} | Price: ₹${item.price || 0}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // 4. Create Modal Overlay
-        const modalOverlay = document.createElement('div');
-        modalOverlay.id = 'customOrderTrackingModal';
-        modalOverlay.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
-            display: flex; justify-content: center; align-items: center; z-index: 999999;
-            padding: 16px; font-family: 'Poppins', sans-serif;
-        `;
-
-        modalOverlay.innerHTML = `
-            <div style="background: white; width: 100%; max-width: 420px; border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; position: relative;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
-                    <h3 style="margin: 0; font-size: 1.05rem; font-weight: 900; color: #065f46;">📍 Track Order #${targetOrder.orderId || orderId}</h3>
-                    <button type="button" onclick="document.getElementById('customOrderTrackingModal').remove()" style="background: #f1f5f9; border: none; font-size: 1rem; font-weight: bold; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #334155;">&times;</button>
-                </div>
-
-                <div style="margin-bottom: 14px;">
-                    <span style="background: #eff6ff; color: #2563eb; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.75rem;">Status: ${targetOrder.status || 'Processing'}</span>
-                    <div style="font-size: 0.72rem; color: #64748b; margin-top: 6px;">Placed on: ${targetOrder.date || 'N/A'}</div>
-                </div>
-
-                <div style="font-weight: 800; font-size: 0.85rem; color: #0f172a; margin-bottom: 8px;">Ordered Items:</div>
-                <div style="margin-bottom: 14px;">${itemsHtml}</div>
-
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 16px;">
-                    <div style="font-weight: 800; font-size: 0.8rem; color: #0f172a; margin-bottom: 4px;">Delivery Address:</div>
-                    <div style="font-size: 0.75rem; color: #475569; line-height: 1.4;">${targetOrder.address || 'N/A'}</div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 12px; margin-bottom: 16px;">
-                    <span style="font-weight: 800; font-size: 0.85rem; color: #065f46;">Total Amount:</span>
-                    <span style="font-weight: 900; font-size: 1rem; color: #065f46;">₹${Number(targetOrder.amount || 0).toFixed(2)}</span>
-                </div>
-
-                <button type="button" onclick="document.getElementById('customOrderTrackingModal').remove()" style="width: 100%; background: #065f46; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 900; font-size: 0.85rem; cursor: pointer; box-shadow: 0 4px 12px rgba(6,95,70,0.2);">Close Tracking</button>
-            </div>
-        `;
-
-        document.body.appendChild(modalOverlay);
-    } catch (err) {
-        console.error("Tracking View Error:", err);
-        alert("Could not open tracking view.");
-    }
-};
-// 🔥 STRICTLY CONTAINED ORDER HISTORY RENDER ENGINE (Keeps Home Screen Clean)
-window.renderOrderHistoryUI = function() {
-    try {
-        // ONLY target the specific history container inside the history section
         const container = document.getElementById('ordersHistoryContainer');
         if (!container) return;
 
@@ -5536,7 +5113,7 @@ window.openOrderTrackingView = function(orderId) {
         }
 
         if (!targetOrder) {
-            alert("Order details not found for ID: " + orderId);
+            console.warn("Order details not found for ID:", orderId);
             return;
         }
 
@@ -5568,8 +5145,6 @@ window.openOrderTrackingView = function(orderId) {
 
         modalOverlay.innerHTML = `
             <div style="background: white; width: 100%; max-width: 450px; border-radius: 20px; padding: 22px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); max-height: 92vh; overflow-y: auto; position: relative;">
-                
-                <!-- Header -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
                     <div>
                         <h3 style="margin: 0; font-size: 1.1rem; font-weight: 900; color: #0f172a;">Order Tracking 📦</h3>
@@ -5578,34 +5153,29 @@ window.openOrderTrackingView = function(orderId) {
                     <button type="button" onclick="document.getElementById('customOrderTrackingModal').remove()" style="background: #f1f5f9; border: none; font-size: 1.1rem; font-weight: bold; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; color: #334155; display: flex; align-items: center; justify-content: center;">&times;</button>
                 </div>
 
-                <!-- Live Status Timeline Badge -->
                 <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 14px; margin-bottom: 16px;">
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
                         <span style="width: 10px; height: 10px; background: #2563eb; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 3px rgba(37,99,235,0.2);"></span>
-                        <span style="font-weight: 900; font-size: 0.88rem; color: #1e40af;">${targetOrder.status || 'Order Placed & Picking'}</span>
+                        <span style="font-weight: 900; font-size: 0.88rem; color: #1e40af;">${targetOrder.status || 'Order Placed & Processing'}</span>
                     </div>
                     <div style="font-size: 0.72rem; color: #64748b; margin-left: 18px;">Placed on: ${targetOrder.date || 'N/A'}</div>
                 </div>
 
-                <!-- Items Section -->
                 <div style="font-weight: 800; font-size: 0.85rem; color: #0f172a; margin-bottom: 8px;">Order Summary:</div>
                 <div style="margin-bottom: 16px; max-height: 180px; overflow-y: auto;">${itemsHtml}</div>
 
-                <!-- Delivery Address & Info -->
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 16px;">
                     <div style="font-weight: 800; font-size: 0.82rem; color: #0f172a; margin-bottom: 4px;">📍 Delivery Address:</div>
                     <div style="font-size: 0.75rem; color: #475569; line-height: 1.4; margin-bottom: 8px;">${targetOrder.address || 'N/A'}</div>
                     <div style="font-size: 0.72rem; color: #065f46; font-weight: 700;">Mode: ${targetOrder.deliveryMode ? targetOrder.deliveryMode.toUpperCase() : 'DOORSTEP'}</div>
                 </div>
 
-                <!-- Bill Total -->
                 <div style="display: flex; justify-content: space-between; align-items: center; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
                     <span style="font-weight: 800; font-size: 0.9rem; color: #065f46;">Total Paid Amount:</span>
                     <span style="font-weight: 900; font-size: 1.1rem; color: #065f46;">₹${Number(targetOrder.amount || 0).toFixed(2)}</span>
                 </div>
 
-                <!-- Action Button -->
-                <button type="button" onclick="document.getElementById('customOrderTrackingModal').remove(); navigateDrawerSection('store');" style="width: 100%; background: #065f46; color: white; border: none; padding: 13px; border-radius: 12px; font-weight: 900; font-size: 0.9rem; cursor: pointer; box-shadow: 0 4px 12px rgba(6,95,70,0.25);">Back to Home / Store &rarr;</button>
+                <button type="button" onclick="document.getElementById('customOrderTrackingModal').remove(); if(typeof navigateDrawerSection==='function') navigateDrawerSection('store');" style="width: 100%; background: #065f46; color: white; border: none; padding: 13px; border-radius: 12px; font-weight: 900; font-size: 0.9rem; cursor: pointer; box-shadow: 0 4px 12px rgba(6,95,70,0.25);">Back to Home / Store &rarr;</button>
             </div>
         `;
 
@@ -5615,109 +5185,9 @@ window.openOrderTrackingView = function(orderId) {
     }
 };
 
-// 🔥 HOOK INTO ORDER PLACEMENT TO REDIRECT DIRECTLY TO TRACKING
-// Jab bhi user order place karega, hum latest order ID nikal kar direct tracking open kar denge
-const originalPlaceOrder = window.placeOrder || window.submitOrder || window.completeOrder;
-// We also monitor localStorage additions to automatically catch new orders
-window.addEventListener('storage', (e) => {
-    if (e.key && e.key.startsWith('history_')) {
-        try {
-            let items = JSON.parse(e.newValue || '[]');
-            if (Array.isArray(items) && items.length > 0) {
-                let latestOrder = items[0]; // Newest order
-                if (latestOrder && latestOrder.orderId) {
-                    setTimeout(() => {
-                        window.openOrderTrackingView(latestOrder.orderId);
-                    }, 200);
-                }
-            }
-        } catch (err) {}
+// 🔥 Automatic initialization on load
+document.addEventListener("DOMContentLoaded", () => {
+    if (typeof renderOrderHistoryUI === 'function') {
+        renderOrderHistoryUI();
     }
 });
-
-// 🔥 DIRECT ORDER SUBMISSION & BUTTON INTERCEPTOR
-document.addEventListener('click', function(e) {
-    const btn = e.target.closest('button, [type="submit"], [onclick]');
-    if (!btn) return;
-    
-    const text = (btn.textContent || btn.getAttribute('onclick') || '').toLowerCase();
-    // Agar button "place order", "checkout", ya order confirm karne wala hai
-    if (text.includes('place order') || text.includes('checkout') || text.includes('confirm order') || text.includes('pay')) {
-        setTimeout(() => {
-            // Scan localStorage for the absolute newest order across all history keys
-            let newestOrder = null;
-            let newestTime = 0;
-            
-            for (let i = 0; i < localStorage.length; i++) {
-                let key = localStorage.key(i);
-                if (key && key.startsWith('history_')) {
-                    try {
-                        let items = JSON.parse(localStorage.getItem(key) || '[]');
-                        if (Array.isArray(items) && items.length > 0) {
-                            items.forEach(ord => {
-                                let ordTime = new Date(ord.date || 0).getTime();
-                                if (ordTime >= newestTime) {
-                                    newestTime = ordTime;
-                                    newestOrder = ord;
-                                }
-                            });
-                        }
-                    } catch (err) {}
-                }
-            }
-            
-            if (newestOrder && newestOrder.orderId) {
-                // Open tracking modal immediately
-                if (typeof window.openOrderTrackingView === 'function') {
-                    window.openOrderTrackingView(newestOrder.orderId);
-                }
-            }
-        }, 600); // Thoda delay taaki order localStorage mein successfully save ho jaye
-    }
-}, true);
-// 🔥 PAYMENT GATE & ORDER LOCK GUARD
-// Jab tak user checkout/payment page par hai, tab tak order history mein save hone se rokein
-const originalSetItem = localStorage.setItem;
-localStorage.setItem = function(key, value) {
-    if (key && key.startsWith('history_')) {
-        try {
-            // Check karein ki kya app abhi payment selection ya checkout stage par hai
-            const activeSection = document.querySelector('.view-section.active, [id*="checkout"], [id*="payment"], [id*="cart"]');
-            const isCheckoutActive = activeSection && (
-                activeSection.id.includes('checkout') || 
-                activeSection.id.includes('payment') || 
-                activeSection.id.includes('cart') ||
-                document.getElementById('paymentModal')?.style.display === 'block'
-            );
-
-            // Agar payment/checkout active hai, toh temporary save ko block karein jab tak explicit confirm na ho
-            if (isCheckoutActive && !window._isPaymentConfirmed) {
-                console.log("🔒 Order save blocked until payment confirmation.");
-                return; // Block saving to history prematurely
-            }
-        } catch (e) {}
-    }
-    originalSetItem.apply(this, arguments);
-};
-
-// Global helper to mark payment as confirmed when user completes payment
-window.confirmOrderPayment = function(orderId) {
-    window._isPaymentConfirmed = true;
-    setTimeout(() => {
-        window._isPaymentConfirmed = false; // Reset flag
-    }, 1000);
-};
-
-// Intercept payment success buttons to ensure order is marked confirmed and redirected to tracking
-document.addEventListener('click', function(e) {
-    const btn = e.target.closest('button, [type="submit"], [onclick]');
-    if (!btn) return;
-    
-    const text = (btn.textContent || btn.getAttribute('onclick') || '').toLowerCase();
-    if (text.includes('pay') || text.includes('confirm payment') || text.includes('complete order') || text.includes('place order')) {
-        window._isPaymentConfirmed = true;
-        setTimeout(() => {
-            window._isPaymentConfirmed = false;
-        }, 2000);
-    }
-}, true);
