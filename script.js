@@ -5056,3 +5056,30 @@ document.addEventListener("DOMContentLoaded", () => {
         renderOrderHistoryUI();
     }
 });
+
+// 🔥 Bulletproof Auto-Healing Order History Watcher
+setInterval(() => {
+    const container = document.getElementById('ordersHistoryContainer');
+    if (container) {
+        let hasOrders = false;
+        for (let i = 0; i < localStorage.length; i++) {
+            let k = localStorage.key(i);
+            if (k && k.startsWith('history_')) {
+                try {
+                    let items = JSON.parse(localStorage.getItem(k) || '[]');
+                    if (Array.isArray(items) && items.length > 0) {
+                        hasOrders = true;
+                        break;
+                    }
+                } catch(e){}
+            }
+        }
+        
+        // Agar localStorage mein orders hain, lekin container khali hai ya "No orders found" dikha raha hai, toh auto-fix karo!
+        if (hasOrders && (container.innerHTML.includes('No orders found') || container.innerHTML.trim() === '')) {
+            if (typeof renderOrderHistoryUI === 'function') {
+                renderOrderHistoryUI();
+            }
+        }
+    }
+}, 1000);
