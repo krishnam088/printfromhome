@@ -3576,64 +3576,73 @@ window.executeFinalCartOrderPlacement = async function() {
     let initialOrderStatus = (window.cartPrintJobsArray.length > 0) ? "Ready for Print" : "Order Placed & Picking";
 
     const finalizeOrderSuccess = async (orderId) => {
-        const historyKey = `history_${sessionActiveUser}`;
-        const currentHistoryArray = JSON.parse(localStorage.getItem(historyKey) || '[]');
-        
-        currentHistoryArray.unshift({ 
-            orderId: orderId,
-            date: new Date().toLocaleString(), 
-            amount: grandTotal.toFixed(2), 
-            status: initialOrderStatus, 
-            details: finalMetaConfig, 
-            address: activeAddress,
-            deliveryMode: deliveryMode,
-            deliveryInstruction: deliveryInstructionText, 
-            deliveryTip: window.currentDeliveryTip || 0
-        });
-        
-        localStorage.setItem(historyKey, JSON.stringify(currentHistoryArray));
+    const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+    const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
+    
+    // 🔥 Dono keys (username aur mobile identity) par save karein taaki mismatch na ho
+    const historyKeys = [
+        `history_${sessionActiveUser}`,
+        activeIdentity ? `history_${activeIdentity}` : null
+    ].filter(Boolean);
 
-        // 🔥 Clear used coupon after successful order (One-time validity rule)
-        window.appliedActiveCoupon = null;
-
-        try {
-            await fetch('/api/admin/inventory/decrement', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ items: finalMetaConfig })
-            });
-        } catch (e) {
-            console.error("Inventory decrement sync error:", e);
-        }
-
-        window.cartPrintJobsArray = [];
-        window.cartSnacksArray = [];
-        window.currentDeliveryTip = 0;
-        localStorage.removeItem('cart_print_jobs');
-        localStorage.removeItem('cart_snacks');
-
-        if (typeof persistCartStateData === 'function') persistCartStateData();
-        if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
-
-        if (typeof renderOrderHistoryUI === 'function') {
-            renderOrderHistoryUI(sessionActiveUser);
-        }
-
-        if (typeof navigateDrawerSection === 'function') {
-            navigateDrawerSection('history');
-        } else {
-            const historySection = document.getElementById('user_section_history');
-            document.querySelectorAll('.view-section').forEach(el => {
-                el.classList.remove('active');
-                el.style.setProperty('display', 'none', 'important');
-            });
-            if (historySection) {
-                historySection.classList.add('active');
-                historySection.style.setProperty('display', 'block', 'important');
-            }
-        }
+    const newOrderObj = { 
+        orderId: orderId,
+        date: new Date().toLocaleString(), 
+        amount: grandTotal.toFixed(2), 
+        status: initialOrderStatus, 
+        details: finalMetaConfig, 
+        address: activeAddress,
+        deliveryMode: deliveryMode,
+        deliveryInstruction: deliveryInstructionText, 
+        deliveryTip: window.currentDeliveryTip || 0
     };
 
+    historyKeys.forEach(key => {
+        let currentHistoryArray = JSON.parse(localStorage.getItem(key) || '[]');
+        currentHistoryArray.unshift(newOrderObj);
+        localStorage.setItem(key, JSON.stringify(currentHistoryArray));
+    });
+
+    // 🔥 Clear used coupon after successful order (One-time validity rule)
+    window.appliedActiveCoupon = null;
+
+    try {
+        await fetch('/api/admin/inventory/decrement', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: finalMetaConfig })
+        });
+    } catch (e) {
+        console.error("Inventory decrement sync error:", e);
+    }
+
+    window.cartPrintJobsArray = [];
+    window.cartSnacksArray = [];
+    window.currentDeliveryTip = 0;
+    localStorage.removeItem('cart_print_jobs');
+    localStorage.removeItem('cart_snacks');
+
+    if (typeof persistCartStateData === 'function') persistCartStateData();
+    if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
+
+    if (typeof renderOrderHistoryUI === 'function') {
+        renderOrderHistoryUI(sessionActiveUser);
+    }
+
+    if (typeof navigateDrawerSection === 'function') {
+        navigateDrawerSection('history');
+    } else {
+        const historySection = document.getElementById('user_section_history');
+        document.querySelectorAll('.view-section').forEach(el => {
+            el.classList.remove('active');
+            el.style.setProperty('display', 'none', 'important');
+        });
+        if (historySection) {
+            historySection.classList.add('active');
+            historySection.style.setProperty('display', 'block', 'important');
+        }
+    }
+};
     // 🔥 CREATE ORDER ON SERVER & HANDLE DIWALI LAUNCH MODE HOLD
     try {
         const response = await fetch('/api/create-order', { method: 'POST', body: formData });
