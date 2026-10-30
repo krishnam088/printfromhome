@@ -5634,3 +5634,44 @@ window.addEventListener('storage', (e) => {
         } catch (err) {}
     }
 });
+
+// 🔥 DIRECT ORDER SUBMISSION & BUTTON INTERCEPTOR
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('button, [type="submit"], [onclick]');
+    if (!btn) return;
+    
+    const text = (btn.textContent || btn.getAttribute('onclick') || '').toLowerCase();
+    // Agar button "place order", "checkout", ya order confirm karne wala hai
+    if (text.includes('place order') || text.includes('checkout') || text.includes('confirm order') || text.includes('pay')) {
+        setTimeout(() => {
+            // Scan localStorage for the absolute newest order across all history keys
+            let newestOrder = null;
+            let newestTime = 0;
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                let key = localStorage.key(i);
+                if (key && key.startsWith('history_')) {
+                    try {
+                        let items = JSON.parse(localStorage.getItem(key) || '[]');
+                        if (Array.isArray(items) && items.length > 0) {
+                            items.forEach(ord => {
+                                let ordTime = new Date(ord.date || 0).getTime();
+                                if (ordTime >= newestTime) {
+                                    newestTime = ordTime;
+                                    newestOrder = ord;
+                                }
+                            });
+                        }
+                    } catch (err) {}
+                }
+            }
+            
+            if (newestOrder && newestOrder.orderId) {
+                // Open tracking modal immediately
+                if (typeof window.openOrderTrackingView === 'function') {
+                    window.openOrderTrackingView(newestOrder.orderId);
+                }
+            }
+        }, 600); // Thoda delay taaki order localStorage mein successfully save ho jaye
+    }
+}, true);
