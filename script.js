@@ -8,6 +8,8 @@ window.updateCartDeliveryMode = function(mode) {
 };
 
 
+
+
 // 🔥 Diwali Pre-Launch Notice Popup Helper Function
 window.showDiwaliPreLaunchNotice = function(message) {
     let existingModal = document.getElementById('diwaliPreLaunchModal');
@@ -4220,7 +4222,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-   window.handleSendSignupOtp = async function() {
+});
+
+ window.isOtpStepActive = false;
+
+window.handleSendSignupOtp = async function() {
     const emailInput = document.getElementById('authEmailInput');
     const email = emailInput ? emailInput.value.trim() : '';
 
@@ -4256,8 +4262,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (data.success) {
             alert("Verification OTP has been sent to your Gmail address.");
+            
+            // 🔥 Yahan isOtpStepActive ko true set karna zaroori hai
+            window.isOtpStepActive = true;
+
+            // OTP box ko show karein aur input field ko bilkul blank rakhein
             const otpBox = document.querySelector('.signup-otp-box');
             if (otpBox) otpBox.classList.remove('hidden');
+            
+            const otpInputNode = document.getElementById('authEmailOtpInput');
+            if (otpInputNode) otpInputNode.value = ''; 
         } else {
             alert(`Error: ${data.message || 'Failed to send OTP.'}`);
         }
@@ -4266,7 +4280,6 @@ document.addEventListener('DOMContentLoaded', () => {
         alert("Server connection error while sending OTP.");
     }
 };
-});
 
 // 🔥 Safe Fix for Missing Function Crash
 if (typeof window.forceFixWhiteScreen !== 'function') {
@@ -4932,11 +4945,11 @@ window.processWalletDeposit = async function() {
             }
         };
 
-        const rzp1 = new Razorpay(options);
+       const rzp1 = new Razorpay(options);
         rzp1.open();
 
     } catch (err) {
         console.error("Wallet Online Payment Error:", err);
         alert("Could not initiate online payment. Please try again.");
     }
-};
+}; // 👈 Sirf ek closing brace aur semicolon hona chahiye
