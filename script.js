@@ -5517,3 +5517,120 @@ window.renderOrderHistoryUI = function() {
         console.error("Render Order History Error:", err);
     }
 };
+
+// 🔥 ENHANCED DIRECT TRACKING & REDIRECT ENGINE
+window.openOrderTrackingView = function(orderId) {
+    try {
+        let targetOrder = null;
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key && key.startsWith('history_')) {
+                try {
+                    let items = JSON.parse(localStorage.getItem(key) || '[]');
+                    if (Array.isArray(items)) {
+                        let found = items.find(o => (o.orderId === orderId || o.id === orderId));
+                        if (found) { targetOrder = found; break; }
+                    }
+                } catch (e) {}
+            }
+        }
+
+        if (!targetOrder) {
+            alert("Order details not found for ID: " + orderId);
+            return;
+        }
+
+        let existingModal = document.getElementById('customOrderTrackingModal');
+        if (existingModal) existingModal.remove();
+
+        let itemsHtml = '';
+        if (Array.isArray(targetOrder.details)) {
+            itemsHtml = targetOrder.details.map(item => `
+                <div style="display: flex; align-items: center; gap: 12px; background: #f8fafc; padding: 10px 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
+                    ${item.imageUrl ? `<img src="${item.imageUrl}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;" />` : ''}
+                    <div style="flex: 1;">
+                        <div style="font-weight: 800; font-size: 0.85rem; color: #0f172a;">${item.name || 'Product'}</div>
+                        <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">Qty: ${item.qty || 1} &bull; ₹${item.price || 0} per unit</div>
+                    </div>
+                    <div style="font-weight: 900; font-size: 0.85rem; color: #065f46;">₹${(Number(item.price || 0) * Number(item.qty || 1)).toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
+
+        const modalOverlay = document.createElement('div');
+        modalOverlay.id = 'customOrderTrackingModal';
+        modalOverlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(5px);
+            display: flex; justify-content: center; align-items: center; z-index: 999999;
+            padding: 16px; font-family: 'Poppins', sans-serif;
+        `;
+
+        modalOverlay.innerHTML = `
+            <div style="background: white; width: 100%; max-width: 450px; border-radius: 20px; padding: 22px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); max-height: 92vh; overflow-y: auto; position: relative;">
+                
+                <!-- Header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.1rem; font-weight: 900; color: #0f172a;">Order Tracking 📦</h3>
+                        <span style="font-size: 0.75rem; color: #64748b;">ID: #${targetOrder.orderId || orderId}</span>
+                    </div>
+                    <button type="button" onclick="document.getElementById('customOrderTrackingModal').remove()" style="background: #f1f5f9; border: none; font-size: 1.1rem; font-weight: bold; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; color: #334155; display: flex; align-items: center; justify-content: center;">&times;</button>
+                </div>
+
+                <!-- Live Status Timeline Badge -->
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <span style="width: 10px; height: 10px; background: #2563eb; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 3px rgba(37,99,235,0.2);"></span>
+                        <span style="font-weight: 900; font-size: 0.88rem; color: #1e40af;">${targetOrder.status || 'Order Placed & Picking'}</span>
+                    </div>
+                    <div style="font-size: 0.72rem; color: #64748b; margin-left: 18px;">Placed on: ${targetOrder.date || 'N/A'}</div>
+                </div>
+
+                <!-- Items Section -->
+                <div style="font-weight: 800; font-size: 0.85rem; color: #0f172a; margin-bottom: 8px;">Order Summary:</div>
+                <div style="margin-bottom: 16px; max-height: 180px; overflow-y: auto;">${itemsHtml}</div>
+
+                <!-- Delivery Address & Info -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                    <div style="font-weight: 800; font-size: 0.82rem; color: #0f172a; margin-bottom: 4px;">📍 Delivery Address:</div>
+                    <div style="font-size: 0.75rem; color: #475569; line-height: 1.4; margin-bottom: 8px;">${targetOrder.address || 'N/A'}</div>
+                    <div style="font-size: 0.72rem; color: #065f46; font-weight: 700;">Mode: ${targetOrder.deliveryMode ? targetOrder.deliveryMode.toUpperCase() : 'DOORSTEP'}</div>
+                </div>
+
+                <!-- Bill Total -->
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+                    <span style="font-weight: 800; font-size: 0.9rem; color: #065f46;">Total Paid Amount:</span>
+                    <span style="font-weight: 900; font-size: 1.1rem; color: #065f46;">₹${Number(targetOrder.amount || 0).toFixed(2)}</span>
+                </div>
+
+                <!-- Action Button -->
+                <button type="button" onclick="document.getElementById('customOrderTrackingModal').remove(); navigateDrawerSection('store');" style="width: 100%; background: #065f46; color: white; border: none; padding: 13px; border-radius: 12px; font-weight: 900; font-size: 0.9rem; cursor: pointer; box-shadow: 0 4px 12px rgba(6,95,70,0.25);">Back to Home / Store &rarr;</button>
+            </div>
+        `;
+
+        document.body.appendChild(modalOverlay);
+    } catch (err) {
+        console.error("Enhanced Tracking View Error:", err);
+    }
+};
+
+// 🔥 HOOK INTO ORDER PLACEMENT TO REDIRECT DIRECTLY TO TRACKING
+// Jab bhi user order place karega, hum latest order ID nikal kar direct tracking open kar denge
+const originalPlaceOrder = window.placeOrder || window.submitOrder || window.completeOrder;
+// We also monitor localStorage additions to automatically catch new orders
+window.addEventListener('storage', (e) => {
+    if (e.key && e.key.startsWith('history_')) {
+        try {
+            let items = JSON.parse(e.newValue || '[]');
+            if (Array.isArray(items) && items.length > 0) {
+                let latestOrder = items[0]; // Newest order
+                if (latestOrder && latestOrder.orderId) {
+                    setTimeout(() => {
+                        window.openOrderTrackingView(latestOrder.orderId);
+                    }, 200);
+                }
+            }
+        } catch (err) {}
+    }
+});
