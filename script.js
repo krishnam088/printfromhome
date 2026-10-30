@@ -5090,3 +5090,40 @@ setInterval(() => {
         }
     }
 }, 1000);
+
+// 🔥 Ultimate MutationObserver Guard for Order History Container
+const historyGuardObserver = new MutationObserver((mutations) => {
+    const container = document.getElementById('ordersHistoryContainer');
+    if (!container) return;
+
+    // Check if localStorage has orders
+    let hasOrders = false;
+    for (let i = 0; i < localStorage.length; i++) {
+        let k = localStorage.key(i);
+        if (k && k.startsWith('history_')) {
+            try {
+                let items = JSON.parse(localStorage.getItem(k) || '[]');
+                if (Array.isArray(items) && items.length > 0) {
+                    hasOrders = true;
+                    break;
+                }
+            } catch(e){}
+        }
+    }
+
+    // Agar localStorage mein orders hain, par container khali ho gaya ya "No orders found" aa gaya
+    if (hasOrders && (container.innerHTML.includes('No orders found') || container.innerHTML.trim() === '')) {
+        if (typeof renderOrderHistoryUI === 'function') {
+            // Thoda delay dekar render karo taaki router ki race condition beat ho jaye
+            setTimeout(() => renderOrderHistoryUI(), 10);
+        }
+    }
+});
+
+// Container par nazar rakho
+document.addEventListener("DOMContentLoaded", () => {
+    const targetContainer = document.getElementById('ordersHistoryContainer');
+    if (targetContainer) {
+        historyGuardObserver.observe(targetContainer, { childList: true, subtree: true });
+    }
+});
