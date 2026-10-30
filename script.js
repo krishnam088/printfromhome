@@ -4835,7 +4835,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
 
-                    const response = await fetch('/api/auth/verify-signup-otp', {
+                const response = await fetch('/api/auth/verify-signup-otp', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ name, identity, email, otpInput: otp })
@@ -4843,7 +4843,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const data = await response.json();
 
                     if (data.success) {
-                        alert("🎉 Gmail verified and account successfully created! Please log in.");
+                        alert("🎉 Gmail verified and account successfully created!");
+                        
+                        // 🔥 YE HAI MAIN FIX: Signup successful hote hi session save karein
+                        localStorage.setItem('printAppUser', name);
+                        localStorage.setItem('printAppUserIdentity', identity || '');
+                        localStorage.setItem('printAppUserEmail', email);
+
+                        // 🔥 Turant page reload karein taaki app login screen ke bajaye seedha Home Page khole
                         location.reload(); 
                     } else {
                         alert(`❌ ${data.message || 'Verification failed'}`);
