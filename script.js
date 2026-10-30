@@ -5128,3 +5128,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// 🔥 Foolproof Router Interceptor for History Section
+if (typeof window.navigateDrawerSection === 'function') {
+    const originalNav = window.navigateDrawerSection;
+    window.navigateDrawerSection = function(section, ...args) {
+        originalNav(section, ...args);
+        if (section === 'history') {
+            // Router ke saare re-loads ko beat karne ke liye multiple checkpoints par render chalayein
+            [10, 50, 150, 300, 600].forEach(delay => {
+                setTimeout(() => {
+                    if (typeof renderOrderHistoryUI === 'function') {
+                        renderOrderHistoryUI();
+                    }
+                }, delay);
+            });
+        }
+    };
+}
