@@ -98,35 +98,17 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
         const container = document.getElementById('ordersHistoryContainer');
         if (!container) return;
         
-        // Strict active user credentials
         const activeUser = username || localStorage.getItem('printAppUser') || 'Customer';
         const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
         
+        const targetKey = activeIdentity ? `history_${activeIdentity}` : `history_${activeUser}`;
         let history = [];
         
-        // 🔒 Sirf current logged-in user ki apni keys check hongi (Strict Isolation for multiple users)
-        const targetKeys = [
-            `history_${activeUser}`,
-            activeIdentity ? `history_${activeIdentity}` : null
-        ].filter(Boolean);
-
-        let uniqueOrdersMap = new Map();
-
-        for (let key of targetKeys) {
-            try {
-                let items = JSON.parse(localStorage.getItem(key) || '[]');
-                if (Array.isArray(items)) {
-                    items.forEach(ord => {
-                        if (ord) {
-                            let uniqueId = ord.orderId || ord.id || JSON.stringify(ord);
-                            uniqueOrdersMap.set(uniqueId, ord);
-                        }
-                    });
-                }
-            } catch (e) {}
+        try {
+            history = JSON.parse(localStorage.getItem(targetKey) || '[]');
+        } catch (e) {
+            history = [];
         }
-
-        history = Array.from(uniqueOrdersMap.values());
 
         const homeTopBar = `
             <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px;">
@@ -135,7 +117,7 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
             </div>
         `;
 
-        if (history.length === 0) {
+        if (!Array.isArray(history) || history.length === 0) {
             container.innerHTML = `
                 ${homeTopBar}
                 <div style="text-align:center; padding:45px 20px; font-family:'Poppins', sans-serif;">
