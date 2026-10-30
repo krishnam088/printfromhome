@@ -5247,3 +5247,24 @@ if (typeof window.navigateDrawerSection === 'function') {
         }
     };
 }
+// 🔥 POST-MAPS INITIALIZATION RENDER HOOK
+// Google Maps load hone ke baad container ko ensure karne ke liye
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        if (typeof window.renderOrderHistoryUI === 'function') {
+            window.renderOrderHistoryUI();
+        }
+    }, 1000);
+});
+
+// Aur jab bhi user history tab par click kare, Google Maps ke conflict ke baad render ho
+document.addEventListener('click', (e) => {
+    const target = e.target.closest('[onclick*="history"], [href*="history"], button');
+    if (target) {
+        setTimeout(() => {
+            if (typeof window.renderOrderHistoryUI === 'function') {
+                window.renderOrderHistoryUI();
+            }
+        }, 300);
+    }
+}, true);
