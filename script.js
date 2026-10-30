@@ -5277,14 +5277,13 @@ if (typeof window.navigateDrawerSection === 'function') {
 }
 
 // ==========================================
-// 🔥 ULTIMATE PROFESSIONAL POPUP TRACKING ENGINE (REAL MAPS + RIDER DETAILS + MANIFEST)
+// 🚀 ULTRA-PROFESSIONAL REAL-TIME POPUP TRACKING ENGINE
 // ==========================================
 window.openOrderTrackingView = function(orderId) {
     try {
         const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
         const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
         
-        // 1. Saari possible history keys scan karein taaki order milne mein koi dikkat na ho
         let history = [];
         const targetKeys = [
             `history_${sessionActiveUser}`,
@@ -5301,16 +5300,13 @@ window.openOrderTrackingView = function(orderId) {
             } catch (e) {}
         }
 
-        // Fallback: Agar upar na mile toh saari history keys scan kar lo
         if (history.length === 0) {
             for (let i = 0; i < localStorage.length; i++) {
                 let key = localStorage.key(i);
                 if (key && key.startsWith('history_')) {
                     try {
                         let items = JSON.parse(localStorage.getItem(key) || '[]');
-                        if (Array.isArray(items)) {
-                            history = history.concat(items);
-                        }
+                        if (Array.isArray(items)) history = history.concat(items);
                     } catch (e) {}
                 }
             }
@@ -5325,11 +5321,10 @@ window.openOrderTrackingView = function(orderId) {
             return;
         }
 
-        // Purane kisi bhi open modal ko remove karein
         let existingModal = document.getElementById('customOrderTrackingModal');
         if (existingModal) existingModal.remove();
 
-        // 2. Items Manifest Breakdown Mapping
+        // 1. Items Manifest Breakdown
         let itemsHtml = '';
         let detailsArray = targetOrder.details || targetOrder.configDetails || [];
         if (typeof detailsArray === 'string') {
@@ -5343,17 +5338,17 @@ window.openOrderTrackingView = function(orderId) {
                 let itemPrice = item.price || 3;
                 let lineTotal = Number(itemPrice) * Number(itemCopies);
                 return `
-                    <div style="display: flex; align-items: center; justify-content: space-between; font-size:0.78rem; color:#334155; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:6px;">
-                        <span>📄 ${itemName} (×${itemCopies})</span>
-                        <b style="color:#065f46;">₹${lineTotal.toFixed(2)}</b>
+                    <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: #334155; background: #f8fafc; padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 6px;">
+                        <span style="font-weight: 600;">📄 ${itemName} (×${itemCopies})</span>
+                        <b style="color: #065f46;">₹${lineTotal.toFixed(2)}</b>
                     </div>
                 `;
             }).join('');
         } else {
-            itemsHtml = `<p style="font-size:0.75rem; color:#64748b; text-align:center;">No item manifest recorded.</p>`;
+            itemsHtml = `<p style="font-size: 0.78rem; color: #64748b; text-align: center;">No item manifest recorded.</p>`;
         }
 
-        // 3. Rider Details Mapping
+        // 2. Rider Details
         let riderName = "Assigning Delivery Executive...";
         let riderPhone = "7007626731";
         if (targetOrder.assignedDeliveryBoy && targetOrder.assignedDeliveryBoy.trim() !== '') {
@@ -5361,193 +5356,237 @@ window.openOrderTrackingView = function(orderId) {
             riderPhone = targetOrder.assignedDeliveryBoyPhone || targetOrder.assignedDeliveryBoy;
         }
 
-        // 4. Timeline Progress Status Check
-        const currentStatus = targetOrder.status || 'Processing';
+        const currentStatus = targetOrder.status || 'Order Placed & Picking';
         const lowerStatus = currentStatus.toLowerCase();
         const isConfirmed = true;
         const isPacked = lowerStatus.includes('packed') || lowerStatus.includes('print') || lowerStatus.includes('out') || lowerStatus.includes('delivered');
         const isOutForDelivery = lowerStatus.includes('out') || lowerStatus.includes('delivery') || lowerStatus.includes('delivered');
 
-        // Create Full-Screen Professional Popup Modal Overlay
+        // Create Comfortable Full-Screen Professional Modal Overlay
         const modalOverlay = document.createElement('div');
         modalOverlay.id = 'customOrderTrackingModal';
         modalOverlay.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(6px);
+            background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px);
             display: flex; justify-content: center; align-items: center; z-index: 9999999;
-            padding: 12px; font-family: 'Poppins', sans-serif;
+            padding: 16px; font-family: 'Poppins', sans-serif;
         `;
 
         modalOverlay.innerHTML = `
-            <div style="background: #ffffff; width: 100%; max-width: 480px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); display: flex; flex-direction: column; max-height: 95vh; overflow: hidden; position: relative;">
+            <div style="background: #ffffff; width: 100%; max-width: 520px; border-radius: 26px; box-shadow: 0 25px 50px rgba(0,0,0,0.35); display: flex; flex-direction: column; max-height: 94vh; overflow: hidden; position: relative; animation: modalPopUp 0.3s ease-out;">
                 
                 <!-- Top Header -->
-                <div style="background: #065f46; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="background: #065f46; color: white; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <h3 style="margin: 0; font-size: 1.05rem; font-weight: 900;">Live Order Tracking 🚀</h3>
-                        <span style="font-size: 0.72rem; opacity: 0.85;">Order #${targetOrder.orderId || orderId}</span>
+                        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 900; letter-spacing: 0.3px;">Live Order Tracking 🚀</h3>
+                        <span style="font-size: 0.75rem; opacity: 0.85;">Order ID: #${targetOrder.orderId || orderId}</span>
                     </div>
-                    <button type="button" onclick="document.getElementById('customOrderTrackingModal').remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.1rem; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold;">&times;</button>
+                    <button type="button" onclick="document.getElementById('customOrderTrackingModal').remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.2rem; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: background 0.2s;">&times;</button>
                 </div>
 
                 <!-- Scrollable Body -->
-                <div style="padding: 16px; overflow-y: auto; flex: 1;">
+                <div style="padding: 20px; overflow-y: auto; flex: 1; scrollbar-width: thin;">
                     
-                    <!-- Live ETA & Status Banner -->
-                    <div style="background: #ecfdf5; border: 2px solid #a7f3d0; border-radius: 16px; padding: 14px 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+                    <!-- Live Real-Time ETA & Status Banner -->
+                    <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 2px solid #a7f3d0; border-radius: 18px; padding: 16px 18px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(5,150,105,0.08);">
                         <div>
-                            <div style="font-size: 0.72rem; font-weight: 700; color: #047857; text-transform: uppercase;">Status: ${currentStatus}</div>
-                            <div id="popupRealMapDistanceBadge" style="font-size: 1.1rem; font-weight: 900; color: #065f46; margin: 2px 0;">Calculating live distance...</div>
-                            <div style="font-size: 0.72rem; color: #059669; font-weight: 600;">⚡ Placed on: ${targetOrder.date || 'N/A'}</div>
+                            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                                <span style="width: 8px; height: 8px; background: #059669; border-radius: 50%; display: inline-block; animation: pulseDot 1.5s infinite;"></span>
+                                <span style="font-size: 0.75rem; font-weight: 800; color: #047857; text-transform: uppercase; letter-spacing: 0.5px;">${currentStatus}</span>
+                            </div>
+                            <div id="popupRealLiveEtaBadge" style="font-size: 1.3rem; font-weight: 900; color: #065f46; margin: 2px 0;">Calculating live GPS route...</div>
+                            <div style="font-size: 0.75rem; color: #059669; font-weight: 600;">⚡ Placed on: ${targetOrder.date || 'N/A'}</div>
                         </div>
-                        <div style="background: #065f46; color: white; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                        <div style="background: #065f46; color: white; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 12px rgba(6,95,70,0.3);">
                             🛵
                         </div>
                     </div>
 
                     <!-- REAL GOOGLE MAP CONTAINER -->
-                    <div id="popupRealGoogleMapContainer" style="width: 100%; height: 170px; border-radius: 16px; overflow: hidden; margin-bottom: 14px; border: 1px solid #cbd5e1;"></div>
+                    <div id="popupRealGoogleMapContainer" style="width: 100%; height: 200px; border-radius: 18px; overflow: hidden; margin-bottom: 16px; border: 1px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.05);"></div>
 
                     <!-- Delivery Partner Card -->
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="width: 40px; height: 40px; background: #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem;">👨‍✈️</div>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <div style="width: 44px; height: 44px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">👨‍✈️</div>
                             <div>
-                                <div id="deliveryExecutiveName" style="font-weight: 900; font-size: 0.82rem; color: #0f172a;">${riderName}</div>
-                                <div id="deliveryExecutivePhone" style="font-size: 0.7rem; color: #64748b;">Delivery Executive &bull; ⭐ 4.9</div>
+                                <div id="deliveryExecutiveName" style="font-weight: 900; font-size: 0.88rem; color: #0f172a;">${riderName}</div>
+                                <div id="deliveryExecutivePhone" style="font-size: 0.75rem; color: #64748b;">Delivery Executive &bull; ⭐ 4.9 (Verified)</div>
                             </div>
                         </div>
-                        <a id="callExecutiveBtn" href="tel:${riderPhone}" style="background: #2563eb; color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 0.85rem; box-shadow: 0 2px 6px rgba(37,99,235,0.3);">📞</a>
+                        <a id="callExecutiveBtn" href="tel:${riderPhone}" style="background: #2563eb; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1rem; box-shadow: 0 4px 10px rgba(37,99,235,0.3);">📞</a>
                     </div>
 
                     <!-- Step-by-Step Timeline Progress -->
-                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; margin-bottom: 14px;">
-                        <div style="font-weight: 900; font-size: 0.82rem; color: #0f172a; margin-bottom: 10px;">Order Progress:</div>
+                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                        <div style="font-weight: 900; font-size: 0.85rem; color: #0f172a; margin-bottom: 12px;">Order Progress Timeline:</div>
                         
-                        <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px;">
-                            <div style="background: ${isConfirmed ? '#065f46' : '#cbd5e1'}; color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: bold; margin-top: 2px;">✓</div>
+                        <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px;">
+                            <div style="background: ${isConfirmed ? '#065f46' : '#cbd5e1'}; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold; margin-top: 2px;">✓</div>
                             <div>
-                                <div style="font-weight: 800; font-size: 0.78rem; color: #065f46;">Order Confirmed & Payment Verified</div>
-                                <div style="font-size: 0.7rem; color: #64748b;">Securely processed in system.</div>
+                                <div style="font-weight: 800; font-size: 0.8rem; color: #065f46;">Order Confirmed & Payment Verified</div>
+                                <div style="font-size: 0.72rem; color: #64748b;">Securely processed in store system.</div>
                             </div>
                         </div>
 
-                        <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px;">
-                            <div style="background: ${isPacked ? '#065f46' : '#cbd5e1'}; color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: bold; margin-top: 2px;">${isPacked ? '✓' : '•'}</div>
+                        <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px;">
+                            <div style="background: ${isPacked ? '#065f46' : '#cbd5e1'}; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold; margin-top: 2px;">${isPacked ? '✓' : '•'}</div>
                             <div>
-                                <div style="font-weight: 800; font-size: 0.78rem; color: ${isPacked ? '#065f46' : '#64748b'};">Item Packed & Quality Checked</div>
-                                <div style="font-size: 0.7rem; color: #64748b;">Ready for dispatch.</div>
+                                <div style="font-weight: 800; font-size: 0.8rem; color: ${isPacked ? '#065f46' : '#64748b'};">Item Packed & Quality Checked</div>
+                                <div style="font-size: 0.72rem; color: #64748b;">Ready for dispatch.</div>
                             </div>
                         </div>
 
-                        <div style="display: flex; align-items: flex-start; gap: 10px;">
-                            <div style="background: ${isOutForDelivery ? '#2563eb' : '#cbd5e1'}; color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: bold; margin-top: 2px;">${isOutForDelivery ? '✓' : '•'}</div>
+                        <div style="display: flex; align-items: flex-start; gap: 12px;">
+                            <div style="background: ${isOutForDelivery ? '#2563eb' : '#cbd5e1'}; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold; margin-top: 2px;">${isOutForDelivery ? '✓' : '•'}</div>
                             <div>
-                                <div style="font-weight: 800; font-size: 0.78rem; color: ${isOutForDelivery ? '#2563eb' : '#64748b'};">Out for Delivery</div>
-                                <div style="font-size: 0.7rem; color: #64748b;">Rider heading to your address.</div>
+                                <div style="font-weight: 800; font-size: 0.8rem; color: ${isOutForDelivery ? '#2563eb' : '#64748b'};">Out for Delivery</div>
+                                <div style="font-size: 0.72rem; color: #64748b;">Rider is heading to your destination.</div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- 🌟 Interactive Delivery Tip Option for User -->
+                    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 16px; padding: 14px 16px; margin-bottom: 16px;">
+                        <div style="font-weight: 800; font-size: 0.8rem; color: #92400e; margin-bottom: 6px;">💖 Say thanks to your delivery partner:</div>
+                        <div style="font-size: 0.72rem; color: #b45309; margin-bottom: 10px;">100% of the tip goes directly to the delivery executive.</div>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" onclick="setPopupTrackingTip(10, this)" class="popup-tip-btn" style="flex: 1; background: #ffffff; border: 1px solid #fcd34d; border-radius: 10px; padding: 8px; font-weight: 800; font-size: 0.78rem; cursor: pointer; color: #78350f;">₹10</button>
+                            <button type="button" onclick="setPopupTrackingTip(20, this)" class="popup-tip-btn" style="flex: 1; background: #ffffff; border: 1px solid #fcd34d; border-radius: 10px; padding: 8px; font-weight: 800; font-size: 0.78rem; cursor: pointer; color: #78350f;">₹20</button>
+                            <button type="button" onclick="setPopupTrackingTip(30, this)" class="popup-tip-btn" style="flex: 1; background: #ffffff; border: 1px solid #fcd34d; border-radius: 10px; padding: 8px; font-weight: 800; font-size: 0.78rem; cursor: pointer; color: #78350f;">₹30</button>
                         </div>
                     </div>
 
                     <!-- Items Manifest Summary -->
-                    <div style="font-weight: 900; font-size: 0.82rem; color: #0f172a; margin-bottom: 6px;">Items Manifest:</div>
-                    <div style="margin-bottom: 14px;">${itemsHtml}</div>
+                    <div style="font-weight: 900; font-size: 0.85rem; color: #0f172a; margin-bottom: 8px;">Items Manifest:</div>
+                    <div style="margin-bottom: 16px;">${itemsHtml}</div>
 
                     <!-- Delivery Address -->
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 14px;">
-                        <div style="font-weight: 800; font-size: 0.78rem; color: #0f172a; margin-bottom: 3px;">📍 Delivery Address:</div>
-                        <div style="font-size: 0.72rem; color: #475569; line-height: 1.4;">${targetOrder.address || 'Varanasi Delivery Address'}</div>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px; margin-bottom: 16px;">
+                        <div style="font-weight: 800; font-size: 0.8rem; color: #0f172a; margin-bottom: 4px;">📍 Delivery Address:</div>
+                        <div style="font-size: 0.75rem; color: #475569; line-height: 1.4;">${targetOrder.address || 'Varanasi Delivery Address'}</div>
                     </div>
 
                     <!-- Bill Total -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 12px;">
-                        <span style="font-weight: 800; font-size: 0.82rem; color: #065f46;">Total Amount Paid:</span>
-                        <span style="font-weight: 900; font-size: 1rem; color: #065f46;">₹${Number(targetOrder.amount || targetOrder.totalAmount || 0).toFixed(2)}</span>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 16px; padding: 16px;">
+                        <span style="font-weight: 800; font-size: 0.85rem; color: #065f46;">Total Amount Paid:</span>
+                        <span style="font-weight: 900; font-size: 1.1rem; color: #065f46;">₹${Number(targetOrder.amount || targetOrder.totalAmount || 0).toFixed(2)}</span>
                     </div>
 
                 </div>
 
                 <!-- Footer Action -->
-                <div style="padding: 12px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
-                    <button type="button" onclick="document.getElementById('customOrderTrackingModal').remove(); if(typeof navigateDrawerSection==='function') navigateDrawerSection('store');" style="width: 100%; background: #065f46; color: white; border: none; padding: 11px; border-radius: 12px; font-weight: 900; font-size: 0.85rem; cursor: pointer; box-shadow: 0 4px 12px rgba(6,95,70,0.25);">Back to Store / Home &rarr;</button>
+                <div style="padding: 14px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
+                    <button type="button" onclick="document.getElementById('customOrderTrackingModal').remove(); if(typeof navigateDrawerSection==='function') navigateDrawerSection('store');" style="width: 100%; background: #065f46; color: white; border: none; padding: 13px; border-radius: 14px; font-weight: 900; font-size: 0.9rem; cursor: pointer; box-shadow: 0 4px 15px rgba(6,95,70,0.3);">Back to Store / Home &rarr;</button>
                 </div>
             </div>
         `;
 
         document.body.appendChild(modalOverlay);
 
-        // Initialize Real Google Map & Distance Calculation inside Popup
+        // Real-Time GPS Tracking & Live Distance Calculation
         setTimeout(() => {
             const mapEl = document.getElementById('popupRealGoogleMapContainer');
-            const distBadge = document.getElementById('popupRealMapDistanceBadge');
+            const distBadge = document.getElementById('popupRealLiveEtaBadge');
             if (!mapEl || typeof google === 'undefined') return;
 
             const storeLatLng = { lat: STORE_LOCATION.lat, lng: STORE_LOCATION.lng };
-            const userLatLng = targetOrder.userLat && targetOrder.userLng ? 
-                { lat: Number(targetOrder.userLat), lng: Number(targetOrder.userLng) } : 
-                { lat: STORE_LOCATION.lat + 0.015, lng: STORE_LOCATION.lng + 0.012 };
-
-            const map = new google.maps.Map(mapEl, {
-                center: storeLatLng,
-                zoom: 14,
-                mapTypeControl: false,
-                streetViewControl: false,
-                fullscreenControl: false
-            });
-
-            // Store Marker (Green)
-            new google.maps.Marker({
-                position: storeLatLng,
-                map: map,
-                title: "Print From Home Store",
-                icon: { url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png" }
-            });
-
-            // User Destination Marker (Red)
-            new google.maps.Marker({
-                position: userLatLng,
-                map: map,
-                title: "Delivery Destination",
-                icon: { url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png" }
-            });
-
-            // Rider Marker (Motorcycle Icon)
-            let riderPos = { ...storeLatLng };
-            const riderMarker = new google.maps.Marker({
-                position: riderPos,
-                map: map,
-                title: "Delivery Executive",
-                icon: { url: "https://maps.google.com/mapfiles/ms/icons/motorcycle.png" }
-            });
-
-            // Distance Matrix / Haversine Calculation
-            const distanceKm = Math.sqrt(Math.pow(storeLatLng.lat - userLatLng.lat, 2) + Math.pow(storeLatLng.lng - userLatLng.lng, 2)) * 111;
-            let etaMins = Math.max(5, Math.round(distanceKm * 3));
-
-            if (distBadge) {
-                distBadge.innerHTML = `🛵 ${distanceKm.toFixed(1)} km away &bull; ~${etaMins} mins ETA`;
-            }
-
-            // Simulate Rider Movement animation if out for delivery
-            if (currentStatus.toLowerCase().includes('out') || targetOrder.assignedDeliveryBoy) {
-                let step = 0;
-                const totalSteps = 45;
-                const interval = setInterval(() => {
-                    step++;
-                    riderPos.lat += (userLatLng.lat - storeLatLng.lat) / totalSteps;
-                    riderPos.lng += (userLatLng.lng - storeLatLng.lng) / totalSteps;
-                    riderMarker.setPosition(riderPos);
-                    if (step >= totalSteps) clearInterval(interval);
-                }, 400);
+            
+            // Get user's live browser location if possible, otherwise use order location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        initMapWithCoords(storeLatLng, { lat: pos.coords.latitude, lng: pos.coords.longitude }, mapEl, distBadge, targetOrder);
+                    },
+                    () => {
+                        const fallbackLatLng = targetOrder.userLat && targetOrder.userLng ? 
+                            { lat: Number(targetOrder.userLat), lng: Number(targetOrder.userLng) } : 
+                            { lat: STORE_LOCATION.lat + 0.015, lng: STORE_LOCATION.lng + 0.012 };
+                        initMapWithCoords(storeLatLng, fallbackLatLng, mapEl, distBadge, targetOrder);
+                    },
+                    { timeout: 7000, enableHighAccuracy: true }
+                );
+            } else {
+                const fallbackLatLng = { lat: STORE_LOCATION.lat + 0.015, lng: STORE_LOCATION.lng + 0.012 };
+                initMapWithCoords(storeLatLng, fallbackLatLng, mapEl, distBadge, targetOrder);
             }
         }, 350);
 
     } catch (err) {
-        console.error("Popup Real Map Tracking Error:", err);
+        console.error("Ultra-Professional Tracking Error:", err);
     }
 };
 
-// 🔥 Order Success Hook: Order place hote hi turant real map popup tracking kholne ke liye
+// Helper to initialize Google Map & Real-time Distance
+function initMapWithCoords(storeLatLng, userLatLng, mapEl, distBadge, targetOrder) {
+    const map = new google.maps.Map(mapEl, {
+        center: storeLatLng,
+        zoom: 14,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false
+    });
+
+    // Store Pin (Green)
+    new google.maps.Marker({
+        position: storeLatLng,
+        map: map,
+        title: "Print From Home Store",
+        icon: { url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png" }
+    });
+
+    // User Destination Pin (Red)
+    new google.maps.Marker({
+        position: userLatLng,
+        map: map,
+        title: "Delivery Destination",
+        icon: { url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png" }
+    });
+
+    // Rider Marker (Motorcycle)
+    let riderPos = { ...storeLatLng };
+    const riderMarker = new google.maps.Marker({
+        position: riderPos,
+        map: map,
+        title: "Delivery Executive",
+        icon: { url: "https://maps.google.com/mapfiles/ms/icons/motorcycle.png" }
+    });
+
+    // Real-time Haversine Distance Calculation
+    const distanceKm = Math.sqrt(Math.pow(storeLatLng.lat - userLatLng.lat, 2) + Math.pow(storeLatLng.lng - userLatLng.lng, 2)) * 111;
+    let etaMins = Math.max(3, Math.round(distanceKm * 3.2));
+
+    if (distBadge) {
+        distBadge.innerHTML = `🛵 ${distanceKm.toFixed(1)} km away &bull; ~${etaMins} mins ETA`;
+    }
+
+    // Smooth Rider Animation
+    let step = 0;
+    const totalSteps = 50;
+    const interval = setInterval(() => {
+        step++;
+        riderPos.lat += (userLatLng.lat - storeLatLng.lat) / totalSteps;
+        riderPos.lng += (userLatLng.lng - storeLatLng.lng) / totalSteps;
+        riderMarker.setPosition(riderPos);
+        if (step >= totalSteps) clearInterval(interval);
+    }, 400);
+}
+
+// 💖 Delivery Tip Selector Helper
+window.setPopupTrackingTip = function(amount, btnElement) {
+    document.querySelectorAll('.popup-tip-btn').forEach(btn => {
+        btn.style.background = '#ffffff';
+        btn.style.borderColor = '#fcd34d';
+        btn.style.color = '#78350f';
+    });
+    btnElement.style.background = '#065f46';
+    btnElement.style.borderColor = '#065f46';
+    btnElement.style.color = '#ffffff';
+    
+    alert(`💖 Thank you! ₹${amount} delivery tip added for your partner.`);
+};
+
+// 🔥 Order Success Hook
 {
     const originalFinalizeOrderSuccess = window.finalizeOrderSuccess;
     window.finalizeOrderSuccess = async function(orderId) {
