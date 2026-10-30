@@ -104,7 +104,7 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
         
         let history = [];
         
-        // 🔒 Sirf current logged-in user ki apni keys check hongi (Strict Isolation)
+        // 🔒 Sirf current logged-in user ki apni keys check hongi (Strict Isolation for multiple users)
         const targetKeys = [
             `history_${activeUser}`,
             activeIdentity ? `history_${activeIdentity}` : null
@@ -536,7 +536,25 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
 window.openOrderTrackingView = function(orderId) {
     try {
         const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
-        let history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
+        const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
+        
+        // 🔥 Saari possible keys check karein taaki kisi bhi user ko "Order details not found" na mile
+        let history = [];
+        const targetKeys = [
+            `history_${sessionActiveUser}`,
+            activeIdentity ? `history_${activeIdentity}` : null
+        ].filter(Boolean);
+
+        for (let key of targetKeys) {
+            try {
+                let items = JSON.parse(localStorage.getItem(key) || '[]');
+                if (Array.isArray(items) && items.length > 0) {
+                    history = items;
+                    break;
+                }
+            } catch (e) {}
+        }
+
         const order = history.find(o => o && String(o.orderId || o.id) === String(orderId));
         
         if (!order) {
