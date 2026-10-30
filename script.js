@@ -5128,29 +5128,3 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// 🔥 Direct Click Interceptor for History Buttons/Tabs
-document.addEventListener("click", (e) => {
-    // Check if the clicked element or its parent is a history tab/button
-    const target = e.target.closest('[onclick*="history"], [href*="history"], button, a');
-    if (target) {
-        const textContent = (target.textContent || '').toLowerCase();
-        const onclickAttr = target.getAttribute('onclick') || '';
-        const hrefAttr = target.getAttribute('href') || '';
-        
-        if (textContent.includes('history') || onclickAttr.includes('history') || hrefAttr.includes('history')) {
-            // Thoda delay taaki app ka default navigation pehle chal jaye, phir humara force-render override kare
-            setTimeout(() => {
-                if (typeof renderOrderHistoryUI === 'function') {
-                    // Saare history sections ko force show karo
-                    document.querySelectorAll('[id*="history"], .view-section').forEach(el => {
-                        if (el.id && (el.id.includes('history') || el.id.includes('section'))) {
-                            el.style.setProperty('display', 'block', 'important');
-                            el.classList.add('active');
-                        }
-                    });
-                    renderOrderHistoryUI();
-                }
-            }, 50);
-        }
-    }
-}, true);
