@@ -5277,14 +5277,14 @@ if (typeof window.navigateDrawerSection === 'function') {
 }
 
 // ==========================================
-// 🔥 COMPLETE PROFESSIONAL POPUP TRACKING ENGINE (WITH REAL MAPS & RIDER DETAILS)
+// 🔥 ULTIMATE PROFESSIONAL POPUP TRACKING ENGINE (REAL MAPS + RIDER DETAILS + MANIFEST)
 // ==========================================
 window.openOrderTrackingView = function(orderId) {
     try {
         const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
         const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
         
-        // Saari possible history keys check karein taaki order milne mein koi dikkat na ho
+        // 1. Saari possible history keys scan karein taaki order milne mein koi dikkat na ho
         let history = [];
         const targetKeys = [
             `history_${sessionActiveUser}`,
@@ -5321,59 +5321,54 @@ window.openOrderTrackingView = function(orderId) {
         if (!targetOrder) {
             console.warn("Order details not found for ID:", orderId);
             alert("⚠️ Order details not found for ID: " + orderId);
+            if (typeof navigateDrawerSection === 'function') navigateDrawerSection('history');
             return;
         }
 
-        // Purane modal ko remove karein
+        // Purane kisi bhi open modal ko remove karein
         let existingModal = document.getElementById('customOrderTrackingModal');
         if (existingModal) existingModal.remove();
 
-        // 1. Items Manifest Breakdown Mapping
+        // 2. Items Manifest Breakdown Mapping
         let itemsHtml = '';
-        let detailsList = targetOrder.details || targetOrder.configDetails || [];
-        if (typeof detailsList === 'string') {
-            try { detailsList = JSON.parse(detailsList); } catch(e) { detailsList = []; }
+        let detailsArray = targetOrder.details || targetOrder.configDetails || [];
+        if (typeof detailsArray === 'string') {
+            try { detailsArray = JSON.parse(detailsArray); } catch(e) { detailsArray = []; }
         }
 
-        if (Array.isArray(detailsList) && detailsList.length > 0) {
-            itemsHtml = detailsList.map(item => {
-                let itemName = item.fileName || item.name || 'Product';
+        if (Array.isArray(detailsArray) && detailsArray.length > 0) {
+            itemsHtml = detailsArray.map(item => {
+                let itemName = item.fileName || item.name || 'Print Item';
                 let itemCopies = item.copies || item.qty || 1;
                 let itemPrice = item.price || 3;
                 let lineTotal = Number(itemPrice) * Number(itemCopies);
                 return `
-                    <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 10px 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #e2e8f0; font-size: 0.78rem;">
-                        <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
-                            <span>📄</span>
-                            <div>
-                                <div style="font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">${itemName}</div>
-                                <div style="font-size: 0.68rem; color: #64748b;">Qty/Copies: ${itemCopies}</div>
-                            </div>
-                        </div>
-                        <div style="font-weight: 900; color: #065f46;">₹${lineTotal.toFixed(2)}</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; font-size:0.78rem; color:#334155; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:6px;">
+                        <span>📄 ${itemName} (×${itemCopies})</span>
+                        <b style="color:#065f46;">₹${lineTotal.toFixed(2)}</b>
                     </div>
                 `;
             }).join('');
         } else {
-            itemsHtml = `<p style="font-size:0.75rem; color:#64748b; text-align:center;">No items recorded.</p>`;
+            itemsHtml = `<p style="font-size:0.75rem; color:#64748b; text-align:center;">No item manifest recorded.</p>`;
         }
 
-        // 2. Rider Details Mapping
-        let riderName = "Rahul Kumar";
+        // 3. Rider Details Mapping
+        let riderName = "Assigning Delivery Executive...";
         let riderPhone = "7007626731";
         if (targetOrder.assignedDeliveryBoy && targetOrder.assignedDeliveryBoy.trim() !== '') {
             riderName = `Delivery Partner (${targetOrder.assignedDeliveryBoy})`;
             riderPhone = targetOrder.assignedDeliveryBoyPhone || targetOrder.assignedDeliveryBoy;
         }
 
-        // 3. Timeline Progress Status Check
+        // 4. Timeline Progress Status Check
         const currentStatus = targetOrder.status || 'Processing';
         const lowerStatus = currentStatus.toLowerCase();
         const isConfirmed = true;
         const isPacked = lowerStatus.includes('packed') || lowerStatus.includes('print') || lowerStatus.includes('out') || lowerStatus.includes('delivered');
         const isOutForDelivery = lowerStatus.includes('out') || lowerStatus.includes('delivery') || lowerStatus.includes('delivered');
 
-        // Create Full-Screen Professional Modal Overlay
+        // Create Full-Screen Professional Popup Modal Overlay
         const modalOverlay = document.createElement('div');
         modalOverlay.id = 'customOrderTrackingModal';
         modalOverlay.style.cssText = `
@@ -5402,7 +5397,7 @@ window.openOrderTrackingView = function(orderId) {
                     <div style="background: #ecfdf5; border: 2px solid #a7f3d0; border-radius: 16px; padding: 14px 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="font-size: 0.72rem; font-weight: 700; color: #047857; text-transform: uppercase;">Status: ${currentStatus}</div>
-                            <div id="popupRealMapDistanceBadge" style="font-size: 1.05rem; font-weight: 900; color: #065f46; margin: 2px 0;">Calculating distance...</div>
+                            <div id="popupRealMapDistanceBadge" style="font-size: 1.1rem; font-weight: 900; color: #065f46; margin: 2px 0;">Calculating live distance...</div>
                             <div style="font-size: 0.72rem; color: #059669; font-weight: 600;">⚡ Placed on: ${targetOrder.date || 'N/A'}</div>
                         </div>
                         <div style="background: #065f46; color: white; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
@@ -5418,11 +5413,11 @@ window.openOrderTrackingView = function(orderId) {
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <div style="width: 40px; height: 40px; background: #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem;">👨‍✈️</div>
                             <div>
-                                <div style="font-weight: 900; font-size: 0.82rem; color: #0f172a;">${riderName}</div>
-                                <div style="font-size: 0.7rem; color: #64748b;">Delivery Executive &bull; ⭐ 4.9 (1.2k deliveries)</div>
+                                <div id="deliveryExecutiveName" style="font-weight: 900; font-size: 0.82rem; color: #0f172a;">${riderName}</div>
+                                <div id="deliveryExecutivePhone" style="font-size: 0.7rem; color: #64748b;">Delivery Executive &bull; ⭐ 4.9</div>
                             </div>
                         </div>
-                        <a href="tel:${riderPhone}" style="background: #2563eb; color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 0.85rem; box-shadow: 0 2px 6px rgba(37,99,235,0.3);">📞</a>
+                        <a id="callExecutiveBtn" href="tel:${riderPhone}" style="background: #2563eb; color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 0.85rem; box-shadow: 0 2px 6px rgba(37,99,235,0.3);">📞</a>
                     </div>
 
                     <!-- Step-by-Step Timeline Progress -->
@@ -5461,8 +5456,7 @@ window.openOrderTrackingView = function(orderId) {
                     <!-- Delivery Address -->
                     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 14px;">
                         <div style="font-weight: 800; font-size: 0.78rem; color: #0f172a; margin-bottom: 3px;">📍 Delivery Address:</div>
-                        <div style="font-size: 0.72rem; color: #475569; line-height: 1.4;">${targetOrder.address || 'N/A'}</div>
-                        <div style="font-size: 0.7rem; color: #065f46; font-weight: 700; margin-top: 4px;">Mode: ${targetOrder.deliveryMode ? targetOrder.deliveryMode.toUpperCase() : 'DOORSTEP'}</div>
+                        <div style="font-size: 0.72rem; color: #475569; line-height: 1.4;">${targetOrder.address || 'Varanasi Delivery Address'}</div>
                     </div>
 
                     <!-- Bill Total -->
@@ -5527,35 +5521,29 @@ window.openOrderTrackingView = function(orderId) {
             });
 
             // Distance Matrix / Haversine Calculation
-            const R = 6371;
-            const dLat = (userLatLng.lat - storeLatLng.lat) * Math.PI / 180;
-            const dLng = (userLatLng.lng - storeLatLng.lng) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(storeLatLng.lat * Math.PI / 180) * Math.cos(userLatLng.lat * Math.PI / 180) *
-                      Math.sin(dLng/2) * Math.sin(dLng/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            const distanceKm = R * c;
+            const distanceKm = Math.sqrt(Math.pow(storeLatLng.lat - userLatLng.lat, 2) + Math.pow(storeLatLng.lng - userLatLng.lng, 2)) * 111;
             let etaMins = Math.max(5, Math.round(distanceKm * 3));
 
             if (distBadge) {
                 distBadge.innerHTML = `🛵 ${distanceKm.toFixed(1)} km away &bull; ~${etaMins} mins ETA`;
             }
 
-            // Simulate Rider Movement animation
-            let step = 0;
-            const totalSteps = 45;
-            const interval = setInterval(() => {
-                step++;
-                riderPos.lat += (userLatLng.lat - storeLatLng.lat) / totalSteps;
-                riderPos.lng += (userLatLng.lng - storeLatLng.lng) / totalSteps;
-                riderMarker.setPosition(riderPos);
-                if (step >= totalSteps) clearInterval(interval);
-            }, 400);
-
+            // Simulate Rider Movement animation if out for delivery
+            if (currentStatus.toLowerCase().includes('out') || targetOrder.assignedDeliveryBoy) {
+                let step = 0;
+                const totalSteps = 45;
+                const interval = setInterval(() => {
+                    step++;
+                    riderPos.lat += (userLatLng.lat - storeLatLng.lat) / totalSteps;
+                    riderPos.lng += (userLatLng.lng - storeLatLng.lng) / totalSteps;
+                    riderMarker.setPosition(riderPos);
+                    if (step >= totalSteps) clearInterval(interval);
+                }, 400);
+            }
         }, 350);
 
     } catch (err) {
-        console.error("Popup Real Map & Details Tracking Error:", err);
+        console.error("Popup Real Map Tracking Error:", err);
     }
 };
 
