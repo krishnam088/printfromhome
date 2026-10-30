@@ -48,54 +48,10 @@ const STORE_LOCATION = {
     name: "Store"
 };
 
-// 🔥 BULLETPROOF NAVIGATION ROUTER
-window.navigateDrawerSection = function(targetId) {
-    try {
-        document.querySelectorAll('.view-section').forEach(el => {
-            el.classList.remove('active');
-            el.style.setProperty('display', 'none', 'important');
-        });
-        
-        let normalizedId = targetId === 'orders' ? 'history' : targetId;
-        const targetNode = document.getElementById(`user_section_${normalizedId}`);
-        
-        if (targetNode) {
-            targetNode.classList.add('active');
-            targetNode.style.setProperty('display', 'block', 'important');
-        }
-
-        const storeSearchAndChipsBar = document.querySelector('header.brand-premium-header + div');
-        if (storeSearchAndChipsBar) {
-            if (normalizedId === 'store') {
-                storeSearchAndChipsBar.style.setProperty('display', 'block', 'important');
-            } else {
-                storeSearchAndChipsBar.style.setProperty('display', 'none', 'important');
-            }
-        }
-
-        const mainContainer = document.getElementById('mainLayoutAppContainer');
-        if (mainContainer) {
-            mainContainer.style.setProperty('display', 'flex', 'important');
-        }
-
-        if (typeof toggleUserDrawer === 'function') toggleUserDrawer(false);
-        if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
-
-        if (normalizedId === 'history' && typeof renderOrderHistoryUI === 'function') {
-            const activeUser = localStorage.getItem('printAppUser') || localStorage.getItem('printAppUserIdentity') || 'Customer';
-            renderOrderHistoryUI(activeUser);
-        }
-    } catch (err) {
-        console.error("Navigation Error:", err);
-    }
-};
-
-// 🔥 100% BULLETPROOF ORDER HISTORY RENDER ENGINE
-// 🔥 Clean & Professional Order History Render Engine (Production Ready)
-// 🔥 Professional & Commercial-Grade Order History Render Engine
+// 🔥 ULTIMATE FOOLPROOF ORDER HISTORY RENDER ENGINE
 window.renderOrderHistoryUI = function(username, showRecent = true) {
     try {
-        // 1. Saare history containers/sections ko visible karo
+        // 1. Force show container and active sections
         document.querySelectorAll('[id*="history"], .view-section').forEach(el => {
             if (el.id && (el.id.includes('history') || el.id.includes('section'))) {
                 el.style.setProperty('display', 'block', 'important');
@@ -105,10 +61,10 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
 
         const container = document.getElementById('ordersHistoryContainer') || document.querySelector('[id*="history"]');
         if (!container) return;
-        
+
         let allOrdersMap = new Map();
 
-        // 2. Saari history keys scan karo
+        // 2. Scan ALL keys starting with 'history_' across localStorage
         for (let i = 0; i < localStorage.length; i++) {
             let key = localStorage.key(i);
             if (key && key.startsWith('history_')) {
@@ -130,7 +86,7 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
 
         const homeTopBar = `
             <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px;">
-                <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0;">Your Orders</h3>
+                <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0;">Your Orders (${history.length})</h3>
                 <button type="button" onclick="navigateDrawerSection('store')" style="background: #065f46; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">🏠 Home</button>
             </div>
         `;
@@ -158,6 +114,12 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
             let safeAmount = Number(order.amount || order.totalAmount || 0).toFixed(2);
             let safeStatus = order.status || 'Processing';
             let safeDate = order.date || '';
+            
+            // Render items list safely
+            let itemsHtml = '';
+            if (Array.isArray(order.details)) {
+                itemsHtml = order.details.map(item => `<div style="font-size: 0.75rem; color: #334155; margin-top: 2px;">• ${item.name || 'Item'} (Qty: ${item.qty || 1})</div>`).join('');
+            }
 
             return `
                 <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; padding:14px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.02);">
@@ -165,6 +127,7 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
                         <span>Order #${safeId}</span>
                         <span style="color:#065f46;">₹${safeAmount}</span>
                     </div>
+                    <div style="margin: 6px 0;">${itemsHtml}</div>
                     <p style="font-size:0.75rem; color:#64748b; margin:4px 0;">Status: <b style="color:#2563eb;">${safeStatus}</b></p>
                     <p style="font-size:0.7rem; color:#94a3b8; margin-bottom:10px;">${safeDate}</p>
                     <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -177,6 +140,18 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
         console.error("Render Order History Error:", err);
     }
 };
+
+// Auto-run every time history section or drawer is accessed
+document.addEventListener("click", (e) => {
+    const target = e.target.closest('[onclick*="history"], [href*="history"], button');
+    if (target) {
+        setTimeout(() => {
+            if (typeof renderOrderHistoryUI === 'function') {
+                renderOrderHistoryUI();
+            }
+        }, 100);
+    }
+});
 
 // Run automatically on load and every 1 second to prevent blank screens
 window.addEventListener('DOMContentLoaded', () => {
