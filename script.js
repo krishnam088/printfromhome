@@ -497,8 +497,9 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
         console.error("Render Order History Error:", err);
     }
 };
+
 // ==========================================
-// 🔥 BRAND-NEW BULLETPROOF ORDER STATUS & TRACKING ENGINE
+// 🔥 PROFESSIONAL SECTION-BASED ORDER STATUS & TRACKING ENGINE
 // ==========================================
 window.openOrderTrackingView = function(orderId) {
     try {
@@ -530,7 +531,7 @@ window.openOrderTrackingView = function(orderId) {
             return;
         }
 
-        // 1. Navigate to the tracking section safely
+        // 1. Navigate to the tracking section safely (index.html section)[cite: 3]
         if (typeof navigateDrawerSection === 'function') {
             navigateDrawerSection('order_tracking');
         }
@@ -589,8 +590,13 @@ window.openOrderTrackingView = function(orderId) {
             const distanceBadge = document.getElementById('mapDistanceBadge');
             if (!mapElement || typeof google === 'undefined') return;
 
-            const storeLatLng = { lat: 25.3451, lng: 83.0012 }; // Varanasi Store
-            const userLatLng = { lat: STORE_LOCATION.lat + 0.015, lng: STORE_LOCATION.lng + 0.012 };
+            const currentStatus = order.status || 'Processing';
+            const storeLatLng = { lat: STORE_LOCATION.lat, lng: STORE_LOCATION.lng }; // Varanasi Store
+            
+            // User location coordinates (fallback to offset if not present)
+            const userLatLng = order.userLat && order.userLng ? 
+                { lat: Number(order.userLat), lng: Number(order.userLng) } : 
+                { lat: STORE_LOCATION.lat + 0.015, lng: STORE_LOCATION.lng + 0.012 };
 
             const map = new google.maps.Map(mapElement, {
                 center: storeLatLng,
@@ -616,12 +622,34 @@ window.openOrderTrackingView = function(orderId) {
                 icon: { url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png" }
             });
 
+            // Rider Marker (Bike icon)
+            let riderPos = { ...storeLatLng };
+            const riderMarker = new google.maps.Marker({
+                position: riderPos,
+                map: map,
+                title: "Delivery Executive",
+                icon: { url: "https://maps.google.com/mapfiles/ms/icons/motorcycle.png" }
+            });
+
             // Calculate Distance
             const distanceKm = Math.sqrt(Math.pow(storeLatLng.lat - userLatLng.lat, 2) + Math.pow(storeLatLng.lng - userLatLng.lng, 2)) * 111;
             if (distanceBadge) {
                 distanceBadge.textContent = `Distance: ${distanceKm.toFixed(1)} km away`;
             }
-        }, 300);
+
+            // Simulate bike movement if Out for Delivery
+            if (currentStatus.toLowerCase().includes('out') || order.assignedDeliveryBoy) {
+                let step = 0;
+                const totalSteps = 50;
+                const interval = setInterval(() => {
+                    step++;
+                    riderPos.lat += (userLatLng.lat - storeLatLng.lat) / totalSteps;
+                    riderPos.lng += (userLatLng.lng - storeLatLng.lng) / totalSteps;
+                    riderMarker.setPosition(riderPos);
+                    if (step >= totalSteps) clearInterval(interval);
+                }, 500);
+            }
+        }, 400);
 
     } catch (err) {
         console.error("Order Tracking View Error:", err);
@@ -630,75 +658,19 @@ window.openOrderTrackingView = function(orderId) {
         }
     }
 };
-// 🗺️ Initialize Google Maps (Store Pin, User Pin & Rider Movement Animation)
-    setTimeout(() => {
-        const mapElement = document.getElementById('liveTrackingGoogleMap');
-        const distanceBadge = document.getElementById('mapDistanceBadge');
-        if (!mapElement || typeof google === 'undefined') return;
 
-        // 🔥 Safe Variable Fallbacks
-        const currentStatus = (typeof window.currentActiveOrderStatus === 'string') ? window.currentActiveOrderStatus : 'Processing';
-        const hasDeliveryBoy = false; // or check your order object safely
-
-        // Store Fixed Location (Varanasi Store)
-        const storeLatLng = { lat: STORE_LOCATION.lat, lng: STORE_LOCATION.lng };
-        
-        // Default user location offset if exact coords not saved
-        const userLatLng = { lat: STORE_LOCATION.lat + 0.015, lng: STORE_LOCATION.lng + 0.012 };
-
-        const map = new google.maps.Map(mapElement, {
-            center: storeLatLng,
-            zoom: 14,
-            mapTypeControl: false,
-            streetViewControl: false,
-            fullscreenControl: false
-        });
-
-        // Store Pin Marker
-        new google.maps.Marker({
-            position: storeLatLng,
-            map: map,
-            title: "Print From Home Store",
-            icon: { url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png" }
-        });
-
-        // User Location Pin Marker
-        new google.maps.Marker({
-            position: userLatLng,
-            map: map,
-            title: "Delivery Destination",
-            icon: { url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png" }
-        });
-
-        // Rider Marker (Bike icon) - Moves when Out for Delivery
-        let riderPos = { ...storeLatLng };
-        const riderMarker = new google.maps.Marker({
-            position: riderPos,
-            map: map,
-            title: "Delivery Executive",
-            icon: { url: "https://maps.google.com/mapfiles/ms/icons/motorcycle.png" }
-        });
-
-        // Calculate Distance
-        const distanceKm = Math.sqrt(Math.pow(storeLatLng.lat - userLatLng.lat, 2) + Math.pow(storeLatLng.lng - userLatLng.lng, 2)) * 111;
-        if (distanceBadge) {
-            distanceBadge.textContent = `Distance: ${distanceKm.toFixed(1)} km`;
+// 🔥 Order place hote hi seedha tracking page par redirect karne ke liye hook
+{
+    const originalFinalizeOrderSuccess = window.finalizeOrderSuccess;
+    window.finalizeOrderSuccess = async function(orderId) {
+        if (typeof originalFinalizeOrderSuccess === 'function') {
+            await originalFinalizeOrderSuccess(orderId);
         }
-
-        // Simulate bike moving towards user if order status is Out for Delivery
-        if (currentStatus.toLowerCase().includes('out') || hasDeliveryBoy) {
-            let step = 0;
-            const totalSteps = 50;
-            const interval = setInterval(() => {
-                step++;
-                riderPos.lat += (userLatLng.lat - storeLatLng.lat) / totalSteps;
-                riderPos.lng += (userLatLng.lng - storeLatLng.lng) / totalSteps;
-                riderMarker.setPosition(riderPos);
-                if (step >= totalSteps) clearInterval(interval);
-            }, 500);
+        if (typeof window.openOrderTrackingView === 'function') {
+            window.openOrderTrackingView(orderId);
         }
-
-    }, 400);
+    };
+}
 
 // 🔥 PAST ORDER RE-ORDER / LOAD TO CART PREVIEW
     window.openPastOrderInCartPreview = function(orderId) {
