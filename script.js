@@ -5191,3 +5191,45 @@ document.addEventListener("DOMContentLoaded", () => {
         renderOrderHistoryUI();
     }
 });
+// 🔥 INSTANT ORDER PLACEMENT REDIRECT HOOK
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('button, [type="submit"], [onclick]');
+    if (!btn) return;
+    
+    const text = (btn.textContent || btn.getAttribute('onclick') || '').toLowerCase();
+    
+    // Agar user ne final order place ya pay button dabaya hai
+    if (text.includes('place order') || text.includes('confirm order') || text.includes('pay now') || text.includes('complete order')) {
+        setTimeout(() => {
+            // localStorage scan karke sabse naya order dhoondhein
+            let newestOrder = null;
+            let newestTime = 0;
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                let key = localStorage.key(i);
+                if (key && key.startsWith('history_')) {
+                    try {
+                        let items = JSON.parse(localStorage.getItem(key) || '[]');
+                        if (Array.isArray(items) && items.length > 0) {
+                            items.forEach(ord => {
+                                let ordTime = new Date(ord.date || 0).getTime();
+                                if (ordTime >= newestTime) {
+                                    newestTime = ordTime;
+                                    newestOrder = ord;
+                                }
+                            });
+                        }
+                    } catch (err) {}
+                }
+            }
+            
+            // Agar pichle 30 seconds ke andar order bana hai, toh seedha tracking kholo
+            if (newestOrder && newestOrder.orderId) {
+                let timeDiff = Date.now() - new Date(newestOrder.date || 0).getTime();
+                if (timeDiff < 30000 && typeof window.openOrderTrackingView === 'function') {
+                    window.openOrderTrackingView(newestOrder.orderId);
+                }
+            }
+        }, 500); // Thoda delay taaki order successfully save ho jaye
+    }
+}, true);
