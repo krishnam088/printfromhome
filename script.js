@@ -5170,3 +5170,37 @@ document.addEventListener("DOMContentLoaded", () => {
     const target = document.getElementById('user_section_history') || document.body;
     observer.observe(target, { childList: true, subtree: true, attributes: true });
 });
+
+// 🔥 API & FETCH INTERCEPTOR FOR ORDER HISTORY
+const originalFetch = window.fetch;
+window.fetch = async function(...args) {
+    const url = args[0] || '';
+    if (typeof url === 'string' && (url.includes('history') || url.includes('orders') || url.includes('get-orders'))) {
+        // Collect all orders from localStorage history keys
+        let allOrdersMap = new Map();
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key && key.startsWith('history_')) {
+                try {
+                    let items = JSON.parse(localStorage.getItem(key) || '[]');
+                    if (Array.isArray(items)) {
+                        items.forEach(ord => {
+                            if (ord) {
+                                let uniqueId = ord.orderId || ord.id || JSON.stringify(ord);
+                                allOrdersMap.set(uniqueId, ord);
+                            }
+                        });
+                    }
+                } catch (e) {}
+            }
+        }
+        let localHistory = Array.from(allOrdersMap.values());
+        
+        // Return a fake successful API response containing localStorage orders
+        return new Response(JSON.stringify({ success: true, orders: localHistory, data: localHistory }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+    return originalFetch.apply(this, args);
+};
