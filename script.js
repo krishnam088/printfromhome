@@ -101,13 +101,30 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
         const activeUser = username || localStorage.getItem('printAppUser') || 'Customer';
         const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
         
+        // 🔥 Wahi exact key target karo jo order save karte waqt use hoti hai
         const targetKey = activeIdentity ? `history_${activeIdentity}` : `history_${activeUser}`;
-        let history = [];
         
+        let history = [];
         try {
             history = JSON.parse(localStorage.getItem(targetKey) || '[]');
         } catch (e) {
             history = [];
+        }
+
+        // Fallback: Agar primary key empty hai, toh localStorage ki kisi bhi valid history key se utha lo
+        if (!Array.isArray(history) || history.length === 0) {
+            for (let i = 0; i < localStorage.length; i++) {
+                let k = localStorage.key(i);
+                if (k && k.startsWith('history_')) {
+                    try {
+                        let items = JSON.parse(localStorage.getItem(k) || '[]');
+                        if (Array.isArray(items) && items.length > 0) {
+                            history = items;
+                            break;
+                        }
+                    } catch(e){}
+                }
+            }
         }
 
         const homeTopBar = `
