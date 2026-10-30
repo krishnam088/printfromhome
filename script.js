@@ -95,13 +95,20 @@ window.navigateDrawerSection = function(targetId) {
 // 🔥 Professional & Commercial-Grade Order History Render Engine
 window.renderOrderHistoryUI = function(username, showRecent = true) {
     try {
-        const container = document.getElementById('ordersHistoryContainer');
+        // 1. Saare history containers/sections ko visible karo
+        document.querySelectorAll('[id*="history"], .view-section').forEach(el => {
+            if (el.id && (el.id.includes('history') || el.id.includes('section'))) {
+                el.style.setProperty('display', 'block', 'important');
+                el.classList.add('active');
+            }
+        });
+
+        const container = document.getElementById('ordersHistoryContainer') || document.querySelector('[id*="history"]');
         if (!container) return;
         
         let allOrdersMap = new Map();
 
-        // 🔥 LocalStorage ki saari keys scan karo jo 'history_' se start hoti hain
-        // Isse kabhi key mismatch ya user identity ka confusion nahi hoga!
+        // 2. Saari history keys scan karo
         for (let i = 0; i < localStorage.length; i++) {
             let key = localStorage.key(i);
             if (key && key.startsWith('history_')) {
