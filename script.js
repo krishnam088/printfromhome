@@ -5120,3 +5120,39 @@ if (typeof window.navigateDrawerSection === 'function') {
         }
     };
 }
+
+// 🔥 Ultimate Persistent Mutation Observer for Order History
+const persistentHistoryWatcher = new MutationObserver(() => {
+    const container = document.getElementById('ordersHistoryContainer');
+    if (!container) return;
+
+    // Check if localStorage has any valid history keys with items
+    let hasOrders = false;
+    for (let i = 0; i < localStorage.length; i++) {
+        let k = localStorage.key(i);
+        if (k && k.startsWith('history_')) {
+            try {
+                let items = JSON.parse(localStorage.getItem(k) || '[]');
+                if (Array.isArray(items) && items.length > 0) {
+                    hasOrders = true;
+                    break;
+                }
+            } catch (e) {}
+        }
+    }
+
+    // Agar orders hain, aur container khali ho gaya ya "No orders found" dikhane laga, toh turant override karo
+    if (hasOrders && (container.innerHTML.includes('No orders found') || container.innerHTML.trim() === '')) {
+        if (typeof renderOrderHistoryUI === 'function') {
+            renderOrderHistoryUI();
+        }
+    }
+});
+
+// Start observing the whole document body for any changes to the history container
+document.addEventListener("DOMContentLoaded", () => {
+    const observerTarget = document.body;
+    if (observerTarget) {
+        persistentHistoryWatcher.observe(observerTarget, { childList: true, subtree: true });
+    }
+});
