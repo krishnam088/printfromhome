@@ -5148,3 +5148,25 @@ document.addEventListener("DOMContentLoaded", () => {
         persistentHistoryWatcher.observe(observerTarget, { childList: true, subtree: true });
     }
 });
+
+// 🔥 MASTER OVERRIDE: Intercept and neutralize any other history render calls
+window.loadUserOrderHistory = function() { window.renderOrderHistoryUI(); };
+window.fetchUserOrders = function() { window.renderOrderHistoryUI(); };
+window.displayOrderHistory = function() { window.renderOrderHistoryUI(); };
+
+// 🔥 Instant DOM Observer to force render the moment history tab is shown
+const observer = new MutationObserver((mutations) => {
+    const container = document.getElementById('ordersHistoryContainer');
+    const historySection = document.getElementById('user_section_history');
+    
+    if (container && historySection && historySection.classList.contains('active')) {
+        if (container.innerHTML.includes('No orders found') || container.innerHTML.trim() === '') {
+            window.renderOrderHistoryUI();
+        }
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const target = document.getElementById('user_section_history') || document.body;
+    observer.observe(target, { childList: true, subtree: true, attributes: true });
+});
