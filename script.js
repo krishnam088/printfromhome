@@ -5204,3 +5204,27 @@ window.fetch = async function(...args) {
     }
     return originalFetch.apply(this, args);
 };
+
+// 🔥 ULTIMATE SAFETY OVERRIDE: Listen to any click on History tab/button and force-render merged data
+document.addEventListener('click', function(e) {
+    const target = e.target.closest('button, a, [onclick], [id*="history"], [class*="history"]');
+    if (target) {
+        const text = (target.textContent || target.getAttribute('onclick') || '').toLowerCase();
+        if (text.includes('history') || text.includes('order')) {
+            setTimeout(() => {
+                if (typeof window.renderOrderHistoryUI === 'function') {
+                    window.renderOrderHistoryUI();
+                }
+            }, 100);
+        }
+    }
+}, true);
+
+// Run immediately on script load if history container is already visible
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (typeof window.renderOrderHistoryUI === 'function') {
+            window.renderOrderHistoryUI();
+        }
+    }, 500);
+});
