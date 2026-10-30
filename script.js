@@ -5675,3 +5675,49 @@ document.addEventListener('click', function(e) {
         }, 600); // Thoda delay taaki order localStorage mein successfully save ho jaye
     }
 }, true);
+// 🔥 PAYMENT GATE & ORDER LOCK GUARD
+// Jab tak user checkout/payment page par hai, tab tak order history mein save hone se rokein
+const originalSetItem = localStorage.setItem;
+localStorage.setItem = function(key, value) {
+    if (key && key.startsWith('history_')) {
+        try {
+            // Check karein ki kya app abhi payment selection ya checkout stage par hai
+            const activeSection = document.querySelector('.view-section.active, [id*="checkout"], [id*="payment"], [id*="cart"]');
+            const isCheckoutActive = activeSection && (
+                activeSection.id.includes('checkout') || 
+                activeSection.id.includes('payment') || 
+                activeSection.id.includes('cart') ||
+                document.getElementById('paymentModal')?.style.display === 'block'
+            );
+
+            // Agar payment/checkout active hai, toh temporary save ko block karein jab tak explicit confirm na ho
+            if (isCheckoutActive && !window._isPaymentConfirmed) {
+                console.log("🔒 Order save blocked until payment confirmation.");
+                return; // Block saving to history prematurely
+            }
+        } catch (e) {}
+    }
+    originalSetItem.apply(this, arguments);
+};
+
+// Global helper to mark payment as confirmed when user completes payment
+window.confirmOrderPayment = function(orderId) {
+    window._isPaymentConfirmed = true;
+    setTimeout(() => {
+        window._isPaymentConfirmed = false; // Reset flag
+    }, 1000);
+};
+
+// Intercept payment success buttons to ensure order is marked confirmed and redirected to tracking
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('button, [type="submit"], [onclick]');
+    if (!btn) return;
+    
+    const text = (btn.textContent || btn.getAttribute('onclick') || '').toLowerCase();
+    if (text.includes('pay') || text.includes('confirm payment') || text.includes('complete order') || text.includes('place order')) {
+        window._isPaymentConfirmed = true;
+        setTimeout(() => {
+            window._isPaymentConfirmed = false;
+        }, 2000);
+    }
+}, true);
