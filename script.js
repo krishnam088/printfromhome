@@ -4512,45 +4512,99 @@ window.finalizeOrderSuccess = async function(orderId) {
 };
 
 // ==========================================
-// 🔥 LOCALSTORAGE BASED ORDER STATUS SYNC & POLLING ENGINE
+// 🔥 SERVER-SYNCED REAL-TIME ORDER STATUS & CANCELLATION POLLING ENGINE
 // ==========================================
-window.syncActiveOrderStatusFromBackend = function() {
-    const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
-    let history = [];
+window.syncActiveOrderStatusFromBackend = async function() {
     try {
-        history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
-    } catch(e) {
-        return;
-    }
+        const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+        const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
 
-    if (!Array.isArray(history) || history.length === 0) return;
+        // 1. Fetch live orders from backend server to catch admin cancellations/updates instantly
+        const res = await fetch('/api/admin/orders');
+        if (!res.ok) return;
+        const serverOrders = await res.json();
+        if (!Array.isArray(serverOrders)) return;
 
-    // Check if currently viewing tracking page
-    const activeTrackingHeader = document.getElementById('trackOrderIdHeader');
-    if (activeTrackingHeader) {
-        let currentTrackedId = activeTrackingHeader.textContent.replace('Order #', '').trim();
-        let currentOrderObj = history.find(o => String(o.orderId || o.id) === currentTrackedId);
+        // 2. Update local storage history with latest server states
+        const targetKeys = [
+            `history_${sessionActiveUser}`,
+            activeIdentity ? `history_${activeIdentity}` : null
+        ].filter(Boolean);
+
+        targetKeys.forEach(key => {
+            try {
+                let localHistory = JSON.parse(localStorage.getItem(key) || '[]');
+                if (Array.isArray(localHistory) && localHistory.length > 0) {
+                    let updated = false;
+                    localHistory.forEach(localOrd => {
+                        let matchedServerOrd = serverOrders.find(so => String(so.orderId) === String(localOrd.orderId || localOrd.id));
+                        if (matchedServerOrd && matchedServerOrd.status !== localOrd.status) {
+                            localOrd.status = matchedServerOrd.status;
+                            updated = true;
+                        }
+                    });
+                    if (updated) {
+                        localStorage.setItem(key, JSON.stringify(localHistory));
+                    }
+                }
+            } catch (e) {}
+        });
+
+        // 3. Update active tracking view or popup modal elements if open
+        const activeTrackingModal = document.getElementById('customOrderTrackingModal');
+        const orderIdHeader = document.getElementById('trackOrderIdHeader');
         
-        if (currentOrderObj) {
-            const statusBadge = document.getElementById('liveOrderStatusBadge');
-            if (statusBadge && statusBadge.textContent !== currentOrderObj.status) {
-                statusBadge.textContent = currentOrderObj.status;
-                
-                if (currentOrderObj.status.toLowerCase().includes('delivered')) {
+        let currentTrackedId = null;
+        if (orderIdHeader) {
+            currentTrackedId = orderIdHeader.textContent.replace('Order #', '').trim();
+        } else if (activeTrackingModal) {
+            const idSpan = activeTrackingModal.querySelector('span[style*="opacity: 0.85"]');
+            if (idSpan) {
+                currentTrackedId = idSpan.textContent.replace('Order ID: #', '').trim();
+            }
+        }
+
+        if (currentTrackedId) {
+            let currentOrderObj = serverOrders.find(so => String(so.orderId) === String(currentTrackedId));
+            
+            if (currentOrderObj) {
+                const statusBadge = document.getElementById('liveOrderStatusBadge');
+                const statusTextLower = (currentOrderObj.status || '').toLowerCase();
+
+                if (statusBadge && statusBadge.textContent !== currentOrderObj.status) {
+                    statusBadge.textContent = currentOrderObj.status;
+                }
+
+                // Agar admin ne order cancel kar diya hai, toh tracking modal par turant cancellation dikhayein
+                if (statusTextLower.includes('cancel')) {
+                    const mapContainer = document.getElementById('popupRealGoogleMapContainer');
+                    if (mapContainer) {
+                        mapContainer.innerHTML = `
+                            <div style="width:100%; height:100%; background:#fef2f2; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#991b1b; padding:15px; text-align:center;">
+                                <div style="font-size:2rem; margin-bottom:4px;">❌</div>
+                                <div style="font-weight:900; font-size:0.9rem;">Order Cancelled by Store</div>
+                                <div style="font-size:0.72rem; color:#7f1d1d; margin-top:2px;">This order has been cancelled by the admin.</div>
+                            </div>
+                        `;
+                    }
+                } else if (statusTextLower.includes('delivered')) {
                     const etaSubtext = document.getElementById('liveOrderEtaSubtext');
                     if (etaSubtext) etaSubtext.innerHTML = "🎉 Order Delivered Successfully! Thank you for ordering.";
                 }
             }
         }
+    } catch (e) {
+        console.warn("Background order status sync warning:", e);
     }
 };
 
-// Run local status checker every 3 seconds seamlessly
+// Run server status sync polling every 3 seconds seamlessly
 setInterval(() => {
     if (typeof window.syncActiveOrderStatusFromBackend === 'function') {
         window.syncActiveOrderStatusFromBackend();
     }
 }, 3000);
+
 // ==========================================
 // 🔥 EDIT CART PRINT JOB HANDLER
 // ==========================================
