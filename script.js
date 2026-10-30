@@ -5356,3 +5356,93 @@ setInterval(() => {
         }
     });
 }, 300);
+// 🔥 BULLETPROOF ORDER TRACKING POPUP ENGINE
+window.openOrderTrackingView = function(orderId) {
+    try {
+        // 1. Search across all localStorage history keys for this specific order ID
+        let targetOrder = null;
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key && key.startsWith('history_')) {
+                try {
+                    let items = JSON.parse(localStorage.getItem(key) || '[]');
+                    if (Array.isArray(items)) {
+                        let found = items.find(o => (o.orderId === orderId || o.id === orderId));
+                        if (found) {
+                            targetOrder = found;
+                            break;
+                        }
+                    }
+                } catch (e) {}
+            }
+        }
+
+        // Fallback agar direct object na mile
+        if (!targetOrder) {
+            alert("Order details not found for ID: " + orderId);
+            return;
+        }
+
+        // 2. Remove existing modal if any
+        let existingModal = document.getElementById('customOrderTrackingModal');
+        if (existingModal) existingModal.remove();
+
+        // 3. Build Items List HTML
+        let itemsHtml = '';
+        if (Array.isArray(targetOrder.details)) {
+            itemsHtml = targetOrder.details.map(item => `
+                <div style="display: flex; align-items: center; gap: 10px; background: #f8fafc; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
+                    ${item.imageUrl ? `<img src="${item.imageUrl}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px;" />` : ''}
+                    <div style="flex: 1;">
+                        <div style="font-weight: 800; font-size: 0.82rem; color: #0f172a;">${item.name || 'Product'}</div>
+                        <div style="font-size: 0.72rem; color: #64748b;">Qty: ${item.qty || 1} | Price: ₹${item.price || 0}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 4. Create Modal Overlay
+        const modalOverlay = document.createElement('div');
+        modalOverlay.id = 'customOrderTrackingModal';
+        modalOverlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+            display: flex; justify-content: center; align-items: center; z-index: 999999;
+            padding: 16px; font-family: 'Poppins', sans-serif;
+        `;
+
+        modalOverlay.innerHTML = `
+            <div style="background: white; width: 100%; max-width: 420px; border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; position: relative;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                    <h3 style="margin: 0; font-size: 1.05rem; font-weight: 900; color: #065f46;">📍 Track Order #${targetOrder.orderId || orderId}</h3>
+                    <button type="button" onclick="document.getElementById('customOrderTrackingModal').remove()" style="background: #f1f5f9; border: none; font-size: 1rem; font-weight: bold; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #334155;">&times;</button>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <span style="background: #eff6ff; color: #2563eb; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.75rem;">Status: ${targetOrder.status || 'Processing'}</span>
+                    <div style="font-size: 0.72rem; color: #64748b; margin-top: 6px;">Placed on: ${targetOrder.date || 'N/A'}</div>
+                </div>
+
+                <div style="font-weight: 800; font-size: 0.85rem; color: #0f172a; margin-bottom: 8px;">Ordered Items:</div>
+                <div style="margin-bottom: 14px;">${itemsHtml}</div>
+
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 800; font-size: 0.8rem; color: #0f172a; margin-bottom: 4px;">Delivery Address:</div>
+                    <div style="font-size: 0.75rem; color: #475569; line-height: 1.4;">${targetOrder.address || 'N/A'}</div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 12px; margin-bottom: 16px;">
+                    <span style="font-weight: 800; font-size: 0.85rem; color: #065f46;">Total Amount:</span>
+                    <span style="font-weight: 900; font-size: 1rem; color: #065f46;">₹${Number(targetOrder.amount || 0).toFixed(2)}</span>
+                </div>
+
+                <button type="button" onclick="document.getElementById('customOrderTrackingModal').remove()" style="width: 100%; background: #065f46; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 900; font-size: 0.85rem; cursor: pointer; box-shadow: 0 4px 12px rgba(6,95,70,0.2);">Close Tracking</button>
+            </div>
+        `;
+
+        document.body.appendChild(modalOverlay);
+    } catch (err) {
+        console.error("Tracking View Error:", err);
+        alert("Could not open tracking view.");
+    }
+};
