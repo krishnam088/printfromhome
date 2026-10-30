@@ -568,57 +568,166 @@ app.post('/api/auth/send-signup-otp', async (req, res) => {
 
 // --- 1. SIGNUP: SEND EMAIL OTP ---
 
-app.post('/api/auth/signup', async (req, res) => {
+// --- 1. SIGNUP: SEND EMAIL OTP VIA BREVO API ---
+app.post('/api/auth/send-signup-otp', async (req, res) => {
     try {
-        const { name, identity, email, password } = req.body;
-        if (!name || !identity || !email || !password) {
-            return res.status(400).json({ success: false, message: "Name, mobile number, email, and password are required." });
+        const { name, identity, email } = req.body;
+        if (!email || !name || !identity) {
+            return res.status(400).json({ success: false, message: "Name, mobile number, and email are required." });
         }
 
-        const normalizedIdentity = identity.replace(/\D/g, '').slice(-10);
+        const normalizedIdentity = identity.replace(/\D/g, '').slice(-10); 
         const normalizedEmail = email.trim().toLowerCase();
-        const existingUser = await User.findOne({
-            $or: [{ identity: normalizedIdentity }, { email: normalizedEmail }]
-        });
+        
+        const existingUser = await User.findOne({ $or: [{ identity: normalizedIdentity }, { email: normalizedEmail }] });
         if (existingUser) {
-            return res.status(409).json({ success: false, message: "An account with this mobile number or email already exists." });
+            return res.status(400).json({ success: false, message: "An account with this mobile number or email already exists." });
         }
 
         const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+        const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 mins expiry
 
-        // 🔥 Brevo HTTP API (Port 443 - Render par kabhi block nahi hoti)
         const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: {
                 'accept': 'application/json',
-                'api-key': process.env.SMTP_PASS, // Render par saved aapki Brevo key
+                'api-key': process.env.SMTP_PASS,
                 'content-type': 'application/json'
             },
             body: JSON.stringify({
                 sender: { name: "Print From Home", email: "support@printfromhomes.com" },
                 to: [{ email: normalizedEmail, name: name.trim() }],
-                subject: '🔒 Verify Your Gmail - Print From Home',
+                subject: 'Verify Your Gmail - Print From Home',
                 textContent: `Hello ${name},\n\nYour Gmail verification OTP is: ${emailOtp}\nThis OTP is valid for 5 minutes.`
             })
         });
 
-        const brevoData = await brevoRes.json();
         if (!brevoRes.ok) {
-            console.error('❌ Brevo HTTP API Error:', brevoData);
-            return res.status(500).json({ success: false, message: "Failed to send email OTP via gateway.", error: brevoData.message });
+            const errData = await brevoRes.json();
+            return res.status(500).json({ success: false, message: "Failed to send email OTP.", error: errData.message });
         }
 
         await TempSignup.findOneAndUpdate(
             { identity: normalizedIdentity },
-            { name: name.trim(), identity: normalizedIdentity, email: normalizedEmail, password, emailOtp, otpExpires },
+            { name: name.trim(), identity: normalizedIdentity, email: normalizedEmail, emailOtp, otpExpires },
             { upsert: true, new: true }
         );
 
-        res.json({ success: true, message: "Verification OTP sent successfully to your Gmail!" });
+        res.json({ success: true, message: "Verification OTP sent successfully to your Gmail." });
     } catch (err) {
-        console.error("❌ Signup Route Error:", err);
         res.status(500).json({ success: false, message: "Failed to send email OTP: " + err.message });
+    }
+});
+
+// --- 2. SIGNUP: VERIFY OTP & CREATE USER ---
+app.post('/api/auth/verify-signup-otp', async (req, res) => {
+    try {
+        const { name, identity, email, otpInput } = req.body;
+        const normalizedIdentity = identity.replace(/\D/g, '').slice(-10);
+
+        const tempData = await TempSignup.findOne({ identity: normalizedIdentity });
+        if (!tempData) {
+            return res.status(400).json({ success: false, message: "Session expired. Please request a new OTP." });
+        }
+
+        if (new Date() > new Date(tempData.otpExpires)) {
+            return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
+        }
+
+        if (String(tempData.emailOtp).trim() !== String(otpInput).trim()) {
+            return res.status(400).json({ success: false, message: "Invalid verification code entered." });
+        }
+
+        const newUser = new User({
+            name: name || tempData.name,
+            identity: normalizedIdentity,
+            email: email.trim().toLowerCase(),
+            isEmailVerified: true,
+            dateCreated: new Date().toLocaleString()
+        });
+        
+        await newUser.save();
+        await TempSignup.deleteOne({ identity: normalizedIdentity });
+
+        res.status(201).json({ 
+            success: true, 
+            message: "Account created successfully!", 
+            userId: newUser.identity, 
+            name: newUser.name, 
+            email: newUser.email 
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Verification failed: " + err.message });
+    }
+});
+
+// --- 3. SEND LOGIN OTP VIA GMAIL (Sirf Email se) ---
+app.post('/api/auth/send-login-otp', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ success: false, message: "Gmail address is required." });
+        }
+
+        const normalizedEmail = email.trim().toLowerCase();
+        const user = await User.findOne({ email: normalizedEmail });
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: "This Gmail is not registered. Please create an account first." });
+        }
+
+        const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.emailOtp = emailOtp;
+        user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+        await user.save();
+
+        await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': process.env.SMTP_PASS,
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                sender: { name: "Print From Home", email: "support@printfromhomes.com" },
+                to: [{ email: user.email, name: user.name }],
+                subject: 'Your Login OTP - Print From Home',
+                textContent: `Your login OTP is: ${emailOtp}\nValid for 5 minutes.`
+            })
+        });
+
+        res.json({ success: true, message: "Login OTP sent to your registered Gmail address." });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// --- 4. VERIFY LOGIN OTP ---
+app.post('/api/auth/verify-login-otp', async (req, res) => {
+    try {
+        const { email, otpInput } = req.body;
+        const normalizedEmail = email.trim().toLowerCase();
+
+        const user = await User.findOne({ email: normalizedEmail });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        if (new Date() > new Date(user.otpExpires)) {
+            return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
+        }
+
+        if (String(user.emailOtp).trim() !== String(otpInput).trim()) {
+            return res.status(400).json({ success: false, message: "Invalid verification code entered." });
+        }
+
+        user.emailOtp = undefined;
+        user.otpExpires = undefined;
+        await user.save();
+
+        res.json({ success: true, name: user.name, identity: user.identity, email: user.email });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
@@ -777,25 +886,18 @@ app.post('/api/auth/change-email/verify-new-and-update', async (req, res) => {
 
 app.post('/api/auth/update-profile', async (req, res) => {
     try {
-        const { identity, name, currentPassword, newPassword } = req.body;
+        const { identity, name } = req.body;
         if (!identity) return res.status(400).json({ success: false, message: "Identity is required!" });
 
         const normalizedIdentity = identity.replace(/\D/g, '').slice(-10);
         const user = await User.findOne({ identity: normalizedIdentity });
-        
+
         if (!user) return res.status(404).json({ success: false, message: "User not found!" });
 
         if (name) user.name = name.trim();
 
-        if (newPassword) {
-            if (!currentPassword || user.password !== currentPassword) {
-                return res.status(401).json({ success: false, message: "Incorrect current password!" });
-            }
-            user.password = newPassword;
-        }
-
         await user.save();
-        res.json({ success: true, message: "Profile updated successfully in database!" });
+        res.json({ success: true, message: "Profile updated successfully!" });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

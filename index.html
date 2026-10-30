@@ -825,14 +825,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <label style="font-size: 0.75rem; font-weight: 800; color: #475569; display: block; margin-bottom: 4px;">Full Name</label>
                     <input type="text" id="modalEditNameInput" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none;" required>
                 </div>
-                <div style="margin-bottom: 12px;">
+                <div style="margin-bottom: 16px;">
                     <label style="font-size: 0.75rem; font-weight: 800; color: #475569; display: block; margin-bottom: 4px;">Notification Gmail Address</label>
                     <input type="email" id="modalEditEmailInput" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none;" placeholder="name@gmail.com" required>
                 </div>
-                <div style="margin-bottom: 16px;">
-                    <label style="font-size: 0.75rem; font-weight: 800; color: #475569; display: block; margin-bottom: 4px;">New Password (Optional)</label>
-                    <input type="password" id="modalEditPasswordInput" placeholder="Leave blank to keep current" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; outline: none;">
-                </div>
+                <!-- ❌ Password input field yahan se poori tarah hata di gayi hai -->
                 <button type="submit" style="background: #065f46; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 800; width: 100%; cursor: pointer;">Save Profile Changes</button>
             </form>
         </div>
@@ -898,13 +895,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <input type="text" id="authName" placeholder="Enter your full name">
             </div>
 
-            <!-- Mobile Number -->
-            <div class="form-group">
+            <!-- Mobile Number (Sirf Signup ke waqt dikhega) -->
+            <div class="form-group signup-only hidden">
                 <label>Mobile Number</label>
-                <input type="text" id="authIdentity" placeholder="Enter 10-digit mobile number" maxlength="10" required>
+                <input type="text" id="authIdentity" placeholder="Enter 10-digit mobile number" maxlength="10">
             </div>
             
-            <!-- Gmail Address + Send OTP Button (Login ya Signup dono ke liye ya signup-only rakh sakte hain) -->
+            <!-- Gmail Address (Login & Signup dono ke liye) -->
             <div class="form-group" id="gmailGroup">
                 <label>Gmail Address</label>
                 <div style="display:flex; gap:8px;">
@@ -913,11 +910,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
 
-            <!-- 🔥 OTP Verification Step (Initially Hidden) -->
+            <!-- 🔥 OTP Verification Step -->
             <div class="form-group signup-otp-box hidden">
                 <label>Enter 6-Digit Gmail OTP</label>
                 <input type="text" id="authEmailOtpInput" placeholder="Enter 6-digit OTP received on email" maxlength="6">
             </div>
+
+            <button type="submit" id="authBtn" class="btn-auth-submit">Log In</button>
+        </form>
+        <p class="auth-toggle-text"><span id="toggleMsg">New to Print From Home?</span> <a href="#" id="toggleAuthLink">Create Account</a></p>
+    </div>
+</div>
 
             <!-- ❌ Password field yahan se poori tarah hata di gayi hai -->
 
