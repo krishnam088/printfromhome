@@ -4771,7 +4771,7 @@ window.handleSendSignupOtp = async function() {
         const data = await response.json();
 
         if (data.success) {
-            alert("✅ Verification OTP aapke Gmail par bhej diya gaya hai!");
+            alert("✅ Verification OTP has been sent to your Gmail address!");
             window.isOtpStepActive = true;
             
             const otpBox = document.querySelector('.signup-otp-box');
