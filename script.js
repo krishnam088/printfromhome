@@ -5050,3 +5050,9 @@ window.showAppConfirm = function(title, description, onConfirm, icon = "⚠️")
         modal.style.display = 'none';
     };
 };
+// 🔥 Automatic trigger on page load & history navigation
+document.addEventListener("DOMContentLoaded", () => {
+    if (typeof renderOrderHistoryUI === 'function') {
+        renderOrderHistoryUI();
+    }
+});
