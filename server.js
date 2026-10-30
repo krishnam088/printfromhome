@@ -511,9 +511,9 @@ cron.schedule('*/30 * * * *', () => {
 // --- SIGNUP: SEND EMAIL OTP VIA BREVO HTTP API ---
 app.post('/api/auth/send-signup-otp', async (req, res) => {
     try {
-        const { name, identity, email, password } = req.body;
-        if (!email || !name || !identity || !password) {
-            return res.status(400).json({ success: false, message: "Name, mobile number, email, and password are required." });
+        const { name, identity, email } = req.body;
+        if (!email || !name || !identity) {
+            return res.status(400).json({ success: false, message: "Name, mobile number, and email are required." });
         }
 
         const normalizedIdentity = identity.replace(/\D/g, '').slice(-10); 
@@ -527,45 +527,37 @@ app.post('/api/auth/send-signup-otp', async (req, res) => {
         const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
         const otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 mins expiry
 
-        console.log("📨 Attempting to send OTP via Brevo HTTP API to:", normalizedEmail);
-
-        // 🔥 Brevo HTTP API Call
         const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: {
                 'accept': 'application/json',
-                'api-key': process.env.SMTP_PASS, // Render par saved aapki Brevo key
+                'api-key': process.env.SMTP_PASS,
                 'content-type': 'application/json'
             },
             body: JSON.stringify({
                 sender: { name: "Print From Home", email: "support@printfromhomes.com" },
                 to: [{ email: normalizedEmail, name: name.trim() }],
-                subject: '🔒 Verify Your Gmail - Print From Home',
+                subject: 'Verify Your Gmail - Print From Home',
                 textContent: `Hello ${name},\n\nYour Gmail verification OTP is: ${emailOtp}\nThis OTP is valid for 5 minutes.`
             })
         });
 
-        const brevoData = await brevoRes.json();
         if (!brevoRes.ok) {
-            console.error('❌ Brevo HTTP API Failed Response:', brevoData);
-            return res.status(500).json({ success: false, message: "Failed to send email OTP via gateway.", error: brevoData.message || JSON.stringify(brevoData) });
+            const errData = await brevoRes.json();
+            return res.status(500).json({ success: false, message: "Failed to send email OTP.", error: errData.message });
         }
-
-        console.log('✅ Brevo HTTP API Success for:', normalizedEmail);
 
         await TempSignup.findOneAndUpdate(
             { identity: normalizedIdentity },
-            { name: name.trim(), identity: normalizedIdentity, email: normalizedEmail, password, emailOtp, otpExpires },
+            { name: name.trim(), identity: normalizedIdentity, email: normalizedEmail, emailOtp, otpExpires },
             { upsert: true, new: true }
         );
 
-        res.json({ success: true, message: "Verification OTP sent successfully to your Gmail!" });
+        res.json({ success: true, message: "Verification OTP sent successfully to your Gmail." });
     } catch (err) {
-        console.error("❌ Send Signup OTP Exception:", err);
         res.status(500).json({ success: false, message: "Failed to send email OTP: " + err.message });
     }
 });
-
 // --- 1. SIGNUP: SEND EMAIL OTP ---
 
 // --- 1. SIGNUP: SEND EMAIL OTP VIA BREVO API ---

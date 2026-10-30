@@ -4220,122 +4220,54 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    window.handleSendSignupOtp = async function() {
-        const emailInput = document.getElementById('authEmailInput');
-        const email = emailInput ? emailInput.value.trim() : '';
+   window.handleSendSignupOtp = async function() {
+    const emailInput = document.getElementById('authEmailInput');
+    const email = emailInput ? emailInput.value.trim() : '';
 
-        if (!email || !email.includes('@gmail.com')) {
-            alert("Please enter a valid Gmail address.");
+    if (!email || !email.includes('@gmail.com')) {
+        alert("Please enter a valid Gmail address.");
+        return;
+    }
+
+    let requestBody = { email: email };
+
+    if (window.isSignupActive) {
+        const nameInput = document.getElementById('authName');
+        const identityInput = document.getElementById('authIdentity');
+        const name = nameInput ? nameInput.value.trim() : '';
+        const identity = identityInput ? identityInput.value.trim() : '';
+
+        if (!name || !identity || identity.length !== 10) {
+            alert("Please fill in your full name and a valid 10-digit mobile number.");
             return;
         }
-
-        if (window.isSignupActive) {
-            const nameInput = document.getElementById('authName');
-            const identityInput = document.getElementById('authIdentity');
-            const name = nameInput ? nameInput.value.trim() : '';
-            const identity = identityInput ? identityInput.value.trim() : '';
-
-            if (!name || !identity || identity.length !== 10) {
-                alert("Please fill in your full name and a valid 10-digit mobile number.");
-                return;
-            }
-        }
-
-        try {
-            const endpoint = window.isSignupActive ? '/api/auth/send-signup-otp' : '/api/auth/send-login-otp';
-            const bodyData = window.isSignupActive ? {
-                name: document.getElementById('authName').value.trim(),
-                identity: document.getElementById('authIdentity').value.trim(),
-                email: email
-            } : { email: email };
-
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(bodyData)
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                alert("Verification OTP has been sent to your Gmail address.");
-                const otpBox = document.querySelector('.signup-otp-box');
-                if (otpBox) otpBox.classList.remove('hidden');
-            } else {
-                alert(`Error: ${data.message || 'Failed to send OTP.'}`);
-            }
-        } catch (err) {
-            console.error("OTP Send Error:", err);
-            alert("Server connection error while sending OTP.");
-        }
-    };
-
-    if (authForm) {
-        authForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const emailInput = document.getElementById('authEmailInput');
-            const otpInputNode = document.getElementById('authEmailOtpInput');
-            
-            const email = emailInput ? emailInput.value.trim() : '';
-            const otp = otpInputNode ? otpInputNode.value.trim() : '';
-
-            if (!email) {
-                alert("Please enter your Gmail address.");
-                return;
-            }
-
-            if (!otp || otp.length !== 6) {
-                alert("Please enter the valid 6-digit OTP received on your Gmail.");
-                return;
-            }
-
-            try {
-                if (window.isSignupActive) {
-                    const name = document.getElementById('authName').value.trim();
-                    const identity = document.getElementById('authIdentity').value.trim();
-
-                    const response = await fetch('/api/auth/verify-signup-otp', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, identity, email, otpInput: otp })
-                    });
-                    const data = await response.json();
-
-                    if (data.success) {
-                        alert("Welcome to Print From Home! Account created successfully.");
-                        localStorage.setItem('printAppUser', data.name || name);
-                        localStorage.setItem('printAppUserIdentity', data.userId || identity);
-                        localStorage.setItem('printAppUserEmail', email);
-                        location.reload();
-                    } else {
-                        alert(`Error: ${data.message || 'Invalid verification code.'}`);
-                    }
-                } else {
-                    const response = await fetch('/api/auth/verify-login-otp', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, otpInput: otp })
-                    });
-                    const data = await response.json();
-
-                    if (data.success) {
-                        localStorage.setItem('printAppUser', data.name);
-                        localStorage.setItem('printAppUserIdentity', data.identity || '');
-                        localStorage.setItem('printAppUserEmail', data.email);
-
-                        alert(`Welcome back, ${data.name}! Login Successful.`);
-                        location.reload();
-                    } else {
-                        alert(`Error: ${data.message || 'Invalid verification code or unregistered Gmail.'}`);
-                    }
-                }
-            } catch (err) {
-                console.error("Auth Verification Error:", err);
-                alert("Server connection error during verification.");
-            }
-        });
+        requestBody.name = name;
+        requestBody.identity = identity;
     }
+
+    try {
+        const endpoint = window.isSignupActive ? '/api/auth/send-signup-otp' : '/api/auth/send-login-otp';
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            alert("Verification OTP has been sent to your Gmail address.");
+            const otpBox = document.querySelector('.signup-otp-box');
+            if (otpBox) otpBox.classList.remove('hidden');
+        } else {
+            alert(`Error: ${data.message || 'Failed to send OTP.'}`);
+        }
+    } catch (err) {
+        console.error("OTP Send Error:", err);
+        alert("Server connection error while sending OTP.");
+    }
+};
 });
+
 // 🔥 Safe Fix for Missing Function Crash
 if (typeof window.forceFixWhiteScreen !== 'function') {
     window.forceFixWhiteScreen = function() {
