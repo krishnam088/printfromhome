@@ -98,34 +98,28 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
         const container = document.getElementById('ordersHistoryContainer');
         if (!container) return;
         
-        const activeUser = username || localStorage.getItem('printAppUser') || 'Customer';
-        const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
-        
-        // 🔥 Wahi exact key target karo jo order save karte waqt use hoti hai
-        const targetKey = activeIdentity ? `history_${activeIdentity}` : `history_${activeUser}`;
-        
-        let history = [];
-        try {
-            history = JSON.parse(localStorage.getItem(targetKey) || '[]');
-        } catch (e) {
-            history = [];
-        }
+        let allOrdersMap = new Map();
 
-        // Fallback: Agar primary key empty hai, toh localStorage ki kisi bhi valid history key se utha lo
-        if (!Array.isArray(history) || history.length === 0) {
-            for (let i = 0; i < localStorage.length; i++) {
-                let k = localStorage.key(i);
-                if (k && k.startsWith('history_')) {
-                    try {
-                        let items = JSON.parse(localStorage.getItem(k) || '[]');
-                        if (Array.isArray(items) && items.length > 0) {
-                            history = items;
-                            break;
-                        }
-                    } catch(e){}
-                }
+        // 🔥 LocalStorage ki saari keys scan karo jo 'history_' se start hoti hain
+        // Isse kabhi key mismatch ya user identity ka confusion nahi hoga!
+        for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            if (key && key.startsWith('history_')) {
+                try {
+                    let items = JSON.parse(localStorage.getItem(key) || '[]');
+                    if (Array.isArray(items)) {
+                        items.forEach(ord => {
+                            if (ord) {
+                                let uniqueId = ord.orderId || ord.id || JSON.stringify(ord);
+                                allOrdersMap.set(uniqueId, ord);
+                            }
+                        });
+                    }
+                } catch (e) {}
             }
         }
+
+        let history = Array.from(allOrdersMap.values());
 
         const homeTopBar = `
             <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px;">
@@ -134,7 +128,7 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
             </div>
         `;
 
-        if (!Array.isArray(history) || history.length === 0) {
+        if (history.length === 0) {
             container.innerHTML = `
                 ${homeTopBar}
                 <div style="text-align:center; padding:45px 20px; font-family:'Poppins', sans-serif;">
