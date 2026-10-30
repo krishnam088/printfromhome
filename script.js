@@ -4733,47 +4733,74 @@ document.addEventListener('click', function(e) {
         }
     }
 });
+
 window.isOtpStepActive = false;
 
 window.handleSendSignupOtp = async function() {
-    const name = document.getElementById('authName').value.trim();
-    const identity = document.getElementById('authIdentity').value.trim();
-    const email = document.getElementById('authEmailInput').value.trim();
-    const password = document.getElementById('authPassword').value.trim();
+    const emailInput = document.getElementById('authEmailInput');
+    const email = emailInput ? emailInput.value.trim() : '';
 
-    if (!name || !identity || !email || !password) {
-        alert("⚠️ Kripya saari details (Name, Mobile, Gmail, Password) bharein!");
+    if (!email || !email.includes('@gmail.com')) {
+        alert("Please enter a valid Gmail address.");
         return;
     }
 
+    let requestBody = { email: email };
+
+    if (window.isSignupActive) {
+        const nameInput = document.getElementById('authName');
+        const identityInput = document.getElementById('authIdentity');
+        const name = nameInput ? nameInput.value.trim() : '';
+        const identity = identityInput ? identityInput.value.trim() : '';
+
+        if (!name || !identity || identity.length !== 10) {
+            alert("⚠️ Please fill in your full name and a valid 10-digit mobile number.");
+            return;
+        }
+        requestBody.name = name;
+        requestBody.identity = identity;
+    }
+
     try {
-        const res = await fetch('/api/auth/send-signup-otp', {
+        const endpoint = window.isSignupActive ? '/api/auth/send-signup-otp' : '/api/auth/send-login-otp';
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, identity, email, password })
+            body: JSON.stringify(requestBody)
         });
-        const data = await res.json();
+        const data = await response.json();
 
         if (data.success) {
             alert("✅ Verification OTP aapke Gmail par bhej diya gaya hai!");
             window.isOtpStepActive = true;
-            document.querySelector('.signup-otp-box').classList.remove('hidden');
-            document.getElementById('sendSignupOtpBtn').style.display = 'none';
-            document.getElementById('authEmailInput').setAttribute('readonly', true);
+            
+            const otpBox = document.querySelector('.signup-otp-box');
+            if (otpBox) otpBox.classList.remove('hidden');
+            
+            const sendOtpBtn = document.getElementById('sendSignupOtpBtn');
+            if (sendOtpBtn) sendOtpBtn.style.display = 'none';
+            
+            if (emailInput) emailInput.setAttribute('readonly', true);
+            
             const authBtn = document.getElementById('authBtn');
-            if (authBtn) authBtn.textContent = "Verify & Complete Signup";
+            if (authBtn) authBtn.textContent = window.isSignupActive ? "Verify & Complete Signup" : "Verify & Log In";
+            
+            const otpInputNode = document.getElementById('authEmailOtpInput');
+            if (otpInputNode) otpInputNode.value = '';
         } else {
             alert(`❌ ${data.message || 'OTP bhejne mein asafalta rahi.'}`);
         }
     } catch (e) {
+        console.error("OTP Error:", e);
         alert("❌ Server connection error.");
     }
 };
+
 // 🔥 COMPLETE AUTH FORM SUBMIT HANDLER (MANDATORY FOR SAVING USER TO MONGODB)
 document.addEventListener('DOMContentLoaded', () => {
     const authForm = document.getElementById('authForm');
     
- if (authForm) {
+    if (authForm) {
         authForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -4817,7 +4844,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (data.success) {
                         alert("🎉 Gmail verified and account successfully created! Please log in.");
-                        location.reload(); // Refresh to switch to login view
+                        location.reload(); 
                     } else {
                         alert(`❌ ${data.message || 'Verification failed'}`);
                     }
@@ -4849,6 +4876,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
 // 🔥 Bulletproof Wallet Click & Tap Handler
 document.addEventListener('click', function(e) {
     // Check if click/tap is on wallet balance or any wallet micro badge
