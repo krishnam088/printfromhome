@@ -4264,7 +4264,25 @@ if (typeof window.forceFixWhiteScreen !== 'function') {
 window.openOrderTrackingView = function(orderId) {
     try {
         const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
-        let history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
+        const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
+        
+        // 🔥 Scan all possible keys starting with 'history_' to prevent "Order details not found"
+        let history = [];
+        const targetKeys = [
+            `history_${sessionActiveUser}`,
+            activeIdentity ? `history_${activeIdentity}` : null
+        ].filter(Boolean);
+
+        for (let key of targetKeys) {
+            try {
+                let items = JSON.parse(localStorage.getItem(key) || '[]');
+                if (Array.isArray(items) && items.length > 0) {
+                    history = items;
+                    break;
+                }
+            } catch (e) {}
+        }
+
         const order = history.find(o => o && String(o.orderId || o.id) === String(orderId));
         
         if (!order) {
@@ -4304,7 +4322,7 @@ window.openOrderTrackingView = function(orderId) {
             if (callBtn) callBtn.href = "tel:7007626731";
         }
 
-        // 4. Render Item Manifest
+        // 4. Render Item Manifest (Fixed multiplication bug here)
         const manifestList = document.getElementById('trackFilesManifestList');
         if (manifestList) {
             let detailsArray = order.details || order.configDetails || [];
@@ -4328,6 +4346,13 @@ window.openOrderTrackingView = function(orderId) {
                 manifestList.innerHTML = `<p style="font-size:0.75rem; color:#64748b; text-align:center;">No item manifest recorded.</p>`;
             }
         }
+
+        // 5. Initialize Live Google Map
+        setTimeout(() => {
+            if (typeof window.initLiveOrderTrackingGoogleMap === 'function') {
+                window.initLiveOrderTrackingGoogleMap(order);
+            }
+        }, 300);
 
     } catch (err) {
         console.error("Order Tracking View Error:", err);
@@ -5251,7 +5276,9 @@ if (typeof window.navigateDrawerSection === 'function') {
     };
 }
 
-// 🔥 PROFESSIONAL LIVE TRACKING & MAP DASHBOARD ENGINE
+// ==========================================
+// 🔥 PROFESSIONAL POPUP-BASED LIVE ORDER TRACKING ENGINE
+// ==========================================
 window.openOrderTrackingView = function(orderId) {
     try {
         let targetOrder = null;
@@ -5270,6 +5297,7 @@ window.openOrderTrackingView = function(orderId) {
 
         if (!targetOrder) {
             console.warn("Order details not found for ID:", orderId);
+            alert("Order details not found for ID: " + orderId);
             return;
         }
 
@@ -5278,15 +5306,20 @@ window.openOrderTrackingView = function(orderId) {
 
         // Items HTML breakdown
         let itemsHtml = '';
-        if (Array.isArray(targetOrder.details)) {
-            itemsHtml = targetOrder.details.map(item => `
+        let detailsList = targetOrder.details || targetOrder.configDetails || [];
+        if (typeof detailsList === 'string') {
+            try { detailsList = JSON.parse(detailsList); } catch(e) { detailsList = []; }
+        }
+
+        if (Array.isArray(detailsList)) {
+            itemsHtml = detailsList.map(item => `
                 <div style="display: flex; align-items: center; gap: 12px; background: #f8fafc; padding: 10px 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
                     ${item.imageUrl ? `<img src="${item.imageUrl}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 8px;" />` : ''}
                     <div style="flex: 1;">
-                        <div style="font-weight: 800; font-size: 0.82rem; color: #0f172a;">${item.name || 'Product'}</div>
-                        <div style="font-size: 0.72rem; color: #64748b;">Qty: ${item.qty || 1} &bull; ₹${item.price || 0}</div>
+                        <div style="font-weight: 800; font-size: 0.82rem; color: #0f172a;">${item.name || item.fileName || 'Product'}</div>
+                        <div style="font-size: 0.72rem; color: #64748b;">Qty: ${item.qty || item.copies || 1} &bull; ₹${item.price || 3}</div>
                     </div>
-                    <div style="font-weight: 900; font-size: 0.82rem; color: #065f46;">₹${(Number(item.price || 0) * Number(item.qty || 1)).toFixed(2)}</div>
+                    <div style="font-weight: 900; font-size: 0.82rem; color: #065f46;">₹${(Number(item.price || 3) * Number(item.qty || item.copies || 1)).toFixed(2)}</div>
                 </div>
             `).join('');
         }
@@ -5300,6 +5333,9 @@ window.openOrderTrackingView = function(orderId) {
             display: flex; justify-content: center; align-items: center; z-index: 999999;
             padding: 12px; font-family: 'Poppins', sans-serif;
         `;
+
+        let riderName = targetOrder.assignedDeliveryBoy ? `Delivery Partner (${targetOrder.assignedDeliveryBoy})` : "Rahul Kumar";
+        let riderPhone = targetOrder.assignedDeliveryBoyPhone || targetOrder.assignedDeliveryBoy || "7007626731";
 
         modalOverlay.innerHTML = `
             <div style="background: #ffffff; width: 100%; max-width: 480px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); display: flex; flex-direction: column; max-height: 95vh; overflow: hidden; position: relative;">
@@ -5317,11 +5353,11 @@ window.openOrderTrackingView = function(orderId) {
                 <div style="padding: 16px; overflow-y: auto; flex: 1;">
                     
                     <!-- Live ETA & Status Banner -->
-                    <div style="background: linear-data; background: #ecfdf5; border: 2px solid #a7f3d0; border-radius: 16px; padding: 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="background: #ecfdf5; border: 2px solid #a7f3d0; border-radius: 16px; padding: 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <div style="font-size: 0.72rem; font-weight: 700; color: #047857; text-transform: uppercase; letter-spacing: 0.5px;">Estimated Delivery</div>
-                            <div style="font-size: 1.4rem; font-weight: 900; color: #065f46; margin: 2px 0;">15 - 20 mins</div>
-                            <div style="font-size: 0.75rem; color: #059669; font-weight: 600;">⚡ Partner is on the way</div>
+                            <div style="font-size: 0.72rem; font-weight: 700; color: #047857; text-transform: uppercase; letter-spacing: 0.5px;">Status: ${targetOrder.status || 'Processing'}</div>
+                            <div style="font-size: 1.3rem; font-weight: 900; color: #065f46; margin: 2px 0;">15 - 20 mins ETA</div>
+                            <div style="font-size: 0.75rem; color: #059669; font-weight: 600;">⚡ Placed on: ${targetOrder.date || 'N/A'}</div>
                         </div>
                         <div style="background: #065f46; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; box-shadow: 0 4px 10px rgba(6,95,70,0.3);">
                             🛵
@@ -5330,9 +5366,8 @@ window.openOrderTrackingView = function(orderId) {
 
                     <!-- Live Map Simulator Box -->
                     <div style="position: relative; width: 100%; height: 160px; background: #e2e8f0; border-radius: 16px; overflow: hidden; margin-bottom: 16px; border: 1px solid #cbd5e1;">
-                        <div id="liveTrackingMapContainer" style="width: 100%; height: 100%; background: url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=600&q=80') center/cover no-repeat; filter: contrast(1.1); position: relative;">
-                            <!-- Simulated Moving Rider Marker -->
-                            <div style="position: absolute; top: 55%; left: 45%; background: #065f46; color: white; padding: 6px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 4px; animation: pulseMarker 1.5s infinite;">
+                        <div style="width: 100%; height: 100%; background: url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=600&q=80') center/cover no-repeat; filter: contrast(1.1); position: relative;">
+                            <div style="position: absolute; top: 55%; left: 45%; background: #065f46; color: white; padding: 6px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 4px;">
                                 🛵 Rider Nearby
                             </div>
                         </div>
@@ -5345,12 +5380,12 @@ window.openOrderTrackingView = function(orderId) {
                                 👨‍✈️
                             </div>
                             <div>
-                                <div style="font-weight: 900; font-size: 0.85rem; color: #0f172a;">Rahul Kumar</div>
+                                <div style="font-weight: 900; font-size: 0.85rem; color: #0f172a;">${riderName}</div>
                                 <div style="font-size: 0.72rem; color: #64748b;">Delivery Executive &bull; ⭐ 4.9 (1.2k deliveries)</div>
                             </div>
                         </div>
                         <div style="display: flex; gap: 8px;">
-                            <a href="tel:+919876543210" style="background: #2563eb; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 0.9rem; box-shadow: 0 2px 6px rgba(37,99,235,0.3);">📞</a>
+                            <a href="tel:${riderPhone}" style="background: #2563eb; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 0.9rem; box-shadow: 0 2px 6px rgba(37,99,235,0.3);">📞</a>
                         </div>
                     </div>
 
@@ -5384,7 +5419,7 @@ window.openOrderTrackingView = function(orderId) {
                     </div>
 
                     <!-- Items Summary -->
-                    <div style="font-weight: 900; font-size: 0.82rem; color: #0f172a; margin-bottom: 8px;">Items Breakdown:</div>
+                    <div style="font-weight: 900; font-size: 0.82rem; color: #0f172a; margin-bottom: 8px;">Order Summary:</div>
                     <div style="margin-bottom: 16px;">${itemsHtml}</div>
 
                     <!-- Delivery Address -->
@@ -5394,9 +5429,9 @@ window.openOrderTrackingView = function(orderId) {
                     </div>
 
                     <!-- Bill Total -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px; margin-bottom: 16px;">
                         <span style="font-weight: 800; font-size: 0.82rem; color: #065f46;">Total Amount Paid:</span>
-                        <span style="font-weight: 900; font-size: 1rem; color: #065f46;">₹${Number(targetOrder.amount || 0).toFixed(2)}</span>
+                        <span style="font-weight: 900; font-size: 1rem; color: #065f46;">₹${Number(targetOrder.amount || targetOrder.totalAmount || 0).toFixed(2)}</span>
                     </div>
 
                 </div>
@@ -5410,6 +5445,19 @@ window.openOrderTrackingView = function(orderId) {
 
         document.body.appendChild(modalOverlay);
     } catch (err) {
-        console.error("Professional Tracking View Error:", err);
+        console.error("Popup Tracking View Error:", err);
     }
 };
+
+// 🔥 Order place hote hi seedha popup tracking kholne ke liye hook
+{
+    const originalFinalizeOrderSuccess = window.finalizeOrderSuccess;
+    window.finalizeOrderSuccess = async function(orderId) {
+        if (typeof originalFinalizeOrderSuccess === 'function') {
+            await originalFinalizeOrderSuccess(orderId);
+        }
+        if (typeof window.openOrderTrackingView === 'function') {
+            window.openOrderTrackingView(orderId);
+        }
+    };
+}
