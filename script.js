@@ -5277,10 +5277,18 @@ if (typeof window.navigateDrawerSection === 'function') {
 }
 
 // ==========================================
-// 🔥 PROFESSIONAL POPUP-BASED LIVE ORDER TRACKING ENGINE
+// 🔥 BULLETPROOF POPUP TRACKING & OVERRIDE ENGINE
 // ==========================================
 window.openOrderTrackingView = function(orderId) {
     try {
+        // 1. Agar galti se purana section open ho raha ho, toh use turant chup chap hide kar dein
+        const oldTrackingSection = document.getElementById('user_section_order_tracking');
+        if (oldTrackingSection) {
+            oldTrackingSection.classList.remove('active');
+            oldTrackingSection.style.setProperty('display', 'none', 'important');
+        }
+
+        // 2. LocalStorage se order dhoondhein
         let targetOrder = null;
         for (let i = 0; i < localStorage.length; i++) {
             let key = localStorage.key(i);
@@ -5288,7 +5296,7 @@ window.openOrderTrackingView = function(orderId) {
                 try {
                     let items = JSON.parse(localStorage.getItem(key) || '[]');
                     if (Array.isArray(items)) {
-                        let found = items.find(o => (o.orderId === orderId || o.id === orderId));
+                        let found = items.find(o => (o && (String(o.orderId) === String(orderId) || String(o.id) === String(orderId))));
                         if (found) { targetOrder = found; break; }
                     }
                 } catch (e) {}
@@ -5297,14 +5305,15 @@ window.openOrderTrackingView = function(orderId) {
 
         if (!targetOrder) {
             console.warn("Order details not found for ID:", orderId);
-            alert("Order details not found for ID: " + orderId);
+            alert("⚠️ Order details not found for ID: " + orderId);
             return;
         }
 
+        // 3. Purane kisi bhi open modal ko pehle remove karein
         let existingModal = document.getElementById('customOrderTrackingModal');
         if (existingModal) existingModal.remove();
 
-        // Items HTML breakdown
+        // 4. Items breakdown mapping
         let itemsHtml = '';
         let detailsList = targetOrder.details || targetOrder.configDetails || [];
         if (typeof detailsList === 'string') {
@@ -5324,13 +5333,13 @@ window.openOrderTrackingView = function(orderId) {
             `).join('');
         }
 
-        // Create Full-Screen Professional Tracking Modal
+        // 5. Create Fresh Full-Screen Professional Tracking Modal
         const modalOverlay = document.createElement('div');
         modalOverlay.id = 'customOrderTrackingModal';
         modalOverlay.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(6px);
-            display: flex; justify-content: center; align-items: center; z-index: 999999;
+            display: flex; justify-content: center; align-items: center; z-index: 9999999;
             padding: 12px; font-family: 'Poppins', sans-serif;
         `;
 
@@ -5381,7 +5390,7 @@ window.openOrderTrackingView = function(orderId) {
                             </div>
                             <div>
                                 <div style="font-weight: 900; font-size: 0.85rem; color: #0f172a;">${riderName}</div>
-                                <div style="font-size: 0.72rem; color: #64748b;">Delivery Executive &bull; ⭐ 4.9 (1.2k deliveries)</div>
+                                <div style="font-size: 0.72rem; color: #64748b;">Delivery Executive &bull; ⭐ 4.9</div>
                             </div>
                         </div>
                         <div style="display: flex; gap: 8px;">
@@ -5438,7 +5447,7 @@ window.openOrderTrackingView = function(orderId) {
 
                 <!-- Footer Action -->
                 <div style="padding: 14px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
-                    <button type="button" onclick="document.getElementById('customOrderTrackingModal').remove(); if(typeof navigateDrawerSection==='function') navigateDrawerSection('store');" style="width: 100%; background: #065f46; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 900; font-size: 0.88rem; cursor: pointer; box-shadow: 0 4px 12px rgba(6,95,70,0.25);">Back to Store / Home &rarr;</button>
+                    <button type="button" onclick="document.getElementById('customOrderTrackingModal').remove();" style="width: 100%; background: #065f46; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 900; font-size: 0.88rem; cursor: pointer; box-shadow: 0 4px 12px rgba(6,95,70,0.25);">Close Tracking &rarr;</button>
                 </div>
             </div>
         `;
@@ -5449,7 +5458,7 @@ window.openOrderTrackingView = function(orderId) {
     }
 };
 
-// 🔥 Order place hote hi seedha popup tracking kholne ke liye hook
+// 🔥 Order Success Hook: Order place hote hi turant popup tracking kholne ke liye
 {
     const originalFinalizeOrderSuccess = window.finalizeOrderSuccess;
     window.finalizeOrderSuccess = async function(orderId) {
