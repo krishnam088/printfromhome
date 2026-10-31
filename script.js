@@ -5546,9 +5546,9 @@ window.openOrderTrackingView = function(orderId) {
             </div>
         `;
 
-       document.body.appendChild(modalOverlay);
+        document.body.appendChild(modalOverlay);
 
-        // 🔥 Delivered Status Check (Map ki jagah Success Banner aur Tip hide karne ke liye)
+        // 🔥 Clean Delivered Status Check & Map Initialization
         const currentStatus = targetOrder.status || 'Order Placed & Picking';
         const isDelivered = currentStatus.toLowerCase().includes('delivered');
 
@@ -5584,25 +5584,13 @@ window.openOrderTrackingView = function(orderId) {
                 initLiveServerPollingMap(storeLatLng, userLatLng, mapEl, distBadge, targetOrder);
             }, 350);
         }
-        
-        // Real-Time GPS Tracking & Server Polling Initialization
-        setTimeout(() => {
-            const mapEl = document.getElementById('popupRealGoogleMapContainer');
-            const distBadge = document.getElementById('popupRealLiveEtaBadge');
-            if (!mapEl || typeof google === 'undefined') return;
-
-            const storeLatLng = { lat: STORE_LOCATION.lat, lng: STORE_LOCATION.lng };
-            const userLatLng = targetOrder.userLat && targetOrder.userLng ? 
-                { lat: Number(targetOrder.userLat), lng: Number(targetOrder.userLng) } : 
-                { lat: STORE_LOCATION.lat + 0.015, lng: STORE_LOCATION.lng + 0.012 };
-
-            initLiveServerPollingMap(storeLatLng, userLatLng, mapEl, distBadge, targetOrder);
-        }, 350);
 
     } catch (err) {
         console.error("Ultra-Professional Tracking Error:", err);
     }
 };
+
+        
 
 // Helper: Initialize Google Map & Poll Server for Live Rider GPS
 function initLiveServerPollingMap(storeLatLng, userLatLng, mapEl, distBadge, targetOrder) {
