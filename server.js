@@ -1465,13 +1465,16 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
 
         const selectedPaymentMode = paymentMode || "online";
 
-        // 🚨 RULE 1: Print Orders ke liye Online Payment Mandatory Check
-        if (hasPrintJobs && selectedPaymentMode !== 'online') {
-            return res.status(400).json({ 
-                success: false, 
-                message: "⚠️ Print orders ke liye sirf Online Payment mandatory hai taaki false orders aur paper waste ka risk na ho!" 
-            });
+        // 🚨 RULE 1: Print Orders require Online Payment or Print Wallet
+
+      if (hasPrintJobs && paymentMode !== 'online' && paymentMode !== 'wallet') {
+        if (typeof showAppToast === 'function') {
+            showAppToast("Print orders require Online Payment or Print Wallet.", "error");
+        } else {
+            alert("Print orders require Online Payment or Print Wallet.");
         }
+        return;
+    }
 
         if (Array.isArray(parsedConfig)) {
             for (const item of parsedConfig) {

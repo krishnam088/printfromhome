@@ -2467,15 +2467,18 @@ window.renderCartDrawerContents = function() {
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
     window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
-    // 🔥 Print Job hone par COD/Wallet Lock karna (Online Payment Mandatory)
+    // 🔥 Print Job hone par sirf COD lock karna (Online aur Wallet dono allow honge)
     const hasPrintJobs = window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0;
     const paymentSelect = document.getElementById('cartDrawerPaymentSelect');
-    if (hasPrintJobs && paymentSelect) {
-        paymentSelect.value = 'online';
-        paymentSelect.disabled = true; // Print job hone par COD/Wallet disable ho jayega
-        paymentSelect.title = "Online payment is mandatory for print orders";
-    } else if (paymentSelect) {
-        paymentSelect.disabled = false;
+    
+    if (paymentSelect) {
+        if (hasPrintJobs) {
+            // COD option ko disable ya hide kar sakte hain agar select mein ho, ya fir dropdown ko enable rakhain taaki Online / Wallet select ho sake
+            paymentSelect.disabled = false;
+            paymentSelect.title = "Online payment or Print Wallet is required for print orders";
+        } else {
+            paymentSelect.disabled = false;
+        }
     }
 
     let hasItems = (window.cartSnacksArray.length > 0) || (window.cartPrintJobsArray.length > 0);
