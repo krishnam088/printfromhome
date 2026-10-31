@@ -683,8 +683,8 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         </div>
 
-        <!-- 🔥 NEW: Paper Type Selection (Document vs Glossy Photo) -->
-        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; margin-bottom:4px;">
+       <!-- 🔥 NEW: Paper Type Selection (Document vs Glossy Photo) -->
+        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; margin-bottom:12px;">
             <div style="font-weight:800; font-size:0.9rem; color:#0f172a; margin-bottom:8px;">Select Paper Type</div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                 <div id="paperTypeDoc" onclick="setStudioPaperType('document')" style="border:2px solid #065f46; border-radius:10px; padding:8px 10px; cursor:pointer; background:#f0fdf4;">
@@ -699,7 +699,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
 
         <!-- 🔥 NEW: Photo / Passport Size Options (Ye tabhi dikhega jab Glossy select ho) -->
-        <div id="photoOptionsContainer" style="display:none; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; margin-bottom:4px;">
+        <div id="photoOptionsContainer" style="display:none; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; margin-bottom:12px;">
             <div style="font-weight:800; font-size:0.9rem; color:#0f172a; margin-bottom:8px;">Select Photo / Passport Layout</div>
             <select id="photoLayoutSelect" onchange="updatePhotoLayoutPricing()" style="width:100%; padding:8px; border-radius:8px; border:1px solid #cbd5e1; font-weight:700; font-size:0.8rem;">
                 <option value="passport_8">Passport Size (8 Copies on A4) - ₹50</option>
@@ -708,7 +708,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <option value="photo_2_a4">2 Large Photos on A4 Sheet - ₹50</option>
                 <option value="photo_single_glossy">Full Page Glossy Print (1 Photo) - ₹100</option>
             </select>
-            
+        </div> <!-- 🔥 Yeh closing <div> zaroori tha taaki structure break na ho -->
           
 
         <!-- Choose Print Orientation (Compact Grid) -->
