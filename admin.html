@@ -691,13 +691,20 @@
     <script>
         async function loadAdminStoreTimings() {
     try {
-        const res = await fetch('/api/admin/settings');
+        // 🔥 /api/admin/settings ki jagah /api/store-status se fetch karein taaki exact live timings milein
+        const res = await fetch('/api/store-status');
         const data = await res.json();
-        if (data.success && data.settings) {
-            if (data.settings.openTime) document.getElementById('adminStoreOpenTime').value = data.settings.openTime;
-            if (data.settings.closeTime) document.getElementById('adminStoreCloseTime').value = data.settings.closeTime;
+        if (data.success) {
+            if (data.openTime) {
+                document.getElementById('adminStoreOpenTime').value = data.openTime;
+            }
+            if (data.closeTime) {
+                document.getElementById('adminStoreCloseTime').value = data.closeTime;
+            }
         }
-    } catch (e) {}
+    } catch (e) {
+        console.warn("Could not load store timings");
+    }
 }
 
 async function saveAdminStoreTimings() {
