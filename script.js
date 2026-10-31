@@ -5876,3 +5876,24 @@ window.setPopupTrackingTip = function(amount, btnElement) {
         }
     };
 })();
+
+// 🔥 Safe Fallback Synchronize Wallet Balance Function
+if (typeof window.synchronizeWalletInterfaceBalance !== 'function') {
+    window.synchronizeWalletInterfaceBalance = function() {
+        const sessionActiveUser = localStorage.getItem('printAppUser');
+        const balanceDisplayNode = document.getElementById('headerWalletDisplayBalance');
+        const drawerWalletText = document.getElementById('walletDrawerBalanceText');
+        
+        if (!balanceDisplayNode) return;
+        
+        if (!sessionActiveUser) {
+            balanceDisplayNode.textContent = '₹0.00';
+            if (drawerWalletText) drawerWalletText.textContent = '₹0';
+            return;
+        }
+
+        const currentWalletCash = parseFloat(localStorage.getItem(`wallet_balance_${sessionActiveUser}`) || localStorage.getItem(`wallet_cash_${sessionActiveUser}`)) || 0.00;
+        balanceDisplayNode.textContent = `₹${currentWalletCash.toFixed(2)}`;
+        if (drawerWalletText) drawerWalletText.textContent = `₹${currentWalletCash.toFixed(2)}`;
+    };
+}
