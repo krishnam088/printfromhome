@@ -5654,3 +5654,17 @@ if (typeof window.synchronizeWalletInterfaceBalance !== 'function') {
         if (drawerWalletText) drawerWalletText.textContent = `₹${currentWalletCash.toFixed(2)}`;
     };
 }
+
+// 🔥 URL Query Param Detector: Automatically open tracking modal if redirected from Gmail notification
+window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const trackOrderId = urlParams.get('track_order');
+    
+    if (trackOrderId) {
+        setTimeout(() => {
+            if (typeof window.openOrderTrackingView === 'function') {
+                window.openOrderTrackingView(trackOrderId);
+            }
+        }, 800); // Thoda delay taaki page completely load ho jaye
+    }
+});

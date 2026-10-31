@@ -982,6 +982,77 @@ async function sendBroadcastEmail(subject, message) {
     }
 }
 
+// ==========================================
+// 📦 AUTOMATIC GMAIL NOTIFICATION ENGINE
+// ==========================================
+async function sendOrderEmailNotification(userEmail, orderId, orderStatus, amount) {
+    if (!userEmail || !userEmail.includes('@')) return;
+
+    let statusColor = '#065f46';
+    let statusTitle = orderStatus;
+    
+    if (orderStatus.toLowerCase().includes('cancel')) {
+        statusColor = '#991b1b';
+        statusTitle = 'Order Cancelled ❌';
+    } else if (orderStatus.toLowerCase().includes('delivered')) {
+        statusColor = '#059669';
+        statusTitle = 'Order Delivered Successfully 🟢';
+    }
+
+    const trackingUrl = `https://printfromhomes.com/?track_order=${orderId}`;
+
+    try {
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': process.env.SMTP_PASS,
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                sender: { name: "Print From Home", email: "support@printfromhomes.com" },
+                to: [{ email: userEmail, name: "Customer" }],
+                subject: `📦 Update on Order #${orderId} - ${statusTitle}`,
+                htmlContent: `
+                    <div style="font-family: 'Poppins', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0;">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <h2 style="color: #065f46; margin: 0; font-size: 1.5rem;">print<span style="color: #16a34a;">from</span>home</h2>
+                            <p style="font-size: 0.75rem; color: #64748b; margin: 2px 0 0 0;">India's Last Minute Printing App</p>
+                        </div>
+                        
+                        <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #cbd5e1; margin-bottom: 20px;">
+                            <h3 style="margin-top: 0; color: #0f172a; font-size: 1.1rem;">Hello,</h3>
+                            <p style="font-size: 0.85rem; color: #334155; line-height: 1.5;">
+                                Your order <strong>#${orderId}</strong> status has been updated successfully.
+                            </p>
+                            <div style="background: #f1f5f9; padding: 12px; border-radius: 8px; margin: 15px 0;">
+                                <p style="margin: 0; font-size: 0.85rem; color: #0f172a;"><strong>Current Status:</strong> <span style="color: ${statusColor}; font-weight: 800;">${statusTitle}</span></p>
+                                <p style="margin: 6px 0 0 0; font-size: 0.85rem; color: #0f172a;"><strong>Total Amount:</strong> ₹${amount}</p>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; margin: 25px 0;">
+                            <a href="${trackingUrl}" style="background: #065f46; color: #ffffff; padding: 14px 28px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.95rem; display: inline-block; box-shadow: 0 4px 12px rgba(6,95,70,0.3);">
+                                Track Order Live 🚀
+                            </a>
+                        </div>
+
+                        <p style="font-size: 0.7rem; color: #94a3b8; text-align: center; margin-top: 30px;">
+                            &copy; 2026 Print From Home, Varanasi. All rights reserved.
+                        </p>
+                    </div>
+                `
+            })
+        });
+
+        if (response.ok) {
+            console.log(`📧 Notification email sent successfully for order #${orderId}`);
+        }
+    } catch (e) {
+        console.error("❌ Email notification error:", e.message);
+    }
+}
+
 app.post('/api/admin/send-notification', async (req, res) => {
     try {
         const { subject, message } = req.body;
@@ -1616,6 +1687,16 @@ app.post('/api/verify-payment', async (req, res) => {
 
             await deductStockForOrder(parsedConfig);
 
+            // 🔥 Send Email Notification on Online Order Success & Payment Verification
+            try {
+                const userObj = await User.findOne({ identity: order.phone });
+                if (userObj && userObj.email) {
+                    sendOrderEmailNotification(userObj.email, order.orderId, order.status, order.totalAmount);
+                }
+            } catch (mailErr) {
+                console.error("Email trigger error:", mailErr.message);
+            }
+
             return res.json({ success: true });
         }
         res.status(404).json({ success: false, message: "Order not found" });
@@ -1692,6 +1773,16 @@ app.post('/api/orders/cancel', async (req, res) => {
         order.isRefundableAmount = refundableAmount;
         await order.save();
 
+        // 🔥 Send Email Notification on Order Cancellation
+        try {
+            const userObj = await User.findOne({ identity: order.phone });
+            if (userObj && userObj.email) {
+                sendOrderEmailNotification(userObj.email, order.orderId, order.status, order.totalAmount);
+            }
+        } catch (mailErr) {
+            console.error("Email trigger error:", mailErr.message);
+        }
+
         res.json({ 
             success: true, 
             message: pickerAlreadyPicked 
@@ -1723,6 +1814,17 @@ const handleStatusUpdate = async (req, res) => {
             }
             if (assignedDeliveryBoy !== undefined) order.assignedDeliveryBoy = assignedDeliveryBoy;
             await order.save();
+
+            // 🔥 Send Email Notification on Admin Status Update (e.g. Out for Delivery, Delivered)
+            try {
+                const userObj = await User.findOne({ identity: order.phone });
+                if (userObj && userObj.email) {
+                    sendOrderEmailNotification(userObj.email, order.orderId, order.status, order.totalAmount);
+                }
+            } catch (mailErr) {
+                console.error("Email trigger error:", mailErr.message);
+            }
+
             return res.json({ success: true, order });
         }
         res.status(404).json({ success: false });
@@ -1733,6 +1835,7 @@ const handleStatusUpdate = async (req, res) => {
 
 app.post('/api/admin/orders/update-status', handleStatusUpdate);
 app.post('/api/admin/orders/:orderId/status', handleStatusUpdate);
+
 
 // 🔥 Admin Route to View All Registered Users
 app.get('/api/admin/users', async (req, res) => {
