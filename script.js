@@ -5022,7 +5022,20 @@ window.renderOrderHistoryUI = function() {
             if (!order) return '';
             let safeId = order.orderId || order.id || 'N/A';
             let safeAmount = Number(order.amount || order.totalAmount || 0).toFixed(2);
-            let safeStatus = order.status || 'Processing';
+            let rawStatus = order.status || 'Processing';
+            
+            // 🔥 User friendly status cleaner (Admin ke internal notes chhipane ke liye)
+            let safeStatus = rawStatus;
+            let statusColor = '#2563eb'; // Default blue for processing
+            
+            if (rawStatus.toLowerCase().includes('cancel')) {
+                safeStatus = 'Cancelled ❌';
+                statusColor = '#dc2626'; // Red for cancelled
+            } else if (rawStatus.toLowerCase().includes('delivered')) {
+                safeStatus = 'Delivered 🟢';
+                statusColor = '#059669'; // Green for delivered
+            }
+
             let safeDate = order.date || '';
             
             let itemsHtml = '';
@@ -5042,7 +5055,7 @@ window.renderOrderHistoryUI = function() {
                         <span style="color:#065f46;">₹${safeAmount}</span>
                     </div>
                     <div style="margin: 6px 0;">${itemsHtml}</div>
-                    <p style="font-size:0.75rem; color:#64748b; margin:4px 0;">Status: <b style="color:#2563eb;">${safeStatus}</b></p>
+                    <p style="font-size:0.75rem; color:#64748b; margin:4px 0;">Status: <b style="color:${statusColor};">${safeStatus}</b></p>
                     <p style="font-size:0.7rem; color:#94a3b8; margin-bottom:10px;">${safeDate}</p>
                     <div style="display:flex; gap:8px; flex-wrap:wrap;">
                         <button type="button" onclick="openOrderTrackingView('${safeId}')" style="background:#2563eb; color:white; border:none; padding:6px 12px; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">📍 Track Status</button>
