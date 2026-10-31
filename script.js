@@ -5742,6 +5742,10 @@ function setStudioPaperType(type) {
     const docBox = document.getElementById('paperTypeDoc');
     const photoBox = document.getElementById('paperTypePhoto');
     const photoContainer = document.getElementById('photoOptionsContainer');
+    
+    // 🔥 Color aur Orientation containers ke elements ko target karein
+    const colorContainer = document.getElementById('printColorContainer');
+    const orientationContainer = document.getElementById('printOrientationContainer');
 
     if (type === 'document') {
         docBox.style.borderColor = '#065f46';
@@ -5749,18 +5753,35 @@ function setStudioPaperType(type) {
         photoBox.style.borderColor = '#e2e8f0';
         photoBox.style.background = '#ffffff';
         photoContainer.style.display = 'none';
+        
+        // Document mode mein color & orientation wapas dikhao
+        if (colorContainer) colorContainer.style.display = 'block';
+        if (orientationContainer) orientationContainer.style.display = 'block';
     } else {
         photoBox.style.borderColor = '#065f46';
         photoBox.style.background = '#f0fdf4';
         docBox.style.borderColor = '#e2e8f0';
         docBox.style.background = '#ffffff';
         photoContainer.style.display = 'block';
+        
+        // Photo mode mein color & orientation ki zaroorat nahi, unhe hide kar do
+        if (colorContainer) colorContainer.style.display = 'none';
+        if (orientationContainer) orientationContainer.style.display = 'none';
+
         updatePhotoLayoutPricing();
+    }
+
+    // 🔥 Paper type badalte hi slider ka preview turant update ho jayega
+    if (typeof updateMultiFileStudioUI === 'function') {
+        updateMultiFileStudioUI();
     }
 }
 
 function updatePhotoLayoutPricing() {
-    const layout = document.getElementById('photoLayoutSelect').value;
+    const layoutSelect = document.getElementById('photoLayoutSelect');
+    if (!layoutSelect) return;
+    
+    const layout = layoutSelect.value;
     let price = 50;
     
     if (layout === 'passport_8') price = 50;
@@ -5769,6 +5790,14 @@ function updatePhotoLayoutPricing() {
     else if (layout === 'photo_2_a4') price = 50;
     else if (layout === 'photo_single_glossy') price = 100;
 
-    document.getElementById('studioTotalPriceText').textContent = `₹${price}`;
+    const totalPriceText = document.getElementById('studioTotalPriceText');
+    if (totalPriceText) {
+        totalPriceText.textContent = `₹${price}`;
+    }
     window.currentCalculatedJobPrice = price;
+
+    // 🔥 Layout change (jaise 8 se 12 copies) hote hi preview turant update ho jayega
+    if (typeof updateMultiFileStudioUI === 'function') {
+        updateMultiFileStudioUI();
+    }
 }

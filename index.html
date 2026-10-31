@@ -662,26 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
     </div>
 
-        <!-- Choose Print Color (Compact Grid) -->
-        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; box-shadow:0 1px 4px rgba(0,0,0,0.02);">
-            <div style="font-weight:800; font-size:0.9rem; color:#0f172a; margin-bottom:8px;">Choose print color</div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <div id="colorOptionColoured" onclick="setStudioPrintColor('coloured')" style="border:2px solid #e2e8f0; border-radius:10px; padding:8px 10px; cursor:pointer; display:flex; align-items:center; gap:8px; background:#ffffff; transition:all 0.2s;">
-                    <div style="font-size:1.2rem;">🎨</div>
-                    <div>
-                        <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Coloured</div>
-                        <div style="font-size:0.65rem; color:#64748b;">₹10/page</div>
-                    </div>
-                </div>
-                <div id="colorOptionBw" onclick="setStudioPrintColor('bw')" style="border:2px solid #065f46; border-radius:10px; padding:8px 10px; cursor:pointer; display:flex; align-items:center; gap:8px; background:#f0fdf4; transition:all 0.2s;">
-                    <div style="font-size:1.2rem;">🖨️</div>
-                    <div>
-                        <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">B & W</div>
-                        <div style="font-size:0.65rem; color:#64748b;">₹3/page</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    
 
        <!-- 🔥 NEW: Paper Type Selection (Document vs Glossy Photo) -->
         <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; margin-bottom:12px;">
@@ -701,8 +682,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <!-- 🔥 NEW: Photo / Passport Size Options (Ye tabhi dikhega jab Glossy select ho) -->
         <div id="photoOptionsContainer" style="display:none; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; margin-bottom:12px;">
             <div style="font-weight:800; font-size:0.9rem; color:#0f172a; margin-bottom:8px;">Select Photo / Passport Layout</div>
-            <select id="photoLayoutSelect" onchange="updatePhotoLayoutPricing()" style="width:100%; padding:8px; border-radius:8px; border:1px solid #cbd5e1; font-weight:700; font-size:0.8rem;">
-                <option value="passport_8">Passport Size (8 Copies on A4) - ₹50</option>
+   <select id="photoLayoutSelect" onchange="updatePhotoLayoutPricing();" style="width:100%; padding:8px; border-radius:8px; border:1px solid #cbd5e1; font-weight:700; font-size:0.8rem;"></select>
+   
+            <option value="passport_8">Passport Size (8 Copies on A4) - ₹50</option>
                 <option value="passport_12">Passport Size (12 Copies on A4) - ₹60</option>
                 <option value="passport_20">Passport Size (20 Copies on A4) - ₹100</option>
                 <option value="photo_2_a4">2 Large Photos on A4 Sheet - ₹50</option>
@@ -710,27 +692,47 @@ document.addEventListener('DOMContentLoaded', () => {
             </select>
         </div> <!-- 🔥 Yeh closing <div> zaroori tha taaki structure break na ho -->
           
-
-        <!-- Choose Print Orientation (Compact Grid) -->
-        <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; box-shadow:0 1px 4px rgba(0,0,0,0.02);">
-            <div style="font-weight:800; font-size:0.9rem; color:#0f172a; margin-bottom:8px;">Choose print orientation</div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <div id="orientationPortrait" onclick="setStudioOrientation('portrait')" style="border:2px solid #065f46; border-radius:10px; padding:8px 10px; cursor:pointer; display:flex; align-items:center; gap:8px; background:#f0fdf4; transition:all 0.2s;">
-                    <div style="font-size:1.1rem;">📄</div>
-                    <div>
-                        <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Portrait</div>
-                        <div style="font-size:0.6rem; color:#64748b;">8.3 x 11.7 in</div>
-                    </div>
-                </div>
-                <div id="orientationLandscape" onclick="setStudioOrientation('landscape')" style="border:2px solid #e2e8f0; border-radius:10px; padding:8px 10px; cursor:pointer; display:flex; align-items:center; gap:8px; background:#ffffff; transition:all 0.2s;">
-                    <div style="font-size:1.1rem;">🖼️</div>
-                    <div>
-                        <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Landscape</div>
-                        <div style="font-size:0.6rem; color:#64748b;">11.7 x 8.3 in</div>
-                    </div>
-                </div>
+<!-- Choose Print Color -->
+<div id="printColorContainer" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; box-shadow:0 1px 4px rgba(0,0,0,0.02); margin-bottom:12px;">
+    <div style="font-weight:800; font-size:0.9rem; color:#0f172a; margin-bottom:8px;">Choose print color</div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div id="colorOptionColoured" onclick="setStudioPrintColor('coloured')" style="border:2px solid #e2e8f0; border-radius:10px; padding:8px 10px; cursor:pointer; display:flex; align-items:center; gap:8px; background:#ffffff;">
+            <div style="font-size:1.2rem;">🎨</div>
+            <div>
+                <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Coloured</div>
+                <div style="font-size:0.65rem; color:#64748b;">₹10/page</div>
             </div>
         </div>
+        <div id="colorOptionBw" onclick="setStudioPrintColor('bw')" style="border:2px solid #e2e8f0; border-radius:10px; padding:8px 10px; cursor:pointer; display:flex; align-items:center; gap:8px; background:#f0fdf4;">
+            <div style="font-size:1.2rem;">🖨️</div>
+            <div>
+                <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">B & W</div>
+                <div style="font-size:0.65rem; color:#64748b;">₹3/page</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Choose Print Orientation -->
+<div id="printOrientationContainer" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; box-shadow:0 1px 4px rgba(0,0,0,0.02); margin-bottom:12px;">
+    <div style="font-weight:800; font-size:0.9rem; color:#0f172a; margin-bottom:8px;">Choose print orientation</div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div id="orientationPortrait" onclick="setStudioOrientation('portrait')" style="border:2px solid #065f46; border-radius:10px; padding:8px 10px; cursor:pointer; display:flex; align-items:center; gap:8px; background:#f0fdf4;">
+            <div style="font-size:1.1rem;">📄</div>
+            <div>
+                <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Portrait</div>
+                <div style="font-size:0.6rem; color:#64748b;">8.3 x 11.7 in</div>
+            </div>
+        </div>
+        <div id="orientationLandscape" onclick="setStudioOrientation('landscape')" style="border:2px solid #e2e8f0; border-radius:10px; padding:8px 10px; cursor:pointer; display:flex; align-items:center; gap:8px; background:#ffffff;">
+            <div style="font-size:1.1rem;">🖼️</div>
+            <div>
+                <div style="font-weight:800; font-size:0.78rem; color:#0f172a;">Landscape</div>
+                <div style="font-size:0.6rem; color:#64748b;">11.7 x 8.3 in</div>
+            </div>
+        </div>
+    </div>
+</div>
 
         <!-- Apply to All Files Bar -->
         <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 4px rgba(0,0,0,0.02);">
