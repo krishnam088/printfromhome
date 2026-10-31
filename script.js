@@ -1182,6 +1182,44 @@ window.setStudioPrintColor = function(type) {
     }
 };
 
+// 🔥 Make setStudioPaperType globally accessible
+window.currentSelectedPaperType = 'document';
+
+window.setStudioPaperType = function(type) {
+    window.currentSelectedPaperType = type;
+    const docBox = document.getElementById('paperTypeDoc');
+    const photoBox = document.getElementById('paperTypePhoto');
+    const photoContainer = document.getElementById('photoOptionsContainer');
+    
+    const colorContainer = document.getElementById('printColorContainer');
+    const orientationContainer = document.getElementById('printOrientationContainer');
+
+    if (type === 'document') {
+        if (docBox) { docBox.style.borderColor = '#065f46'; docBox.style.background = '#f0fdf4'; }
+        if (photoBox) { photoBox.style.borderColor = '#e2e8f0'; photoBox.style.background = '#ffffff'; }
+        if (photoContainer) photoContainer.style.display = 'none';
+        
+        if (colorContainer) colorContainer.style.display = 'block';
+        if (orientationContainer) orientationContainer.style.display = 'block';
+    } else {
+        if (photoBox) { photoBox.style.borderColor = '#065f46'; photoBox.style.background = '#f0fdf4'; }
+        if (docBox) { docBox.style.borderColor = '#e2e8f0'; docBox.style.background = '#ffffff'; }
+        if (photoContainer) photoContainer.style.display = 'block';
+        
+        if (colorContainer) colorContainer.style.display = 'none';
+        if (orientationContainer) orientationContainer.style.display = 'none';
+
+        if (typeof updatePhotoLayoutPricing === 'function') {
+            updatePhotoLayoutPricing();
+        }
+    }
+
+    if (typeof updateMultiFileStudioUI === 'function') {
+        updateMultiFileStudioUI();
+    }
+};
+
+
 window.setStudioOrientation = function(ori) {
     let file = window.studioMasterFiles[window.currentStudioActiveIndex];
     if (file) {
