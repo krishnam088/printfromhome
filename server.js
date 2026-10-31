@@ -983,23 +983,43 @@ async function sendBroadcastEmail(subject, message) {
 }
 
 // ==========================================
-// 📦 AUTOMATIC GMAIL NOTIFICATION ENGINE
+// 📦 ADVANCED AUTOMATED GMAIL NOTIFICATION ENGINE
 // ==========================================
-async function sendOrderEmailNotification(userEmail, orderId, orderStatus, amount) {
+async function sendOrderEmailNotification(userEmail, userName, orderId, orderStatus, amount, itemsList, paymentMode, deliveryFee) {
     if (!userEmail || !userEmail.includes('@')) return;
 
     let statusColor = '#065f46';
     let statusTitle = orderStatus;
+    let isCancelled = orderStatus.toLowerCase().includes('cancel');
+    let isDelivered = orderStatus.toLowerCase().includes('delivered');
     
-    if (orderStatus.toLowerCase().includes('cancel')) {
+    if (isCancelled) {
         statusColor = '#991b1b';
         statusTitle = 'Order Cancelled ❌';
-    } else if (orderStatus.toLowerCase().includes('delivered')) {
+    } else if (isDelivered) {
         statusColor = '#059669';
         statusTitle = 'Order Delivered Successfully 🟢';
     }
 
     const trackingUrl = `https://printfromhomes.com/?track_order=${orderId}`;
+
+    // 🔥 Refund timeline text for cancelled orders
+    let refundDetailsHtml = '';
+    if (isCancelled) {
+        let isOnlinePay = paymentMode && paymentMode !== 'CASH ON DELIVERY' && paymentMode !== 'PAID VIA WALLET' && paymentMode !== 'cod';
+        let refundableAmt = Math.max(0, Number(amount) - Number(deliveryFee || 25));
+
+        refundDetailsHtml = `
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 12px; margin-top: 15px;">
+                <p style="margin: 0; font-size: 0.8rem; font-weight: 800; color: #991b1b;">🔄 Refund & Cancellation Details:</p>
+                <p style="margin: 4px 0 0 0; font-size: 0.75rem; color: #7f1d1d; line-height: 1.4;">
+                    ${isOnlinePay 
+                        ? `Your online payment refund of <strong>₹${refundableAmt.toFixed(2)}</strong> (excluding delivery fee of ₹${deliveryFee || 25}) has been initiated and will reflect in your original payment source within <strong>3 to 4 working days</strong>.` 
+                        : `Since this was a Cash on Delivery / Wallet order, no online debit was made. Any applicable wallet deductions have been reversed instantly.`}
+                </p>
+            </div>
+        `;
+    }
 
     try {
         const response = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -1011,7 +1031,7 @@ async function sendOrderEmailNotification(userEmail, orderId, orderStatus, amoun
             },
             body: JSON.stringify({
                 sender: { name: "Print From Home", email: "support@printfromhomes.com" },
-                to: [{ email: userEmail, name: "Customer" }],
+                to: [{ email: userEmail, name: userName || "Customer" }],
                 subject: `📦 Update on Order #${orderId} - ${statusTitle}`,
                 htmlContent: `
                     <div style="font-family: 'Poppins', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0;">
@@ -1021,20 +1041,28 @@ async function sendOrderEmailNotification(userEmail, orderId, orderStatus, amoun
                         </div>
                         
                         <div style="background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #cbd5e1; margin-bottom: 20px;">
-                            <h3 style="margin-top: 0; color: #0f172a; font-size: 1.1rem;">Hello,</h3>
+                            <h3 style="margin-top: 0; color: #0f172a; font-size: 1.1rem;">Hello ${userName || 'Customer'},</h3>
                             <p style="font-size: 0.85rem; color: #334155; line-height: 1.5;">
-                                Your order <strong>#${orderId}</strong> status has been updated successfully.
+                                Here is the latest update regarding your order <strong>#${orderId}</strong>.
                             </p>
                             <div style="background: #f1f5f9; padding: 12px; border-radius: 8px; margin: 15px 0;">
                                 <p style="margin: 0; font-size: 0.85rem; color: #0f172a;"><strong>Current Status:</strong> <span style="color: ${statusColor}; font-weight: 800;">${statusTitle}</span></p>
                                 <p style="margin: 6px 0 0 0; font-size: 0.85rem; color: #0f172a;"><strong>Total Amount:</strong> ₹${amount}</p>
                             </div>
+                            ${refundDetailsHtml}
                         </div>
 
                         <div style="text-align: center; margin: 25px 0;">
                             <a href="${trackingUrl}" style="background: #065f46; color: #ffffff; padding: 14px 28px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.95rem; display: inline-block; box-shadow: 0 4px 12px rgba(6,95,70,0.3);">
                                 Track Order Live 🚀
                             </a>
+                        </div>
+
+                        <!-- 🎧 Help & Support Hub Section -->
+                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 14px; text-align: center; margin-top: 20px;">
+                            <p style="margin: 0 0 6px 0; font-size: 0.8rem; font-weight: 800; color: #065f46;">Need Help With Your Print Order?</p>
+                            <p style="margin: 0 0 10px 0; font-size: 0.72rem; color: #047857;">Our support team is available 24/7 to assist you.</p>
+                            <a href="mailto:support@printfromhomes.com?subject=Support%20For%20Order%20%23${orderId}" style="color: #ffffff; background: #065f46; padding: 6px 14px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; text-decoration: none; display: inline-block;">Contact Support Hub 📧</a>
                         </div>
 
                         <p style="font-size: 0.7rem; color: #94a3b8; text-align: center; margin-top: 30px;">
@@ -1046,7 +1074,7 @@ async function sendOrderEmailNotification(userEmail, orderId, orderStatus, amoun
         });
 
         if (response.ok) {
-            console.log(`📧 Notification email sent successfully for order #${orderId}`);
+            console.log(`📧 Notification email sent successfully to ${userEmail} for order #${orderId}`);
         }
     } catch (e) {
         console.error("❌ Email notification error:", e.message);
@@ -1687,11 +1715,20 @@ app.post('/api/verify-payment', async (req, res) => {
 
             await deductStockForOrder(parsedConfig);
 
-            // 🔥 Send Email Notification on Online Order Success & Payment Verification
+            // 🔥 Send Advanced Email Notification on Payment Verification & Order Placement
             try {
                 const userObj = await User.findOne({ identity: order.phone });
                 if (userObj && userObj.email) {
-                    sendOrderEmailNotification(userObj.email, order.orderId, order.status, order.totalAmount);
+                    sendOrderEmailNotification(
+                        userObj.email, 
+                        userObj.name || order.customerName, 
+                        order.orderId, 
+                        order.status, 
+                        order.totalAmount, 
+                        order.configDetails, 
+                        order.paymentId, 
+                        order.deliveryFeeCharged
+                    );
                 }
             } catch (mailErr) {
                 console.error("Email trigger error:", mailErr.message);
@@ -1773,11 +1810,20 @@ app.post('/api/orders/cancel', async (req, res) => {
         order.isRefundableAmount = refundableAmount;
         await order.save();
 
-        // 🔥 Send Email Notification on Order Cancellation
+        // 🔥 Send Advanced Email Notification on Cancellation with Refund Policy Details
         try {
             const userObj = await User.findOne({ identity: order.phone });
             if (userObj && userObj.email) {
-                sendOrderEmailNotification(userObj.email, order.orderId, order.status, order.totalAmount);
+                sendOrderEmailNotification(
+                    userObj.email, 
+                    userObj.name || order.customerName, 
+                    order.orderId, 
+                    order.status, 
+                    order.totalAmount, 
+                    order.configDetails, 
+                    order.paymentId, 
+                    order.deliveryFeeCharged
+                );
             }
         } catch (mailErr) {
             console.error("Email trigger error:", mailErr.message);
@@ -1815,11 +1861,20 @@ const handleStatusUpdate = async (req, res) => {
             if (assignedDeliveryBoy !== undefined) order.assignedDeliveryBoy = assignedDeliveryBoy;
             await order.save();
 
-            // 🔥 Send Email Notification on Admin Status Update (e.g. Out for Delivery, Delivered)
+            // 🔥 Send Advanced Email Notification on Admin Status Update
             try {
                 const userObj = await User.findOne({ identity: order.phone });
                 if (userObj && userObj.email) {
-                    sendOrderEmailNotification(userObj.email, order.orderId, order.status, order.totalAmount);
+                    sendOrderEmailNotification(
+                        userObj.email, 
+                        userObj.name || order.customerName, 
+                        order.orderId, 
+                        order.status, 
+                        order.totalAmount, 
+                        order.configDetails, 
+                        order.paymentId, 
+                        order.deliveryFeeCharged
+                    );
                 }
             } catch (mailErr) {
                 console.error("Email trigger error:", mailErr.message);
