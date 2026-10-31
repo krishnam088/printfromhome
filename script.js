@@ -4609,7 +4609,7 @@ window.submitProfileUpdates = async function(e) {
     const newPass = passField ? passField.value.trim() : '';
 
     if (!newName || !newEmail) {
-        alert("⚠️ Name and Gmail address cannot be empty!");
+        alert(" Name and Gmail address cannot be empty!");
         return;
     }
 
