@@ -649,6 +649,21 @@
                     </div>
                 </div>
 
+                <!-- 🔥 NEW: Printer Hardware Mode Setup Card -->
+                <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+                    <label style="font-size: 0.78rem; font-weight: 800; color: var(--text-main); display: block; margin-bottom: 8px;">🖨️ Printer Hardware Routing Mode</label>
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-dark); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div>
+                            <div style="font-size: 0.82rem; font-weight: 800; color: white;">Single Printer Mode (Paper Swap & Pause)</div>
+                            <div style="font-size: 0.7rem; color: var(--text-sub);">Enabled: Agent pauses for glossy paper prompt on HP Smart Tank 580.<br>Disabled: Routes jobs directly to dual dedicated printers.</div>
+                        </div>
+                        <label style="position: relative; display: inline-block; width: 50px; height: 26px; flex-shrink: 0;">
+                            <input type="checkbox" id="adminSettingSinglePrinterMode" checked style="opacity: 0; width: 0; height: 0;" onchange="saveAdminStoreSettings()">
+                            <span style="position: absolute; cursor: pointer; inset: 0; background-color: #334155; transition: .4s; border-radius: 26px;"></span>
+                        </label>
+                    </div>
+                </div>
+
                 <button type="button" onclick="saveAdminStoreSettings()" style="width: 100%; padding: 14px; background: var(--accent-green); color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">Save Store Settings & Fees</button>
             </div>
         </div>
@@ -799,7 +814,7 @@ window.addEventListener('DOMContentLoaded', () => {
         // 🔥 Load Live Settings into Admin Inputs on Panel Open
       // 🔥 Load Live Settings into Admin Inputs on Panel Open
      // 🔥 Load Live Settings into Admin Inputs on Panel Open
-        async function loadAdminPanelSettings() {
+    async function loadAdminPanelSettings() {
             try {
                 const res = await fetch('/api/admin/settings');
                 const data = await res.json();
@@ -807,11 +822,17 @@ window.addEventListener('DOMContentLoaded', () => {
                     const dField = document.getElementById('adminSettingDeliveryFee');
                     const hField = document.getElementById('adminSettingHandlingFee');
                     const rField = document.getElementById('adminSettingRainFee');
+                    const singlePrinterToggle = document.getElementById('adminSettingSinglePrinterMode'); // 🔥 Added
 
                     // 🔥 Strict checks supporting explicit 0 values without defaulting
                     if (dField) dField.value = (data.settings.deliveryFee !== undefined && data.settings.deliveryFee !== null && data.settings.deliveryFee !== '') ? data.settings.deliveryFee : 25;
                     if (hField) hField.value = (data.settings.handlingFee !== undefined && data.settings.handlingFee !== null && data.settings.handlingFee !== '') ? data.settings.handlingFee : 5;
                     if (rField) rField.value = (data.settings.rainFee !== undefined && data.settings.rainFee !== null && data.settings.rainFee !== '') ? data.settings.rainFee : 15;
+                    
+                    // 🔥 Load Single Printer Mode state
+                    if (singlePrinterToggle) {
+                        singlePrinterToggle.checked = data.settings.singlePrinterMode !== false;
+                    }
                 }
             } catch (e) {
                 console.warn("Could not load admin settings");
@@ -827,16 +848,18 @@ window.addEventListener('DOMContentLoaded', () => {
             const deliveryField = document.getElementById('adminSettingDeliveryFee');
             const handlingField = document.getElementById('adminSettingHandlingFee');
             const rainField = document.getElementById('adminSettingRainFee');
+            const singlePrinterToggle = document.getElementById('adminSettingSinglePrinterMode'); // 🔥 Added
 
             const deliveryFee = deliveryField ? deliveryField.value : 25;
             const handlingFee = handlingField ? handlingField.value : 5;
             const rainFee = rainField ? rainField.value : 15;
+            const singlePrinterMode = singlePrinterToggle ? singlePrinterToggle.checked : true; // 🔥 Added
 
             try {
                 const res = await fetch('/api/admin/settings/update', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ deliveryFee, handlingFee, rainFee })
+                    body: JSON.stringify({ deliveryFee, handlingFee, rainFee, singlePrinterMode }) // 🔥 Included singlePrinterMode
                 });
                 const data = await res.json();
                 if (data.success) {

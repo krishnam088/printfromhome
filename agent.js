@@ -3,16 +3,23 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const pt = require('pdf-to-printer');
+const readline = require('readline');
 
 const app = express();
-const PRINTER_NAME = "HP Smart Tank 580-590 series";
+const PRINTER_NAME = "Microsoft Print to PDF";
 
-const BASE_URL = "https://printfromhome.onrender.com"; 
+const BASE_URL = "https://printfromhomes.com"; 
 const HISTORY_FILE = path.join(__dirname, 'printed_history.json');
 
 if (!fs.existsSync(HISTORY_FILE)) {
     fs.writeFileSync(HISTORY_FILE, JSON.stringify([]));
 }
+
+// Terminal prompt helper for single printer paper swap pause
+const promptUser = (query) => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    return new Promise(resolve => rl.question(query, ans => { rl.close(); resolve(ans); }));
+};
 
 function getPrintedHistory() {
     try {
@@ -46,32 +53,6 @@ function downloadFilePromise(url, localPath) {
     });
 }
 
-async function directHardwareSpoolPrint(filePath, options = {}) {
-    console.log(`📠 Feeding document bytes directly to printer driver queue...`);
-    
-    const printOptions = {
-        printer: PRINTER_NAME,
-        copies: parseInt(options.copies) || 1,
-        side: options.sides === 'double' ? 'duplex' : 'simplex',
-        orientation: options.orientation === 'landscape' ? 'landscape' : 'portrait'
-    };
-
-    // 🔥 Added password support for locked/encrypted PDFs directly into printer spooled command
-    if (options.password) {
-        printOptions.password = options.password;
-        console.log(`🔑 Secured PDF Password applied to print spooled buffer.`);
-    }
-
-    if (options.printType === 'bw' || options.colorMode === 'bw') {
-        printOptions.monochrome = true;
-        console.log(`⚙️ Driver Configuration Map: MONOCHROME (B&W) MODE LOCKED 🎯`);
-    } else {
-        console.log(`⚙️ Driver Configuration Map: FULL VIBRANT COLOR MODE LOCKED 🌈`);
-    }
-
-    await pt.print(filePath, printOptions);
-}
-
 async function fetchAndPrintLiveJobs() {
     try {
         console.log("🔍 Scanning LIVE Cloud Queue... (ADVANCED COLOR MATRIX MODE)");
@@ -79,6 +60,18 @@ async function fetchAndPrintLiveJobs() {
         const orders = response.data;
 
         if (!orders || !Array.isArray(orders)) return;
+
+        // 1. Server se admin settings fetch karein (Single vs Dual mode check)
+        let settings = { singlePrinterMode: true, printerName: PRINTER_NAME };
+        try {
+            const settingsRes = await axios.get(`${BASE_URL}/api/admin/settings`, { timeout: 5000 });
+            if (settingsRes.data) settings = settingsRes.data;
+        } catch (e) {
+            // Fallback to default single printer mode if offline
+        }
+
+        const isSingleMode = settings.singlePrinterMode !== false; 
+        const primaryPrinter = settings.printerName || PRINTER_NAME;
 
         const paidOrders = orders.filter(o => o.status === 'Ready for Print' || o.status === 'Paid / Ready for Print');
         const printedHistory = getPrintedHistory();
@@ -88,8 +81,23 @@ async function fetchAndPrintLiveJobs() {
                 continue; 
             }
             
-            console.log(`📥 NEW MULTI-FILE TARGET ACQUIRED! Processing Order ID: ${order.orderId}`);
-            let totalFilesPrintedSuccessfully = 0;
+            console.log(`\n==================================================`);
+            console.log(`📥 PROCESSING ORDER ID: #${order.orderId}`);
+            console.log(`👤 Customer: ${order.customerName || 'Valued Customer'} | Phone: ${order.phone || 'N/A'}`);
+            console.log(`==================================================`);
+            
+            // Check karo ki is order mein koi photo print job hai ya nahi
+            const items = order.configDetails || [];
+            const hasPhotoJobs = items.some(item => item.jobType === 'photo_print' || item.paperType === 'photo');
+
+            if (isSingleMode && hasPhotoJobs) {
+                console.log(`\n==================================================`);
+                console.log(`🛑 PAPER SWAP REQUIRED FOR ORDER #${order.orderId}!`);
+                console.log(`👉 PLEASE LOAD GLOSSY PHOTO PAPER INTO ${primaryPrinter}!`);
+                console.log(`==================================================\n`);
+                
+                await promptUser('👉 Press [ENTER] in this terminal AFTER loading Glossy Photo Paper...');
+            }
 
             if (order.configDetails && Array.isArray(order.configDetails) && order.files && order.files.length > 0) {
                 for (let i = 0; i < order.configDetails.length; i++) {
@@ -98,26 +106,41 @@ async function fetchAndPrintLiveJobs() {
                     
                     if (targetFile) {
                         const fileUrl = targetFile.url || `${BASE_URL}/uploads/${targetFile.filename || targetFile.savedName}`;
-                        const localPath = path.join(__dirname, 'temp_print_job.pdf');
+                        const localPath = path.join(__dirname, `temp_print_${i}.pdf`);
 
                         try {
                             if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
 
                             await downloadFilePromise(fileUrl, localPath);
-                            console.log(`🚀 Downloaded file [${i+1}/${order.configDetails.length}]: ${targetFile.name || targetFile.originalName || 'Document'}`);
                             
-                            await directHardwareSpoolPrint(localPath, {
-                                copies: fileMeta.copies || 1,
-                                sides: fileMeta.sides || 'single',
-                                orientation: fileMeta.orientation || 'portrait',
-                                printType: fileMeta.printType || 'color',
-                                colorMode: fileMeta.colorMode || 'color',
-                                password: fileMeta.pdfPassword || order.pdfPassword || null
-                            });
+                            const isPhoto = fileMeta.jobType === 'photo_print' || fileMeta.paperType === 'photo';
                             
-                            console.log(`✓ Print signal released for file node.`);
-                            totalFilesPrintedSuccessfully++;
+                            if (isPhoto) {
+                                console.log(`[ROUTE CHECK] 🖼️ Target: GLOSSY PHOTO PRINTER (${primaryPrinter})`);
+                                console.log(`[ACTION] Sending Photo Layout (${fileMeta.photoLayout || 'Photo'}) to Photo Printer`);
+                            } else {
+                                console.log(`[ROUTE CHECK] 📄 Target: DOCUMENT PRINTER (70 GSM) (${primaryPrinter})`);
+                                console.log(`[ACTION] Sending Document (${fileMeta.fileName || 'Document'}) to Document Printer`);
+                            }
 
+                            const targetPrintDevice = isSingleMode ? primaryPrinter : (isPhoto ? (settings.photoPrinterName || primaryPrinter) : (settings.documentPrinterName || primaryPrinter));
+
+                            const printOptions = {
+                                printer: targetPrintDevice,
+                                copies: parseInt(fileMeta.copies) || 1,
+                                side: fileMeta.sides === 'double' ? 'duplex' : 'simplex',
+                                orientation: fileMeta.orientation === 'landscape' ? 'landscape' : 'portrait',
+                                monochrome: !isPhoto && (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw')
+                            };
+
+                            if (fileMeta.pdfPassword || order.pdfPassword) {
+                                printOptions.password = fileMeta.pdfPassword || order.pdfPassword;
+                            }
+
+                            await pt.print(localPath, printOptions);
+                            console.log(`✓ Print signal released for file node.`);
+
+                            if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
                             await new Promise(res => setTimeout(res, 3000));
 
                         } catch (fileErr) {
@@ -132,18 +155,28 @@ async function fetchAndPrintLiveJobs() {
                     if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
                     await downloadFilePromise(fileUrl, localPath);
                     
-                    await directHardwareSpoolPrint(localPath, { 
+                    console.log(`[ROUTE CHECK] 📄 Target: DOCUMENT PRINTER (Fallback)`);
+                    await pt.print(localPath, { 
+                        printer: primaryPrinter, 
                         copies: 1, 
-                        printType: order.printType || 'color',
-                        password: order.pdfPassword || null
+                        monochrome: order.printType === 'bw' 
                     });
-                    totalFilesPrintedSuccessfully++;
+                    if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
                 } catch (err) {
                     console.error("❌ Fallback Print Blocked:", err.message);
                 }
             }
 
+            if (isSingleMode && hasPhotoJobs) {
+                console.log(`\n==================================================`);
+                console.log(`✅ Photos printed successfully!`);
+                console.log(`👉 PLEASE LOAD 70 GSM PAPER BACK INTO THE PRINTER!`);
+                console.log(`==================================================\n`);
+                await promptUser('👉 Press [ENTER] after putting normal 70 GSM paper back...');
+            }
+
             saveToHistory(order.orderId);
+            console.log(`✅ Order #${order.orderId} processing completed successfully!\n`);
             console.log(`🔒 Local Security Guard Locked: Order ${order.orderId} moved to history to break any potential loops.`);
             
             const localPath = path.join(__dirname, 'temp_print_job.pdf');

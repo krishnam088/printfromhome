@@ -1246,8 +1246,30 @@ window.addStudioJobToCart = async function() {
 
     window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
+    // 🔥 1. Yahan Paper Type aur Photo/Passport Layout ki values nikal lein
+    const paperType = typeof currentSelectedPaperType !== 'undefined' ? currentSelectedPaperType : 'document';
+    const jobType = (paperType === 'photo') ? 'photo_print' : 'document_print';
+    let photoLayout = null;
+    let photoCalculatedPrice = 50; // Default passport price
+
+    if (paperType === 'photo') {
+        const layoutSelect = document.getElementById('photoLayoutSelect');
+        photoLayout = layoutSelect ? layoutSelect.value : 'passport_8';
+        
+        // Layout ke hisab se price set karein
+        if (photoLayout === 'passport_8') photoCalculatedPrice = 50;
+        else if (photoLayout === 'passport_12') photoCalculatedPrice = 60;
+        else if (photoLayout === 'passport_20') photoCalculatedPrice = 100;
+        else if (photoLayout === 'photo_2_a4') photoCalculatedPrice = 50;
+        else if (photoLayout === 'photo_single_glossy') photoCalculatedPrice = 100;
+    }
+
     window.studioMasterFiles.forEach(f => {
         let rate = (f.printType === 'bw') ? 3 : 10;
+        
+        // 🔥 2. Agar photo print hai toh photo price lagega, warna normal document calculation
+        let itemPrice = (paperType === 'photo') ? photoCalculatedPrice : (f.pages * rate * f.copies);
+
         let printJobItem = {
             id: 'print_' + Date.now() + Math.random(),
             fileName: f.name,
@@ -1259,7 +1281,13 @@ window.addStudioJobToCart = async function() {
             orientation: f.orientation,
             sides: f.orientation === 'portrait' ? 'single' : 'landscape',
             binding: f.binding || 'none',
-            price: f.pages * rate * f.copies
+            
+            // 🔥 3. Yeh naye parameters add kiye hain agent aur routing ke liye
+            paperType: paperType,       // 'document' ya 'photo'
+            jobType: jobType,           // 'document_print' ya 'photo_print'
+            photoLayout: photoLayout,   // 'passport_8', 'passport_12' etc.
+            
+            price: itemPrice
         };
         window.cartPrintJobsArray.push(printJobItem);
     });
@@ -1272,15 +1300,6 @@ window.addStudioJobToCart = async function() {
     closePrintStudio();
     if (typeof toggleCartDrawer === 'function') {
         toggleCartDrawer(true);
-    }
-};
-
-window.addStudioDocumentToCartAndRedirect = window.addStudioJobToCart;
-window.toggleGlobalOrientation = function() {
-    let file = window.studioMasterFiles[window.currentStudioActiveIndex];
-    if (file) {
-        file.orientation = (file.orientation === 'portrait') ? 'landscape' : 'portrait';
-        updateMultiFileStudioUI();
     }
 };
 
@@ -5675,3 +5694,42 @@ window.toggleLegalTermsModal = function(open) {
         modal.style.display = open ? 'flex' : 'none';
     }
 };
+
+
+let currentSelectedPaperType = 'document';
+
+function setStudioPaperType(type) {
+    currentSelectedPaperType = type;
+    const docBox = document.getElementById('paperTypeDoc');
+    const photoBox = document.getElementById('paperTypePhoto');
+    const photoContainer = document.getElementById('photoOptionsContainer');
+
+    if (type === 'document') {
+        docBox.style.borderColor = '#065f46';
+        docBox.style.background = '#f0fdf4';
+        photoBox.style.borderColor = '#e2e8f0';
+        photoBox.style.background = '#ffffff';
+        photoContainer.style.display = 'none';
+    } else {
+        photoBox.style.borderColor = '#065f46';
+        photoBox.style.background = '#f0fdf4';
+        docBox.style.borderColor = '#e2e8f0';
+        docBox.style.background = '#ffffff';
+        photoContainer.style.display = 'block';
+        updatePhotoLayoutPricing();
+    }
+}
+
+function updatePhotoLayoutPricing() {
+    const layout = document.getElementById('photoLayoutSelect').value;
+    let price = 50;
+    
+    if (layout === 'passport_8') price = 50;
+    else if (layout === 'passport_12') price = 60;
+    else if (layout === 'passport_20') price = 100;
+    else if (layout === 'photo_2_a4') price = 50;
+    else if (layout === 'photo_single_glossy') price = 100;
+
+    document.getElementById('studioTotalPriceText').textContent = `₹${price}`;
+    window.currentCalculatedJobPrice = price;
+}
