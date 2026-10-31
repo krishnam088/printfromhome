@@ -406,6 +406,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+
     // 🔥 Bulletproof Address Updater (Handles both Google LatLng object and plain {lat, lng} object)
     function updateAddressFromLatLng(geocoder, latLng, inputElement) {
         const latVal = (typeof latLng.lat === 'function') ? latLng.lat() : latLng.lat;
@@ -677,6 +678,7 @@ window.openOrderTrackingView = function(orderId) {
         }
     };
 }
+
 
 // 🔥 PAST ORDER RE-ORDER / LOAD TO CART PREVIEW
     window.openPastOrderInCartPreview = function(orderId) {
@@ -3609,7 +3611,195 @@ window.executeFinalCartOrderPlacement = async function() {
         }
     }
 };
-    // 🔥 CREATE ORDER ON SERVER & HANDLE DIWALI LAUNCH MODE HOLD
+    // ==========================================
+// 💳 BULLETPROOF ORDER PLACEMENT & PAYMENT GATEWAY ENGINE
+// ==========================================
+window.executeFinalCartOrderPlacement = async function() {
+    if (typeof isStoreCurrentlyOpen !== 'undefined' && !isStoreCurrentlyOpen) {
+        if (typeof showAppToast === 'function') showAppToast("Store is currently closed. Orders cannot be accepted right now.", "error");
+        const storeClosedModal = document.getElementById('storeClosedPopupModal');
+        if (storeClosedModal) storeClosedModal.style.display = 'flex';
+        return;
+    }
+
+    const activeAddress = localStorage.getItem('selected_active_address');
+    if (!activeAddress || activeAddress.trim() === "") {
+        if (typeof showAppToast === 'function') showAppToast("Please add and select a delivery address first.", "error");
+        if (typeof openAddressManagerModal === 'function') {
+            openAddressManagerModal();
+        }
+        return;
+    }
+
+    window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
+    window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
+
+    const cachedDel = localStorage.getItem('cached_delivery_fee');
+    const cachedHan = localStorage.getItem('cached_handling_fee');
+    const cachedRai = localStorage.getItem('cached_rain_fee');
+
+    window.adminDeliveryFee = (cachedDel !== null && cachedDel !== undefined && cachedDel !== '') ? parseFloat(cachedDel) : 0;
+    window.adminHandlingFee = (cachedHan !== null && cachedHan !== undefined && cachedHan !== '') ? parseFloat(cachedHan) : 0;
+    window.adminRainFee = (cachedRai !== null && cachedRai !== undefined && cachedRai !== '') ? parseFloat(cachedRai) : 0;
+    
+    let totalItemsCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0) + window.cartPrintJobsArray.length;
+    if (totalItemsCount === 0) {
+        if (typeof showAppToast === 'function') showAppToast("Your cart is empty. Please add items first.", "error");
+        return;
+    }
+
+    let totalPrintVal = 0;
+    let totalSnacksVal = 0;
+    const finalMetaConfig = [];
+
+    window.cartPrintJobsArray.forEach(job => {
+        let rate = (job.printType === 'bw') ? 3 : 10;
+        const cost = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
+        totalPrintVal += cost;
+        finalMetaConfig.push({ fileName: job.fileName, pages: job.pages, printType: job.printType, binding: job.binding, copies: job.copies });
+    });
+
+    window.cartSnacksArray.forEach(snack => {
+        totalSnacksVal += snack.price * snack.qty;
+        finalMetaConfig.push({ 
+            sku: snack.sku || '',
+            name: snack.name,
+            fileName: `Product: ${snack.name} (Qty: ${snack.qty})`, 
+            copies: snack.qty, 
+            qty: snack.qty,
+            printType: 'snack', 
+            pages: 1,
+            price: snack.price,
+            imageUrl: snack.imageUrl || ''
+        });
+    });
+
+    let subtotal = totalPrintVal + totalSnacksVal;
+    const freeDeliveryThreshold = window.getDynamicFreeDeliveryThreshold ? window.getDynamicFreeDeliveryThreshold() : 99.00;
+    
+    const selectedDeliveryModeRadio = document.querySelector('input[name="cartDeliveryModeRadio"]:checked');
+    let deliveryMode = selectedDeliveryModeRadio ? selectedDeliveryModeRadio.value : (window.currentCartDeliveryMode || 'doorstep');
+
+    let activeDelFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 0;
+    let delivery = (deliveryMode === 'pickup') ? 0 : ((subtotal >= freeDeliveryThreshold || subtotal === 0) ? 0 : activeDelFee);
+    
+    let activeRainFee = window.adminRainFee !== undefined ? window.adminRainFee : 0;
+    let rainFee = window.isRainSurgeActive ? activeRainFee : 0;
+    
+    let activeHandlingFee = window.adminHandlingFee !== undefined ? window.adminHandlingFee : 0;
+    let couponDiscount = window.appliedActiveCoupon ? window.appliedActiveCoupon.discount : 0;
+    
+    let grandTotal = subtotal + delivery + rainFee + activeHandlingFee + (window.currentDeliveryTip || 0) - couponDiscount;
+    grandTotal = Math.max(0, grandTotal);
+
+    const paymentSelect = document.getElementById('cartDrawerPaymentSelect');
+    const selectedRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
+    let paymentMode = selectedRadio ? selectedRadio.value.toLowerCase() : (paymentSelect ? paymentSelect.value.toLowerCase() : 'online');
+
+    const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+    const userPhone = localStorage.getItem('printAppUserIdentity') || 'N/A';
+
+    let deliveryInstructionText = "Standard Delivery";
+    const activeCheckedInstruction = document.querySelector('input[name="deliveryInstruction"]:checked');
+    if (activeCheckedInstruction) {
+        deliveryInstructionText = activeCheckedInstruction.value;
+    } else {
+        const highlightedInstruction = document.querySelector('[style*="background: rgb(240, 253, 244)"], [style*="background:#f0fdf4"]');
+        if (highlightedInstruction) {
+            deliveryInstructionText = highlightedInstruction.innerText.replace('✔', '').trim();
+        }
+    }
+
+    let userLat = STORE_LOCATION.lat;
+    let userLng = STORE_LOCATION.lng;
+    
+    try {
+        const position = await new Promise((resolve, reject) => {
+            if (!navigator.geolocation) reject("Geolocation not supported");
+            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+        });
+        userLat = position.coords.latitude;
+        userLng = position.coords.longitude;
+    } catch (e) {
+        console.warn("Using store location fallback for order coordinates.");
+    }
+
+    const formData = new FormData();
+    window.cartPrintJobsArray.forEach(job => {
+        if (job.fileData) formData.append('document', job.fileData);
+    });
+
+    formData.append('totalAmount', grandTotal.toFixed(2));
+    formData.append('configDetails', JSON.stringify(finalMetaConfig));
+    formData.append('address', activeAddress);
+    formData.append('customerName', sessionActiveUser);
+    formData.append('phone', userPhone);
+    formData.append('deliveryTip', window.currentDeliveryTip || 0);
+    formData.append('paymentMode', paymentMode);
+    formData.append('deliveryMode', deliveryMode);
+    formData.append('userLat', userLat);
+    formData.append('userLng', userLng);
+    formData.append('deliveryInstruction', deliveryInstructionText);
+
+    let initialOrderStatus = (window.cartPrintJobsArray.length > 0) ? "Ready for Print" : "Order Placed & Picking";
+
+    const finalizeOrderSuccess = async (orderId) => {
+        const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+        const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
+        
+        const historyKeys = [
+            `history_${sessionActiveUser}`,
+            activeIdentity ? `history_${activeIdentity}` : null
+        ].filter(Boolean);
+
+        const newOrderObj = { 
+            orderId: orderId,
+            date: new Date().toLocaleString(), 
+            amount: grandTotal.toFixed(2), 
+            status: initialOrderStatus, 
+            details: finalMetaConfig, 
+            address: activeAddress,
+            deliveryMode: deliveryMode,
+            deliveryInstruction: deliveryInstructionText, 
+            deliveryTip: window.currentDeliveryTip || 0
+        };
+
+        historyKeys.forEach(key => {
+            let currentHistoryArray = JSON.parse(localStorage.getItem(key) || '[]');
+            currentHistoryArray.unshift(newOrderObj);
+            localStorage.setItem(key, JSON.stringify(currentHistoryArray));
+        });
+
+        window.appliedActiveCoupon = null;
+
+        try {
+            await fetch('/api/admin/inventory/decrement', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: finalMetaConfig })
+            });
+        } catch (e) {
+            console.error("Inventory decrement sync error:", e);
+        }
+
+        window.cartPrintJobsArray = [];
+        window.cartSnacksArray = [];
+        window.currentDeliveryTip = 0;
+        localStorage.removeItem('cart_print_jobs');
+        localStorage.removeItem('cart_snacks');
+
+        if (typeof persistCartStateData === 'function') persistCartStateData();
+        if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
+
+        if (typeof renderOrderHistoryUI === 'function') {
+            renderOrderHistoryUI(sessionActiveUser);
+        }
+
+        if (typeof navigateDrawerSection === 'function') {
+            navigateDrawerSection('history');
+        }
+    };
+
     try {
         const response = await fetch('/api/create-order', { method: 'POST', body: formData });
         const data = await response.json();
@@ -3618,39 +3808,38 @@ window.executeFinalCartOrderPlacement = async function() {
             if (data.isDiwaliHold) {
                 showDiwaliPreLaunchNotice(data.message);
             } else {
-                alert(`⚠️ Error: ${data.message || 'Failed to create order'}`);
+                if (typeof showAppToast === 'function') showAppToast(data.message || 'Failed to create order', "error");
             }
             return;
         }
 
         // 1️⃣ CASH ON DELIVERY (COD) ROUTE
         if (paymentMode === 'cod' || paymentMode === 'cash') {
-            alert('🎉 Order Placed Successfully via Cash on Delivery!');
+            if (typeof showAppToast === 'function') showAppToast("Order placed successfully via Cash on Delivery!", "success", true);
             await finalizeOrderSuccess(data.order_id);
             return;
         }
 
-      // 2️⃣ PRINT WALLET ROUTE
+        // 2️⃣ PRINT WALLET ROUTE
         if (paymentMode === 'wallet') {
             const walletKey = `wallet_balance_${sessionActiveUser}`;
             let currentWalletCash = parseFloat(localStorage.getItem(walletKey)) || 0.00;
             
             if (currentWalletCash < grandTotal) {
-                alert(`❌ Insufficient wallet balance! You have ₹${currentWalletCash.toFixed(2)}, but grand total is ₹${grandTotal.toFixed(2)}. Please recharge your wallet online.`);
+                if (typeof showAppToast === 'function') showAppToast(`Insufficient wallet balance! Available: ₹${currentWalletCash.toFixed(2)}, Needed: ₹${grandTotal.toFixed(2)}`, "error");
                 return;
             }
 
             let newBalance = currentWalletCash - grandTotal;
             localStorage.setItem(walletKey, newBalance.toFixed(2));
             
-            // Sync UI wallet balance display if function exists
             const balanceDisplay = document.getElementById('headerWalletDisplayBalance');
             if (balanceDisplay) {
                 balanceDisplay.textContent = `₹${newBalance.toFixed(2)}`;
             }
             if (typeof synchronizeWalletInterfaceBalance === 'function') synchronizeWalletInterfaceBalance();
 
-            alert('🎉 Order Placed Successfully using Print Wallet!');
+            if (typeof showAppToast === 'function') showAppToast("Order placed successfully using Print Wallet!", "success", true);
             await finalizeOrderSuccess(data.order_id);
             return;
         }
@@ -3675,19 +3864,19 @@ window.executeFinalCartOrderPlacement = async function() {
                     });
                     const verifyData = await verifyRes.json();
                     if (verifyData.success) {
-                        alert('🎉 Payment Successful & Order Confirmed!');
+                        if (typeof showAppToast === 'function') showAppToast("Payment successful & order confirmed!", "success", true);
                         await finalizeOrderSuccess(data.order_id);
                     } else {
-                        alert('⚠️ Payment verification failed.');
+                        if (typeof showAppToast === 'function') showAppToast("Payment verification failed.", "error");
                     }
                 } catch (err) {
-                    alert('🎉 Payment Recorded Successfully!');
+                    if (typeof showAppToast === 'function') showAppToast("Payment recorded successfully!", "success", true);
                     await finalizeOrderSuccess(data.order_id);
                 }
             },
             modal: {
                 ondismiss: function() {
-                    alert('⚠️ Payment cancelled. Order was not completed.');
+                    if (typeof showAppToast === 'function') showAppToast("Payment cancelled. Order was not completed.", "error");
                 }
             },
             theme: { color: '#065f46' }
@@ -3697,12 +3886,12 @@ window.executeFinalCartOrderPlacement = async function() {
             const rzp1 = new Razorpay(options);
             rzp1.open();
         } else {
-            alert('⚠️ Razorpay SDK not loaded.');
+            if (typeof showAppToast === 'function') showAppToast("Razorpay SDK not loaded.", "error");
         }
 
     } catch (error) {
         console.error("Order placement exception:", error);
-        alert('❌ Connection Breakdown during order checkout.');
+        if (typeof showAppToast === 'function') showAppToast("Connection breakdown during order checkout.", "error");
     }
 };
 
@@ -4001,6 +4190,7 @@ window.forceDebugOrderHistory = function(username, showRecent = true) {
         }, 1000);
     });
 })();
+}
 
 // Final safety net: ensure no trailing syntax issues at EOF.
 if (typeof window !== 'undefined') {
@@ -4510,10 +4700,10 @@ window.openOrderTrackingView = function(orderId) {
 };
 
 // 4. Order Place hote hi direct naye order ke tracking page par bhejna
-const originalFinalizeOrderSuccess = window.finalizeOrderSuccess;
+const originalFinalizeOrderSuccessForTrackingRedirect = window.finalizeOrderSuccess;
 window.finalizeOrderSuccess = async function(orderId) {
-    if (typeof originalFinalizeOrderSuccess === 'function') {
-        await originalFinalizeOrderSuccess(orderId);
+    if (typeof originalFinalizeOrderSuccessForTrackingRedirect === 'function') {
+        await originalFinalizeOrderSuccessForTrackingRedirect(orderId);
     }
     if (typeof window.openOrderTrackingView === 'function') {
         window.openOrderTrackingView(orderId);
@@ -5673,14 +5863,16 @@ window.setPopupTrackingTip = function(amount, btnElement) {
 };
 
 // 🔥 Order Success Hook
-{
+(() => {
+    if (typeof window === 'undefined') return;
+
     const originalFinalizeOrderSuccess = window.finalizeOrderSuccess;
     window.finalizeOrderSuccess = async function(orderId) {
         if (typeof originalFinalizeOrderSuccess === 'function') {
-            await originalFinalizeOrderSuccess(orderId);
+            await originalFinalizeOrderSuccess.call(this, orderId);
         }
         if (typeof window.openOrderTrackingView === 'function') {
             window.openOrderTrackingView(orderId);
         }
     };
-}
+})();
