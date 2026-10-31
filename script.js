@@ -2639,17 +2639,30 @@ window.editCartPrintJob = function(idx) {
     let job = window.cartPrintJobsArray[idx];
     if (!job) return;
 
+    // 🔥 Purane expired blob URL ki jagah fresh object URL generate karein agar file data available hai
+    let freshFileUrl = job.fileUrl;
+    if (job.fileData) {
+        try {
+            freshFileUrl = URL.createObjectURL(job.fileData);
+        } catch (e) {
+            freshFileUrl = job.fileUrl;
+        }
+    }
+
     window.studioMasterFiles = [{
         name: job.fileName,
         size: 0,
         fileBlob: job.fileData,
-        fileUrl: job.fileUrl,
-        pageImages: [job.fileUrl],
+        fileUrl: freshFileUrl,
+        pageImages: [freshFileUrl],
         pages: job.pages,
         copies: job.copies,
         printType: job.printType,
         orientation: job.orientation,
-        binding: job.binding || 'none'
+        binding: job.binding || 'none',
+        paperType: job.paperType || 'document',
+        photoLayout: job.photoLayout || null,
+        price: job.price || 50
     }];
     window.currentStudioActiveIndex = 0;
 
