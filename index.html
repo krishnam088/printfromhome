@@ -744,7 +744,60 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <button type="button" onclick="toggleHelpModal(false)" style="background: #e2e8f0; color: #334155; border: none; padding: 10px; border-radius: 10px; font-weight: 700; width: 100%; cursor: pointer;">Close</button>
         </div>
+    </div>      
+
+    <!-- 📜 Legal Terms & Policies Button (Help & Support Hub ke theek niche) -->
+    <div style="margin-top: 10px;">
+        <button type="button" onclick="toggleLegalTermsModal(true)" style="width: 100%; background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>📄</span> Terms & Conditions, Privacy & Refund Policy
+        </button>
     </div>
+
+    <!-- 📜 Legal Terms & Policies Popup Modal -->
+    <div id="legalTermsModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 999999; display: none; justify-content: center; align-items: center; padding: 16px; font-family: 'Poppins', sans-serif;">
+        <div style="background: #ffffff; border-radius: 20px; max-width: 480px; width: 100%; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            
+            <!-- Header -->
+            <div style="padding: 16px 20px; background: #065f46; color: white; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 1rem; font-weight: 900;">Print From Home - Legal Policies</h3>
+                <span onclick="toggleLegalTermsModal(false)" style="font-size: 1.4rem; cursor: pointer; font-weight: bold;">&times;</span>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div style="padding: 20px; overflow-y: auto; flex: 1; font-size: 0.78rem; color: #334155; line-height: 1.6;">
+                
+                <h4 style="color: #0f172a; font-weight: 900; margin-top: 0;">1. Terms & Conditions</h4>
+                <p><strong>Introduction:</strong> Welcome to Print From Home, India's last-minute printing and delivery service based in Varanasi, Uttar Pradesh. By placing an order, you agree to comply with our terms.</p>
+                <p><strong>Service Availability:</strong> Operating within designated local zones in Varanasi during store hours (7:00 AM to 10:00 PM).</p>
+                <p><strong>User Content & Privacy:</strong> You retain full ownership of uploaded documents. Files are used solely for printing and are purged securely from temporary local directories.</p>
+                <p><strong>Pricing & Payments:</strong> Prices are in INR inclusive of taxes. Payments via Razorpay, Print Wallet, or Cash on Delivery.</p>
+
+                <h4 style="color: #0f172a; font-weight: 900; margin-top: 15px;">2. Cancellation & Refund Policy</h4>
+                <p><strong>Cancellation Window:</strong> Cancel directly from the app before the order is marked as "Out for Delivery" or "Printing Started".</p>
+                <p><strong>Refund Timelines (Online):</strong> Refunds for prepaid online orders are credited back to the original source within <strong>3 to 4 working days</strong>.</p>
+                <p><strong>Delivery Fee Deduction:</strong> A standard local logistics fee (₹25) may be retained if cancelled after printing has commenced.</p>
+                <p><strong>COD & Wallet Orders:</strong> No actual online debit takes place; wallet balances are instantly reversed upon valid cancellation.</p>
+
+                <h4 style="color: #0f172a; font-weight: 900; margin-top: 15px;">3. Privacy Policy</h4>
+                <p><strong>Data Collected:</strong> We collect necessary details like name, mobile number, delivery address, and Gmail strictly for order fulfillment and tracking updates.</p>
+                <p><strong>Data Security:</strong> Secured with encrypted authentication and reliable database storage. We never share data with third-party marketers.</p>
+
+            </div>
+
+            <!-- Footer -->
+            <div style="padding: 12px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;">
+                <button type="button" onclick="toggleLegalTermsModal(false)" style="background: #065f46; color: white; border: none; padding: 10px 24px; border-radius: 10px; font-weight: 800; font-size: 0.82rem; cursor: pointer; width: 100%;">Close & Return</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function toggleLegalTermsModal(open) {
+            const modal = document.getElementById('legalTermsModal');
+            if (modal) modal.style.display = open ? 'flex' : 'none';
+        }
+    </script>
 
     <!-- 💰 Wallet Deposit & Recharge Modal -->
 <div id="walletDepositModal" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:999999; display:none; justify-content:center; align-items:center; padding:20px; font-family:'Poppins',sans-serif;">
@@ -854,58 +907,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
     </div>
 
-    <!-- 📜 Legal Terms & Policies Button in Account Menu / Profile Settings -->
-<div style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
-    <button type="button" onclick="toggleLegalTermsModal(true)" style="width: 100%; background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; padding: 10px; border-radius: 10px; font-weight: 800; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-        <span>📄</span> Terms & Conditions, Privacy & Refund Policy
-    </button>
-</div>
-
-<!-- 📜 Legal Terms & Policies Popup Modal -->
-<div id="legalTermsModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 999999; display: none; justify-content: center; align-items: center; padding: 16px; font-family: 'Poppins', sans-serif;">
-    <div style="background: #ffffff; border-radius: 20px; max-width: 480px; width: 100%; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
-        
-        <!-- Header -->
-        <div style="padding: 16px 20px; background: #065f46; color: white; display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin: 0; font-size: 1rem; font-weight: 900;">Print From Home - Legal Policies</h3>
-            <span onclick="toggleLegalTermsModal(false)" style="font-size: 1.4rem; cursor: pointer; font-weight: bold;">&times;</span>
-        </div>
-
-        <!-- Scrollable Content -->
-        <div style="padding: 20px; overflow-y: auto; flex: 1; font-size: 0.78rem; color: #334155; line-height: 1.6;">
-            
-            <h4 style="color: #0f172a; font-weight: 900; margin-top: 0;">1. Terms & Conditions</h4>
-            <p><strong>Introduction:</strong> Welcome to Print From Home, India's last-minute printing and delivery service based in Varanasi, Uttar Pradesh. By placing an order, you agree to comply with our terms.</p>
-            <p><strong>Service Availability:</strong> Operating within designated local zones in Varanasi during store hours (7:00 AM to 10:00 PM).</p>
-            <p><strong>User Content & Privacy:</strong> You retain full ownership of uploaded documents. Files are used solely for printing and are purged securely from temporary local directories.</p>
-            <p><strong>Pricing & Payments:</strong> Prices are in INR inclusive of taxes. Payments via Razorpay, Print Wallet, or Cash on Delivery.</p>
-
-            <h4 style="color: #0f172a; font-weight: 900; margin-top: 15px;">2. Cancellation & Refund Policy</h4>
-            <p><strong>Cancellation Window:</strong> Cancel directly from the app before the order is marked as "Out for Delivery" or "Printing Started".</p>
-            <p><strong>Refund Timelines (Online):</strong> Refunds for prepaid online orders are credited back to the original source within <strong>3 to 4 working days</strong>.</p>
-            <p><strong>Delivery Fee Deduction:</strong> A standard local logistics fee (₹25) may be retained if cancelled after printing has commenced.</p>
-            <p><strong>COD & Wallet Orders:</strong> No actual online debit takes place; wallet balances are instantly reversed upon valid cancellation.</p>
-
-            <h4 style="color: #0f172a; font-weight: 900; margin-top: 15px;">3. Privacy Policy</h4>
-            <p><strong>Data Collected:</strong> We collect necessary details like name, mobile number, delivery address, and Gmail strictly for order fulfillment and tracking updates.</p>
-            <p><strong>Data Security:</strong> Secured with encrypted authentication and reliable database storage. We never share data with third-party marketers.</p>
-
-        </div>
-
-        <!-- Footer -->
-        <div style="padding: 12px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;">
-            <button type="button" onclick="toggleLegalTermsModal(false)" style="background: #065f46; color: white; border: none; padding: 10px 24px; border-radius: 10px; font-weight: 800; font-size: 0.82rem; cursor: pointer; width: 100%;">Close & Return</button>
-        </div>
-
-    </div>
-</div>
-
-<script>
-    function toggleLegalTermsModal(open) {
-        const modal = document.getElementById('legalTermsModal');
-        if (modal) modal.style.display = open ? 'flex' : 'none';
-    }
-</script>
+  
 
     <div id="iosInstallModal" onclick="closeIosInstallModal(event)" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(5px); z-index: 100000; justify-content: center; align-items: flex-end; padding: 0;">
         <div onclick="event.stopPropagation()" style="background: #1e293b; color: #f8fafc; width: 100%; max-width: 460px; border-radius: 24px 24px 0 0; padding: 24px; border-top: 1px solid #334155; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); text-align: center; animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1); position: relative;">
