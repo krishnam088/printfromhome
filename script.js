@@ -2371,30 +2371,47 @@ window.renderCartDrawerContents = function() {
 
     // 1. Render Print Jobs in Cart
     window.cartPrintJobsArray.forEach((job, idx) => {
-        let rate = (job.printType === 'bw') ? 3 : 10;
-        let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
+    let rate = (job.printType === 'bw') ? 3 : 10;
+    
+    // 🔥 Yahan check karein ki kya yeh photo print hai, agar hai toh job.price lein warna document calculation karein
+    let jobTotal = 0;
+    let subtitleText = "";
 
-        const card = document.createElement('div');
-        card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02);";
+    if (job.paperType === 'photo' || job.jobType === 'photo_print') {
+        jobTotal = Number(job.price || 50);
+        let layoutName = "Photo Print";
+        if (job.photoLayout === 'passport_12') layoutName = "Passport (12 Copies)";
+        else if (job.photoLayout === 'passport_20') layoutName = "Passport (20 Copies)";
+        else if (job.photoLayout === 'photo_2_a4') layoutName = "2 Large Photos (A4)";
+        else if (job.photoLayout === 'photo_single_glossy') layoutName = "Full Page Glossy";
+        else layoutName = "Passport (8 Copies)";
 
-        card.innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
-                    <div style="font-size:1.6rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px; flex-shrink:0;">📄</div>
-                    <div style="overflow:hidden; flex:1;">
-                        <div title="${job.fileName}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
-                        <div style="font-size:0.68rem; color:#64748b; font-weight:600; margin-top:2px;">${job.pages} pgs | ${job.printType.toUpperCase()} | Copies: ${job.copies}</div>
-                    </div>
-                </div>
-                <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
-                    <div style="font-weight:900; font-size:0.85rem; color:#065f46;">₹${jobTotal}</div>
-                    <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:5px 8px; font-size:0.7rem; cursor:pointer;" title="Remove Print Job">🗑️</button>
+        subtitleText = `🖼️ Glossy Photo | ${layoutName} | Copies: ${job.copies}`;
+    } else {
+        jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
+        subtitleText = `${job.pages} pgs | ${job.printType.toUpperCase()} | Copies: ${job.copies}`;
+    }
+
+    const card = document.createElement('div');
+    card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,0.02);";
+
+    card.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;">
+                <div style="font-size:1.6rem; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:#f1f5f9; border-radius:8px; flex-shrink:0;">${(job.paperType === 'photo') ? '🖼️' : '📄'}</div>
+                <div style="overflow:hidden; flex:1;">
+                    <div title="${job.fileName}" style="font-weight:700; font-size:0.82rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${job.fileName}</div>
+                    <div style="font-size:0.68rem; color:#64748b; font-weight:600; margin-top:2px;">${subtitleText}</div>
                 </div>
             </div>
-        `;
-        wrapper.appendChild(card);
-    });
-
+            <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+                <div style="font-weight:900; font-size:0.85rem; color:#065f46;">₹${jobTotal}</div>
+                <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; border-radius:6px; padding:5px 8px; font-size:0.7rem; cursor:pointer;" title="Remove Print Job">🗑️</button>
+            </div>
+        </div>
+    `;
+    wrapper.appendChild(card);
+});
     // 2. Render Snacks / Store Products in Cart (Fixed typo: snack.price * snack.qty)
     window.cartSnacksArray.forEach((snack, idx) => {
         const card = document.createElement('div');
