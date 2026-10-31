@@ -5668,3 +5668,10 @@ window.addEventListener('DOMContentLoaded', () => {
         }, 800); // Thoda delay taaki page completely load ho jaye
     }
 });
+// 🔥 Toggle Legal Terms Modal Function
+window.toggleLegalTermsModal = function(open) {
+    const modal = document.getElementById('legalTermsModal');
+    if (modal) {
+        modal.style.display = open ? 'flex' : 'none';
+    }
+};
