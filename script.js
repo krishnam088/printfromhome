@@ -1247,55 +1247,56 @@ window.applyCurrentSettingToAllFiles = function() {
 };
 
 window.handleStudioFilesAdded = function(input) {
-        if (input.files && input.files.length > 0) {
-            Array.from(input.files).forEach(async (file) => {
-                let pageCount = 1;
-                let pageImages = [];
-                let fileUrl = '';
-                
+    if (input.files && input.files.length > 0) {
+        Array.from(input.files).forEach(async (file) => {
+            let pageCount = 1;
+            let pageImages = [];
+            let fileUrl = '';
+            
+            try {
+                fileUrl = URL.createObjectURL(file);
+            } catch(e) {
+                fileUrl = '';
+            }
+
+            if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
                 try {
-                    fileUrl = URL.createObjectURL(file);
-                } catch(e) {
-                    fileUrl = '';
-                }
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    pageCount = pdfDoc.numPages || 1;
 
-                if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-                    try {
-                        const arrayBuffer = await file.arrayBuffer();
-                        const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                        pageCount = pdfDoc.numPages || 1;
-
-                        if (pdfDoc && typeof window.convertPdfPageToImage === 'function') {
-                            for (let p = 1; p <= pageCount; p++) {
-                                let pageImgUrl = await window.convertPdfPageToImage(pdfDoc, p);
-                                if (pageImgUrl) pageImages.push(pageImgUrl);
-                            }
+                    if (pdfDoc && typeof window.convertPdfPageToImage === 'function') {
+                        for (let p = 1; p <= pageCount; p++) {
+                            let pageImgUrl = await window.convertPdfPageToImage(pdfDoc, p);
+                            if (pageImgUrl) pageImages.push(pageImgUrl);
                         }
-                        if (pageImages.length > 0) fileUrl = pageImages[0];
-                    } catch (e) {
-                        pageCount = 1;
                     }
-                } else if (file.type && file.type.startsWith('image/')) {
-                    pageImages.push(fileUrl);
+                    if (pageImages.length > 0) fileUrl = pageImages[0];
+                } catch (e) {
+                    pageCount = 1;
                 }
+            } else if (file.type && file.type.startsWith('image/')) {
+                pageImages.push(fileUrl);
+            }
 
-                window.studioMasterFiles.push({
-                    name: file.name,
-                    size: file.size,
-                    fileBlob: file,
-                    fileUrl: fileUrl,
-                    pageImages: pageImages.length > 0 ? pageImages : [fileUrl],
-                    pages: pageCount,
-                    copies: 1,
-                    printType: 'bw',
-                    orientation: 'portrait',
-                    binding: 'none'
-                });
-                updateMultiFileStudioUI();
+            // 🔥 Ensure fileBlob and fileUrl are strictly preserved to prevent ERR_FILE_NOT_FOUND
+            window.studioMasterFiles.push({
+                name: file.name,
+                size: file.size,
+                fileBlob: file,
+                fileUrl: fileUrl,
+                pageImages: pageImages.length > 0 ? pageImages : [fileUrl],
+                pages: pageCount,
+                copies: 1,
+                printType: 'bw',
+                orientation: 'portrait',
+                binding: 'none'
             });
-            input.value = '';
-        }
-    };
+            updateMultiFileStudioUI();
+        });
+        input.value = '';
+    }
+};
 
 window.removeCurrentStudioFile = function() {
     if (window.studioMasterFiles.length > 1) {
