@@ -566,7 +566,7 @@ window.openOrderTrackingView = function(orderId) {
             if (callBtn) callBtn.href = "tel:7007626731";
         }
 
-        // 4. Render Item Manifest (Print Jobs & Snacks Breakdown)
+      // 4. Render Item Manifest (Fixed multiplication bug here)
         const manifestList = document.getElementById('trackFilesManifestList');
         if (manifestList) {
             let detailsArray = order.details || order.configDetails || [];
@@ -582,7 +582,7 @@ window.openOrderTrackingView = function(orderId) {
                     return `
                         <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:#334155; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;">
                             <span>📄 ${itemName} (×${itemCopies})</span>
-                            <b style="color:#065f46;">₹${itemPrice * itemCopies}</b>
+                            <b style="color:#065f46;">₹${Number(itemPrice) * Number(itemCopies)}</b>
                         </div>
                     `;
                 }).join('');
@@ -5635,8 +5635,8 @@ window.openOrderTrackingView = function(orderId) {
             riderPhone = targetOrder.assignedDeliveryBoyPhone || targetOrder.assignedDeliveryBoy;
         }
 
-        const currentStatus = targetOrder.status || 'Order Placed & Picking';
-        const lowerStatus = currentStatus.toLowerCase();
+        const trackingStatus = targetOrder.status || 'Order Placed & Picking';
+        const lowerStatus = trackingStatus.toLowerCase();
         const isConfirmed = true;
         const isPacked = lowerStatus.includes('packed') || lowerStatus.includes('print') || lowerStatus.includes('out') || lowerStatus.includes('delivered');
         const isOutForDelivery = lowerStatus.includes('out') || lowerStatus.includes('delivery') || lowerStatus.includes('delivered');
@@ -5671,7 +5671,7 @@ window.openOrderTrackingView = function(orderId) {
                         <div>
                             <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
                                 <span style="width: 8px; height: 8px; background: #059669; border-radius: 50%; display: inline-block; animation: pulseDot 1.5s infinite;"></span>
-                                <span style="font-size: 0.75rem; font-weight: 800; color: #047857; text-transform: uppercase; letter-spacing: 0.5px;">${currentStatus}</span>
+                                <span style="font-size: 0.75rem; font-weight: 800; color: #047857; text-transform: uppercase; letter-spacing: 0.5px;">${trackingStatus}</span>
                             </div>
                             <div id="popupRealLiveEtaBadge" style="font-size: 1.3rem; font-weight: 900; color: #065f46; margin: 2px 0;">Connecting to live GPS...</div>
                             <div style="font-size: 0.75rem; color: #059669; font-weight: 600;">⚡ Placed on: ${targetOrder.date || 'N/A'}</div>
@@ -5763,6 +5763,29 @@ window.openOrderTrackingView = function(orderId) {
 
         document.body.appendChild(modalOverlay);
 
+        // 🔥 Delivered Status Check (Map ki jagah Success Banner aur Tip hide karne ke liye)
+        const currentStatus = targetOrder.status || 'Order Placed & Picking';
+        const isDelivered = currentStatus.toLowerCase().includes('delivered');
+
+        if (isDelivered) {
+            const mapContainerElement = document.getElementById('popupRealGoogleMapContainer');
+            if (mapContainerElement) {
+                mapContainerElement.innerHTML = `
+                    <div style="width:100%; height:100%; background:#f0fdf4; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#065f46; padding:15px; text-align:center; border:1px solid #bbf7d0; border-radius:18px;">
+                        <div style="font-size:2.2rem; margin-bottom:4px;">🎉</div>
+                        <div style="font-weight:900; font-size:0.95rem;">Order Delivered Successfully!</div>
+                        <div style="font-size:0.75rem; color:#047857; margin-top:2px;">Thank you for ordering with Print From Home.</div>
+                    </div>
+                `;
+            }
+
+            // Delivery tip box ko hide kar dein
+            const tipSectionBox = document.querySelector('.popup-tip-btn')?.closest('div[style*="background: #fffbeb"]');
+            if (tipSectionBox) {
+                tipSectionBox.style.display = 'none';
+            }
+        }
+        
         // Real-Time GPS Tracking & Server Polling Initialization
         setTimeout(() => {
             const mapEl = document.getElementById('popupRealGoogleMapContainer');
