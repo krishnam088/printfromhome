@@ -1465,16 +1465,13 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
 
         const selectedPaymentMode = paymentMode || "online";
 
-        // 🚨 RULE 1: Print Orders require Online Payment or Print Wallet
-
-      if (hasPrintJobs && paymentMode !== 'online' && paymentMode !== 'wallet') {
-        if (typeof showAppToast === 'function') {
-            showAppToast("Print orders require Online Payment or Print Wallet.", "error");
-        } else {
-            alert("Print orders require Online Payment or Print Wallet.");
+    // 🚨 RULE 1: Print Orders require Online Payment or Print Wallet
+        if (hasPrintJobs && selectedPaymentMode !== 'online' && selectedPaymentMode !== 'wallet') {
+            return res.status(400).json({ 
+                success: false, 
+                message: "For your convenience and to prevent paper waste, print orders require either Online Payment or Print Wallet. Please select Online or Wallet to proceed!" 
+            });
         }
-        return;
-    }
 
         if (Array.isArray(parsedConfig)) {
             for (const item of parsedConfig) {
