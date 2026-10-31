@@ -992,42 +992,80 @@ if (fileUpload) {
 
             let previewContent = '';
 
-            // 🔥 MULTI-PAGE PDF CHECK (Agar 1 se zyada page images hain)
-            if (f.pageImages && f.pageImages.length > 1) {
-                let verticalPagesHtml = f.pageImages.map((imgSrc, pIdx) => `
-                    <div class="pdf-preview-page-item" data-page-idx="${pIdx}" style="width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:14px; background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:12px; box-sizing:border-box;">
-                        <img src="${imgSrc}" style="${transformStyle} object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />
-                        <div style="margin-top:8px; background:#1e293b; color:white; font-size:0.7rem; font-weight:700; padding:3px 10px; border-radius:6px;">
-                            Page ${pIdx + 1} of ${f.pageImages.length}
+            // 🔥 Check karo ki kya user ne 'photo' paper type select kiya hai
+            const isPhotoMode = (typeof currentSelectedPaperType !== 'undefined' && currentSelectedPaperType === 'photo');
+
+            if (isPhotoMode) {
+                const layoutSelect = document.getElementById('photoLayoutSelect');
+                const selectedLayout = layoutSelect ? layoutSelect.value : 'passport_8';
+                
+                // Layout ke hisab से grid count set karein
+                let gridCount = 8;
+                if (selectedLayout === 'passport_12') gridCount = 12;
+                else if (selectedLayout === 'passport_20') gridCount = 20;
+                else if (selectedLayout === 'photo_2_a4') gridCount = 2;
+                else if (selectedLayout === 'photo_single_glossy') gridCount = 1;
+
+                let gridItemsHtml = '';
+                let singleImgSrc = (f.pageImages && f.pageImages.length > 0) ? f.pageImages[0] : f.fileUrl;
+
+                for (let g = 0; g < gridCount; g++) {
+                    gridItemsHtml += `
+                        <div style="border: 1px dashed #cbd5e1; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px; box-sizing: border-box;">
+                            <img src="${singleImgSrc}" style="width: 100%; height: 100%; object-fit: cover;" />
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }
+
+                // A4 Sheet Grid Layout Columns
+                let gridTemplateCols = 'repeat(4, 1fr)';
+                if (selectedLayout === 'passport_12') gridTemplateCols = 'repeat(4, 1fr)';
+                else if (selectedLayout === 'passport_20') gridTemplateCols = 'repeat(5, 1fr)';
+                else if (selectedLayout === 'photo_2_a4') gridTemplateCols = 'repeat(1, 1fr)';
+                else if (selectedLayout === 'photo_single_glossy') gridTemplateCols = 'repeat(1, 1fr)';
 
                 previewContent = `
-                    <div class="vertical-pdf-scroll-box" data-file-index="${fIdx}" style="width:100%; height:100%; display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; padding:12px; box-sizing:border-box; scrollbar-width:thin;">
-                        ${verticalPagesHtml}
+                    <div style="width: 85%; height: 85%; background: #ffffff; border: 2px solid #065f46; border-radius: 8px; padding: 10px; display: grid; grid-template-columns: ${gridTemplateCols}; gap: 6px; align-content: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); box-sizing: border-box; overflow: hidden;">
+                        ${gridItemsHtml}
                     </div>
                 `;
             } else {
-                // 🔥 SINGLE PAGE OR IMAGE OR DOCUMENT CHECK
-                let singleImgSrc = (f.pageImages && f.pageImages.length > 0) ? f.pageImages[0] : f.fileUrl;
-                
-                if (singleImgSrc) {
-                    const isActualImage = (f.fileBlob && f.fileBlob.type && f.fileBlob.type.startsWith('image/')) || 
-                                          singleImgSrc.startsWith('data:image/');
-
-                    if (isActualImage) {
-                        previewContent = `<img src="${singleImgSrc}" style="${transformStyle} object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />`;
-                    } else {
-                        previewContent = `
-                            <div style="display:flex; flex-direction:column; align-items:center; gap:8px; ${filterStyle}; max-width: 90%; padding: 0 10px; box-sizing: border-box;">
-                                <span style="font-size:3.5rem;">📄</span>
-                                <span style="font-size:0.75rem; font-weight:700; color:#1e293b; max-width:100%; white-space:normal; word-break:break-all; overflow-wrap:break-word; text-align:center; line-height:1.3;">${f.name}</span>
+                // 🔥 MULTI-PAGE PDF & NORMAL DOCUMENT PREVIEW CHECK
+                if (f.pageImages && f.pageImages.length > 1) {
+                    let verticalPagesHtml = f.pageImages.map((imgSrc, pIdx) => `
+                        <div class="pdf-preview-page-item" data-page-idx="${pIdx}" style="width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:14px; background:#ffffff; border:1px solid #cbd5e1; border-radius:10px; padding:12px; box-sizing:border-box;">
+                            <img src="${imgSrc}" style="${transformStyle} object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />
+                            <div style="margin-top:8px; background:#1e293b; color:white; font-size:0.7rem; font-weight:700; padding:3px 10px; border-radius:6px;">
+                                Page ${pIdx + 1} of ${f.pageImages.length}
                             </div>
-                        `;
-                    }
+                        </div>
+                    `).join('');
+
+                    previewContent = `
+                        <div class="vertical-pdf-scroll-box" data-file-index="${fIdx}" style="width:100%; height:100%; display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; padding:12px; box-sizing:border-box; scrollbar-width:thin;">
+                            ${verticalPagesHtml}
+                        </div>
+                    `;
                 } else {
-                    previewContent = `<span style="font-size:3.5rem; ${filterStyle}">📄</span>`;
+                    let singleImgSrc = (f.pageImages && f.pageImages.length > 0) ? f.pageImages[0] : f.fileUrl;
+                    
+                    if (singleImgSrc) {
+                        const isActualImage = (f.fileBlob && f.fileBlob.type && f.fileBlob.type.startsWith('image/')) || 
+                                              singleImgSrc.startsWith('data:image/');
+
+                        if (isActualImage) {
+                            previewContent = `<img src="${singleImgSrc}" style="${transformStyle} object-fit:contain; ${filterStyle} transition: all 0.3s ease;" />`;
+                        } else {
+                            previewContent = `
+                                <div style="display:flex; flex-direction:column; align-items:center; gap:8px; ${filterStyle}; max-width: 90%; padding: 0 10px; box-sizing: border-box;">
+                                    <span style="font-size:3.5rem;">📄</span>
+                                    <span style="font-size:0.75rem; font-weight:700; color:#1e293b; max-width:100%; white-space:normal; word-break:break-all; overflow-wrap:break-word; text-align:center; line-height:1.3;">${f.name}</span>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        previewContent = `<span style="font-size:3.5rem; ${filterStyle}">📄</span>`;
+                    }
                 }
             }
 
@@ -1107,7 +1145,6 @@ if (fileUpload) {
         }
     }
 
-    // 🔥 ACCURATE TOTAL PAGES & GRAND TOTAL CALCULATION ACROSS ALL FILES
     let totalPagesCombined = 0;
     let grandTotalPrice = 0;
 
@@ -1125,6 +1162,8 @@ if (fileUpload) {
         totalPriceText.textContent = `₹${grandTotalPrice} (${totalPagesCombined} pgs)`;
     }
 };
+    
+
 
 window.updatePrintStudioUI = window.updateMultiFileStudioUI;
 
