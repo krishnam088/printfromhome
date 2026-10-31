@@ -505,223 +505,6 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
     }
 };
 
-// ==========================================
-// 🔥 PROFESSIONAL SECTION-BASED ORDER STATUS & TRACKING ENGINE
-// ==========================================
-window.openOrderTrackingView = function(orderId) {
-    try {
-        const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
-        const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
-        
-        // 🔥 Saari possible keys check karein taaki kisi bhi user ko "Order details not found" na mile
-        let history = [];
-        const targetKeys = [
-            `history_${sessionActiveUser}`,
-            activeIdentity ? `history_${activeIdentity}` : null
-        ].filter(Boolean);
-
-        for (let key of targetKeys) {
-            try {
-                let items = JSON.parse(localStorage.getItem(key) || '[]');
-                if (Array.isArray(items) && items.length > 0) {
-                    history = items;
-                    break;
-                }
-            } catch (e) {}
-        }
-
-        const order = history.find(o => o && String(o.orderId || o.id) === String(orderId));
-        
-        if (!order) {
-            alert("⚠️ Order details not found.");
-            if (typeof navigateDrawerSection === 'function') navigateDrawerSection('history');
-            return;
-        }
-
-        // 1. Navigate to the tracking section safely (index.html section)[cite: 3]
-        if (typeof navigateDrawerSection === 'function') {
-            navigateDrawerSection('order_tracking');
-        }
-
-        // 2. Populate Order Header Details
-        const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-        
-        setText('trackOrderIdHeader', `Order #${order.orderId || order.id || 'N/A'}`);
-        setText('trackGrandTotalBadge', `₹${Number(order.amount || order.totalAmount || 0).toFixed(2)}`);
-        setText('liveOrderStatusBadge', order.status || 'Your order is getting ready...');
-        setText('trackShippingAddressLabel', order.address || 'Varanasi Delivery Address');
-
-        // 3. Populate Rider / Delivery Partner Details
-        const riderNameNode = document.getElementById('deliveryExecutiveName');
-        const riderPhoneNode = document.getElementById('deliveryExecutivePhone');
-        const callBtn = document.getElementById('callExecutiveBtn');
-
-        if (order.assignedDeliveryBoy && order.assignedDeliveryBoy.trim() !== '') {
-            if (riderNameNode) riderNameNode.textContent = `Delivery Partner (${order.assignedDeliveryBoy})`;
-            if (riderPhoneNode) riderPhoneNode.textContent = `📞 ${order.assignedDeliveryBoy}`;
-            if (callBtn) callBtn.href = `tel:${order.assignedDeliveryBoy}`;
-        } else {
-            if (riderNameNode) riderNameNode.textContent = "Assigning Delivery Executive...";
-            if (riderPhoneNode) riderPhoneNode.textContent = "Will be assigned shortly";
-            if (callBtn) callBtn.href = "tel:7007626731";
-        }
-
-      // 4. Render Item Manifest (Fixed multiplication bug here)
-        const manifestList = document.getElementById('trackFilesManifestList');
-        if (manifestList) {
-            let detailsArray = order.details || order.configDetails || [];
-            if (typeof detailsArray === 'string') {
-                try { detailsArray = JSON.parse(detailsArray); } catch(e) { detailsArray = []; }
-            }
-
-            if (Array.isArray(detailsArray) && detailsArray.length > 0) {
-                manifestList.innerHTML = detailsArray.map(item => {
-                    let itemName = item.fileName || item.name || 'Print Item';
-                    let itemCopies = item.copies || item.qty || 1;
-                    let itemPrice = item.price || 3;
-                    return `
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:#334155; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;">
-                            <span>📄 ${itemName} (×${itemCopies})</span>
-                            <b style="color:#065f46;">₹${Number(itemPrice) * Number(itemCopies)}</b>
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                manifestList.innerHTML = `<p style="font-size:0.75rem; color:#64748b; text-align:center;">No item manifest recorded.</p>`;
-            }
-        }
-
-        // 5. Initialize Live Tracking Google Map & Distance Matrix
-        setTimeout(() => {
-            const mapElement = document.getElementById('liveTrackingGoogleMap');
-            const distanceBadge = document.getElementById('mapDistanceBadge');
-            if (!mapElement || typeof google === 'undefined') return;
-
-            const currentStatus = order.status || 'Processing';
-            const storeLatLng = { lat: STORE_LOCATION.lat, lng: STORE_LOCATION.lng }; // Varanasi Store
-            
-            // User location coordinates (fallback to offset if not present)
-            const userLatLng = order.userLat && order.userLng ? 
-                { lat: Number(order.userLat), lng: Number(order.userLng) } : 
-                { lat: STORE_LOCATION.lat + 0.015, lng: STORE_LOCATION.lng + 0.012 };
-
-            const map = new google.maps.Map(mapElement, {
-                center: storeLatLng,
-                zoom: 14,
-                mapTypeControl: false,
-                streetViewControl: false,
-                fullscreenControl: false
-            });
-
-            // Store Pin
-            new google.maps.Marker({
-                position: storeLatLng,
-                map: map,
-                title: "Print From Home Store",
-                icon: { url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png" }
-            });
-
-            // User Destination Pin
-            new google.maps.Marker({
-                position: userLatLng,
-                map: map,
-                title: "Delivery Destination",
-                icon: { url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png" }
-            });
-
-            // Rider Marker (Bike icon)
-            let riderPos = { ...storeLatLng };
-            const riderMarker = new google.maps.Marker({
-                position: riderPos,
-                map: map,
-                title: "Delivery Executive",
-                icon: { url: "https://maps.google.com/mapfiles/ms/icons/motorcycle.png" }
-            });
-
-            // Calculate Distance
-            const distanceKm = Math.sqrt(Math.pow(storeLatLng.lat - userLatLng.lat, 2) + Math.pow(storeLatLng.lng - userLatLng.lng, 2)) * 111;
-            if (distanceBadge) {
-                distanceBadge.textContent = `Distance: ${distanceKm.toFixed(1)} km away`;
-            }
-
-            // Simulate bike movement if Out for Delivery
-            if (currentStatus.toLowerCase().includes('out') || order.assignedDeliveryBoy) {
-                let step = 0;
-                const totalSteps = 50;
-                const interval = setInterval(() => {
-                    step++;
-                    riderPos.lat += (userLatLng.lat - storeLatLng.lat) / totalSteps;
-                    riderPos.lng += (userLatLng.lng - storeLatLng.lng) / totalSteps;
-                    riderMarker.setPosition(riderPos);
-                    if (step >= totalSteps) clearInterval(interval);
-                }, 500);
-            }
-        }, 400);
-
-    } catch (err) {
-        console.error("Order Tracking View Error:", err);
-        if (typeof navigateDrawerSection === 'function') {
-            navigateDrawerSection('history');
-        }
-    }
-};
-
-// 🔥 Order place hote hi seedha tracking page par redirect karne ke liye hook
-{
-    const originalFinalizeOrderSuccess = window.finalizeOrderSuccess;
-    window.finalizeOrderSuccess = async function(orderId) {
-        if (typeof originalFinalizeOrderSuccess === 'function') {
-            await originalFinalizeOrderSuccess(orderId);
-        }
-        if (typeof window.openOrderTrackingView === 'function') {
-            window.openOrderTrackingView(orderId);
-        }
-    };
-}
-
-
-// 🔥 PAST ORDER RE-ORDER / LOAD TO CART PREVIEW
-    window.openPastOrderInCartPreview = function(orderId) {
-        const sessionActiveUser = localStorage.getItem('printAppUser');
-        const history = JSON.parse(localStorage.getItem(`history_${sessionActiveUser}`) || '[]');
-        const targetOrder = history.find(o => o.orderId === orderId);
-
-        if (!targetOrder || !targetOrder.details) {
-            alert("⚠️ Order details not found.");
-            return;
-        }
-
-        targetOrder.details.forEach(item => {
-            if (item.printType === 'snack') {
-                window.cartSnacksArray.push({
-                    sku: item.sku || '',
-                    name: item.name,
-                    price: item.price || 0,
-                    qty: item.qty || item.copies || 1,
-                    printType: 'snack',
-                    fileName: item.fileName,
-                    imageUrl: item.imageUrl || ''
-                });
-            } else {
-                window.cartPrintJobsArray.push({
-                    fileName: item.fileName || 'Document.pdf',
-                    pages: item.pages || 1,
-                    printType: item.printType || 'bw',
-                    sides: 'single',
-                    binding: item.binding || 'none',
-                    copies: item.copies || 1,
-                    orientation: 'portrait',
-                    fileData: null
-                });
-            }
-        });
-
-        persistCartStateData();
-        if (typeof toggleCartDrawer === 'function') {
-            toggleCartDrawer(true);
-        }
-        alert("✅ Past order items loaded into your cart! You can modify quantities or add new items.");
-    };
 
     window.currentDeliveryTip = 0;
 
@@ -4459,7 +4242,9 @@ if (typeof window.forceFixWhiteScreen !== 'function') {
     };
 }
 
+// ==========================================
 // 🔥 Updated & Clean Order Status / Tracking View Engine
+// ==========================================
 window.openOrderTrackingView = function(orderId) {
     try {
         const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
@@ -4537,7 +4322,7 @@ window.openOrderTrackingView = function(orderId) {
                     return `
                         <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:#334155; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;">
                             <span>📄 ${itemName} (×${itemCopies})</span>
-                            <b style="color:#065f46;">₹${itemPrice * itemCopies}</b>
+                            <b style="color:#065f46;">₹${Number(itemPrice) * Number(itemCopies)}</b>
                         </div>
                     `;
                 }).join('');
@@ -5761,7 +5546,7 @@ window.openOrderTrackingView = function(orderId) {
             </div>
         `;
 
-        document.body.appendChild(modalOverlay);
+       document.body.appendChild(modalOverlay);
 
         // 🔥 Delivered Status Check (Map ki jagah Success Banner aur Tip hide karne ke liye)
         const currentStatus = targetOrder.status || 'Order Placed & Picking';
@@ -5784,6 +5569,20 @@ window.openOrderTrackingView = function(orderId) {
             if (tipSectionBox) {
                 tipSectionBox.style.display = 'none';
             }
+        } else {
+            // 🚀 Sirf tabhi live GPS tracking initialize ho jab order delivered na hua ho
+            setTimeout(() => {
+                const mapEl = document.getElementById('popupRealGoogleMapContainer');
+                const distBadge = document.getElementById('popupRealLiveEtaBadge');
+                if (!mapEl || typeof google === 'undefined') return;
+
+                const storeLatLng = { lat: STORE_LOCATION.lat, lng: STORE_LOCATION.lng };
+                const userLatLng = targetOrder.userLat && targetOrder.userLng ? 
+                    { lat: Number(targetOrder.userLat), lng: Number(targetOrder.userLng) } : 
+                    { lat: STORE_LOCATION.lat + 0.015, lng: STORE_LOCATION.lng + 0.012 };
+
+                initLiveServerPollingMap(storeLatLng, userLatLng, mapEl, distBadge, targetOrder);
+            }, 350);
         }
         
         // Real-Time GPS Tracking & Server Polling Initialization
