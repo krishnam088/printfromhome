@@ -3367,7 +3367,7 @@ window.executeFinalCartOrderPlacement = async function() {
         console.error("Inventory decrement sync error:", e);
     }
 
-    window.cartPrintJobsArray = [];
+   window.cartPrintJobsArray = [];
     window.cartSnacksArray = [];
     window.currentDeliveryTip = 0;
     localStorage.removeItem('cart_print_jobs');
@@ -3380,210 +3380,212 @@ window.executeFinalCartOrderPlacement = async function() {
         renderOrderHistoryUI(sessionActiveUser);
     }
 
-    if (typeof navigateDrawerSection === 'function') {
-        navigateDrawerSection('history');
-    } else {
-        const historySection = document.getElementById('user_section_history');
-        document.querySelectorAll('.view-section').forEach(el => {
-            el.classList.remove('active');
-            el.style.setProperty('display', 'none', 'important');
-        });
-        if (historySection) {
-            historySection.classList.add('active');
-            historySection.style.setProperty('display', 'block', 'important');
-        }
+    // 🔥 Order successful hote hi seedha live tracking popup kholo
+    if (typeof window.openOrderTrackingView === 'function') {
+        window.openOrderTrackingView(orderId);
     }
 };
-    // ==========================================
-// 💳 BULLETPROOF ORDER PLACEMENT & PAYMENT GATEWAY ENGINE
+
+   // ==========================================
+// 💳 BULLETPROOF ORDER PLACEMENT & PAYMENT GATEWAY ENGINE (SINGLE-TAP SECURED)
 // ==========================================
 window.executeFinalCartOrderPlacement = async function() {
-    if (typeof isStoreCurrentlyOpen !== 'undefined' && !isStoreCurrentlyOpen) {
-        if (typeof showAppToast === 'function') showAppToast("Store is currently closed. Orders cannot be accepted right now.", "error");
-        const storeClosedModal = document.getElementById('storeClosedPopupModal');
-        if (storeClosedModal) storeClosedModal.style.display = 'flex';
-        return;
+    // 🔥 Single-Tap Safeguard: Button ko lock kar do taaki double-tap na ho
+    const submitOrderBtn = document.getElementById('submitOrderBtn') || document.querySelector('[onclick*="executeFinalCartOrderPlacement"]');
+    if (submitOrderBtn) {
+        if (submitOrderBtn.disabled) return;
+        submitOrderBtn.disabled = true;
+        submitOrderBtn.style.opacity = '0.6';
+        submitOrderBtn.textContent = 'Processing Order... 🚀';
     }
 
-    const activeAddress = localStorage.getItem('selected_active_address');
-    if (!activeAddress || activeAddress.trim() === "") {
-        if (typeof showAppToast === 'function') showAppToast("Please add and select a delivery address first.", "error");
-        if (typeof openAddressManagerModal === 'function') {
-            openAddressManagerModal();
-        }
-        return;
-    }
-
-    window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
-    window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
-
-    const cachedDel = localStorage.getItem('cached_delivery_fee');
-    const cachedHan = localStorage.getItem('cached_handling_fee');
-    const cachedRai = localStorage.getItem('cached_rain_fee');
-
-    window.adminDeliveryFee = (cachedDel !== null && cachedDel !== undefined && cachedDel !== '') ? parseFloat(cachedDel) : 0;
-    window.adminHandlingFee = (cachedHan !== null && cachedHan !== undefined && cachedHan !== '') ? parseFloat(cachedHan) : 0;
-    window.adminRainFee = (cachedRai !== null && cachedRai !== undefined && cachedRai !== '') ? parseFloat(cachedRai) : 0;
-    
-    let totalItemsCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0) + window.cartPrintJobsArray.length;
-    if (totalItemsCount === 0) {
-        if (typeof showAppToast === 'function') showAppToast("Your cart is empty. Please add items first.", "error");
-        return;
-    }
-
-    let totalPrintVal = 0;
-    let totalSnacksVal = 0;
-    const finalMetaConfig = [];
-
-    window.cartPrintJobsArray.forEach(job => {
-        let rate = (job.printType === 'bw') ? 3 : 10;
-        const cost = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
-        totalPrintVal += cost;
-        finalMetaConfig.push({ fileName: job.fileName, pages: job.pages, printType: job.printType, binding: job.binding, copies: job.copies });
-    });
-
-    window.cartSnacksArray.forEach(snack => {
-        totalSnacksVal += snack.price * snack.qty;
-        finalMetaConfig.push({ 
-            sku: snack.sku || '',
-            name: snack.name,
-            fileName: `Product: ${snack.name} (Qty: ${snack.qty})`, 
-            copies: snack.qty, 
-            qty: snack.qty,
-            printType: 'snack', 
-            pages: 1,
-            price: snack.price,
-            imageUrl: snack.imageUrl || ''
-        });
-    });
-
-    let subtotal = totalPrintVal + totalSnacksVal;
-    const freeDeliveryThreshold = window.getDynamicFreeDeliveryThreshold ? window.getDynamicFreeDeliveryThreshold() : 99.00;
-    
-    const selectedDeliveryModeRadio = document.querySelector('input[name="cartDeliveryModeRadio"]:checked');
-    let deliveryMode = selectedDeliveryModeRadio ? selectedDeliveryModeRadio.value : (window.currentCartDeliveryMode || 'doorstep');
-
-    let activeDelFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 0;
-    let delivery = (deliveryMode === 'pickup') ? 0 : ((subtotal >= freeDeliveryThreshold || subtotal === 0) ? 0 : activeDelFee);
-    
-    let activeRainFee = window.adminRainFee !== undefined ? window.adminRainFee : 0;
-    let rainFee = window.isRainSurgeActive ? activeRainFee : 0;
-    
-    let activeHandlingFee = window.adminHandlingFee !== undefined ? window.adminHandlingFee : 0;
-    let couponDiscount = window.appliedActiveCoupon ? window.appliedActiveCoupon.discount : 0;
-    
-    let grandTotal = subtotal + delivery + rainFee + activeHandlingFee + (window.currentDeliveryTip || 0) - couponDiscount;
-    grandTotal = Math.max(0, grandTotal);
-
-    const paymentSelect = document.getElementById('cartDrawerPaymentSelect');
-    const selectedRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
-    let paymentMode = selectedRadio ? selectedRadio.value.toLowerCase() : (paymentSelect ? paymentSelect.value.toLowerCase() : 'online');
-
-    const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
-    const userPhone = localStorage.getItem('printAppUserIdentity') || 'N/A';
-
-    let deliveryInstructionText = "Standard Delivery";
-    const activeCheckedInstruction = document.querySelector('input[name="deliveryInstruction"]:checked');
-    if (activeCheckedInstruction) {
-        deliveryInstructionText = activeCheckedInstruction.value;
-    } else {
-        const highlightedInstruction = document.querySelector('[style*="background: rgb(240, 253, 244)"], [style*="background:#f0fdf4"]');
-        if (highlightedInstruction) {
-            deliveryInstructionText = highlightedInstruction.innerText.replace('✔', '').trim();
-        }
-    }
-
-    let userLat = STORE_LOCATION.lat;
-    let userLng = STORE_LOCATION.lng;
-    
     try {
-        const position = await new Promise((resolve, reject) => {
-            if (!navigator.geolocation) reject("Geolocation not supported");
-            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
-        });
-        userLat = position.coords.latitude;
-        userLng = position.coords.longitude;
-    } catch (e) {
-        console.warn("Using store location fallback for order coordinates.");
-    }
+        if (typeof isStoreCurrentlyOpen !== 'undefined' && !isStoreCurrentlyOpen) {
+            if (typeof showAppToast === 'function') showAppToast("Store is currently closed. Orders cannot be accepted right now.", "error");
+            const storeClosedModal = document.getElementById('storeClosedPopupModal');
+            if (storeClosedModal) storeClosedModal.style.display = 'flex';
+            return;
+        }
 
-    const formData = new FormData();
-    window.cartPrintJobsArray.forEach(job => {
-        if (job.fileData) formData.append('document', job.fileData);
-    });
+        const activeAddress = localStorage.getItem('selected_active_address');
+        if (!activeAddress || activeAddress.trim() === "") {
+            if (typeof showAppToast === 'function') showAppToast("Please add and select a delivery address first.", "error");
+            if (typeof openAddressManagerModal === 'function') {
+                openAddressManagerModal();
+            }
+            return;
+        }
 
-    formData.append('totalAmount', grandTotal.toFixed(2));
-    formData.append('configDetails', JSON.stringify(finalMetaConfig));
-    formData.append('address', activeAddress);
-    formData.append('customerName', sessionActiveUser);
-    formData.append('phone', userPhone);
-    formData.append('deliveryTip', window.currentDeliveryTip || 0);
-    formData.append('paymentMode', paymentMode);
-    formData.append('deliveryMode', deliveryMode);
-    formData.append('userLat', userLat);
-    formData.append('userLng', userLng);
-    formData.append('deliveryInstruction', deliveryInstructionText);
+        window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
+        window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
-    let initialOrderStatus = (window.cartPrintJobsArray.length > 0) ? "Ready for Print" : "Order Placed & Picking";
+        const cachedDel = localStorage.getItem('cached_delivery_fee');
+        const cachedHan = localStorage.getItem('cached_handling_fee');
+        const cachedRai = localStorage.getItem('cached_rain_fee');
 
-    const finalizeOrderSuccess = async (orderId) => {
-        const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
-        const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
+        window.adminDeliveryFee = (cachedDel !== null && cachedDel !== undefined && cachedDel !== '') ? parseFloat(cachedDel) : 0;
+        window.adminHandlingFee = (cachedHan !== null && cachedHan !== undefined && cachedHan !== '') ? parseFloat(cachedHan) : 0;
+        window.adminRainFee = (cachedRai !== null && cachedRai !== undefined && cachedRai !== '') ? parseFloat(cachedRai) : 0;
         
-        const historyKeys = [
-            `history_${sessionActiveUser}`,
-            activeIdentity ? `history_${activeIdentity}` : null
-        ].filter(Boolean);
+        let totalItemsCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0) + window.cartPrintJobsArray.length;
+        if (totalItemsCount === 0) {
+            if (typeof showAppToast === 'function') showAppToast("Your cart is empty. Please add items first.", "error");
+            return;
+        }
 
-        const newOrderObj = { 
-            orderId: orderId,
-            date: new Date().toLocaleString(), 
-            amount: grandTotal.toFixed(2), 
-            status: initialOrderStatus, 
-            details: finalMetaConfig, 
-            address: activeAddress,
-            deliveryMode: deliveryMode,
-            deliveryInstruction: deliveryInstructionText, 
-            deliveryTip: window.currentDeliveryTip || 0
+        let totalPrintVal = 0;
+        let totalSnacksVal = 0;
+        const finalMetaConfig = [];
+
+        window.cartPrintJobsArray.forEach(job => {
+            let rate = (job.printType === 'bw') ? 3 : 10;
+            const cost = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
+            totalPrintVal += cost;
+            finalMetaConfig.push({ fileName: job.fileName, pages: job.pages, printType: job.printType, binding: job.binding, copies: job.copies });
+        });
+
+        window.cartSnacksArray.forEach(snack => {
+            totalSnacksVal += snack.price * snack.qty;
+            finalMetaConfig.push({ 
+                sku: snack.sku || '',
+                name: snack.name,
+                fileName: `Product: ${snack.name} (Qty: ${snack.qty})`, 
+                copies: snack.qty, 
+                qty: snack.qty,
+                printType: 'snack', 
+                pages: 1,
+                price: snack.price,
+                imageUrl: snack.imageUrl || ''
+            });
+        });
+
+        let subtotal = totalPrintVal + totalSnacksVal;
+        const freeDeliveryThreshold = window.getDynamicFreeDeliveryThreshold ? window.getDynamicFreeDeliveryThreshold() : 99.00;
+        
+        const selectedDeliveryModeRadio = document.querySelector('input[name="cartDeliveryModeRadio"]:checked');
+        let deliveryMode = selectedDeliveryModeRadio ? selectedDeliveryModeRadio.value : (window.currentCartDeliveryMode || 'doorstep');
+
+        let activeDelFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 0;
+        let delivery = (deliveryMode === 'pickup') ? 0 : ((subtotal >= freeDeliveryThreshold || subtotal === 0) ? 0 : activeDelFee);
+        
+        let activeRainFee = window.adminRainFee !== undefined ? window.adminRainFee : 0;
+        let rainFee = window.isRainSurgeActive ? activeRainFee : 0;
+        
+        let activeHandlingFee = window.adminHandlingFee !== undefined ? window.adminHandlingFee : 0;
+        let couponDiscount = window.appliedActiveCoupon ? window.appliedActiveCoupon.discount : 0;
+        
+        let grandTotal = subtotal + delivery + rainFee + activeHandlingFee + (window.currentDeliveryTip || 0) - couponDiscount;
+        grandTotal = Math.max(0, grandTotal);
+
+        const paymentSelect = document.getElementById('cartDrawerPaymentSelect');
+        const selectedRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
+        let paymentMode = selectedRadio ? selectedRadio.value.toLowerCase() : (paymentSelect ? paymentSelect.value.toLowerCase() : 'online');
+
+        const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+        const userPhone = localStorage.getItem('printAppUserIdentity') || 'N/A';
+
+        let deliveryInstructionText = "Standard Delivery";
+        const activeCheckedInstruction = document.querySelector('input[name="deliveryInstruction"]:checked');
+        if (activeCheckedInstruction) {
+            deliveryInstructionText = activeCheckedInstruction.value;
+        } else {
+            const highlightedInstruction = document.querySelector('[style*="background: rgb(240, 253, 244)"], [style*="background:#f0fdf4"]');
+            if (highlightedInstruction) {
+                deliveryInstructionText = highlightedInstruction.innerText.replace('✔', '').trim();
+            }
+        }
+
+        let userLat = STORE_LOCATION.lat;
+        let userLng = STORE_LOCATION.lng;
+        
+        try {
+            const position = await new Promise((resolve, reject) => {
+                if (!navigator.geolocation) reject("Geolocation not supported");
+                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000 });
+            });
+            userLat = position.coords.latitude;
+            userLng = position.coords.longitude;
+        } catch (e) {
+            console.warn("Using store location fallback for order coordinates.");
+        }
+
+        const formData = new FormData();
+        window.cartPrintJobsArray.forEach(job => {
+            if (job.fileData) formData.append('document', job.fileData);
+        });
+
+        formData.append('totalAmount', grandTotal.toFixed(2));
+        formData.append('configDetails', JSON.stringify(finalMetaConfig));
+        formData.append('address', activeAddress);
+        formData.append('customerName', sessionActiveUser);
+        formData.append('phone', userPhone);
+        formData.append('deliveryTip', window.currentDeliveryTip || 0);
+        formData.append('paymentMode', paymentMode);
+        formData.append('deliveryMode', deliveryMode);
+        formData.append('userLat', userLat);
+        formData.append('userLng', userLng);
+        formData.append('deliveryInstruction', deliveryInstructionText);
+
+        let initialOrderStatus = (window.cartPrintJobsArray.length > 0) ? "Ready for Print" : "Order Placed & Picking";
+
+        const finalizeOrderSuccess = async (orderId) => {
+            const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+            const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
+            
+            const historyKeys = [
+                `history_${sessionActiveUser}`,
+                activeIdentity ? `history_${activeIdentity}` : null
+            ].filter(Boolean);
+
+            const newOrderObj = { 
+                orderId: orderId,
+                date: new Date().toLocaleString(), 
+                amount: grandTotal.toFixed(2), 
+                status: initialOrderStatus, 
+                details: finalMetaConfig, 
+                address: activeAddress,
+                deliveryMode: deliveryMode,
+                deliveryInstruction: deliveryInstructionText, 
+                deliveryTip: window.currentDeliveryTip || 0
+            };
+
+            historyKeys.forEach(key => {
+                let currentHistoryArray = JSON.parse(localStorage.getItem(key) || '[]');
+                currentHistoryArray.unshift(newOrderObj);
+                localStorage.setItem(key, JSON.stringify(currentHistoryArray));
+            });
+
+            window.appliedActiveCoupon = null;
+
+            try {
+                await fetch('/api/admin/inventory/decrement', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: finalMetaConfig })
+                });
+            } catch (e) {
+                console.error("Inventory decrement sync error:", e);
+            }
+
+            window.cartPrintJobsArray = [];
+            window.cartSnacksArray = [];
+            window.currentDeliveryTip = 0;
+            localStorage.removeItem('cart_print_jobs');
+            localStorage.removeItem('cart_snacks');
+
+            if (typeof persistCartStateData === 'function') persistCartStateData();
+            if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
+
+            if (typeof renderOrderHistoryUI === 'function') {
+                renderOrderHistoryUI(sessionActiveUser);
+            }
+
+            // 🔥 FIX: History page par bhejne ki jagah 100% seedha live tracking popup kholo
+            if (typeof window.openOrderTrackingView === 'function') {
+                window.openOrderTrackingView(orderId);
+            }
         };
 
-        historyKeys.forEach(key => {
-            let currentHistoryArray = JSON.parse(localStorage.getItem(key) || '[]');
-            currentHistoryArray.unshift(newOrderObj);
-            localStorage.setItem(key, JSON.stringify(currentHistoryArray));
-        });
-
-        window.appliedActiveCoupon = null;
-
-        try {
-            await fetch('/api/admin/inventory/decrement', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ items: finalMetaConfig })
-            });
-        } catch (e) {
-            console.error("Inventory decrement sync error:", e);
-        }
-
-        window.cartPrintJobsArray = [];
-        window.cartSnacksArray = [];
-        window.currentDeliveryTip = 0;
-        localStorage.removeItem('cart_print_jobs');
-        localStorage.removeItem('cart_snacks');
-
-        if (typeof persistCartStateData === 'function') persistCartStateData();
-        if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
-
-        if (typeof renderOrderHistoryUI === 'function') {
-            renderOrderHistoryUI(sessionActiveUser);
-        }
-
-        if (typeof navigateDrawerSection === 'function') {
-            navigateDrawerSection('history');
-        }
-    };
-
-    try {
         const response = await fetch('/api/create-order', { method: 'POST', body: formData });
         const data = await response.json();
         
@@ -3675,6 +3677,13 @@ window.executeFinalCartOrderPlacement = async function() {
     } catch (error) {
         console.error("Order placement exception:", error);
         if (typeof showAppToast === 'function') showAppToast("Connection breakdown during order checkout.", "error");
+    } finally {
+        // Button ko wapas normal kar do agar koi error ya cancel ho
+        if (submitOrderBtn) {
+            submitOrderBtn.disabled = false;
+            submitOrderBtn.style.opacity = '1';
+            submitOrderBtn.textContent = 'Place Order';
+        }
     }
 };
 
@@ -5295,13 +5304,13 @@ document.addEventListener('click', function(e) {
     }
 }, true);
 
-// 🔥 ROUTER INTERCEPTOR: Redirect history navigation to direct tracking after order placement
+// 🔥 ULTIMATE ROUTER INTERCEPTOR: History redirection ko 100% block karke seedha Popup Tracking kholna
 if (typeof window.navigateDrawerSection === 'function') {
     const originalNavigate = window.navigateDrawerSection;
     window.navigateDrawerSection = function(section, ...args) {
         let normalizedSection = section === 'orders' ? 'history' : section;
         
-        // Agar app history section par bhej raha hai, check karein ki kya koi naya order abhi bana hai
+        // Agar app history section par bhej raha hai, toh check karein ki kya koi naya order abhi bana hai
         if (normalizedSection === 'history') {
             let newestOrder = null;
             let newestTime = 0;
@@ -5324,13 +5333,13 @@ if (typeof window.navigateDrawerSection === 'function') {
                 }
             }
             
-            // Agar pichle 20 seconds mein order bana hai, toh history page kholne se rokein aur tracking modal dikhayein
+            // Agar pichle 30 seconds ke andar order bana hai, toh history page kholne se STRICTLY rokein aur naya popup tracking dikhayein
             if (newestOrder && newestOrder.orderId) {
                 let timeDiff = Date.now() - new Date(newestOrder.date || 0).getTime();
-                if (timeDiff < 20000 && typeof window.openOrderTrackingView === 'function') {
-                    console.log("🚀 Intercepted history redirect, showing tracking instead for order:", newestOrder.orderId);
+                if (timeDiff < 30000 && typeof window.openOrderTrackingView === 'function') {
+                    console.log("🚀 Blocked old history redirect, forcing new popup tracking for order:", newestOrder.orderId);
                     window.openOrderTrackingView(newestOrder.orderId);
-                    return; // Block navigation to history page
+                    return; // 🛑 Yahi se execution rokh do taaki purana history page load na ho!
                 }
             }
         }
