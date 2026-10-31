@@ -627,15 +627,20 @@ window.calculateTotal = function() {
         let totalBindingCost = 0;
         
         let snacksTotal = window.cartSnacksArray ? window.cartSnacksArray.reduce((acc, item) => acc + (parseFloat(item.price || 0) * parseInt(item.qty || 1)), 0) : 0;
-        let printJobsTotal = window.cartPrintJobsArray ? window.cartPrintJobsArray.reduce((acc, job) => acc + (parseInt(job.pages || 1) * (job.printType === 'bw' ? 3 : 10) * parseInt(job.copies || 1) + (job.binding === 'spiral' ? 30 * job.copies : 0)), 0) : 0;
+      let printJobsTotal = window.cartPrintJobsArray ? window.cartPrintJobsArray.reduce((acc, job) => {
+    if (job.paperType === 'photo' || job.jobType === 'photo_print') {
+        return acc + Number(job.price || 50);
+    }
+    return acc + (parseInt(job.pages || 1) * (job.printType === 'bw' ? 3 : 10) * parseInt(job.copies || 1) + (job.binding === 'spiral' ? 30 * job.copies : 0));
+}, 0) : 0;
 
-        if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
-            masterFilesArray.forEach((item) => {
-                const pages = parseInt(item.config.pages) || 1; 
-                totalPrintCost += (pages * ((item.config.printType === 'bw') ? 3.00 : 10.00)) * item.config.copies;
-                if (item.config.binding === 'spiral') totalBindingCost += 30.00 * item.config.copies;
-            });
-        }
+if (typeof masterFilesArray !== 'undefined' && masterFilesArray.length > 0) {
+    masterFilesArray.forEach((item) => {
+        const pages = parseInt(item.config.pages) || 1; 
+        totalPrintCost += (pages * ((item.config.printType === 'bw') ? 3.00 : 10.00)) * item.config.copies;
+        if (item.config.binding === 'spiral') totalBindingCost += 30.00 * item.config.copies;
+    });
+}
 
         let finalDocumentCost = totalPrintCost + totalBindingCost + snacksTotal + printJobsTotal;
         const freeDeliveryThreshold = window.getDynamicFreeDeliveryThreshold();
