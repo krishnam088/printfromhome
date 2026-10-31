@@ -310,7 +310,7 @@ app.get('/manifest-delivery.json', (req, res) => {
 app.get('/sw-admin.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw-admin.js')); });
 app.get('/sw.js', (req, res) => { res.sendFile(path.join(__dirname, 'sw.js')); });
 
-// 🔥 Fully completed /api/store-status route
+// 🔥 Fully completed /api/store-status route with dynamic database timings
 app.get('/api/store-status', async (req, res) => {
     try {
         let config = await StoreConfig.findOne();
@@ -334,6 +334,7 @@ app.get('/api/store-status', async (req, res) => {
         const openMinutesOfDay = openH * 60 + openM;
         const closeMinutesOfDay = closeH * 60 + closeM;
 
+        // 🔥 Ab yeh database ke open aur close time ke mutabiq 100% accurate check karega
         const isTimeWithinOperatingHours = currentMinutesOfDay >= openMinutesOfDay && currentMinutesOfDay < closeMinutesOfDay;
         const finalIsOpen = isTimeWithinOperatingHours && config.isOpen;
 
@@ -343,8 +344,8 @@ app.get('/api/store-status', async (req, res) => {
             printEnabled: config.printEnabled !== false,
             manualOverride: config.isOpen, 
             rainSurgeActive: config.rainSurgeActive, 
-            openTime: openTimeStr,   // 🔥 Client ke liye open time bhej rahe hain
-            closeTime: closeTimeStr, // 🔥 Client ke liye close time bhej rahe hain
+            openTime: openTimeStr,   
+            closeTime: closeTimeStr, 
             currentIstHour: istHours 
         });
     } catch (err) {

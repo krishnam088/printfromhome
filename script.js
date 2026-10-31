@@ -30,17 +30,6 @@ window.showDiwaliPreLaunchNotice = function(message) {
     document.body.appendChild(modal);
 };
 
-// 🔥 ABSOLUTE WHITE SCREEN & ERROR BOUNDARY DEFENDER
-window.onerror = function(msg, url, lineNo, columnNo, error) {
-    console.error("❌ App Crash Prevented:", msg, "at line:", lineNo);
-    return true;
-};
-
-window.addEventListener('unhandledrejection', function(event) {
-    console.error("🚨 Uncaught Promise Rejection:", event.reason);
-    event.preventDefault();
-});
-
 // 🔥 GLOBAL STORE LOCATION
 const STORE_LOCATION = {
     lat: 25.3451,
@@ -1159,7 +1148,12 @@ if (fileUpload) {
 
     const totalPriceText = document.getElementById('studioTotalPriceText');
     if (totalPriceText) {
-        totalPriceText.textContent = `₹${grandTotalPrice} (${totalPagesCombined} pgs)`;
+        // 🔥 Agar photo mode hai toh layout ke mutabiq pricing dikhayein
+        if (typeof currentSelectedPaperType !== 'undefined' && currentSelectedPaperType === 'photo') {
+            totalPriceText.textContent = `₹${window.currentCalculatedJobPrice || 50}`;
+        } else {
+            totalPriceText.textContent = `₹${grandTotalPrice} (${totalPagesCombined} pgs)`;
+        }
     }
 };
     
@@ -5735,60 +5729,23 @@ window.toggleLegalTermsModal = function(open) {
 };
 
 
-let currentSelectedPaperType = 'document';
-
-function setStudioPaperType(type) {
-    currentSelectedPaperType = type;
-    const docBox = document.getElementById('paperTypeDoc');
-    const photoBox = document.getElementById('paperTypePhoto');
-    const photoContainer = document.getElementById('photoOptionsContainer');
-    
-    // 🔥 Color aur Orientation containers ke elements ko target karein
-    const colorContainer = document.getElementById('printColorContainer');
-    const orientationContainer = document.getElementById('printOrientationContainer');
-
-    if (type === 'document') {
-        docBox.style.borderColor = '#065f46';
-        docBox.style.background = '#f0fdf4';
-        photoBox.style.borderColor = '#e2e8f0';
-        photoBox.style.background = '#ffffff';
-        photoContainer.style.display = 'none';
-        
-        // Document mode mein color & orientation wapas dikhao
-        if (colorContainer) colorContainer.style.display = 'block';
-        if (orientationContainer) orientationContainer.style.display = 'block';
-    } else {
-        photoBox.style.borderColor = '#065f46';
-        photoBox.style.background = '#f0fdf4';
-        docBox.style.borderColor = '#e2e8f0';
-        docBox.style.background = '#ffffff';
-        photoContainer.style.display = 'block';
-        
-        // Photo mode mein color & orientation ki zaroorat nahi, unhe hide kar do
-        if (colorContainer) colorContainer.style.display = 'none';
-        if (orientationContainer) orientationContainer.style.display = 'none';
-
-        updatePhotoLayoutPricing();
-    }
-
-    // 🔥 Paper type badalte hi slider ka preview turant update ho jayega
-    if (typeof updateMultiFileStudioUI === 'function') {
-        updateMultiFileStudioUI();
-    }
-}
-
+// 🔥 Final Clean updatePhotoLayoutPricing Function
 function updatePhotoLayoutPricing() {
     const layoutSelect = document.getElementById('photoLayoutSelect');
     if (!layoutSelect) return;
     
     const layout = layoutSelect.value;
     let price = 50;
+    let gridCount = 8;
     
-    if (layout === 'passport_8') price = 50;
-    else if (layout === 'passport_12') price = 60;
-    else if (layout === 'passport_20') price = 100;
-    else if (layout === 'photo_2_a4') price = 50;
-    else if (layout === 'photo_single_glossy') price = 100;
+    if (layout === 'passport_8') { price = 50; gridCount = 8; }
+    else if (layout === 'passport_12') { price = 60; gridCount = 12; }
+    else if (layout === 'passport_20') { price = 100; gridCount = 20; }
+    else if (layout === 'photo_2_a4') { price = 50; gridCount = 2; }
+    else if (layout === 'photo_single_glossy') { price = 100; gridCount = 1; }
+
+    window.currentPhotoGridCount = gridCount;
+    window.currentPhotoSelectedLayout = layout;
 
     const totalPriceText = document.getElementById('studioTotalPriceText');
     if (totalPriceText) {
@@ -5796,7 +5753,6 @@ function updatePhotoLayoutPricing() {
     }
     window.currentCalculatedJobPrice = price;
 
-    // 🔥 Layout change (jaise 8 se 12 copies) hote hi preview turant update ho jayega
     if (typeof updateMultiFileStudioUI === 'function') {
         updateMultiFileStudioUI();
     }
