@@ -4594,12 +4594,19 @@ window.openEditProfileModal = function() {
     if(modal) modal.style.display = 'flex';
 };
 
+
 window.submitProfileUpdates = async function(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    
     const sessionUser = localStorage.getItem('printAppUserIdentity') || localStorage.getItem('printAppUser');
-    const newName = document.getElementById('modalEditNameInput').value.trim();
-    const newEmail = document.getElementById('modalEditEmailInput').value.trim();
-    const newPass = document.getElementById('modalEditPasswordInput').value.trim();
+    
+    const nameField = document.getElementById('modalEditNameInput');
+    const emailField = document.getElementById('modalEditEmailInput');
+    const passField = document.getElementById('modalEditPasswordInput');
+
+    const newName = nameField ? nameField.value.trim() : '';
+    const newEmail = emailField ? emailField.value.trim() : '';
+    const newPass = passField ? passField.value.trim() : '';
 
     if (!newName || !newEmail) {
         alert("⚠️ Name and Gmail address cannot be empty!");
@@ -4620,17 +4627,29 @@ window.submitProfileUpdates = async function(e) {
             localStorage.setItem(`user_email_${sessionUser}`, newEmail);
             
             const greetingEl = document.getElementById('userGreeting');
-            if(greetingEl) greetingEl.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${newName}</span>`;
+            if (greetingEl) greetingEl.innerHTML = `HI, <span style="color:#000000; font-weight:800; text-transform:uppercase;">${newName}</span>`;
 
-            showAppToast("✅ Profile & Gmail updated successfully!", "success");
-            closeEditProfileModal();
+            if (typeof showAppToast === 'function') {
+                showAppToast("✅ Profile & Gmail updated successfully!", "success");
+            } else {
+                alert("✅ Profile updated successfully!");
+            }
+            
+            if (typeof closeEditProfileModal === 'function') {
+                closeEditProfileModal();
+            } else {
+                const modal = document.getElementById('editProfileModal');
+                if (modal) modal.style.display = 'none';
+            }
         } else {
             alert(`❌ ${data.message || 'Failed to update profile'}`);
         }
     } catch(err) {
+        console.error("Profile update error:", err);
         alert("❌ Server connection error while updating profile.");
     }
 };
+
 // 🔥 Bulletproof User Account Slider Drawer Toggle Engine
 window.toggleUserDrawer = function(open) {
     const drawer = document.getElementById('userSideDrawer');
@@ -5458,14 +5477,29 @@ window.openOrderTrackingView = function(orderId) {
             </div>
         `;
 
-        document.body.appendChild(modalOverlay);
+       document.body.appendChild(modalOverlay);
 
-        // 🔥 Clean Delivered Status Check & Map Initialization
-        const currentStatus = targetOrder.status || 'Order Placed & Picking';
-        const isDelivered = currentStatus.toLowerCase().includes('delivered');
+        // 🔥 Clean Cancelled & Delivered Status Check & Map Initialization
+        const trackingCurrentStatus = targetOrder.status || 'Order Placed & Picking';
+        const trackingLowerStatus = trackingCurrentStatus.toLowerCase();
+        const isOrderDelivered = trackingLowerStatus.includes('delivered');
+        const isOrderCancelled = trackingLowerStatus.includes('cancel');
 
-        if (isDelivered) {
-            const mapContainerElement = document.getElementById('popupRealGoogleMapContainer');
+        const mapContainerElement = document.getElementById('popupRealGoogleMapContainer');
+
+        if (isOrderCancelled) {
+            if (mapContainerElement) {
+                mapContainerElement.innerHTML = `
+                    <div style="width:100%; height:100%; background:#fef2f2; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#991b1b; padding:15px; text-align:center; border:1px solid #fecaca; border-radius:18px;">
+                        <div style="font-size:2.2rem; margin-bottom:4px;">❌</div>
+                        <div style="font-weight:900; font-size:0.95rem;">Order Cancelled by Store</div>
+                        <div style="font-size:0.75rem; color:#7f1d1d; margin-top:2px;">This order has been cancelled. Amount will be refunded if paid online.</div>
+                    </div>
+                `;
+            }
+            const tipSectionBox = document.querySelector('.popup-tip-btn')?.closest('div[style*="background: #fffbeb"]');
+            if (tipSectionBox) tipSectionBox.style.display = 'none';
+        } else if (isOrderDelivered) {
             if (mapContainerElement) {
                 mapContainerElement.innerHTML = `
                     <div style="width:100%; height:100%; background:#f0fdf4; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#065f46; padding:15px; text-align:center; border:1px solid #bbf7d0; border-radius:18px;">
@@ -5475,14 +5509,9 @@ window.openOrderTrackingView = function(orderId) {
                     </div>
                 `;
             }
-
-            // Delivery tip box ko hide kar dein
             const tipSectionBox = document.querySelector('.popup-tip-btn')?.closest('div[style*="background: #fffbeb"]');
-            if (tipSectionBox) {
-                tipSectionBox.style.display = 'none';
-            }
+            if (tipSectionBox) tipSectionBox.style.display = 'none';
         } else {
-            // 🚀 Sirf tabhi live GPS tracking initialize ho jab order delivered na hua ho
             setTimeout(() => {
                 const mapEl = document.getElementById('popupRealGoogleMapContainer');
                 const distBadge = document.getElementById('popupRealLiveEtaBadge');
@@ -5502,6 +5531,12 @@ window.openOrderTrackingView = function(orderId) {
     }
 };
 
+// 🔥 Automatic initialization on load
+document.addEventListener("DOMContentLoaded", () => {
+    if (typeof renderOrderHistoryUI === 'function') {
+        renderOrderHistoryUI();
+    }
+});
         
 
 // Helper: Initialize Google Map & Poll Server for Live Rider GPS
