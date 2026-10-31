@@ -48,41 +48,46 @@ const STORE_LOCATION = {
     name: "Store"
 };
 
-// 🔥 ULTIMATE FOOLPROOF ORDER HISTORY RENDER ENGINE
+// ==========================================
+// 🔥 STRICTLY USER-SPECIFIC ORDER HISTORY RENDER ENGINE
+// ==========================================
 window.renderOrderHistoryUI = function(username, showRecent = true) {
     try {
-        // 1. Force show container and active sections
-        document.querySelectorAll('[id*="history"], .view-section').forEach(el => {
-            if (el.id && (el.id.includes('history') || el.id.includes('section'))) {
-                el.style.setProperty('display', 'block', 'important');
-                el.classList.add('active');
-            }
-        });
-
         const container = document.getElementById('ordersHistoryContainer') || document.querySelector('[id*="history"]');
         if (!container) return;
 
-        let allOrdersMap = new Map();
+        // 1. Sirf active logged-in user ki keys target karein (Doosre users ka data mix na ho)
+        const sessionActiveUser = localStorage.getItem('printAppUser') || username || 'Customer';
+        const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
 
-        // 2. Scan ALL keys starting with 'history_' across localStorage
-        for (let i = 0; i < localStorage.length; i++) {
-            let key = localStorage.key(i);
-            if (key && key.startsWith('history_')) {
-                try {
-                    let items = JSON.parse(localStorage.getItem(key) || '[]');
-                    if (Array.isArray(items)) {
-                        items.forEach(ord => {
-                            if (ord) {
-                                let uniqueId = ord.orderId || ord.id || JSON.stringify(ord);
-                                allOrdersMap.set(uniqueId, ord);
+        const targetKeys = [
+            `history_${sessionActiveUser}`,
+            activeIdentity ? `history_${activeIdentity}` : null
+        ].filter(Boolean);
+
+        let history = [];
+        let seenOrderIds = new Set();
+
+        targetKeys.forEach(key => {
+            try {
+                let items = JSON.parse(localStorage.getItem(key) || '[]');
+                if (Array.isArray(items)) {
+                    items.forEach(ord => {
+                        if (ord) {
+                            let uniqueId = ord.orderId || ord.id || JSON.stringify(ord);
+                            if (!seenOrderIds.has(uniqueId)) {
+                                seenOrderIds.add(uniqueId);
+                                history.push(ord);
                             }
-                        });
-                    }
-                } catch (e) {}
-            }
-        }
+                        }
+                    });
+                }
+            } catch (e) {}
+        });
 
-        let history = Array.from(allOrdersMap.values());
+        if (showRecent !== false) {
+            history = history.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+        }
 
         const homeTopBar = `
             <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px;">
@@ -94,18 +99,14 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
         if (history.length === 0) {
             container.innerHTML = `
                 ${homeTopBar}
-                <div style="text-align:center; padding:45px 20px; font-family:'Poppins', sans-serif;">
-                    <div style="font-size:3.5rem; margin-bottom:12px;">📦✨</div>
-                    <h3 style="font-size:1.15rem; font-weight:900; color:#0f172a; margin-bottom:6px;">No orders found</h3>
-                    <p style="font-size:0.82rem; color:#64748b; line-height:1.5; margin-bottom:20px; max-width:280px; margin-left:auto; margin-right:auto;">You haven't placed any orders yet. Place your first order now!</p>
-                    <button type="button" onclick="navigateDrawerSection('store')" style="background:#065f46; color:white; border:none; padding:12px 24px; border-radius:12px; font-weight:900; font-size:0.85rem; cursor:pointer; box-shadow:0 4px 12px rgba(6,95,70,0.2);">Start Your First Order &rarr;</button>
+                <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px dashed #16a34a; border-radius: 20px; padding: 36px 20px; text-align: center; font-family: 'Poppins', sans-serif; box-shadow: 0 4px 15px rgba(22, 163, 74, 0.05); margin-top: 10px;">
+                    <div style="font-size: 3.2rem; margin-bottom: 12px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.06));">📦✨</div>
+                    <h3 style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin-bottom: 6px; letter-spacing: -0.3px;">No orders found yet</h3>
+                    <p style="font-size: 0.8rem; color: #64748b; line-height: 1.5; margin-bottom: 22px; max-width: 290px; margin-left: auto; margin-right: auto; font-weight: 500;">You haven't placed any print orders or store purchases. Kickstart your first order and get superfast doorstep delivery!</p>
+                    <button type="button" onclick="navigateDrawerSection('store')" style="background: #065f46; color: white; border: none; padding: 12px 28px; border-radius: 14px; font-weight: 900; font-size: 0.85rem; cursor: pointer; box-shadow: 0 6px 20px rgba(6, 95, 70, 0.25); transition: transform 0.2s ease;">Start Your First Order &rarr;</button>
                 </div>
             `;
             return;
-        }
-
-        if (showRecent !== false) {
-            history = history.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
         }
 
         container.innerHTML = homeTopBar + history.map(order => {
@@ -116,8 +117,13 @@ window.renderOrderHistoryUI = function(username, showRecent = true) {
             let safeDate = order.date || '';
             
             let itemsHtml = '';
-            if (Array.isArray(order.details)) {
-                itemsHtml = order.details.map(item => `<div style="font-size: 0.75rem; color: #334155; margin-top: 2px;">• ${item.name || 'Item'} (Qty: ${item.qty || 1})</div>`).join('');
+            let detailsArray = order.details || order.configDetails || [];
+            if (typeof detailsArray === 'string') {
+                try { detailsArray = JSON.parse(detailsArray); } catch(e) { detailsArray = []; }
+            }
+
+            if (Array.isArray(detailsArray)) {
+                itemsHtml = detailsArray.map(item => `<div style="font-size: 0.75rem; color: #334155; margin-top: 2px;">• ${item.name || item.fileName || 'Item'} (Qty: ${item.qty || item.copies || 1})</div>`).join('');
             }
 
             return `
@@ -5075,31 +5081,44 @@ window.showAppConfirm = function(title, description, onConfirm, icon = "⚠️")
     };
 };
 
-// 🔥 STRICTLY CONTAINED ORDER HISTORY RENDER ENGINE
+// ==========================================
+// 🔥 STRICTLY USER-SPECIFIC ORDER HISTORY RENDER ENGINE
+// ==========================================
 window.renderOrderHistoryUI = function() {
     try {
         const container = document.getElementById('ordersHistoryContainer');
         if (!container) return;
 
-        let allOrdersMap = new Map();
-        for (let i = 0; i < localStorage.length; i++) {
-            let key = localStorage.key(i);
-            if (key && key.startsWith('history_')) {
-                try {
-                    let items = JSON.parse(localStorage.getItem(key) || '[]');
-                    if (Array.isArray(items)) {
-                        items.forEach(ord => {
-                            if (ord) {
-                                let uniqueId = ord.orderId || ord.id || JSON.stringify(ord);
-                                allOrdersMap.set(uniqueId, ord);
-                            }
-                        });
-                    }
-                } catch (e) {}
-            }
-        }
+        // 1. Sirf currently active user ki keys target karein (Doosre users ka data mix na ho)
+        const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+        const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
 
-        let history = Array.from(allOrdersMap.values());
+        const targetKeys = [
+            `history_${sessionActiveUser}`,
+            activeIdentity ? `history_${activeIdentity}` : null
+        ].filter(Boolean);
+
+        let history = [];
+        let seenOrderIds = new Set();
+
+        targetKeys.forEach(key => {
+            try {
+                let items = JSON.parse(localStorage.getItem(key) || '[]');
+                if (Array.isArray(items)) {
+                    items.forEach(ord => {
+                        if (ord) {
+                            let uniqueId = ord.orderId || ord.id || JSON.stringify(ord);
+                            if (!seenOrderIds.has(uniqueId)) {
+                                seenOrderIds.add(uniqueId);
+                                history.push(ord);
+                            }
+                        }
+                    });
+                }
+            } catch (e) {}
+        });
+
+        // Sort by newest first
         history = history.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
 
         const topBar = `
@@ -5110,7 +5129,15 @@ window.renderOrderHistoryUI = function() {
         `;
 
         if (history.length === 0) {
-            container.innerHTML = topBar + `<div style="text-align:center; padding:30px;"><p style="color:#64748b;">No orders found.</p></div>`;
+            container.innerHTML = `
+                ${topBar}
+                <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px dashed #16a34a; border-radius: 20px; padding: 36px 20px; text-align: center; font-family: 'Poppins', sans-serif;">
+                    <div style="font-size: 3.2rem; margin-bottom: 12px;">📦✨</div>
+                    <h3 style="font-size: 1.15rem; font-weight: 900; color: #0f172a; margin-bottom: 6px;">No orders found yet</h3>
+                    <p style="font-size: 0.8rem; color: #64748b; line-height: 1.5; margin-bottom: 22px; max-width: 290px; margin-left: auto; margin-right: auto;">You haven't placed any orders yet. Place your first order now!</p>
+                    <button type="button" onclick="navigateDrawerSection('store')" style="background: #065f46; color: white; border: none; padding: 12px 28px; border-radius: 14px; font-weight: 900; font-size: 0.85rem; cursor: pointer;">Start Your First Order &rarr;</button>
+                </div>
+            `;
             return;
         }
 
@@ -5122,8 +5149,13 @@ window.renderOrderHistoryUI = function() {
             let safeDate = order.date || '';
             
             let itemsHtml = '';
-            if (Array.isArray(order.details)) {
-                itemsHtml = order.details.map(item => `<div style="font-size: 0.75rem; color: #334155; margin-top: 2px;">• ${item.name || 'Item'} (Qty: ${item.qty || 1})</div>`).join('');
+            let detailsArray = order.details || order.configDetails || [];
+            if (typeof detailsArray === 'string') {
+                try { detailsArray = JSON.parse(detailsArray); } catch(e) { detailsArray = []; }
+            }
+
+            if (Array.isArray(detailsArray)) {
+                itemsHtml = detailsArray.map(item => `<div style="font-size: 0.75rem; color: #334155; margin-top: 2px;">• ${item.name || item.fileName || 'Item'} (Qty: ${item.qty || item.copies || 1})</div>`).join('');
             }
 
             return `
