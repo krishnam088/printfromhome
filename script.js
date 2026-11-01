@@ -993,7 +993,6 @@ if (fileUpload) {
                 const layoutSelect = document.getElementById('photoLayoutSelect');
                 const selectedLayout = layoutSelect ? layoutSelect.value : 'passport_8';
                 
-                // Layout ke hisab se grid count set karein
                 let gridCount = 8;
                 if (selectedLayout === 'passport_12') gridCount = 12;
                 else if (selectedLayout === 'passport_20') gridCount = 20;
@@ -1005,25 +1004,27 @@ if (fileUpload) {
 
                 for (let g = 0; g < gridCount; g++) {
                     gridItemsHtml += `
-                        <div style="border: 1px dashed #cbd5e1; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px; box-sizing: border-box; aspect-ratio: 1/1.414;">
+                        <div style="border: 1px dashed #cbd5e1; background: #f8fafc; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px; box-sizing: border-box; aspect-ratio: 1/1.414; padding: 2mm;">
                             <img src="${singleImgSrc}" style="width: 100%; height: 100%; object-fit: contain;" />
                         </div>
                     `;
                 }
 
-                // A4 Sheet Grid Layout Columns (Strict 4 or 5 per row)
                 let gridTemplateCols = 'repeat(4, 1fr)';
                 if (selectedLayout === 'passport_12') gridTemplateCols = 'repeat(4, 1fr)';
                 else if (selectedLayout === 'passport_20') gridTemplateCols = 'repeat(5, 1fr)';
                 else if (selectedLayout === 'photo_2_a4') gridTemplateCols = 'repeat(1, 1fr)';
                 else if (selectedLayout === 'photo_single_glossy') gridTemplateCols = 'repeat(1, 1fr)';
 
-                // 🔥 Yahan 'a4-page-wrapper' ki jagah inline grid enforce kar di hai taaki CSS ka flex conflict na ho
+                // 🔥 Real A4 White Sheet Preview with Proper Margins and Scaling
                 previewContent = `
-                    <div style="width: 210mm; min-height: 297mm; background: #ffffff; border: 2px solid #065f46; border-radius: 8px; padding: 12mm; display: grid !important; grid-template-columns: ${gridTemplateCols} !important; gap: 4mm; align-content: start; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); box-sizing: border-box; overflow: hidden; margin: 0 auto;">
-                        ${gridItemsHtml}
+                    <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: flex-start; overflow: hidden; padding: 5px; box-sizing: border-box;">
+                        <div style="width: 210mm; min-height: 297mm; background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 30px rgba(0,0,0,0.12); border-radius: 6px; padding: 15mm; display: grid !important; grid-template-columns: ${gridTemplateCols} !important; gap: 5mm; align-content: start; justify-content: center; box-sizing: border-box; transform: scale(0.36); transform-origin: top center; margin-bottom: -190mm;">
+                            ${gridItemsHtml}
+                        </div>
                     </div>
                 `;
+                
             } else {
                 // 🔥 MULTI-PAGE PDF & NORMAL DOCUMENT PREVIEW CHECK
                 if (f.pageImages && f.pageImages.length > 1) {
