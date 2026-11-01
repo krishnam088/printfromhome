@@ -827,7 +827,8 @@ window.addEventListener('DOMContentLoaded', () => {
         // 🔥 Load Live Settings into Admin Inputs on Panel Open
       // 🔥 Load Live Settings into Admin Inputs on Panel Open
      // 🔥 Load Live Settings into Admin Inputs on Panel Open
-    async function loadAdminPanelSettings() {
+   
+async function loadAdminPanelSettings() {
             try {
                 const res = await fetch('/api/admin/settings');
                 const data = await res.json();
@@ -836,6 +837,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     const hField = document.getElementById('adminSettingHandlingFee');
                     const rField = document.getElementById('adminSettingRainFee');
                     const singlePrinterToggle = document.getElementById('adminSettingSinglePrinterMode'); // 🔥 Added
+                    const codToggle = document.getElementById('adminCodForPrintToggle'); // 🔥 Added (COD Toggle)
 
                     // 🔥 Strict checks supporting explicit 0 values without defaulting
                     if (dField) dField.value = (data.settings.deliveryFee !== undefined && data.settings.deliveryFee !== null && data.settings.deliveryFee !== '') ? data.settings.deliveryFee : 25;
@@ -845,6 +847,11 @@ window.addEventListener('DOMContentLoaded', () => {
                     // 🔥 Load Single Printer Mode state
                     if (singlePrinterToggle) {
                         singlePrinterToggle.checked = data.settings.singlePrinterMode !== false;
+                    }
+
+                    // 🔥 Load COD for Print state
+                    if (codToggle) {
+                        codToggle.checked = data.settings.codForPrintEnabled !== false;
                     }
                 }
             } catch (e) {
