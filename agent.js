@@ -61,7 +61,6 @@ async function fetchAndPrintLiveJobs() {
 
         if (!orders || !Array.isArray(orders)) return;
 
-        // 1. Server se admin settings fetch karein (Single vs Dual mode check)
         let settings = { singlePrinterMode: true, printerName: PRINTER_NAME };
         try {
             const settingsRes = await axios.get(`${BASE_URL}/api/admin/settings`, { timeout: 5000 });
@@ -70,7 +69,7 @@ async function fetchAndPrintLiveJobs() {
             // Fallback to default single printer mode if offline
         }
 
-        const isSingleMode = settings.singlePrinterMode !== false; 
+        const isSingleMode = settings.singlePrinterMode !== false;
         const primaryPrinter = settings.printerName || PRINTER_NAME;
 
         const paidOrders = orders.filter(o => o.status === 'Ready for Print' || o.status === 'Paid / Ready for Print');
@@ -78,15 +77,14 @@ async function fetchAndPrintLiveJobs() {
 
         for (let order of paidOrders) {
             if (printedHistory.has(order.orderId)) {
-                continue; 
+                continue;
             }
-            
+
             console.log(`\n==================================================`);
             console.log(`📥 PROCESSING ORDER ID: #${order.orderId}`);
             console.log(`👤 Customer: ${order.customerName || 'Valued Customer'} | Phone: ${order.phone || 'N/A'}`);
             console.log(`==================================================`);
-            
-            // Check karo ki is order mein koi photo print job hai ya nahi
+
             const items = order.configDetails || [];
             const hasPhotoJobs = items.some(item => item.jobType === 'photo_print' || item.paperType === 'photo');
 
@@ -95,25 +93,27 @@ async function fetchAndPrintLiveJobs() {
                 console.log(`🛑 PAPER SWAP REQUIRED FOR ORDER #${order.orderId}!`);
                 console.log(`👉 PLEASE LOAD GLOSSY PHOTO PAPER INTO ${primaryPrinter}!`);
                 console.log(`==================================================\n`);
-                
+
                 await promptUser('👉 Press [ENTER] in this terminal AFTER loading Glossy Photo Paper...');
             }
 
-          if (order.configDetails && Array.isArray(order.configDetails)) {
+            if (order.configDetails && Array.isArray(order.configDetails)) {
                 for (let i = 0; i < order.configDetails.length; i++) {
                     const fileMeta = order.configDetails[i];
-                    
-                    // 🔥 Har possible jagah se file URL dhoondne ka bulletproof tareeka
                     let fileUrl = fileMeta.fileUrl || fileMeta.url;
-                    
+
+                    if (fileUrl && fileUrl.startsWith('blob:')) {
+                        fileUrl = null;
+                    }
+
                     if (!fileUrl && order.files && Array.isArray(order.files) && order.files.length > 0) {
-                        const targetFile = order.files.find(f => f.name === fileMeta.fileName || f.originalName === fileMeta.fileName) || order.files[i];
+                        const targetFile = order.files.find(f => f.name === fileMeta.fileName || f.originalName === fileMeta.fileName) || order.files[i] || order.files[0];
                         if (targetFile) {
                             fileUrl = targetFile.url || `${BASE_URL}/uploads/${targetFile.filename || targetFile.savedName || targetFile.name}`;
                         }
                     }
 
-                    if (!fileUrl && order.fileUrl) {
+                    if (!fileUrl && order.fileUrl && !order.fileUrl.startsWith('blob:')) {
                         fileUrl = order.fileUrl;
                     }
 
@@ -128,9 +128,9 @@ async function fetchAndPrintLiveJobs() {
                             if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
 
                             await downloadFilePromise(fileUrl, localPath);
-                            
+
                             const isPhoto = fileMeta.jobType === 'photo_print' || fileMeta.paperType === 'photo';
-                            
+
                             if (isPhoto) {
                                 console.log(`[ROUTE CHECK] 🖼️ Target: GLOSSY PHOTO PRINTER (${primaryPrinter})`);
                                 console.log(`[ACTION] Sending Photo Layout (${fileMeta.photoLayout || 'Photo'}) to Photo Printer`);
@@ -158,7 +158,6 @@ async function fetchAndPrintLiveJobs() {
 
                             if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
                             await new Promise(res => setTimeout(res, 3000));
-
                         } catch (fileErr) {
                             console.error(`❌ Failed printing individual node file (${fileUrl}):`, fileErr.message);
                         }
@@ -172,12 +171,12 @@ async function fetchAndPrintLiveJobs() {
                 try {
                     if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
                     await downloadFilePromise(fileUrl, localPath);
-                    
+
                     console.log(`[ROUTE CHECK] 📄 Target: DOCUMENT PRINTER (Fallback)`);
-                    await pt.print(localPath, { 
-                        printer: primaryPrinter, 
-                        copies: 1, 
-                        monochrome: order.printType === 'bw' 
+                    await pt.print(localPath, {
+                        printer: primaryPrinter,
+                        copies: 1,
+                        monochrome: order.printType === 'bw'
                     });
                     if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
                 } catch (err) {
@@ -196,7 +195,7 @@ async function fetchAndPrintLiveJobs() {
             saveToHistory(order.orderId);
             console.log(`✅ Order #${order.orderId} processing completed successfully!\n`);
             console.log(`🔒 Local Security Guard Locked: Order ${order.orderId} moved to history to break any potential loops.`);
-            
+
             const localPath = path.join(__dirname, 'temp_print_job.pdf');
             if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
         }
