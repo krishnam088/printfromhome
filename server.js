@@ -560,7 +560,7 @@ app.post('/api/auth/send-signup-otp', async (req, res) => {
         res.status(500).json({ success: false, message: "Failed to send email OTP: " + err.message });
     }
 });
-// --- 1. SIGNUP: SEND EMAIL OTP ---
+
 
 // --- 1. SIGNUP: SEND EMAIL OTP VIA BREVO API ---
 app.post('/api/auth/send-signup-otp', async (req, res) => {
@@ -613,47 +613,6 @@ app.post('/api/auth/send-signup-otp', async (req, res) => {
     }
 });
 
-// --- 2. SIGNUP: VERIFY OTP & CREATE USER ---
-app.post('/api/auth/verify-signup-otp', async (req, res) => {
-    try {
-        const { name, identity, email, otpInput } = req.body;
-        const normalizedIdentity = identity.replace(/\D/g, '').slice(-10);
-
-        const tempData = await TempSignup.findOne({ identity: normalizedIdentity });
-        if (!tempData) {
-            return res.status(400).json({ success: false, message: "Session expired. Please request a new OTP." });
-        }
-
-        if (new Date() > new Date(tempData.otpExpires)) {
-            return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
-        }
-
-        if (String(tempData.emailOtp).trim() !== String(otpInput).trim()) {
-            return res.status(400).json({ success: false, message: "Invalid verification code entered." });
-        }
-
-        const newUser = new User({
-            name: name || tempData.name,
-            identity: normalizedIdentity,
-            email: email.trim().toLowerCase(),
-            isEmailVerified: true,
-            dateCreated: new Date().toLocaleString()
-        });
-        
-        await newUser.save();
-        await TempSignup.deleteOne({ identity: normalizedIdentity });
-
-        res.status(201).json({ 
-            success: true, 
-            message: "Account created successfully!", 
-            userId: newUser.identity, 
-            name: newUser.name, 
-            email: newUser.email 
-        });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Verification failed: " + err.message });
-    }
-});
 
 // --- 3. SEND LOGIN OTP VIA GMAIL (Sirf Email se) ---
 app.post('/api/auth/send-login-otp', async (req, res) => {
