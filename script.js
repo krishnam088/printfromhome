@@ -2390,7 +2390,7 @@ window.renderCartDrawerContents = function() {
     wrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
     wrapper.innerHTML = stylishCartHeader;
 
-   // 1. Render Print Jobs in Cart
+  // 1. Render Print Jobs in Cart
     window.cartPrintJobsArray.forEach((job, idx) => {
         let jobTotal = 0;
         let subtitleText = "";
@@ -2438,7 +2438,7 @@ window.renderCartDrawerContents = function() {
         `;
         wrapper.appendChild(card);
     });
-    
+
     // 2. Render Snacks / Store Products in Cart (Fixed typo: snack.price * snack.qty)
     window.cartSnacksArray.forEach((snack, idx) => {
         const card = document.createElement('div');
