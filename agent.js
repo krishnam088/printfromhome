@@ -117,15 +117,22 @@ async function fetchAndPrintLiveJobs() {
                 for (let i = 0; i < validPrintJobs.length; i++) {
                     const fileMeta = validPrintJobs[i];
                     
-                    let fileUrl = fileMeta.fileUrl || fileMeta.url;
+                   let fileUrl = fileMeta.fileUrl || fileMeta.url;
                     
                     // 🛑 Safety Check: Agar URL 'blob:' ya 'data:' se shuru ho raha hai, toh use ignore karo
                     if (fileUrl && (fileUrl.startsWith('blob:') || fileUrl.startsWith('data:'))) {
                         fileUrl = null; 
                     }
                     
+                    // 🔥 Smart & Forgiving File Lookup (Double extension & partial name mismatch fix)
                     if (!fileUrl && order.files && Array.isArray(order.files) && order.files.length > 0) {
-                        const targetFile = order.files.find(f => f.name === fileMeta.fileName || f.originalName === fileMeta.fileName) || order.files[i] || order.files[0];
+                        const cleanMetaName = (fileMeta.fileName || '').replace(/\.(png|jpg|jpeg)\.(png|jpg|jpeg)$/i, '.$1').toLowerCase();
+                        
+                        const targetFile = order.files.find(f => {
+                            const fName = (f.name || f.originalName || '').toLowerCase();
+                            return fName === cleanMetaName || fName.includes(cleanMetaName) || cleanMetaName.includes(fName);
+                        }) || order.files[i] || order.files[0]; // Fallback to index or first available file
+
                         if (targetFile) {
                             fileUrl = targetFile.url || `${BASE_URL}/uploads/${targetFile.filename || targetFile.savedName || targetFile.name}`;
                         }
