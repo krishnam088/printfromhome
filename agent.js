@@ -117,7 +117,7 @@ async function fetchAndPrintLiveJobs() {
                 for (let i = 0; i < validPrintJobs.length; i++) {
                     const fileMeta = validPrintJobs[i];
                     
-                   let fileUrl = fileMeta.fileUrl || fileMeta.url;
+                let fileUrl = fileMeta.fileUrl || fileMeta.url;
                     
                     // 🛑 Safety Check: Agar URL 'blob:' ya 'data:' se shuru ho raha hai, toh use ignore karo
                     if (fileUrl && (fileUrl.startsWith('blob:') || fileUrl.startsWith('data:'))) {
@@ -131,11 +131,17 @@ async function fetchAndPrintLiveJobs() {
                         const targetFile = order.files.find(f => {
                             const fName = (f.name || f.originalName || '').toLowerCase();
                             return fName === cleanMetaName || fName.includes(cleanMetaName) || cleanMetaName.includes(fName);
-                        }) || order.files[i] || order.files[0]; // Fallback to index or first available file
+                        }) || order.files[i] || order.files[0]; 
 
                         if (targetFile) {
                             fileUrl = targetFile.url || `${BASE_URL}/uploads/${targetFile.filename || targetFile.savedName || targetFile.name}`;
                         }
+                    }
+
+                    // 🔥 NAYA FOOLPROOF FALLBACK: Agar fir bhi URL na mile, toh fileMeta.fileName ke zariye direct uploads link bana lo!
+                    if (!fileUrl && fileMeta.fileName) {
+                        const cleanFileName = fileMeta.fileName.replace(/^Product:\s*/i, '').trim();
+                        fileUrl = `${BASE_URL}/uploads/${cleanFileName}`;
                     }
 
                     if (!fileUrl && order.fileUrl && !order.fileUrl.startsWith('blob:')) {
@@ -145,7 +151,7 @@ async function fetchAndPrintLiveJobs() {
                     if (!fileUrl && order.file) {
                         fileUrl = `${BASE_URL}/uploads/${order.file}`;
                     }
-
+                    
                     if (fileUrl && fileUrl !== '#') {
                         const localPath = path.join(__dirname, `temp_print_${i}.pdf`);
 
