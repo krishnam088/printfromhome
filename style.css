@@ -792,3 +792,104 @@ body.theme-festive-republic #festivalAnimationContainer {
         -webkit-overflow-scrolling: touch !important;
     }
 }
+
+/* 🖼️ GLOSSY & PASSPORT PHOTO GRID / SLIDER FIX */
+.glossy-photo-container, 
+.photo-selection-grid, 
+.print-copies-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+    gap: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Ensure photo card items maintain fixed proportions (prevent portrait/landscape shifting) */
+.glossy-photo-card, 
+.photo-item-box {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    aspect-ratio: unset !important; /* Forces items not to distort */
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+/* Mobile screen par strictly 2 columns aur proper padding */
+@media (max-width: 768px) {
+    .glossy-photo-container, 
+    .photo-selection-grid, 
+    .print-copies-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        padding: 0 2px !important;
+    }
+}
+
+/* ========================================
+   📱 ULTIMATE GLOSSY & PHOTO GRID MOBILE FIX
+   ======================================== */
+
+/* Glossy section container ko phone screen ke andar lock karne ke liye */
+.glossy-section-container, 
+.photo-selection-wrapper, 
+.print-copies-grid-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+}
+
+/* Grids ko mobile friendly banane ke liye (Single, 2-grid, 4-grid, 8-grid sabke liye) */
+.photo-grid-preview, 
+.copies-grid-container, 
+.print-copies-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important; /* Mobile par default 2 columns */
+    gap: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Single grid ya full-width items ke liye */
+.photo-grid-preview.single-grid,
+.print-copies-grid.full-width {
+    grid-template-columns: 1fr !important;
+}
+
+/* Photo card aur image containers ko portrait/landscape stretch hone se bachane ke liye */
+.glossy-photo-card, 
+.photo-item-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+/* Images ko box ke andar properly fit rakhne ke liye taaki distortion na ho */
+.glossy-photo-card img, 
+.photo-item-box img {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 220px !important;
+    object-fit: contain !important; /* Image ka aspect ratio maintain rahega, cut nahi hogi */
+    border-radius: 8px;
+}
+
+/* Mobile Screens Specific Tweaks (<= 768px) */
+@media (max-width: 768px) {
+    .glossy-section-container {
+        padding: 8px !important;
+    }
+    
+    .photo-grid-preview, 
+    .copies-grid-container, 
+    .print-copies-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+}
