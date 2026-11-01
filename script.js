@@ -2636,6 +2636,7 @@ function renderUpsellingGridSafely() {
 }
 
 // Helper function to edit a print job from cart (re-opens Print Studio)
+
 window.editCartPrintJob = function(idx) {
     let job = window.cartPrintJobsArray[idx];
     if (!job) return;
@@ -2676,6 +2677,21 @@ window.editCartPrintJob = function(idx) {
     if (typeof openPrintStudioWithFilesArray === 'function') {
         openPrintStudioWithFilesArray(window.studioMasterFiles, 0);
     }
+
+    // 🛠️ FIX: Forcefully update preview elements so image shows up immediately on edit
+    setTimeout(() => {
+        const previewImgElem = document.getElementById('previewImageElement') || document.querySelector('.a4-page-canvas');
+        if (previewImgElem && freshFileUrl) {
+            previewImgElem.src = freshFileUrl;
+            previewImgElem.style.display = 'block';
+        }
+        
+        // Agar file name display update karna ho
+        const fileNameDisp = document.getElementById('fileNameDisplay');
+        if (fileNameDisp) {
+            fileNameDisp.innerText = job.fileName;
+        }
+    }, 100);
 };
 
 window.removeSnackItemCompletely = function(index) {
