@@ -1330,17 +1330,15 @@ window.addStudioJobToCart = async function() {
 
     window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
-    // 🔥 1. Yahan Paper Type aur Photo/Passport Layout ki values nikal lein
     const paperType = typeof currentSelectedPaperType !== 'undefined' ? currentSelectedPaperType : 'document';
     const jobType = (paperType === 'photo') ? 'photo_print' : 'document_print';
     let photoLayout = null;
-    let photoCalculatedPrice = 50; // Default passport price
+    let photoCalculatedPrice = 50;
 
     if (paperType === 'photo') {
         const layoutSelect = document.getElementById('photoLayoutSelect');
         photoLayout = layoutSelect ? layoutSelect.value : 'passport_8';
         
-        // Layout ke hisab se price set karein
         if (photoLayout === 'passport_8') photoCalculatedPrice = 50;
         else if (photoLayout === 'passport_12') photoCalculatedPrice = 60;
         else if (photoLayout === 'passport_20') photoCalculatedPrice = 100;
@@ -1348,33 +1346,39 @@ window.addStudioJobToCart = async function() {
         else if (photoLayout === 'photo_single_glossy') photoCalculatedPrice = 100;
     }
 
-    window.studioMasterFiles.forEach(f => {
+    // 🔥 FIX: Saare files aur unke blobs ko session/local storage ke liye safely map karein
+    for (const f of window.studioMasterFiles) {
         let rate = (f.printType === 'bw') ? 3 : 10;
-        
-        // 🔥 2. Agar photo print hai toh photo price lagega, warna normal document calculation
         let itemPrice = (paperType === 'photo') ? photoCalculatedPrice : (f.pages * rate * f.copies);
+
+        // Agar fileBlob ek actual File object hai, toh usko Base64 string mein convert karein taaki localStorage mein save ho sake
+        let base64Data = null;
+        if (f.fileBlob instanceof Blob || f.fileBlob instanceof File) {
+            base64Data = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(f.fileBlob);
+            });
+        }
 
         let printJobItem = {
             id: 'print_' + Date.now() + Math.random(),
             fileName: f.name,
             fileUrl: f.fileUrl,
-            fileData: f.fileBlob,
+            fileBase64: base64Data, // 🔥 Yeh actual file data ko safely carry karega
             pages: f.pages,
             copies: f.copies,
             printType: f.printType,
             orientation: f.orientation,
             sides: f.orientation === 'portrait' ? 'single' : 'landscape',
             binding: f.binding || 'none',
-            
-            // 🔥 3. Yeh naye parameters add kiye hain agent aur routing ke liye
-            paperType: paperType,       // 'document' ya 'photo'
-            jobType: jobType,           // 'document_print' ya 'photo_print'
-            photoLayout: photoLayout,   // 'passport_8', 'passport_12' etc.
-            
+            paperType: paperType,
+            jobType: jobType,
+            photoLayout: photoLayout,
             price: itemPrice
         };
         window.cartPrintJobsArray.push(printJobItem);
-    });
+    }
 
     localStorage.setItem('cart_print_jobs', JSON.stringify(window.cartPrintJobsArray));
 
@@ -3539,9 +3543,24 @@ window.executeFinalCartOrderPlacement = async function() {
             console.warn("Using store location fallback for order coordinates.");
         }
 
-        const formData = new FormData();
+const formData = new FormData();
         window.cartPrintJobsArray.forEach(job => {
-            if (job.fileData) formData.append('document', job.fileData);
+            if (job.fileData) {
+                formData.append('document', job.fileData);
+            } else if (job.fileBase64) {
+                try {
+                    let arr = job.fileBase64.split(',');
+                    let mime = arr[0].match(/:(.*?);/)[1];
+                    let bstr = atob(arr[1]);
+                    let n = bstr.length;
+                    let u8arr = new Uint8Array(n);
+                    while(n--) { u8arr[n] = bstr.charCodeAt(n); }
+                    let convertedFile = new File([u8arr], job.fileName || 'Document.pdf', { type: mime });
+                    formData.append('document', convertedFile);
+                } catch (err) {
+                    console.error("Failed to convert fileBase64 to file:", err);
+                }
+            }
         });
 
         formData.append('totalAmount', grandTotal.toFixed(2));
@@ -3586,7 +3605,7 @@ window.executeFinalCartOrderPlacement = async function() {
             });
 
             window.appliedActiveCoupon = null;
-
+            
             try {
                 await fetch('/api/admin/inventory/decrement', {
                     method: 'POST',
