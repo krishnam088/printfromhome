@@ -97,21 +97,30 @@ async function fetchAndPrintLiveJobs() {
                 await promptUser('👉 Press [ENTER] in this terminal AFTER loading Glossy Photo Paper...');
             }
 
-            if (order.configDetails && Array.isArray(order.configDetails)) {
-                // 🔥 STRICT FILTER: Sirf wahi items lo jo print jobs hain (Snacks ya Products ko hata do)
-                const validPrintJobs = order.configDetails.filter(item => 
-                    item.printType !== 'snack' && 
-                    !item.isCoverSlip && 
-                    !(item.fileName && item.fileName.startsWith('Product:'))
-                );
+          if (order.configDetails && Array.isArray(order.configDetails)) {
+                // 🔥 STRICT FILTER: Snacks, Cover Slips, Products, aur UI Icons/PNGs ko turant bahar karo
+                const validPrintJobs = order.configDetails.filter(item => {
+                    if (!item) return false;
+                    let fName = (item.fileName || item.name || '').toLowerCase();
+                    
+                    if (item.printType === 'snack' || item.isCoverSlip) return false;
+                    if (fName.startsWith('product:')) return false;
+                    
+                    // 🛑 Fuzul UI Icons aur App Assets ko yahan block kar do
+                    if (fName.includes('admin_icon') || fName.includes('app_icon') || fName.includes('favicon')) {
+                        return false;
+                    }
+                    
+                    return true;
+                });
 
                 for (let i = 0; i < validPrintJobs.length; i++) {
                     const fileMeta = validPrintJobs[i];
                     
                     let fileUrl = fileMeta.fileUrl || fileMeta.url;
                     
-                    // 🛑 Safety Check: Agar URL 'blob:' se shuru ho raha hai, toh use ignore karo
-                    if (fileUrl && fileUrl.startsWith('blob:')) {
+                    // 🛑 Safety Check: Agar URL 'blob:' ya 'data:' se shuru ho raha hai, toh use ignore karo
+                    if (fileUrl && (fileUrl.startsWith('blob:') || fileUrl.startsWith('data:'))) {
                         fileUrl = null; 
                     }
                     
@@ -175,7 +184,6 @@ async function fetchAndPrintLiveJobs() {
                         console.warn(`⚠️ Warning: No valid downloadable file URL found for print item ${fileMeta.fileName || i}`);
                     }
                 }
-            
             } else {
                 const fileUrl = order.fileUrl || `${BASE_URL}/uploads/${order.file}`;
                 const localPath = path.join(__dirname, 'temp_print_job.pdf');
