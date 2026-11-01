@@ -99,13 +99,29 @@ async function fetchAndPrintLiveJobs() {
                 await promptUser('👉 Press [ENTER] in this terminal AFTER loading Glossy Photo Paper...');
             }
 
-            if (order.configDetails && Array.isArray(order.configDetails) && order.files && order.files.length > 0) {
+          if (order.configDetails && Array.isArray(order.configDetails)) {
                 for (let i = 0; i < order.configDetails.length; i++) {
                     const fileMeta = order.configDetails[i];
-                    const targetFile = order.files.find(f => f.name === fileMeta.fileName || f.originalName === fileMeta.fileName) || order.files[i];
                     
-                    if (targetFile) {
-                        const fileUrl = targetFile.url || `${BASE_URL}/uploads/${targetFile.filename || targetFile.savedName}`;
+                    // 🔥 Har possible jagah se file URL dhoondne ka bulletproof tareeka
+                    let fileUrl = fileMeta.fileUrl || fileMeta.url;
+                    
+                    if (!fileUrl && order.files && Array.isArray(order.files) && order.files.length > 0) {
+                        const targetFile = order.files.find(f => f.name === fileMeta.fileName || f.originalName === fileMeta.fileName) || order.files[i];
+                        if (targetFile) {
+                            fileUrl = targetFile.url || `${BASE_URL}/uploads/${targetFile.filename || targetFile.savedName || targetFile.name}`;
+                        }
+                    }
+
+                    if (!fileUrl && order.fileUrl) {
+                        fileUrl = order.fileUrl;
+                    }
+
+                    if (!fileUrl && order.file) {
+                        fileUrl = `${BASE_URL}/uploads/${order.file}`;
+                    }
+
+                    if (fileUrl && fileUrl !== '#') {
                         const localPath = path.join(__dirname, `temp_print_${i}.pdf`);
 
                         try {
@@ -144,8 +160,10 @@ async function fetchAndPrintLiveJobs() {
                             await new Promise(res => setTimeout(res, 3000));
 
                         } catch (fileErr) {
-                            console.error(`❌ Failed printing individual node file:`, fileErr.message);
+                            console.error(`❌ Failed printing individual node file (${fileUrl}):`, fileErr.message);
                         }
+                    } else {
+                        console.warn(`⚠️ Warning: No valid file URL found for item ${fileMeta.fileName || i}`);
                     }
                 }
             } else {

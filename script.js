@@ -3486,6 +3486,7 @@ window.executeFinalCartOrderPlacement = async function() {
                 copies: job.copies,
                 paperType: job.paperType || 'document',
                 photoLayout: job.photoLayout || null,
+                fileUrl: job.fileUrl || '', // 🔥 Yeh line yahan zaroor honi chahiye!
                 price: cost
             });
         });

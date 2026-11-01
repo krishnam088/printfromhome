@@ -1617,7 +1617,7 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             });
         }
 
-       const host = req.get('host');
+      const host = req.get('host');
         const docFiles = req.files ? req.files.filter(f => f.fieldname === 'document') : [];
         const filesMappedList = docFiles.map(f => ({ 
             name: f.originalname || 'Document.pdf', 
