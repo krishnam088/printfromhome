@@ -1316,7 +1316,6 @@ window.removeCurrentStudioFile = function() {
 };
 
 window.addStudioJobToCart = async function() {
-    // 🔥 Print Service Maintenance Check for Print Studio
     try {
         const statusRes = await fetch('/api/store-status');
         const statusData = await statusRes.json();
@@ -1346,26 +1345,54 @@ window.addStudioJobToCart = async function() {
         else if (photoLayout === 'photo_single_glossy') photoCalculatedPrice = 100;
     }
 
-    // 🔥 FIX: Saare files aur unke blobs ko session/local storage ke liye safely map karein
     for (const f of window.studioMasterFiles) {
         let rate = (f.printType === 'bw') ? 3 : 10;
         let itemPrice = (paperType === 'photo') ? photoCalculatedPrice : (f.pages * rate * f.copies);
 
-        // Agar fileBlob ek actual File object hai, toh usko Base64 string mein convert karein taaki localStorage mein save ho sake
+        let finalBlob = f.fileBlob;
+        let finalFileUrl = f.fileUrl;
+        let finalFileName = f.name;
+
+        // 🔥 AGAR PHOTO/PASSPORT LAYOUT HAI, TOH PREVIEW CONTAINER KO CANVAS BANAKAR IMAGE MEIN CONVERT KAREIN
+        if (paperType === 'photo') {
+            const previewContainerNode = document.querySelector('#studioInImageHorizontalSlider > div > div');
+            if (previewContainerNode && typeof html2canvas !== 'undefined') {
+                try {
+                    const canvas = await html2canvas(previewContainerNode, { scale: 2, useCORS: true });
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                    
+                    // Base64 ko File object mein convert karna
+                    let arr = dataUrl.split(',');
+                    let mime = arr[0].match(/:(.*?);/)[1];
+                    let bstr = atob(arr[1]);
+                    let n = bstr.length;
+                    let u8arr = new Uint8Array(n);
+                    while(n--) { u8arr[n] = bstr.charCodeAt(n); }
+                    
+                    finalBlob = new File([u8arr], `Glossy_${photoLayout}_${f.name}.jpg`, { type: mime });
+                    finalFileUrl = dataUrl;
+                    finalFileName = `Glossy_${photoLayout}_${f.name}.jpg`;
+                } catch (err) {
+                    console.error("Canvas capture failed:", err);
+                }
+            }
+        }
+
         let base64Data = null;
-        if (f.fileBlob instanceof Blob || f.fileBlob instanceof File) {
+        if (finalBlob instanceof Blob || finalBlob instanceof File) {
             base64Data = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result);
-                reader.readAsDataURL(f.fileBlob);
+                reader.readAsDataURL(finalBlob);
             });
         }
 
         let printJobItem = {
             id: 'print_' + Date.now() + Math.random(),
-            fileName: f.name,
-            fileUrl: f.fileUrl,
-            fileBase64: base64Data, // 🔥 Yeh actual file data ko safely carry karega
+            fileName: finalFileName,
+            fileUrl: finalFileUrl,
+            fileBase64: base64Data,
+            fileData: finalBlob,
             pages: f.pages,
             copies: f.copies,
             printType: f.printType,
@@ -3605,7 +3632,7 @@ const formData = new FormData();
             });
 
             window.appliedActiveCoupon = null;
-            
+
             try {
                 await fetch('/api/admin/inventory/decrement', {
                     method: 'POST',
