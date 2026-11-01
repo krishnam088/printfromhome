@@ -1290,3 +1290,32 @@ body.theme-festive-republic #festivalAnimationContainer {
         margin-bottom: -140mm !important;
     }
 }
+
+/* ========================================
+   📸 GLOSSY GRID WRAPPER MOBILE RESPONSIVE SCALING
+   ======================================== */
+.glossy-grid-wrapper {
+    width: 210mm !important;
+    max-width: 210mm !important;
+    min-height: 297mm !important;
+    background: #ffffff !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+}
+
+@media (max-width: 768px) {
+    .glossy-grid-wrapper {
+        transform: scale(0.62);
+        transform-origin: top center;
+        margin-bottom: -110mm !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .glossy-grid-wrapper {
+        transform: scale(0.50);
+        transform-origin: top center;
+        margin-bottom: -140mm !important;
+    }
+}

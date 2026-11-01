@@ -1018,8 +1018,9 @@ if (fileUpload) {
                 else if (selectedLayout === 'photo_2_a4') gridTemplateCols = 'repeat(1, 1fr)';
                 else if (selectedLayout === 'photo_single_glossy') gridTemplateCols = 'repeat(1, 1fr)';
 
+                // 🔥 Yahan 'a4-page-wrapper' ki jagah inline grid enforce kar di hai taaki CSS ka flex conflict na ho
                 previewContent = `
-                    <div class="a4-page-wrapper" style="width: 210mm; min-height: 297mm; background: #ffffff; border: 2px solid #065f46; border-radius: 8px; padding: 12mm; display: grid; grid-template-columns: ${gridTemplateCols}; gap: 4mm; align-content: start; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); box-sizing: border-box; overflow: hidden;">
+                    <div style="width: 210mm; min-height: 297mm; background: #ffffff; border: 2px solid #065f46; border-radius: 8px; padding: 12mm; display: grid !important; grid-template-columns: ${gridTemplateCols} !important; gap: 4mm; align-content: start; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); box-sizing: border-box; overflow: hidden; margin: 0 auto;">
                         ${gridItemsHtml}
                     </div>
                 `;
@@ -1036,10 +1037,14 @@ if (fileUpload) {
                     `).join('');
 
                     previewContent = `
-                        <div class="vertical-pdf-scroll-box" data-file-index="${fIdx}" style="width:100%; height:100%; display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; padding:12px; box-sizing:border-box; scrollbar-width:thin;">
-                            ${verticalPagesHtml}
+                    <div style="width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 10px; box-sizing: border-box;">
+                        <div style="width: 210mm; min-height: 297mm; background: #ffffff; border: 2px solid #065f46; border-radius: 8px; padding: 12mm; display: grid !important; grid-template-columns: ${gridTemplateCols} !important; gap: 4mm; align-content: start; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); box-sizing: border-box; transform: scale(0.42); transform-origin: top center; margin-bottom: -170mm;">
+                            ${gridItemsHtml}
                         </div>
-                    `;
+                    </div>
+                `;
+
+
                 } else {
                     let singleImgSrc = (f.pageImages && f.pageImages.length > 0) ? f.pageImages[0] : f.fileUrl;
                     
