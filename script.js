@@ -4641,7 +4641,7 @@ setInterval(() => {
     if (typeof window.syncActiveOrderStatusFromBackend === 'function') {
         window.syncActiveOrderStatusFromBackend();
     }
-}, 3000);
+}, 12000);
 
 // ==========================================
 // 🔥 EDIT CART PRINT JOB HANDLER
