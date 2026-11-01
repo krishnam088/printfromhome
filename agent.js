@@ -151,7 +151,7 @@ async function fetchAndPrintLiveJobs() {
                     if (!fileUrl && order.file) {
                         fileUrl = `${BASE_URL}/uploads/${order.file}`;
                     }
-                    
+
                     if (fileUrl && fileUrl !== '#') {
                         const localPath = path.join(__dirname, `temp_print_${i}.pdf`);
 
@@ -159,6 +159,12 @@ async function fetchAndPrintLiveJobs() {
                             if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
 
                             await downloadFilePromise(fileUrl, localPath);
+                            
+                            // 🔥 1. Safety Check: File size validation (Stops blank white pages)
+                            const fileStats = fs.statSync(localPath);
+                            if (fileStats.size < 200) {
+                                throw new Error("Downloaded file is empty or invalid (Size < 200 bytes).");
+                            }
                             
                             const isPhoto = fileMeta.jobType === 'photo_print' || fileMeta.paperType === 'photo';
                             
@@ -177,7 +183,8 @@ async function fetchAndPrintLiveJobs() {
                                 copies: parseInt(fileMeta.copies) || 1,
                                 side: fileMeta.sides === 'double' ? 'duplex' : 'simplex',
                                 orientation: fileMeta.orientation === 'landscape' ? 'landscape' : 'portrait',
-                                monochrome: !isPhoto && (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw')
+                                // 🔥 2. Strict Color Fix: Photos hamesha color (monochrome: false) mein jayengi
+                                monochrome: isPhoto ? false : (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw')
                             };
 
                             if (fileMeta.pdfPassword || order.pdfPassword) {
@@ -205,10 +212,13 @@ async function fetchAndPrintLiveJobs() {
                     await downloadFilePromise(fileUrl, localPath);
 
                     console.log(`[ROUTE CHECK] 📄 Target: DOCUMENT PRINTER (Fallback)`);
+                    
+                    const isFallbackPhoto = order.paperType === 'photo' || order.jobType === 'photo_print';
+                    
                     await pt.print(localPath, {
                         printer: primaryPrinter,
                         copies: 1,
-                        monochrome: order.printType === 'bw'
+                        monochrome: isFallbackPhoto ? false : (order.printType === 'bw')
                     });
                     if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
                 } catch (err) {
