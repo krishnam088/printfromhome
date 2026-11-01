@@ -1617,7 +1617,7 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             });
         }
 
-      const host = req.get('host');
+     const host = req.get('host');
         const docFiles = req.files ? req.files.filter(f => f.fieldname === 'document') : [];
         const filesMappedList = docFiles.map(f => ({ 
             name: f.originalname || 'Document.pdf', 
@@ -1629,6 +1629,17 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
         const primaryName = filesMappedList.length > 0 ? filesMappedList[0].name : (parsedConfig[0]?.fileName || 'Document.pdf');
         const initialOrderStatus = hasPrintJobs ? 'Ready for Print' : 'Processing';
 
+        // 🔥 Yahan yeh loop add kar dein taaki canvas/blob URLs replace hokar live server URL ban jayein
+        parsedConfig.forEach((item, index) => {
+            if (!item.fileUrl || item.fileUrl.startsWith('blob:') || item.fileUrl.startsWith('data:')) {
+                if (filesMappedList[index]) {
+                    item.fileUrl = filesMappedList[index].url;
+                } else {
+                    item.fileUrl = primaryUrl;
+                }
+            }
+        });
+        
         // 🏪 RULE 3: Store Pickup hone par Delivery Fee strictly ₹0 (FREE) karna
         let calculatedDeliveryFee = (deliveryMode === 'pickup') ? 0 : (finalAmountNumeric >= 99 ? 0 : 25);
 

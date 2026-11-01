@@ -1387,12 +1387,12 @@ window.addStudioJobToCart = async function() {
             });
         }
 
-        let printJobItem = {
+       let printJobItem = {
             id: 'print_' + Date.now() + Math.random(),
             fileName: finalFileName,
-            fileUrl: finalFileUrl,
+            fileUrl: finalFileUrl, // Canvas dataUrl yahan aayega
             fileBase64: base64Data,
-            fileData: finalBlob,
+            fileData: finalBlob,   // File object yahan aayega
             pages: f.pages,
             copies: f.copies,
             printType: f.printType,

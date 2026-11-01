@@ -98,14 +98,23 @@ async function fetchAndPrintLiveJobs() {
             }
 
             if (order.configDetails && Array.isArray(order.configDetails)) {
-                for (let i = 0; i < order.configDetails.length; i++) {
-                    const fileMeta = order.configDetails[i];
+                // 🔥 STRICT FILTER: Sirf wahi items lo jo print jobs hain (Snacks ya Products ko hata do)
+                const validPrintJobs = order.configDetails.filter(item => 
+                    item.printType !== 'snack' && 
+                    !item.isCoverSlip && 
+                    !(item.fileName && item.fileName.startsWith('Product:'))
+                );
+
+                for (let i = 0; i < validPrintJobs.length; i++) {
+                    const fileMeta = validPrintJobs[i];
+                    
                     let fileUrl = fileMeta.fileUrl || fileMeta.url;
-
+                    
+                    // 🛑 Safety Check: Agar URL 'blob:' se shuru ho raha hai, toh use ignore karo
                     if (fileUrl && fileUrl.startsWith('blob:')) {
-                        fileUrl = null;
+                        fileUrl = null; 
                     }
-
+                    
                     if (!fileUrl && order.files && Array.isArray(order.files) && order.files.length > 0) {
                         const targetFile = order.files.find(f => f.name === fileMeta.fileName || f.originalName === fileMeta.fileName) || order.files[i] || order.files[0];
                         if (targetFile) {
@@ -128,9 +137,9 @@ async function fetchAndPrintLiveJobs() {
                             if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
 
                             await downloadFilePromise(fileUrl, localPath);
-
+                            
                             const isPhoto = fileMeta.jobType === 'photo_print' || fileMeta.paperType === 'photo';
-
+                            
                             if (isPhoto) {
                                 console.log(`[ROUTE CHECK] 🖼️ Target: GLOSSY PHOTO PRINTER (${primaryPrinter})`);
                                 console.log(`[ACTION] Sending Photo Layout (${fileMeta.photoLayout || 'Photo'}) to Photo Printer`);
@@ -158,13 +167,15 @@ async function fetchAndPrintLiveJobs() {
 
                             if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
                             await new Promise(res => setTimeout(res, 3000));
+
                         } catch (fileErr) {
                             console.error(`❌ Failed printing individual node file (${fileUrl}):`, fileErr.message);
                         }
                     } else {
-                        console.warn(`⚠️ Warning: No valid file URL found for item ${fileMeta.fileName || i}`);
+                        console.warn(`⚠️ Warning: No valid downloadable file URL found for print item ${fileMeta.fileName || i}`);
                     }
                 }
+            
             } else {
                 const fileUrl = order.fileUrl || `${BASE_URL}/uploads/${order.file}`;
                 const localPath = path.join(__dirname, 'temp_print_job.pdf');
