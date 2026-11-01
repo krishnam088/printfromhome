@@ -2519,7 +2519,7 @@ window.filterCartItemsSearch = function(query) {
 };
 
 // ==========================================
-// 🔥 2. USER IDENTITY & ADDRESS FETCH FIX IN CART RENDER
+// 🔥 2. USER IDENTITY & ADDRESS FETCH FIX IN CART RENDER (UPDATED FOR GLOSSY PHOTOS)
 // ==========================================
 window.renderCartDrawerContents = function() {
     const container = document.getElementById('cartDrawerItemsList');
@@ -2556,19 +2556,38 @@ window.renderCartDrawerContents = function() {
     let totalPagesCount = 0;
     let totalItemsCount = 0;
 
+    // 🔥 UPDATED: Print Jobs Loop with Glossy Photo Pricing & Subtitle Support
     window.cartPrintJobsArray.forEach((job, idx) => {
-        let rate = (job.printType === 'bw') ? 3 : 10;
-        let jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
-        totalPagesCount += job.pages * job.copies;
+        let jobTotal = 0;
+        let subtitleText = "";
+
+        if (job.paperType === 'photo' || job.jobType === 'photo_print') {
+            jobTotal = Number(job.price || 50);
+            let layoutName = "Photo Print";
+            if (job.photoLayout === 'passport_12') layoutName = "Passport (12 Copies)";
+            else if (job.photoLayout === 'passport_20') layoutName = "Passport (20 Copies)";
+            else if (job.photoLayout === 'photo_2_a4') layoutName = "2 Large Photos (A4)";
+            else if (job.photoLayout === 'photo_single_glossy') layoutName = "Full Page Glossy";
+            else layoutName = "Passport (8 Copies)";
+
+            subtitleText = `🖼️ Glossy Photo | ${layoutName} | Copies: ${job.copies}`;
+        } else {
+            let rate = (job.printType === 'bw') ? 3 : 10;
+            jobTotal = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
+            subtitleText = `${job.pages} pgs | ${job.printType.toUpperCase()} | Copies: ${job.copies}`;
+            totalPagesCount += job.pages * job.copies;
+        }
+
         totalItemsCount += 1;
 
         const card = document.createElement('div');
-        card.style.cssText = "min-width:130px; max-width:130px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
+        card.style.cssText = "min-width:140px; max-width:140px; background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.03); flex-shrink:0;";
 
         card.innerHTML = `
-            <div style="font-size:1.8rem; margin-bottom:2px;">📄</div>
+            <div style="font-size:1.8rem; margin-bottom:2px;">${(job.paperType === 'photo') ? '🖼️' : '📄'}</div>
             <div title="${job.fileName}" style="font-weight:700; font-size:0.72rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${job.fileName}</div>
-            <div style="font-size:0.6rem; color:#64748b; font-weight:600; margin-bottom:6px;">${job.pages} pgs | ${job.printType.toUpperCase()}</div>
+            <div style="font-size:0.6rem; color:#64748b; font-weight:600; margin-bottom:4px;">${subtitleText}</div>
+            <div style="font-weight:900; font-size:0.75rem; color:#065f46; margin-bottom:6px;">₹${jobTotal}</div>
             <div style="display:flex; align-items:center; gap:6px; width:100%; justify-content:center;">
                 <button type="button" onclick="editCartPrintJob(${idx})" style="background:#fef08a; border:1px solid #fde047; padding:3px 8px; border-radius:6px; font-size:0.68rem; font-weight:800; cursor:pointer; color:#713f12;">Edit</button>
                 <button type="button" onclick="removePrintJobFromCart(${idx})" style="background:#fee2e2; color:#ef4444; border:none; width:22px; height:22px; border-radius:50%; font-weight:bold; cursor:pointer; font-size:0.75rem; display:flex; align-items:center; justify-content:center;">&times;</button>
@@ -2603,7 +2622,6 @@ window.renderCartDrawerContents = function() {
         shipmentTextNode.textContent = `${totalPagesCount} page${totalPagesCount !== 1 ? 's' : ''} and ${totalItemsCount} item${totalItemsCount !== 1 ? 's' : ''}`;
     }
 
-    // ⚡ Sirf upselling grid ko call karo, naya div create mat karo kyunki wo index.html mein pehle se hai
     if (typeof renderUpsellingGridSafely === 'function') {
         renderUpsellingGridSafely();
     }

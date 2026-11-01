@@ -1565,12 +1565,18 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
 
         const selectedPaymentMode = paymentMode || "online";
 
-    // 🚨 RULE 1: Print Orders require Online Payment or Print Wallet
+   // 🔥 Store se live settings fetch karke check karein ki COD allowed hai ya nahi
+        let storeSettings = await StoreSetting.findOne({ key: 'global_settings' });
+        let isCodAllowedForPrint = storeSettings ? storeSettings.codForPrintEnabled : true;
+
+        // 🚨 RULE 1: Print Orders require Online Payment or Print Wallet (Unless explicitly enabled by Admin via COD Toggle)
         if (hasPrintJobs && selectedPaymentMode !== 'online' && selectedPaymentMode !== 'wallet') {
-            return res.status(400).json({ 
-                success: false, 
-                message: "For your convenience and to prevent paper waste, print orders require either Online Payment or Print Wallet. Please select Online or Wallet to proceed!" 
-            });
+            if (!(isCodAllowedForPrint && (selectedPaymentMode === 'cod' || selectedPaymentMode === 'cash'))) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "For your convenience and to prevent paper waste, print orders require either Online Payment or Print Wallet. Please select Online or Wallet to proceed!" 
+                });
+            }
         }
 
         if (Array.isArray(parsedConfig)) {
@@ -1595,6 +1601,7 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
         }
 
         const numericId = String(Math.floor(100000 + Math.random() * 900000));
+
 
         // 📋 RULE 2: Print Jobs ke sath Summary / Advertising Cover Slip attach karna
         if (hasPrintJobs) {
@@ -1903,12 +1910,15 @@ app.get('/api/admin/users', async (req, res) => {
     }
 });
 
+
 // 🔥 Persistent Database-Backed Admin Store Settings & Fees Schema
 const storeSettingsSchema = new mongoose.Schema({
     key: { type: String, unique: true, default: 'global_settings' },
     deliveryFee: { type: Number, default: 25.00 },
     handlingFee: { type: Number, default: 5.00 },
     rainFee: { type: Number, default: 15.00 },
+    codForPrintEnabled: { type: Boolean, default: true }, // 🔥 Yahan add karein
+    singlePrinterMode: { type: Boolean, default: true },  // 🔥 Yahan add karein
     coupons: { type: Array, default: [
         { code: 'FREEDEL', desc: 'Free delivery on orders above ₹99', discount: 25 },
         { code: 'PRINT20', desc: 'Flat ₹20 off on print orders', discount: 20 }
@@ -1930,7 +1940,8 @@ app.get('/api/admin/settings', async (req, res) => {
 
 app.post('/api/admin/settings/update', async (req, res) => {
     try {
-        const { deliveryFee, handlingFee, rainFee, coupons, openTime, closeTime } = req.body;
+        // 🔥 Yahan req.body se codForPrintEnabled aur singlePrinterMode ko destructure karein
+        const { deliveryFee, handlingFee, rainFee, coupons, openTime, closeTime, codForPrintEnabled, singlePrinterMode } = req.body;
         
         let settings = await StoreSetting.findOne({ key: 'global_settings' });
         if (!settings) {
@@ -1945,6 +1956,13 @@ app.post('/api/admin/settings/update', async (req, res) => {
         }
         if (rainFee !== undefined && rainFee !== null && rainFee !== '') {
             settings.rainFee = parseFloat(rainFee);
+        }
+        // 🔥 Yahan database settings mein save karein
+        if (codForPrintEnabled !== undefined) {
+            settings.codForPrintEnabled = Boolean(codForPrintEnabled);
+        }
+        if (singlePrinterMode !== undefined) {
+            settings.singlePrinterMode = Boolean(singlePrinterMode);
         }
         if (coupons !== undefined && Array.isArray(coupons)) settings.coupons = coupons;
         await settings.save();
