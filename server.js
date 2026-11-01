@@ -1618,7 +1618,7 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             });
         }
 
-     const host = req.get('host');
+        const host = req.get('host');
         const docFiles = req.files ? req.files.filter(f => f.fieldname === 'document') : [];
         const filesMappedList = docFiles.map(f => ({ 
             name: f.originalname || 'Document.pdf', 
@@ -1626,9 +1626,63 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             url: `https://${host}/uploads/${f.filename}` 
         }));
 
+        // 🔥 NAYA BULLETPROOF BASE64 DECODER FALLBACK (LocalStorage file loss fix)
+        if (Array.isArray(parsedConfig)) {
+            parsedConfig.forEach((item, index) => {
+                if (item.fileBase64 && typeof item.fileBase64 === 'string' && item.fileBase64.startsWith('data:')) {
+                    try {
+                        let matches = item.fileBase64.match(/^data:(.+);base64,(.+)$/);
+                        if (matches && matches.length === 3) {
+                            let ext = matches[1].split('/')[1] || 'png';
+                            let base64Data = matches[2];
+                            let uniqueFileName = `order_${numericId}_file_${index}_${Date.now()}.${ext}`;
+                            let filePath = path.join(localUploadsDir, uniqueFileName);
+                            
+                            // Server ke uploads folder mein file turant write kar do
+                            fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
+                            
+                            let generatedUrl = `https://${host}/uploads/${uniqueFileName}`;
+                            item.fileUrl = generatedUrl;
+                            filesMappedList.push({
+                                name: item.fileName || uniqueFileName,
+                                filename: uniqueFileName,
+                                url: generatedUrl
+                            });
+                        }
+                    } catch (base64Err) {
+                        console.error("❌ Base64 Server Save Error:", base64Err.message);
+                    }
+                }
+            });
+        }
+
         const primaryUrl = filesMappedList.length > 0 ? filesMappedList[0].url : '';
         const primaryName = filesMappedList.length > 0 ? filesMappedList[0].name : (parsedConfig[0]?.fileName || 'Document.pdf');
         const initialOrderStatus = hasPrintJobs ? 'Ready for Print' : 'Processing';
+
+      // 🔥 Smart & Foolproof File Mapping for All Print Formats (PDF, JPG, PNG)
+        parsedConfig.forEach((item, index) => {
+            // Agar yeh store product / snack nahi hai, matlab print job hai:
+            const isPrintJob = item.printType !== 'snack' && item.printType !== 'product' && !String(item.fileName || '').startsWith('Project:') && !String(item.fileName || '').startsWith('Product:');
+            
+            if (isPrintJob) {
+                if (!item.fileUrl || item.fileUrl.startsWith('blob:') || item.fileUrl.startsWith('data:')) {
+                    // Exact filename match karne ki koshish karo filesMappedList ke sath
+                    let matchedFile = filesMappedList.find(f => 
+                        f.name === item.fileName || 
+                        (item.fileName && f.name.toLowerCase().includes(item.fileName.toLowerCase()))
+                    );
+
+                    if (matchedFile) {
+                        item.fileUrl = matchedFile.url;
+                    } else if (filesMappedList[index]) {
+                        item.fileUrl = filesMappedList[index].url;
+                    } else {
+                        item.fileUrl = primaryUrl;
+                    }
+                }
+            }
+        });
 
       // 🔥 Smart & Foolproof File Mapping for All Print Formats (PDF, JPG, PNG)
         parsedConfig.forEach((item, index) => {
