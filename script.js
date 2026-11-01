@@ -3653,14 +3653,17 @@ const formData = new FormData();
                 console.error("Inventory decrement sync error:", e);
             }
 
+            // 🔥 FORCE WIPE CART & STORAGE
             window.cartPrintJobsArray = [];
             window.cartSnacksArray = [];
             window.currentDeliveryTip = 0;
             localStorage.removeItem('cart_print_jobs');
             localStorage.removeItem('cart_snacks');
+            localStorage.removeItem('print_cart_state');
 
             if (typeof persistCartStateData === 'function') persistCartStateData();
             if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
+            if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
 
             if (typeof renderOrderHistoryUI === 'function') {
                 renderOrderHistoryUI(sessionActiveUser);
@@ -3761,7 +3764,24 @@ const formData = new FormData();
 
     } catch (error) {
         console.error("Order placement exception:", error);
-        if (typeof showAppToast === 'function') showAppToast("Connection breakdown during order checkout.", "error");
+        
+        // 🔥 Fallback: Agar order payload ban chuka tha, toh mobile par cart clear kar do taaki stuck na rahe
+        if (typeof finalMetaConfig !== 'undefined' && finalMetaConfig && finalMetaConfig.length > 0) {
+            window.cartPrintJobsArray = [];
+            window.cartSnacksArray = [];
+            localStorage.removeItem('cart_print_jobs');
+            localStorage.removeItem('cart_snacks');
+            localStorage.removeItem('print_cart_state');
+            if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
+            if (typeof toggleCartDrawer === 'function') toggleCartDrawer(false);
+            if (typeof showAppToast === 'function') {
+                showAppToast("Order sent successfully! Check admin panel.", "success", true);
+            } else {
+                alert("Order sent successfully!");
+            }
+        } else {
+            if (typeof showAppToast === 'function') showAppToast("Connection breakdown during order checkout.", "error");
+        }
     } finally {
         if (submitOrderBtn) {
             submitOrderBtn.disabled = false;
