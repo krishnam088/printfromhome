@@ -840,17 +840,24 @@ if (fileUpload) {
         
         let uploadedFilesList = [];
         
-        for (let i = 0; i < files.length; i++) {
+    for (let i = 0; i < files.length; i++) {
             const file = files[i];
             let pageCount = 1;
             let fileUrl = '';
-            let pageImages = []; // Saare pages ki images store karne ke liye array
+            let pageImages = [];
             
             try {
                 fileUrl = URL.createObjectURL(file);
             } catch(e) {
                 fileUrl = '';
             }
+
+            // 🔥 Har uploaded file ko turant Base64 mein convert karein taaki localStorage mein loss na ho
+            let base64Data = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+            });
 
             if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
                 try {
@@ -860,7 +867,6 @@ if (fileUpload) {
                         const pdfDoc = await loadingTask.promise;
                         pageCount = pdfDoc.numPages || 1;
                         
-                        // 🔥 Loop through ALL pages of the PDF to convert each page to an image
                         if (pdfDoc && typeof window.convertPdfPageToImage === 'function') {
                             for (let p = 1; p <= pageCount; p++) {
                                 let pageImgUrl = await window.convertPdfPageToImage(pdfDoc, p);
@@ -870,14 +876,13 @@ if (fileUpload) {
                             }
                         }
                         if (pageImages.length > 0) {
-                            fileUrl = pageImages[0]; // Default preview ke liye pehla page
+                            fileUrl = pageImages[0];
                         }
                     }
                 } catch (e) {
                     pageCount = 1;
                 }
             } else {
-                // Agar normal image file hai toh usko bhi array mein dal dein
                 pageImages.push(fileUrl);
             } 
 
@@ -886,7 +891,8 @@ if (fileUpload) {
                 size: file.size || 0,
                 fileBlob: file,
                 fileUrl: fileUrl,
-                pageImages: pageImages.length > 0 ? pageImages : [fileUrl], // Store all page images here
+                fileBase64: base64Data, // 🔥 Yeh line sabse zaroori hai!
+                pageImages: pageImages.length > 0 ? pageImages : [fileUrl],
                 pages: pageCount,
                 copies: 1,
                 printType: 'bw',
