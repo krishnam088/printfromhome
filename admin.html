@@ -1648,13 +1648,22 @@ window.adminAddNewCoupon = async function() {
             }
         }
 
-        function triggerPrintJob(fileUrl, orderId) {
+    function triggerPrintJob(fileUrl, orderId) {
             let resolvedUrl = fileUrl;
             
+            // Agar direct fileUrl nahi mila, toh global live orders cache se find karo
             if (!resolvedUrl || resolvedUrl === '#') {
-                const matchOrder = globalLiveOrdersCache.find(o => o.orderId === orderId);
+                const matchOrder = globalLiveOrdersCache.find(o => String(o.orderId) === String(orderId));
                 if (matchOrder) {
-                    resolvedUrl = matchOrder.fileUrl || (matchOrder.files && matchOrder.files[0]?.url) || (matchOrder.file ? `${window.location.origin}/uploads/${matchOrder.file}` : null);
+                    resolvedUrl = matchOrder.fileUrl || 
+                                  (Array.isArray(matchOrder.files) && matchOrder.files[0]?.url) || 
+                                  (matchOrder.file ? `${window.location.origin}/uploads/${matchOrder.file}` : null);
+                    
+                    // Agar configDetails ke andar file ki info hai toh wahan se bhi check karo
+                    if ((!resolvedUrl || resolvedUrl === '#') && Array.isArray(matchOrder.configDetails)) {
+                        const configItem = matchOrder.configDetails.find(i => i.fileUrl || i.url);
+                        if (configItem) resolvedUrl = configItem.fileUrl || configItem.url;
+                    }
                 }
             }
 
@@ -1664,21 +1673,26 @@ window.adminAddNewCoupon = async function() {
             }
 
             const frame = document.getElementById('silentPrintFrame');
-            frame.src = resolvedUrl;
-            frame.onload = function () {
-                try { 
-                    frame.contentWindow.focus(); 
-                    frame.contentWindow.print(); 
-                } catch (e) { 
-                    window.open(resolvedUrl, '_blank'); 
-                }
-            };
+            if (frame) {
+                frame.src = resolvedUrl;
+                frame.onload = function () {
+                    try { 
+                        frame.contentWindow.focus(); 
+                        frame.contentWindow.print(); 
+                    } catch (e) { 
+                        window.open(resolvedUrl, '_blank'); 
+                    }
+                };
+            } else {
+                window.open(resolvedUrl, '_blank');
+            }
+
             if (orderId) {
                 processedAutoPrintOrderIds.add(orderId);
                 localStorage.setItem('printed_orders', JSON.stringify(Array.from(processedAutoPrintOrderIds)));
             }
         }
-
+        
         let isStoreOpen = true;
         async function fetchStoreStatus() {
             try {
