@@ -1050,3 +1050,167 @@ body.theme-festive-republic #festivalAnimationContainer {
         margin: 0 auto !important;
     }
 }
+
+/* ========================================
+   🖨️ STRICT A4 SHEET & GLOSSY GRID PROPORTION LOCK
+   ======================================== */
+
+/* 1. Virtual A4 Sheet container ko sabhi devices pe exact proportions par lock karna */
+.a4-page-wrapper {
+    width: 210mm !important;
+    max-width: 210mm !important;
+    min-height: 297mm !important;
+    height: 297mm !important;
+    background: #ffffff !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    position: relative !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+}
+
+/* Landscape mode ke liye */
+.a4-page-wrapper.landscape {
+    width: 297mm !important;
+    max-width: 297mm !important;
+    min-height: 210mm !important;
+    height: 210mm !important;
+}
+
+/* 2. Grids aur Photos ko A4 sheet ke andar strict fit rakhna */
+.a4-page-wrapper .photo-grid-preview,
+.a4-page-wrapper .copies-grid-container,
+.a4-page-wrapper .print-copies-grid {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    padding: 10mm !important; /* A4 margin spacing */
+    gap: 5mm !important;
+    align-content: center !important;
+    justify-content: center !important;
+}
+
+/* Single Photo Layout: Full A4 Fit */
+.a4-page-wrapper .photo-grid-preview.single-grid,
+.a4-page-wrapper .print-copies-grid.full-width {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 1fr !important;
+    padding: 5mm !important;
+}
+
+/* 2 Photos Layout: Exact 2 large sections on A4 */
+.a4-page-wrapper .photo-grid-preview.two-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: repeat(2, 1fr) !important;
+}
+
+/* Images inside A4: Never stretch, maintain strict aspect ratio */
+.a4-page-wrapper img,
+.a4-page-wrapper .photo-item-box img,
+.glossy-photo-card img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important; /* Strict proportion without cutting or stretching */
+    display: block !important;
+    margin: auto !important;
+}
+
+/* 3. Mobile aur Tablet screens par A4 sheet ko properly scale down karna taaki cut na ho */
+@media (max-width: 768px) {
+    .studio-workspace {
+        padding: 15px 5px !important;
+        overflow-x: auto !important;
+    }
+
+    /* Mobile screen par A4 sheet ko responsive scale dena jabki physical ratio wahi rahe */
+    .a4-page-wrapper {
+        transform: scale(0.65);
+        transform-origin: top center;
+        margin-bottom: -100mm !important; /* Scale gap adjustment */
+    }
+}
+
+@media (max-width: 480px) {
+    .a4-page-wrapper {
+        transform: scale(0.52);
+        transform-origin: top center;
+        margin-bottom: -130mm !important;
+    }
+}
+
+/* ========================================
+   📸 STRICT PASSPORT & GLOSSY A4 GRID LOCK
+   ======================================== */
+
+/* Passport / Multi-photo grid layout on A4 */
+.a4-page-wrapper .photo-grid-preview,
+.a4-page-wrapper .copies-grid-container,
+.a4-page-wrapper .print-copies-grid {
+    display: grid !important;
+    width: 100% !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+    padding: 12mm !important;
+    gap: 4mm !important;
+    align-content: start !important;
+    justify-content: center !important;
+}
+
+/* 8/12 Copies (Passport size): 4 photos per row */
+.a4-page-wrapper .copies-grid-container,
+.a4-page-wrapper .photo-grid-preview.passport-grid {
+    grid-template-columns: repeat(4, 1fr) !important; /* Ek line mein strict 4 photos */
+}
+
+/* 2 Photos Layout: 2 side-by-side or stacked correctly */
+.a4-page-wrapper .photo-grid-preview.two-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+}
+
+/* Single Photo Layout: Full A4 */
+.a4-page-wrapper .photo-grid-preview.single-grid,
+.a4-page-wrapper .print-copies-grid.full-width {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 1fr !important;
+}
+
+/* Grid items aur images par strict proportions */
+.a4-page-wrapper .photo-item-box,
+.a4-page-wrapper .glossy-photo-card {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+}
+
+.a4-page-wrapper img,
+.a4-page-wrapper .photo-item-box img,
+.glossy-photo-card img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    display: block !important;
+}
+
+/* Mobile & Tablet scaling adjustments for exact A4 preview */
+@media (max-width: 768px) {
+    .studio-workspace {
+        padding: 10px 4px !important;
+    }
+    .a4-page-wrapper {
+        transform: scale(0.62);
+        transform-origin: top center;
+        margin-bottom: -110mm !important;
+    }
+}
