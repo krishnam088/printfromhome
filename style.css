@@ -1214,3 +1214,79 @@ body.theme-festive-republic #festivalAnimationContainer {
         margin-bottom: -110mm !important;
     }
 }
+
+/* ========================================
+   🖨️ SAFE & FOCUSED A4 & GLOSSY GRID LOCK
+   ======================================== */
+
+/* 1. Virtual A4 Sheet container exact proportions par lock */
+.a4-page-wrapper {
+    width: 210mm !important;
+    max-width: 210mm !important;
+    min-height: 297mm !important;
+    height: 297mm !important;
+    background: #ffffff !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    position: relative !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+}
+
+/* Landscape mode ke liye */
+.a4-page-wrapper.landscape {
+    width: 297mm !important;
+    max-width: 297mm !important;
+    min-height: 210mm !important;
+    height: 210mm !important;
+}
+
+/* 2. Passport & Glossy Grids alignment inside A4 */
+.a4-page-wrapper .photo-grid-preview,
+.a4-page-wrapper .copies-grid-container,
+.a4-page-wrapper .print-copies-grid {
+    display: grid !important;
+    width: 100% !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+    padding: 12mm !important;
+    gap: 4mm !important;
+    align-content: start !important;
+    justify-content: center !important;
+}
+
+/* 3. Images inside A4: Strict contain without stretching or cutting */
+.a4-page-wrapper img,
+.a4-page-wrapper .photo-item-box img,
+.glossy-photo-card img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    display: block !important;
+    margin: auto !important;
+}
+
+/* 4. Mobile & Tablet responsive scaling */
+@media (max-width: 768px) {
+    .studio-workspace {
+        padding: 10px 4px !important;
+        overflow-x: auto !important;
+    }
+    .a4-page-wrapper {
+        transform: scale(0.62);
+        transform-origin: top center;
+        margin-bottom: -110mm !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .a4-page-wrapper {
+        transform: scale(0.50);
+        transform-origin: top center;
+        margin-bottom: -140mm !important;
+    }
+}
