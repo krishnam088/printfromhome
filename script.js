@@ -987,13 +987,13 @@ if (fileUpload) {
             let previewContent = '';
 
             // 🔥 Check karo ki kya user ne 'photo' paper type select kiya hai
-            const isPhotoMode = (typeof currentSelectedPaperType !== 'undefined' && currentSelectedPaperType === 'photo');
+      const isPhotoMode = (typeof currentSelectedPaperType !== 'undefined' && currentSelectedPaperType === 'photo');
 
             if (isPhotoMode) {
                 const layoutSelect = document.getElementById('photoLayoutSelect');
                 const selectedLayout = layoutSelect ? layoutSelect.value : 'passport_8';
                 
-                // Layout ke hisab से grid count set karein
+                // Layout ke hisab se grid count set karein
                 let gridCount = 8;
                 if (selectedLayout === 'passport_12') gridCount = 12;
                 else if (selectedLayout === 'passport_20') gridCount = 20;
@@ -1005,13 +1005,13 @@ if (fileUpload) {
 
                 for (let g = 0; g < gridCount; g++) {
                     gridItemsHtml += `
-                        <div style="border: 1px dashed #cbd5e1; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px; box-sizing: border-box;">
-                            <img src="${singleImgSrc}" style="width: 100%; height: 100%; object-fit: cover;" />
+                        <div style="border: 1px dashed #cbd5e1; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 4px; box-sizing: border-box; aspect-ratio: 1/1.414;">
+                            <img src="${singleImgSrc}" style="width: 100%; height: 100%; object-fit: contain;" />
                         </div>
                     `;
                 }
 
-                // A4 Sheet Grid Layout Columns
+                // A4 Sheet Grid Layout Columns (Strict 4 or 5 per row)
                 let gridTemplateCols = 'repeat(4, 1fr)';
                 if (selectedLayout === 'passport_12') gridTemplateCols = 'repeat(4, 1fr)';
                 else if (selectedLayout === 'passport_20') gridTemplateCols = 'repeat(5, 1fr)';
@@ -1019,7 +1019,7 @@ if (fileUpload) {
                 else if (selectedLayout === 'photo_single_glossy') gridTemplateCols = 'repeat(1, 1fr)';
 
                 previewContent = `
-                    <div style="width: 85%; height: 85%; background: #ffffff; border: 2px solid #065f46; border-radius: 8px; padding: 10px; display: grid; grid-template-columns: ${gridTemplateCols}; gap: 6px; align-content: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); box-sizing: border-box; overflow: hidden;">
+                    <div class="a4-page-wrapper" style="width: 210mm; min-height: 297mm; background: #ffffff; border: 2px solid #065f46; border-radius: 8px; padding: 12mm; display: grid; grid-template-columns: ${gridTemplateCols}; gap: 4mm; align-content: start; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); box-sizing: border-box; overflow: hidden;">
                         ${gridItemsHtml}
                     </div>
                 `;
