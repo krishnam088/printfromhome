@@ -3474,7 +3474,7 @@ window.executeFinalCartOrderPlacement = async function() {
         const finalMetaConfig = [];
 
         // 🔥 FIXED LOOP: Handles both Document Prints and Glossy/Passport Photo Prints accurately
-        window.cartPrintJobsArray.forEach(job => {
+      window.cartPrintJobsArray.forEach(job => {
             let cost = 0;
             if (job.paperType === 'photo' || job.jobType === 'photo_print') {
                 cost = Number(job.price || 50);
@@ -3492,7 +3492,8 @@ window.executeFinalCartOrderPlacement = async function() {
                 copies: job.copies,
                 paperType: job.paperType || 'document',
                 photoLayout: job.photoLayout || null,
-                fileUrl: job.fileUrl || '', // 🔥 Yeh line yahan zaroor honi chahiye!
+                fileUrl: job.fileUrl || '', 
+                fileBase64: job.fileBase64 || '', // 🔥 Yeh line yahan add karni hai!
                 price: cost
             });
         });
