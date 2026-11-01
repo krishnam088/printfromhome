@@ -1648,7 +1648,7 @@ window.adminAddNewCoupon = async function() {
             }
         }
 
-    function triggerPrintJob(fileUrl, orderId) {
+  function triggerPrintJob(fileUrl, orderId) {
             let resolvedUrl = fileUrl;
             
             // Agar direct fileUrl nahi mila, toh global live orders cache se find karo
@@ -1668,7 +1668,7 @@ window.adminAddNewCoupon = async function() {
             }
 
             if (!resolvedUrl || resolvedUrl === '#') {
-                alert("⚠️ Document file URL is not available for this print job.");
+                alert("⚠️ Document file URL is not available for this print job. Order ID: " + orderId);
                 return;
             }
 
@@ -1688,11 +1688,12 @@ window.adminAddNewCoupon = async function() {
             }
 
             if (orderId) {
-                processedAutoPrintOrderIds.add(orderId);
+                processedAutoPrintOrderIds.add(String(orderId));
                 localStorage.setItem('printed_orders', JSON.stringify(Array.from(processedAutoPrintOrderIds)));
             }
         }
         
+
         let isStoreOpen = true;
         async function fetchStoreStatus() {
             try {

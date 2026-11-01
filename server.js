@@ -1617,7 +1617,7 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             });
         }
 
-        const host = req.get('host');
+       const host = req.get('host');
         const docFiles = req.files ? req.files.filter(f => f.fieldname === 'document') : [];
         const filesMappedList = docFiles.map(f => ({ 
             name: f.originalname || 'Document.pdf', 
@@ -1627,7 +1627,6 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
 
         const primaryUrl = filesMappedList.length > 0 ? filesMappedList[0].url : '';
         const primaryName = filesMappedList.length > 0 ? filesMappedList[0].name : (parsedConfig[0]?.fileName || 'Document.pdf');
-
         const initialOrderStatus = hasPrintJobs ? 'Ready for Print' : 'Processing';
 
         // 🏪 RULE 3: Store Pickup hone par Delivery Fee strictly ₹0 (FREE) karna
