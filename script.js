@@ -1367,19 +1367,21 @@ window.addStudioJobToCart = async function() {
                     const canvas = await html2canvas(previewContainerNode, { scale: 2, useCORS: true });
                     const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
                     
-                    // Base64 ko File object mein convert karna
-                    let arr = dataUrl.split(',');
-                    let mime = arr[0].match(/:(.*?);/)[1];
-                    let bstr = atob(arr[1]);
-                    let n = bstr.length;
-                    let u8arr = new Uint8Array(n);
-                    while(n--) { u8arr[n] = bstr.charCodeAt(n); }
-                    
-                    finalBlob = new File([u8arr], `Glossy_${photoLayout}_${f.name}.jpg`, { type: mime });
-                    finalFileUrl = dataUrl;
-                    finalFileName = `Glossy_${photoLayout}_${f.name}.jpg`;
+                    // 🔥 Safety Check: Agar canvas valid hai tabhi dataUrl lo, warna original file use karo
+                    if (dataUrl && dataUrl.length > 100) {
+                        let arr = dataUrl.split(',');
+                        let mime = arr[0].match(/:(.*?);/)[1];
+                        let bstr = atob(arr[1]);
+                        let n = bstr.length;
+                        let u8arr = new Uint8Array(n);
+                        while(n--) { u8arr[n] = bstr.charCodeAt(n); }
+                        
+                        finalBlob = new File([u8arr], `Glossy_${photoLayout}_${f.name}.jpg`, { type: mime });
+                        finalFileUrl = dataUrl;
+                        finalFileName = `Glossy_${photoLayout}_${f.name}.jpg`;
+                    }
                 } catch (err) {
-                    console.error("Canvas capture failed:", err);
+                    console.error("Canvas capture failed, falling back to original file:", err);
                 }
             }
         }
@@ -1396,9 +1398,9 @@ window.addStudioJobToCart = async function() {
        let printJobItem = {
             id: 'print_' + Date.now() + Math.random(),
             fileName: finalFileName,
-            fileUrl: finalFileUrl, // Canvas dataUrl yahan aayega
+            fileUrl: finalFileUrl,
             fileBase64: base64Data,
-            fileData: finalBlob,   // File object yahan aayega
+            fileData: finalBlob,
             pages: f.pages,
             copies: f.copies,
             printType: f.printType,
