@@ -856,73 +856,81 @@ window.addEventListener('DOMContentLoaded', () => {
             loadAdminPanelSettings();
         });
 
-        // 🔥 Admin Store Settings & Fees Save Engine
-        window.saveAdminStoreSettings = async function() {
-            const deliveryField = document.getElementById('adminSettingDeliveryFee');
-            const handlingField = document.getElementById('adminSettingHandlingFee');
-            const rainField = document.getElementById('adminSettingRainFee');
-            const singlePrinterToggle = document.getElementById('adminSettingSinglePrinterMode'); // 🔥 Added
+     // 🔥 Admin Store Settings & Fees Save Engine (Including COD, Rain Fee & Single Printer Mode)
+window.saveAdminStoreSettings = async function() {
+    const deliveryField = document.getElementById('adminSettingDeliveryFee');
+    const handlingField = document.getElementById('adminSettingHandlingFee');
+    const rainField = document.getElementById('adminSettingRainFee');
+    const codPrintToggle = document.getElementById('adminCodForPrintToggle'); // 🔥 COD Toggle Element
+    const singlePrinterToggle = document.getElementById('adminSettingSinglePrinterMode'); // 🔥 Single Printer Toggle
 
-            const deliveryFee = deliveryField ? deliveryField.value : 25;
-            const handlingFee = handlingField ? handlingField.value : 5;
-            const rainFee = rainField ? rainField.value : 15;
-            const singlePrinterMode = singlePrinterToggle ? singlePrinterToggle.checked : true; // 🔥 Added
+    const deliveryFee = deliveryField ? deliveryField.value : 25;
+    const handlingFee = handlingField ? handlingField.value : 5;
+    const rainFee = rainField ? rainField.value : 15;
+    const codForPrintEnabled = codPrintToggle ? codPrintToggle.checked : true; // 🔥 Captured value
+    const singlePrinterMode = singlePrinterToggle ? singlePrinterToggle.checked : true;
 
-            try {
-                const res = await fetch('/api/admin/settings/update', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ deliveryFee, handlingFee, rainFee, singlePrinterMode }) // 🔥 Included singlePrinterMode
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert('✅ Admin store settings & fees updated successfully!');
-                    if (typeof loadAdminConfiguredFeesAndCoupons === 'function') {
-                        loadAdminConfiguredFeesAndCoupons();
-                    }
-                } else {
-                    alert('❌ Failed to update settings.');
-                }
-            } catch(e) {
-                alert('❌ Server connection error.');
+    try {
+        const res = await fetch('/api/admin/settings/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                deliveryFee, 
+                handlingFee, 
+                rainFee, 
+                codForPrintEnabled, // 🔥 Sent to backend
+                singlePrinterMode 
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert('✅ Admin store settings, fees & COD preferences updated successfully!');
+            if (typeof loadAdminConfiguredFeesAndCoupons === 'function') {
+                loadAdminConfiguredFeesAndCoupons();
             }
-        };
+        } else {
+            alert('❌ Failed to update settings.');
+        }
+    } catch(e) {
+        alert('❌ Server connection error.');
+    }
+};
 
-        // 🔥 Admin Add New Coupon Engine
-        window.adminAddNewCoupon = async function() {
-            const codeInput = document.getElementById('adminNewCouponCode');
-            const descInput = document.getElementById('adminNewCouponDesc');
-            
-            if (!codeInput || !descInput) return;
-            const code = codeInput.value.trim().toUpperCase();
-            const desc = descInput.value.trim();
+// 🔥 Admin Add New Coupon Engine
+window.adminAddNewCoupon = async function() {
+    const codeInput = document.getElementById('adminNewCouponCode');
+    const descInput = document.getElementById('adminNewCouponDesc');
+    
+    if (!codeInput || !descInput) return;
+    const code = codeInput.value.trim().toUpperCase();
+    const desc = descInput.value.trim();
 
-            if (!code || !desc) {
-                alert("⚠️ Please enter both Coupon Code and Description!");
-                return;
-            }
+    if (!code || !desc) {
+        alert("⚠️ Please enter both Coupon Code and Description!");
+        return;
+    }
 
-            if (!window.adminCouponsList) window.adminCouponsList = [];
-            window.adminCouponsList.push({ code: code, desc: desc });
+    if (!window.adminCouponsList) window.adminCouponsList = [];
+    window.adminCouponsList.push({ code: code, desc: desc });
 
-            try {
-                const res = await fetch('/api/admin/settings/update', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ coupons: window.adminCouponsList })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert(`✅ Coupon "${code}" added successfully!`);
-                    codeInput.value = '';
-                    descInput.value = '';
-                } else {
-                    alert('❌ Failed to save coupon on server.');
-                }
-            } catch(e) {
-                alert('❌ Server connection error.');
-            }
-        };
+    try {
+        const res = await fetch('/api/admin/settings/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ coupons: window.adminCouponsList })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(`✅ Coupon "${code}" added successfully!`);
+            codeInput.value = '';
+            descInput.value = '';
+        } else {
+            alert('❌ Failed to save coupon on server.');
+        }
+    } catch(e) {
+        alert('❌ Server connection error.');
+    }
+};
         
         // 🛠️ ADMIN ADD & EDIT PRODUCT MODAL LOGIC (NEW UPDATE)
         window.openAddProductModal = function() {
