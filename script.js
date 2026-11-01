@@ -4548,8 +4548,16 @@ window.syncActiveOrderStatusFromBackend = async function() {
         const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
         const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
 
-        // 1. Fetch live orders from backend server to catch admin cancellations/updates instantly
-        const res = await fetch('/api/admin/orders');
+        // 🔥 Mobile & Network Safety: AbortController with 8 seconds timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        const res = await fetch('/api/admin/orders', {
+            signal: controller.signal,
+            headers: { 'Cache-Control': 'no-cache' }
+        });
+        clearTimeout(timeoutId);
+
         if (!res.ok) return;
         const serverOrders = await res.json();
         if (!Array.isArray(serverOrders)) return;
@@ -4623,16 +4631,17 @@ window.syncActiveOrderStatusFromBackend = async function() {
             }
         }
     } catch (e) {
-        console.warn("Background order status sync warning:", e);
+        // Network timeout / connection reset ko silently handle karega taaki console spam na ho
+        console.warn("Background order status sync skipped due to network fluctuation.");
     }
 };
 
-// Run server status sync polling every 3 seconds seamlessly
+// 🔥 Polling Interval ko 3 seconds se badha kar 12 seconds kar dein taaki network overload na ho
 setInterval(() => {
     if (typeof window.syncActiveOrderStatusFromBackend === 'function') {
         window.syncActiveOrderStatusFromBackend();
     }
-}, 3000);
+}, 12000);
 
 // ==========================================
 // 🔥 EDIT CART PRINT JOB HANDLER
