@@ -3614,7 +3614,7 @@ const formData = new FormData();
 
         let initialOrderStatus = (window.cartPrintJobsArray.length > 0) ? "Ready for Print" : "Order Placed & Picking";
 
-        const finalizeOrderSuccess = async (orderId) => {
+      const finalizeOrderSuccess = async (orderId) => {
             const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
             const activeIdentity = localStorage.getItem('printAppUserIdentity') || '';
             
@@ -3623,12 +3623,19 @@ const formData = new FormData();
                 activeIdentity ? `history_${activeIdentity}` : null
             ].filter(Boolean);
 
+            // 🔥 FIX: LocalStorage quota bachane ke liye details se heavy fileBase64 hata dein
+            const sanitizedDetails = finalMetaConfig.map(item => {
+                const cleanItem = { ...item };
+                delete cleanItem.fileBase64; // Base64 ko localStorage history mein save nahi karna hai
+                return cleanItem;
+            });
+
             const newOrderObj = { 
                 orderId: orderId,
                 date: new Date().toLocaleString(), 
                 amount: grandTotal.toFixed(2), 
                 status: initialOrderStatus, 
-                details: finalMetaConfig, 
+                details: sanitizedDetails, // 🔥 Cleaned details without heavy base64 blobs
                 address: activeAddress,
                 deliveryMode: deliveryMode,
                 deliveryInstruction: deliveryInstructionText, 
@@ -3636,9 +3643,20 @@ const formData = new FormData();
             };
 
             historyKeys.forEach(key => {
-                let currentHistoryArray = JSON.parse(localStorage.getItem(key) || '[]');
-                currentHistoryArray.unshift(newOrderObj);
-                localStorage.setItem(key, JSON.stringify(currentHistoryArray));
+                try {
+                    let currentHistoryArray = JSON.parse(localStorage.getItem(key) || '[]');
+                    currentHistoryArray.unshift(newOrderObj);
+                    // Agar history bohot purani ho gayi ho, toh quota error se bachne ke liye sirf latest 20 orders rakhein
+                    if (currentHistoryArray.length > 20) {
+                        currentHistoryArray = currentHistoryArray.slice(0, 20);
+                    }
+                    localStorage.setItem(key, JSON.stringify(currentHistoryArray));
+                } catch (storageErr) {
+                    console.warn("LocalStorage quota exceeded safety catch:", storageErr);
+                    // Agar fir bhi quota full ho jaye toh purana data saaf karke naya save karo
+                    localStorage.removeItem(key);
+                    localStorage.setItem(key, JSON.stringify([newOrderObj]));
+                }
             });
 
             window.appliedActiveCoupon = null;
