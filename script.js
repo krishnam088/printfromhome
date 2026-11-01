@@ -1024,7 +1024,7 @@ if (fileUpload) {
                         </div>
                     </div>
                 `;
-                
+
             } else {
                 // 🔥 MULTI-PAGE PDF & NORMAL DOCUMENT PREVIEW CHECK
                 if (f.pageImages && f.pageImages.length > 1) {
@@ -3126,6 +3126,7 @@ window.forceReturnToUploadView = function() {
 window.adminDeliveryFee = parseFloat(localStorage.getItem('cached_delivery_fee')) || 0;
 window.adminHandlingFee = parseFloat(localStorage.getItem('cached_handling_fee')) || 0;
 window.adminRainFee = parseFloat(localStorage.getItem('cached_rain_fee')) || 0;
+window.adminCodForPrintEnabled = localStorage.getItem('cached_cod_print') !== 'false'; // Default true
 window.adminCouponsList = JSON.parse(localStorage.getItem('cached_coupons') || '[]');
 
 window.loadAdminConfiguredFeesAndCoupons = async function() {
@@ -3139,13 +3140,19 @@ window.loadAdminConfiguredFeesAndCoupons = async function() {
                 window.adminHandlingFee = (data.settings.handlingFee !== undefined && data.settings.handlingFee !== null && data.settings.handlingFee !== '') ? parseFloat(data.settings.handlingFee) : 0;
                 window.adminRainFee = (data.settings.rainFee !== undefined && data.settings.rainFee !== null && data.settings.rainFee !== '') ? parseFloat(data.settings.rainFee) : 0;
                 
+                window.adminCodForPrintEnabled = data.settings.codForPrintEnabled !== undefined ? data.settings.codForPrintEnabled : true;
                 window.adminCouponsList = data.settings.coupons || [];
 
                 // 💾 Save to localStorage so refresh shows it instantly without waiting
                 localStorage.setItem('cached_delivery_fee', window.adminDeliveryFee);
                 localStorage.setItem('cached_handling_fee', window.adminHandlingFee);
                 localStorage.setItem('cached_rain_fee', window.adminRainFee);
+                localStorage.setItem('cached_cod_print', window.adminCodForPrintEnabled);
                 localStorage.setItem('cached_coupons', JSON.stringify(window.adminCouponsList));
+
+                // 🔄 Sync toggle state in UI if element exists
+                const codToggle = document.getElementById('adminCodForPrintToggle');
+                if (codToggle) codToggle.checked = window.adminCodForPrintEnabled;
 
                 // 🔄 Recalculate bill instantly with live admin values
                 if (typeof calculateTotal === 'function') {
@@ -3165,10 +3172,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // 🔥 Admin Store Settings & Fees Save Engine
+
 window.saveAdminStoreSettings = async function() {
     const deliveryField = document.getElementById('adminSettingDeliveryFee');
     const handlingField = document.getElementById('adminSettingHandlingFee');
     const rainField = document.getElementById('adminSettingRainFee');
+    
+    // 👉 Yeh raha pehla snippet jo aapko yahan add karna hai:
+    const codPrintToggle = document.getElementById('adminCodForPrintToggle');
+    const codForPrintEnabled = codPrintToggle ? codPrintToggle.checked : true;
 
     const deliveryFee = deliveryField ? deliveryField.value : 0;
     const handlingFee = handlingField ? handlingField.value : 0;
@@ -3178,11 +3190,14 @@ window.saveAdminStoreSettings = async function() {
         const res = await fetch('/api/admin/settings/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ deliveryFee, handlingFee, rainFee })
+            body: JSON.stringify({ deliveryFee, handlingFee, rainFee, codForPrintEnabled }) // 👈 Yahan codForPrintEnabled pass karna mat bhoolna
         });
+        // ... baaki ka purana code
+
+
         const data = await res.json();
         if (data.success) {
-            alert('✅ Admin store settings & fees updated successfully!');
+            alert('✅ Admin store settings & COD preferences updated successfully!');
             if (typeof loadAdminConfiguredFeesAndCoupons === 'function') {
                 loadAdminConfiguredFeesAndCoupons();
             }
@@ -3607,31 +3622,29 @@ window.executeFinalCartOrderPlacement = async function() {
             });
         });
 
-        let subtotal = totalPrintVal + totalSnacksVal;
-        const freeDeliveryThreshold = window.getDynamicFreeDeliveryThreshold ? window.getDynamicFreeDeliveryThreshold() : 99.00;
-        
-        const selectedDeliveryModeRadio = document.querySelector('input[name="cartDeliveryModeRadio"]:checked');
-        let deliveryMode = selectedDeliveryModeRadio ? selectedDeliveryModeRadio.value : (window.currentCartDeliveryMode || 'doorstep');
-
-        let activeDelFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 0;
-        let delivery = (deliveryMode === 'pickup') ? 0 : ((subtotal >= freeDeliveryThreshold || subtotal === 0) ? 0 : activeDelFee);
-        
-        let activeRainFee = window.adminRainFee !== undefined ? window.adminRainFee : 0;
-        let rainFee = window.isRainSurgeActive ? activeRainFee : 0;
-        
-        let activeHandlingFee = window.adminHandlingFee !== undefined ? window.adminHandlingFee : 0;
-        let couponDiscount = window.appliedActiveCoupon ? window.appliedActiveCoupon.discount : 0;
-        
-        let grandTotal = subtotal + delivery + rainFee + activeHandlingFee + (window.currentDeliveryTip || 0) - couponDiscount;
-        grandTotal = Math.max(0, grandTotal);
-
-        const paymentSelect = document.getElementById('cartDrawerPaymentSelect');
+      const paymentSelect = document.getElementById('cartDrawerPaymentSelect');
         const selectedRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
         let paymentMode = selectedRadio ? selectedRadio.value.toLowerCase() : (paymentSelect ? paymentSelect.value.toLowerCase() : 'online');
 
+        // 🔥 Print Orders ke liye COD Admin Control Validation
+        const hasPrintJobs = window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0;
+        if ((paymentMode === 'cod' || paymentMode === 'cash') && hasPrintJobs && !window.adminCodForPrintEnabled) {
+            if (typeof showAppToast === 'function') {
+                showAppToast("Cash on Delivery (COD) is currently disabled by admin for print orders.", "error");
+            } else {
+                alert("⚠️ Cash on Delivery (COD) is currently disabled by admin for print orders. Please choose Online Payment or Wallet.");
+            }
+            if (submitOrderBtn) {
+                submitOrderBtn.disabled = false;
+                submitOrderBtn.style.opacity = '1';
+                submitOrderBtn.textContent = 'Place Order';
+            }
+            return;
+        }
+
         const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
         const userPhone = localStorage.getItem('printAppUserIdentity') || 'N/A';
-
+        
         let deliveryInstructionText = "Standard Delivery";
         const activeCheckedInstruction = document.querySelector('input[name="deliveryInstruction"]:checked');
         if (activeCheckedInstruction) {

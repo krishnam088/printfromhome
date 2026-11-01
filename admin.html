@@ -373,8 +373,6 @@
         <li class="sidebar-item" id="nav_riders" onclick="switchAdminTab('riders')">🛵 Live Riders Monitor</li>
     
     <li class="sidebar-item" id="nav_fees" onclick="switchAdminTab('fees')">⚙️ Fee & Coupons Setup</li>
-    <li class="sidebar-item" id="nav_payouts" onclick="switchAdminTab('payouts')">🏦 Rider Payouts</li>
-    <li class="sidebar-item" id="nav_riders" onclick="switchAdminTab('riders')">🛵 Live Riders Monitor</li>
    
 </ul>
     </nav>
@@ -397,6 +395,14 @@
     <button type="button" id="autoPrintToggleBtn" class="toggle-badge-btn btn-autoprint-on" onclick="toggleAutoPrintEngine()">🖨️ Auto-Print: <span id="autoPrintStatusText">ON</span></button>
     <button type="button" id="storeStatusToggleBtn" class="toggle-badge-btn btn-store-open" onclick="toggleStoreStatus()">🏪 Store: <span id="storeStatusStateText">OPEN</span></button>
     <button type="button" id="btnInstallAdmin">📥 Install Admin App</button>
+</div>
+
+<div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+    <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+        <span style="font-weight: 800; font-size: 0.85rem; color: #0f172a;">💵 Enable COD for Print Orders (Admin Control)</span>
+        <input type="checkbox" id="adminCodForPrintToggle" style="width: 20px; height: 20px; accent-color: #065f46; cursor: pointer;">
+    </label>
+    <p style="font-size: 0.72rem; color: #64748b; margin-top: 4px;">Turn this ON to allow Cash on Delivery for print orders (used for testing and future scaling).</p>
 </div>
                
         </header>
