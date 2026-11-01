@@ -1630,13 +1630,26 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
         const primaryName = filesMappedList.length > 0 ? filesMappedList[0].name : (parsedConfig[0]?.fileName || 'Document.pdf');
         const initialOrderStatus = hasPrintJobs ? 'Ready for Print' : 'Processing';
 
-        // 🔥 Yahan yeh loop add kar dein taaki canvas/blob URLs replace hokar live server URL ban jayein
+      // 🔥 Smart & Foolproof File Mapping for All Print Formats (PDF, JPG, PNG)
         parsedConfig.forEach((item, index) => {
-            if (!item.fileUrl || item.fileUrl.startsWith('blob:') || item.fileUrl.startsWith('data:')) {
-                if (filesMappedList[index]) {
-                    item.fileUrl = filesMappedList[index].url;
-                } else {
-                    item.fileUrl = primaryUrl;
+            // Agar yeh store product / snack nahi hai, matlab print job hai:
+            const isPrintJob = item.printType !== 'snack' && item.printType !== 'product' && !String(item.fileName || '').startsWith('Project:') && !String(item.fileName || '').startsWith('Product:');
+            
+            if (isPrintJob) {
+                if (!item.fileUrl || item.fileUrl.startsWith('blob:') || item.fileUrl.startsWith('data:')) {
+                    // Exact filename match karne ki koshish karo filesMappedList ke sath
+                    let matchedFile = filesMappedList.find(f => 
+                        f.name === item.fileName || 
+                        (item.fileName && f.name.toLowerCase().includes(item.fileName.toLowerCase()))
+                    );
+
+                    if (matchedFile) {
+                        item.fileUrl = matchedFile.url;
+                    } else if (filesMappedList[index]) {
+                        item.fileUrl = filesMappedList[index].url;
+                    } else {
+                        item.fileUrl = primaryUrl;
+                    }
                 }
             }
         });
