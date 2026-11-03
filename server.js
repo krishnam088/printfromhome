@@ -2071,11 +2071,8 @@ app.get('/api/admin/live-location', (req, res) => {
     }
 });
 
-// 🔥 MongoDB Connection (Must be added to fix 500 errors)
-mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb+srv://...', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+// 🔥 MongoDB Connection (Clean & Modern)
+mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb+srv://...')
 .then(() => console.log('📦 Connected to MongoDB Atlas successfully!'))
 .catch(err => console.error('❌ MongoDB Connection Error:', err.message));
 
