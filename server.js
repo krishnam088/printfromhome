@@ -1543,8 +1543,15 @@ async function deductStockForOrder(parsedConfig) {
     }
 }
 
+
 app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
     try {
+        console.log("📥 [DEBUG CREATE-ORDER] Files received:", req.files ? req.files.length : 0);
+        if (req.files && req.files.length > 0) {
+            console.log("📄 [DEBUG FILE FIELDNAME]:", req.files[0].fieldname, "Filename:", req.files[0].filename);
+        }
+        
+        // ... baaki ka aapka purana code ...
         let config = await StoreConfig.findOne();
         
         if (config && config.diwaliLaunchMode) {
@@ -1593,15 +1600,23 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
 
         // 🔥 YAHAN IS CODE KO PASTE KAREIN (Base64 Backup capture karne ke liye)
         let rawBase64Backup = '';
+
         if (docFiles.length > 0) {
             try {
-                let fileBuffer = fs.readFileSync(path.join(localUploadsDir, docFiles[0].filename));
-                rawBase64Backup = `data:image/jpeg;base64,${fileBuffer.toString('base64')}`;
-            } catch(e) {}
-        } else if (parsedConfig[0]?.fileBase64) {
+                let targetFilePath = path.join(localUploadsDir, docFiles[0].filename);
+                if (fs.existsSync(targetFilePath)) {
+                    let fileBuffer = fs.readFileSync(targetFilePath);
+                    let ext = docFiles[0].originalname ? docFiles[0].originalname.split('.').pop() : 'jpeg';
+                    let mimeType = ext === 'pdf' ? 'application/pdf' : `image/${ext}`;
+                    rawBase64Backup = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
+                    console.log("✅ [Server Base64 Generated Successfully] Length:", rawBase64Backup.length);
+                }
+            } catch(e) {
+                console.error("❌ [Server Base64 Generation Error]:", e.message);
+            }
+        } else if (parsedConfig[0]?.fileBase64 && parsedConfig[0].fileBase64.startsWith('data:')) {
             rawBase64Backup = parsedConfig[0].fileBase64;
         }
-
         // 🔥 Bulletproof Base64 to Server File Fallback with Disk Verification
         if (Array.isArray(parsedConfig)) {
             parsedConfig.forEach((item, index) => {
