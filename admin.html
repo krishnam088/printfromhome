@@ -1704,63 +1704,95 @@ setInterval(fetchAdminGlossyStatus, 4000);
 
   // 🔥 Updated Self-Healing Print Engine (Fixes ERR_FILE_NOT_FOUND completely)
    // 🔥 100% Fail-Safe Print Engine (Directly fetches blob to bypass ERR_FILE_NOT_FOUND)
+    // 🔥 Multi-File Safe Print Engine (Handles 1 or multiple files sequentially without ERR_FILE_NOT_FOUND)
+        // 🔥 100% Robust Multi-File & Single-File Sequential Print Engine
         async function triggerPrintJob(fileUrl, orderId) {
-            let resolvedUrl = fileUrl;
+            let filesToPrint = [];
+
+            // 1. Order cache se check karo ki is order mein kitni files hain
+            const matchOrder = globalLiveOrdersCache.find(o => String(o.orderId) === String(orderId));
             
-            // Agar direct fileUrl nahi mila, toh global live orders cache se find karo
-            if (!resolvedUrl || resolvedUrl === '#') {
-                const matchOrder = globalLiveOrdersCache.find(o => String(o.orderId) === String(orderId));
-                if (matchOrder) {
-                    resolvedUrl = matchOrder.fileUrl || 
-                                  (Array.isArray(matchOrder.files) && matchOrder.files[0]?.url) || 
-                                  (matchOrder.file ? `${window.location.origin}/uploads/${matchOrder.file}` : null);
-                    
-                    if ((!resolvedUrl || resolvedUrl === '#') && Array.isArray(matchOrder.configDetails)) {
-                        const configItem = matchOrder.configDetails.find(i => i.fileUrl || i.url);
-                        if (configItem) resolvedUrl = configItem.fileUrl || configItem.url;
-                    }
+            if (matchOrder) {
+                // Agar 'files' array available hai
+                if (Array.isArray(matchOrder.files) && matchOrder.files.length > 0) {
+                    matchOrder.files.forEach(f => {
+                        let fUrl = f.url || (f.name ? `${window.location.origin}/uploads/${f.name}` : null);
+                        if (fUrl && fUrl !== '#') filesToPrint.push(fUrl);
+                    });
+                } 
+                
+                // Agar 'configDetails' array mein multiple documents hain
+                if (Array.isArray(matchOrder.configDetails) && filesToPrint.length === 0) {
+                    matchOrder.configDetails.forEach(item => {
+                        let u = item.fileUrl || item.url;
+                        if (u && u !== '#' && item.printType !== 'snack') {
+                            filesToPrint.push(u);
+                        }
+                    });
                 }
             }
 
-            if (!resolvedUrl || resolvedUrl === '#') {
-                alert("⚠️ Document file URL is not available for this print job. Order ID: " + orderId);
+            // Agar upar se URL nahi mila, toh function parameter wala fileUrl use karo
+            if (filesToPrint.length === 0 && fileUrl && fileUrl !== '#') {
+                filesToPrint.push(fileUrl);
+            }
+
+            // Agar abhi bhi koi file nahi mili, toh order object ka primary URL try karo
+            if (filesToPrint.length === 0 && matchOrder) {
+                let fallbackUrl = matchOrder.fileUrl || (matchOrder.file ? `${window.location.origin}/uploads/${matchOrder.file}` : null);
+                if (fallbackUrl) filesToPrint.push(fallbackUrl);
+            }
+
+            if (filesToPrint.length === 0) {
+                alert("⚠️ No document files found to print for Order ID: " + orderId);
                 return;
             }
 
-            try {
-                console.log("🔄 Fetching and self-healing file for print:", resolvedUrl);
-                
-                // Server ko request bhejo taaki self-healing middleware active ho kar file restore kar de
-                const response = await fetch(resolvedUrl);
-                if (!response.ok) throw new Error("Server failed to recover the file (Status: " + response.status + ")");
+            console.log(`🖨️ Starting print sequence for ${filesToPrint.length} file(s) in Order #${orderId}`);
 
-                const blob = await response.blob();
-                const blobUrl = URL.createObjectURL(blob);
+            // 2. Ek-ek karke saari files ko fetch karke sequential print queue mein chalao
+            for (let i = 0; i < filesToPrint.length; i++) {
+                let resolvedUrl = filesToPrint[i];
+                try {
+                    console.log(`📥 Fetching & self-healing file ${i + 1} of ${filesToPrint.length}:`, resolvedUrl);
+                    
+                    const response = await fetch(resolvedUrl);
+                    if (!response.ok) throw new Error(`Server failed to recover file (Status: ${response.status})`);
 
-                // Ab ERR_FILE_NOT_FOUND ka koi chance nahi hai kyunki yeh local browser memory (blob) ban chuka hai!
-                const frame = document.getElementById('silentPrintFrame');
-                if (frame) {
-                    frame.src = blobUrl;
-                    frame.onload = function () {
-                        try { 
-                            frame.contentWindow.focus(); 
-                            frame.contentWindow.print(); 
-                        } catch (e) { 
-                            window.open(blobUrl, '_blank'); 
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+
+                    // Har file ke print ke beech smooth gap ke liye Promise use karenge
+                    await new Promise((resolve) => {
+                        const frame = document.getElementById('silentPrintFrame');
+                        if (frame) {
+                            frame.src = blobUrl;
+                            frame.onload = function () {
+                                try { 
+                                    frame.contentWindow.focus(); 
+                                    frame.contentWindow.print(); 
+                                } catch (e) { 
+                                    window.open(blobUrl, '_blank'); 
+                                }
+                                // 2 seconds ka gap taaki printer queue jam na ho
+                                setTimeout(resolve, 2000);
+                            };
+                        } else {
+                            window.open(blobUrl, '_blank');
+                            setTimeout(resolve, 2000);
                         }
-                    };
-                } else {
-                    window.open(blobUrl, '_blank');
+                    });
+                } catch (err) {
+                    console.error(`❌ Error printing file ${i + 1}:`, err.message);
+                    alert(`❌ Print Error on File ${i + 1}: ` + err.message);
                 }
-
-                if (orderId) {
-                    processedAutoPrintOrderIds.add(String(orderId));
-                    localStorage.setItem('printed_orders', JSON.stringify(Array.from(processedAutoPrintOrderIds)));
-                }
-            } catch (err) {
-                alert("❌ Print Error: " + err.message + "\nURL: " + resolvedUrl);
             }
-        }      
+
+            if (orderId) {
+                processedAutoPrintOrderIds.add(String(orderId));
+                localStorage.setItem('printed_orders', JSON.stringify(Array.from(processedAutoPrintOrderIds)));
+            }
+        }
 
         let isStoreOpen = true;
         async function fetchStoreStatus() {
