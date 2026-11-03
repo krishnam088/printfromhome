@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Print From Home - Social Media Post Banner</title>
+    <link href="[https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800;900&display=swap](https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800;900&display=swap)" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body {
+            background: #020617;
+            color: #f8fafc;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .post-card {
+            width: 100%;
+            max-width: 500px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            border: 2px solid #334155;
+            border-radius: 32px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+            position: relative;
+            overflow: hidden;
+        }
+        .post-card::before {
+            content: '';
+            position: absolute;
+            top: -60px; right: -60px; width: 160px; height: 160px;
+            background: rgba(245, 158, 11, 0.12);
+            border-radius: 50%;
+            filter: blur(40px);
+        }
+        .top-tag {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: inline-block;
+            margin-bottom: 16px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        h2 { font-size: 2.2rem; font-weight: 900; color: #38bdf8; margin-bottom: 6px; }
+        .location { font-size: 0.85rem; color: #94a3b8; font-weight: 600; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .grid-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        .grid-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            padding: 14px;
+            border-radius: 14px;
+        }
+        .grid-card h4 { font-size: 0.82rem; font-weight: 800; color: #10b981; margin-bottom: 3px; }
+        .grid-card p { font-size: 0.72rem; color: #94a3b8; margin: 0; }
+
+        .launch-banner-box {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px dashed #f59e0b;
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+        }
+        .launch-banner-box h3 { color: #f59e0b; font-size: 1.05rem; font-weight: 900; }
+
+        .website-link {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+            padding: 8px 16px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="post-card">
+        <div class="top-tag">🚀 Coming Soon</div>
+        <h2>Print From Home</h2>
+        <div class="location">Varanasi, India</div>
+
+        <div class="grid-features">
+            <div class="grid-card">
+                <h4>⚡ 15-Min Delivery</h4>
+                <p>Lightning fast doorstep drop</p>
+            </div>
+            <div class="grid-card">
+                <h4>📄 ₹3/page</h4>
+                <p>70 GSM laser print quality</p>
+            </div>
+            <div class="grid-card">
+                <h4>🥤 Snacks & More</h4>
+                <p>Cravings fixed instantly</p>
+            </div>
+            <div class="grid-card">
+                <h4>🔒 Secure PDF</h4>
+                <p>Complete privacy guaranteed</p>
+            </div>
+        </div>
+
+        <div class="launch-banner-box">
+            <h3>🪔 OFFICIAL LAUNCH: DIWALI 2026 🪔</h3>
+        </div>
+
+        <div class="website-link">printfromhome.onrender.com</div>
+    </div>
+
+</body>
+</html>

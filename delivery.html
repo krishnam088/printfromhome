@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="data:,">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Print From Home - Delivery Partner App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: #0f172a; color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .delivery-header {
+            background: #1e293b; padding: 16px 20px; border-bottom: 1px solid #334155;
+            display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100;
+        }
+        .delivery-brand { font-size: 1.15rem; font-weight: 800; color: #38bdf8; }
+        .delivery-container { flex: 1; padding: 16px; max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+
+        .auth-box { background: #1e293b; border-radius: 20px; padding: 24px; border: 1px solid #334155; text-align: center; margin-top: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .form-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #475569; background: #0f172a; color: white; font-size: 0.95rem; font-weight: 700; outline: none; margin-bottom: 14px; text-align: center; }
+        .btn-main { width: 100%; padding: 14px; background: #10b981; color: white; border: none; border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .stat-card { background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 14px; text-align: center; }
+        .stat-num { font-size: 1.3rem; font-weight: 900; color: #38bdf8; margin-top: 2px; }
+
+        .order-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 16px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .order-badge { background: rgba(16,185,129,0.15); color: #10b981; padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 800; display: inline-block; text-transform: uppercase; }
+        .customer-info { background: #0f172a; padding: 12px; border-radius: 10px; border: 1px solid #334155; font-size: 0.84rem; line-height: 1.5; }
+        .btn-row { display: flex; gap: 8px; }
+        .btn-nav { flex: 1; background: #0284c7; color: white; padding: 10px; border-radius: 10px; border: none; font-weight: 700; font-size: 0.82rem; text-decoration: none; text-align: center; display: inline-block; }
+        .btn-deliver { flex: 1; background: #10b981; color: white; padding: 10px; border-radius: 10px; border: none; font-weight: 800; font-size: 0.82rem; cursor: pointer; }
+        .btn-reject { background: #ef4444; color: white; padding: 10px 16px; border-radius: 10px; border: none; font-weight: 800; font-size: 0.82rem; cursor: pointer; }
+   
+   body { background: #fdfbf7; color: #1e293b; }
+.delivery-header { background: #ffffff; border-bottom: 1px solid #e2e8f0; color: #0f172a; }
+.delivery-brand { color: #059669; }
+.auth-box, .order-card, .section-box { background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+.form-input { background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; }
+.customer-info { background: #f8fafc; border: 1px solid #e2e8f0; color: #334155; }
+
+.earnings-slider-container { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; margin-bottom: 16px; scrollbar-width: none; }
+.earnings-slider-container::-webkit-scrollbar { display: none; }
+.earning-card { min-width: 170px; flex: 1; background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%); border: 1px solid #fde047; border-radius: 16px; padding: 16px; scroll-snap-align: start; box-shadow: 0 3px 10px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between; }
+.earning-card.blue { background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border-color: #7dd3fc; }
+.earning-card.green { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-color: #86efac; }
+.earning-title { font-size: 0.72rem; font-weight: 800; color: #334155; text-transform: uppercase; }
+.earning-num { font-size: 1.3rem; font-weight: 900; color: #0f172a; margin-top: 6px; }
+   </style>
+</head>
+<body>
+
+   <header class="delivery-header">
+    <div class="delivery-brand">🛵 Delivery Partner App</div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <div id="deliveryAgentNameBadge" style="font-size: 0.82rem; font-weight: 700; color: #94a3b8;"></div>
+        <button type="button" onclick="logoutDeliveryExecutive()" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">Logout</button>
+    </div>
+</header>
+
+    <div id="riderOrderPopupModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:99999; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:#1e293b; border-radius:20px; padding:24px; width:100%; max-width:400px; text-align:center; border:2px solid #10b981;">
+        <h2 style="font-size:1.2rem; font-weight:900; color:#10b981; margin-bottom:10px;">🚨 NEW ORDER RECEIVED!</h2>
+        <p id="popupOrderMeta" style="font-size:0.85rem; color:#f8fafc; margin-bottom:16px;"></p>
+        <button type="button" onclick="closeRiderPopup()" class="btn-main" style="background:#065f46;">Pick your order from store</button>
+    </div>
+</div>
+    <div class="delivery-container">
+      <div id="deliveryAuthScreen" class="auth-box">
+    <h2 id="deliveryAuthTitle" style="font-size: 1.3rem; font-weight: 800; margin-bottom: 6px;">Delivery Executive Login</h2>
+    <p id="deliveryAuthSub" style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 20px;">Enter your credentials to continue</p>
+    
+    <div id="riderSignupFields" style="display:none;">
+        <input type="text" id="riderNameInput" placeholder="Full Name" class="form-input">
+        <input type="email" id="riderEmailInput" placeholder="Gmail Address" class="form-input">
+        <input type="text" id="riderLicenseInput" placeholder="Driving License Number (Optional)" class="form-input">
+    </div>
+
+    <input type="tel" id="deliveryMobileInput" placeholder="10-digit mobile number" maxlength="10" class="form-input">
+    <input type="password" id="deliveryPasswordInput" placeholder="Password" class="form-input">
+    
+    <button type="button" id="deliveryAuthSubmitBtn" onclick="submitDeliveryAuth()" class="btn-main">Log In</button>
+    
+    <p style="margin-top: 14px; font-size: 0.78rem; color: #94a3b8;">
+        <span id="riderToggleMsg">New delivery partner?</span> 
+        <a href="#" onclick="toggleRiderAuthMode(event)" style="color: #38bdf8; font-weight: 700; text-decoration: none;">Create Account</a>
+    </p>
+</div>
+        <!-- 2. Dashboard Screen -->
+        <div id="deliveryDashboardScreen" style="display: none;">
+            
+            <!-- Duty Status Toggle Card -->
+            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="font-size: 0.9rem; font-weight: 800;">Work Duty Status</h4>
+                    <p id="dutyStatusSubText" style="font-size: 0.72rem; color: #94a3b8;">You are currently OFFLINE</p>
+                </div>
+                <button type="button" id="toggleDutyBtn" onclick="toggleRiderDuty()" style="background: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 10px; font-weight: 800; font-size: 0.82rem; cursor: pointer;">GO ONLINE</button>
+            </div>
+
+    <!-- 🔥 Earnings Slider Carousel -->
+<div class="earnings-slider-container">
+    <div class="earning-card">
+        <span class="earning-title">⚡ Live / Today</span>
+        <div class="earning-num" id="riderEarningsTodayText">₹0.00</div>
+    </div>
+    <div class="earning-card blue">
+        <span class="earning-title">📅 Weekly Earning</span>
+        <div class="earning-num" id="riderEarningsWeeklyText">₹0.00</div>
+    </div>
+    <div class="earning-card green">
+        <span class="earning-title">📦 Total Deliveries</span>
+        <div class="earning-num" id="riderCompletedCountText">0</div>
+    </div>
+</div>
+<!-- Yeh container earnings slider aur history ke baad dashboard screen mein add kar dein -->
+<div id="riderOrdersListContainer"></div>
+
+<!-- 🏦 Bank Account Setup for NEFT Payout -->
+<div class="section-box" style="padding: 16px; margin-bottom: 16px; border-radius: 16px;">
+    <h4 style="font-size: 0.9rem; font-weight: 800; margin-bottom: 8px; color: #0f172a;">🏦 Bank Account Details (For NEFT Payout)</h4>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+        <input type="text" id="bankHolderName" placeholder="Account Holder Name" class="form-input" style="margin-bottom:0; font-size:0.8rem; padding:8px;">
+        <input type="text" id="bankAccountNumber" placeholder="Account Number" class="form-input" style="margin-bottom:0; font-size:0.8rem; padding:8px;">
+        <input type="text" id="bankIfscCode" placeholder="IFSC Code" class="form-input" style="margin-bottom:0; font-size:0.8rem; padding:8px;">
+        <button type="button" onclick="saveRiderBankDetails()" style="background: #0284c7; color: white; border: none; padding: 8px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">Save Bank Details</button>
+    </div>
+</div>
+
+<!-- 📜 Date-wise Earnings & Order Breakdown History -->
+<div class="section-box" style="padding: 16px; margin-bottom: 16px; border-radius: 16px;">
+    <h4 style="font-size: 0.9rem; font-weight: 800; margin-bottom: 10px; color: #0f172a;">📜 Date-Wise Earnings Ledger</h4>
+    <div id="riderEarningsHistoryList" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+        <p style="font-size: 0.78rem; color: #64748b; text-align: center;">No completed deliveries recorded yet.</p>
+    </div>
+</div>
+
+<!-- 💬 Support & Help Section -->
+<div class="section-box" style="background: #f0fdf4; border-color: #bbf7d0; padding: 16px; margin-bottom: 16px; border-radius: 16px;">
+    <h4 style="font-size: 0.9rem; font-weight: 800; color: #16a34a; margin-bottom: 4px;">📞 Partner Support & Help</h4>
+    <p style="font-size: 0.75rem; color: #334155; margin-bottom: 8px;">Facing issues with order or store pickup? Contact support instantly.</p>
+    <a href="https://api.whatsapp.com/send?phone=917007626731&text=Hello%20Support,%20I%20am%20a%20delivery%20partner." target="_blank" style="background: #25D366; color: white; padding: 8px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; text-decoration: none; display: inline-block;">💬 Chat on WhatsApp</a>
+</div>
+        </div>
+    </div>
+
+    <script>
+
+       // 🔥 Real-time GPS Background Broadcaster for Delivery Partner
+if (navigator.geolocation) {
+    navigator.geolocation.watchPosition((pos) => {
+        if (typeof currentAgentPhone !== 'undefined' && currentAgentPhone && isRiderOnline) {
+            // Get active order ID if available from dashboard data
+            const activeOrderId = window.currentActiveAssignedOrderId || null;
+            
+            fetch('/api/admin/update-location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    orderId: activeOrderId,
+                    lat: pos.coords.latitude, 
+                    lng: pos.coords.longitude,
+                    phone: currentAgentPhone 
+                })
+            }).catch(err => console.error("GPS Sync Error:", err));
+
+            fetch('/api/rider/update-location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    phone: currentAgentPhone, 
+                    lat: pos.coords.latitude, 
+                    lng: pos.coords.longitude 
+                })
+            }).catch(err => console.error("Rider GPS Sync Error:", err));
+        }
+    }, (err) => {
+        console.warn("Geolocation watch error:", err);
+    }, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 });
+}
+
+
+
+
+       let currentAgentPhone = localStorage.getItem('delivery_agent_phone') || '';
+let isRiderOnline = false;
+let lastSeenOrderIdForRider = localStorage.getItem('last_dismissed_popup_order') || '';
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (currentAgentPhone) {
+                document.getElementById('deliveryAuthScreen').style.display = 'none';
+                document.getElementById('deliveryDashboardScreen').style.display = 'block';
+                document.getElementById('deliveryAgentNameBadge').textContent = `Agent: ${currentAgentPhone}`;
+                fetchRiderDashboard();
+                setInterval(fetchRiderDashboard, 5000);
+            }
+        });
+
+        // Real Database Auth Login
+        async function loginDeliveryExecutive() {
+            const phone = document.getElementById('deliveryMobileInput').value.trim();
+            if (phone.length !== 10) {
+                alert("Please enter a valid 10-digit mobile number.");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/rider/auth-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    currentAgentPhone = phone;
+                    localStorage.setItem('delivery_agent_phone', phone);
+                    document.getElementById('deliveryAuthScreen').style.display = 'none';
+                    document.getElementById('deliveryDashboardScreen').style.display = 'block';
+                    document.getElementById('deliveryAgentNameBadge').textContent = `Agent: ${phone}`;
+                    fetchRiderDashboard();
+                } else {
+                    alert(`⚠️ ${data.message}`);
+                }
+            } catch (err) {
+                alert("❌ Authentication server connection error.");
+            }
+        }
+
+        // Toggle Duty (Online / Offline)
+        async function toggleRiderDuty() {
+            isRiderOnline = !isRiderOnline;
+            try {
+                const res = await fetch('/api/rider/toggle-duty', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: currentAgentPhone, isOnline: isRiderOnline })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    isRiderOnline = data.isOnline;
+                    updateDutyUI();
+                    fetchRiderDashboard();
+                }
+            } catch (err) {
+                alert("❌ Error updating duty status.");
+            }
+        }
+
+        function updateDutyUI() {
+            const btn = document.getElementById('toggleDutyBtn');
+            const sub = document.getElementById('dutyStatusSubText');
+            if (isRiderOnline) {
+                btn.textContent = "GO OFFLINE";
+                btn.style.background = "#ef4444";
+                sub.textContent = "You are currently ONLINE & active";
+                sub.style.color = "#10b981";
+            } else {
+                btn.textContent = "GO ONLINE";
+                btn.style.background = "#10b981";
+                sub.textContent = "You are currently OFFLINE";
+                sub.style.color = "#94a3b8";
+            }
+        }
+
+        // Fetch Dashboard Data & Orders
+    async function fetchRiderDashboard() {
+        if (!currentAgentPhone) return;
+        try {
+            const res = await fetch(`/api/rider/dashboard/${currentAgentPhone}`);
+            const data = await res.json();
+            if (!data.success) return;
+
+            // Update Rider stats
+            isRiderOnline = data.rider.isOnline;
+            updateDutyUI();
+            
+            // Update Rider stats & Slider
+            document.getElementById('riderEarningsTodayText').textContent = `₹${(data.rider.earningsToday || 0).toFixed(2)}`;
+            document.getElementById('riderEarningsWeeklyText').textContent = `₹${(data.rider.earningsWeekly || 0).toFixed(2)}`;
+            document.getElementById('riderCompletedCountText').textContent = data.rider.completedDeliveriesToday || 0;
+
+            // Render Date-wise Earnings History Ledger
+            const historyContainer = document.getElementById('riderEarningsHistoryList');
+            if (historyContainer && data.rider.deliveryHistory && data.rider.deliveryHistory.length > 0) {
+                historyContainer.innerHTML = data.rider.deliveryHistory.map(h => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.78rem; color: #1e293b;">
+                        <div><b>Order #${h.orderId}</b><br><span style="color: #64748b; font-size: 0.7rem;">📅 ${h.date}</span></div>
+                        <span style="color: #16a34a; font-weight: 800; font-size: 0.85rem;">+₹${h.amount}</span>
+                    </div>
+                `).join('');
+            }
+
+            // 🔥 Check for New Incoming Order Popup Trigger
+            if (data.newOrders && data.newOrders.length > 0) {
+                const firstNewOrder = data.newOrders[0];
+                if (firstNewOrder.orderId !== lastSeenOrderIdForRider) {
+                    lastSeenOrderIdForRider = firstNewOrder.orderId;
+                    const popupModal = document.getElementById('riderOrderPopupModal');
+                    const popupMeta = document.getElementById('popupOrderMeta');
+                    if (popupModal && popupMeta) {
+                        popupMeta.innerHTML = `<b>Order #${firstNewOrder.orderId}</b><br>📍 Drop: ${firstNewOrder.address}<br>💰 Earning: ₹25`;
+                        popupModal.style.display = 'flex';
+                    }
+                }
+            }
+
+            const container = document.getElementById('riderOrdersListContainer');
+            if (!container) return;
+
+           let htmlContent = '';
+
+                    // 1. Show Active Assigned Order and any queued orders
+                if (data.activeOrder || (data.secondaryOrders && data.secondaryOrders.length > 0)) {
+        if (data.activeOrder) {
+            const order = data.activeOrder;
+            
+            // 🔥 Bind active assigned order ID for precise GPS live tracking
+            window.currentActiveAssignedOrderId = order.orderId;
+
+            htmlContent += `
+                <div class="order-card" style="border-color: #10b981;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="order-badge">1. Primary Active Order #${order.orderId}</span>
+                        <span style="font-size: 0.95rem; font-weight: 900; color: #10b981;">₹${order.totalAmount || order.amount || 0}</span>
+                    </div>
+                    <div class="customer-info">
+                        ${(() => {
+                            let configItemsHtml = '';
+                            if (order.configDetails) {
+                                try {
+                                    const items = typeof order.configDetails === 'string' ? JSON.parse(order.configDetails) : order.configDetails;
+                                    if (Array.isArray(items)) {
+                                        configItemsHtml = items.map(item => `
+                                            <div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px;">📦 ${item.fileName || item.name || 'Print/Item'} (Qty:${item.copies || item.qty || 1})</div>
+                                        `).join('');
+                                    }
+                                } catch (e) {
+                                    console.error('Failed to parse order configDetails', e);
+                                }
+                            }
+                            return configItemsHtml;
+                        })()}
+                        <p style="font-weight: 800; color: #38bdf8; margin-bottom: 4px;">👤 ${order.customerName} (<a href="tel:${order.phone}" style="color: #38bdf8;">📞 ${order.phone}</a>)</p>
+                        <p style="color: #cbd5e1;">📍 <b>Drop Address:</b> ${order.address}</p>
+                        <p style="color: #94a3b8; font-size: 0.75rem; margin-top: 4px;">Status: <b>${order.status}</b> (Must deliver this first)</p>
+                    </div>
+                    <div class="btn-row">
+                         <a href="${getGoogleMapsLink(order)}" target="_blank" class="btn-nav">🗺️ Navigate</a>
+                        <button type="button" onclick="markOrderAsDelivered('${order.orderId}')" class="btn-deliver">✅ Complete Delivery</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            window.currentActiveAssignedOrderId = null;
+        }
+        
+                // 🔥 2. Show Admin Queued / Secondary Assigned Orders
+                if (data.secondaryOrders && data.secondaryOrders.length > 0) {
+                    data.secondaryOrders.forEach((secOrder, index) => {
+                        htmlContent += `
+                            <div class="order-card" style="border-color: #f59e0b; opacity: 0.9;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span class="order-badge" style="background: rgba(245,158,11,0.15); color: #f59e0b;">${index + 2}. Queued Order #${secOrder.orderId}</span>
+                                    <span style="font-size: 0.95rem; font-weight: 900; color: #f59e0b;">₹${secOrder.totalAmount || secOrder.amount || 0}</span>
+                                </div>
+                                <div class="customer-info">
+                                    <p style="font-weight: 800; color: #38bdf8; margin-bottom: 4px;">👤 ${secOrder.customerName}</p>
+                                    <p style="color: #cbd5e1;">📍 <b>Drop Address:</b> ${secOrder.address}</p>
+                                    <p style="color: #f59e0b; font-size: 0.72rem; margin-top: 4px;">⏳ <i>Will become active automatically after Primary Order is delivered.</i></p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            } else if (isRiderOnline && data.newOrders && data.newOrders.length > 0) {
+                // 3. Show New Incoming Orders with Accept / Reject
+                data.newOrders.forEach(order => {
+                    htmlContent += `
+                        <div class="order-card">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span class="order-badge">New Delivery Request #${order.orderId}</span>
+                                <span style="font-size: 0.95rem; font-weight: 900; color: #38bdf8;">Delivery Earning: ₹25</span>
+                            </div>
+                            <div class="customer-info">
+                                <p style="color: #cbd5e1;">📍 <b>Pickup:</b> Print From Home Store (Varanasi)</p>
+                                <p style="color: #cbd5e1; margin-top: 4px;">📍 <b>Drop:</b> ${order.address}</p>
+                            </div>
+                            <div class="btn-row">
+                                <button type="button" onclick="acceptDeliveryOrder('${order.orderId}')" class="btn-deliver" style="background: #3b82f6;">ACCEPT ORDER</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                htmlContent = `<div style="text-align: center; color: #94a3b8; padding: 30px; background: #1e293b; border-radius: 16px;">📭 No orders in queue. Stay online to receive incoming requests!</div>`;
+            }
+
+            container.innerHTML = htmlContent;
+        } catch (e) {
+            console.error("Dashboard fetch error:", e);
+        }
+    }
+
+        async function acceptDeliveryOrder(orderId) {
+            try {
+                const res = await fetch('/api/rider/accept-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: currentAgentPhone, orderId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    fetchRiderDashboard();
+                } else {
+                    alert(`⚠️ ${data.message}`);
+                }
+            } catch (err) {
+                alert("❌ Connection error accepting order.");
+            }
+        }
+
+        async function markOrderAsDelivered(orderId) {
+            if (!confirm(`Are you sure order #${orderId} has been successfully delivered?`)) return;
+            try {
+                const res = await fetch('/api/rider/complete-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: currentAgentPhone, orderId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    fetchRiderDashboard();
+                } else {
+                    alert("⚠️ Failed to complete delivery.");
+                }
+            } catch (err) {
+                alert("❌ Connection error.");
+            }
+        }
+       if (navigator.geolocation) {
+    navigator.geolocation.watchPosition((pos) => {
+        if (currentAgentPhone && isRiderOnline) {
+            fetch('/api/admin/update-location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+            });
+            fetch('/api/rider/update-location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: currentAgentPhone, lat: pos.coords.latitude, lng: pos.coords.longitude })
+            });
+        }
+    }, null, { enableHighAccuracy: true });
+}
+
+
+function closeRiderPopup() {
+    const popup = document.getElementById('riderOrderPopupModal');
+    if (popup) popup.style.display = 'none';
+    if (lastSeenOrderIdForRider) {
+        localStorage.setItem('last_dismissed_popup_order', lastSeenOrderIdForRider);
+    }
+}
+
+let isRiderSignup = false;
+function toggleRiderAuthMode(e) {
+    e.preventDefault();
+    isRiderSignup = !isRiderSignup;
+    const title = document.getElementById('deliveryAuthTitle');
+    const sub = document.getElementById('deliveryAuthSub');
+    const btn = document.getElementById('deliveryAuthSubmitBtn');
+    const signupFields = document.getElementById('riderSignupFields');
+    const toggleMsg = document.getElementById('riderToggleMsg');
+
+    if (isRiderSignup) {
+        title.textContent = "Delivery Partner Signup";
+        sub.textContent = "Register with your documents for store verification";
+        btn.textContent = "Register & Create Account";
+        signupFields.style.display = 'block';
+        toggleMsg.textContent = "Already have an account?";
+        e.target.textContent = "Log In";
+    } else {
+        title.textContent = "Delivery Executive Login";
+        sub.textContent = "Enter your credentials to continue";
+        btn.textContent = "Log In";
+        signupFields.style.display = 'none';
+        toggleMsg.textContent = "New delivery partner?";
+        e.target.textContent = "Create Account";
+    }
+}
+
+async function submitDeliveryAuth() {
+    const phone = document.getElementById('deliveryMobileInput').value.trim();
+    const password = document.getElementById('deliveryPasswordInput').value.trim();
+    if (phone.length !== 10 || !password) {
+        alert("⚠️ Please enter a valid 10-digit mobile number and password!");
+        return;
+    }
+
+    if (isRiderSignup) {
+        const name = document.getElementById('riderNameInput').value.trim();
+        const email = document.getElementById('riderEmailInput').value.trim();
+        const licenseNumber = document.getElementById('riderLicenseInput').value.trim();
+        if (!name) { alert("⚠️ Please enter your name!"); return; }
+
+        const res = await fetch('/api/rider/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone, email, password, licenseNumber })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert("🎉 Account created successfully! Please log in.");
+            toggleRiderAuthMode({ preventDefault: () => {} });
+        } else { alert(`⚠️ ${data.message}`); }
+    } else {
+        const res = await fetch('/api/rider/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+            currentAgentPhone = data.phone;
+            localStorage.setItem('delivery_agent_phone', data.phone);
+            document.getElementById('deliveryAuthScreen').style.display = 'none';
+            document.getElementById('deliveryDashboardScreen').style.display = 'block';
+            document.getElementById('deliveryAgentNameBadge').textContent = `Agent: ${data.name} (${data.phone})`;
+            fetchRiderDashboard();
+        } else { alert(`⚠️ ${data.message}`); }
+    }
+}
+function logoutDeliveryExecutive() {
+    if (confirm("⚠️ Are you sure you want to log out?")) {
+        // LocalStorage se delivery agent ka phone number remove kar dein
+        localStorage.removeItem('delivery_agent_phone');
+        // Page reload karke wapas login screen par aa jayein
+        location.reload();
+    }
+}
+// Save Bank Account Details for NEFT Payout
+async function saveRiderBankDetails() {
+    const holderName = document.getElementById('bankHolderName').value.trim();
+    const accountNumber = document.getElementById('bankAccountNumber').value.trim();
+    const ifscCode = document.getElementById('bankIfscCode').value.trim();
+
+    if (!holderName || !accountNumber || !ifscCode) {
+        alert("⚠️ Please fill in all bank account fields!");
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/rider/bank-details', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: currentAgentPhone, accountNumber, ifscCode, holderName })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ Bank details saved successfully!");
+        } else {
+            alert(`⚠️ ${data.message}`);
+        }
+    } catch (e) {
+        alert("❌ Error saving bank details.");
+    }
+}
+function getGoogleMapsLink(orderOrStr) {
+    if (!orderOrStr) return "https://maps.google.com";
+    
+    let addressStr = "";
+    let lat = null, lng = null;
+    
+    // Agar order object pass hua hai toh coordinates aur address nikal lein
+    if (typeof orderOrStr === 'object') {
+        lat = orderOrStr.userLat;
+        lng = orderOrStr.userLng;
+        addressStr = orderOrStr.address || "";
+    } else {
+        addressStr = String(orderOrStr);
+    }
+
+    // Agar direct lat/lng maujood hain toh wahi use karein
+    if (lat && lng) {
+        return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    }
+    
+    // Agar address string mein coordinates hain toh unhe extract karein
+    const match = addressStr.match(/Location:\s*([-\d.]+),\s*([-\d.]+)/i);
+    if (match && match[1] && match[2]) {
+        return `https://www.google.com/maps/search/?api=1&query=${match[1]},${match[2]}`;
+    }
+    
+    // Fallback: Text address pass karein
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressStr)}`;
+}
+    </script>
+</body>
+</html>

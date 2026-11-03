@@ -1,0 +1,15 @@
+{
+  "name": "Print From Home - Festive Edition",
+  "short_name": "PrintFromHome",
+  "icons": [
+    {
+      "src": "/app_icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#FF9933"
+}

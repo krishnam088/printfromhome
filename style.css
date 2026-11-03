@@ -1,0 +1,1321 @@
+/* ========================================
+   PRINT FROM HOME - MASTER RESPONSIVE STYLESHEET
+   ======================================== */
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: 'Poppins', sans-serif; 
+}
+
+html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    background-color: var(--bg-primary);
+    color: var(--text-main);
+}
+
+:root {
+    --bg-primary: #f8fafc;
+    --surface: #ffffff;
+    --text-main: #0f172a;
+    --text-sub: #64748b;
+    --blinkit-yellow: #F4C430;
+    --blinkit-green: #0C8346;
+    --blinkit-light-green: #e6f4ea;
+    --border-color: #e2e8f0;
+}
+
+body {
+    position: relative;
+    padding-bottom: 120px;
+    transition: background-color 0.5s ease;
+}
+/* 🔒 VISIBILITY & APP GUARDS (Strict Hide Override) */
+.hidden { display: none !important; }
+.app-hidden { display: none !important; }
+
+/* 🔥 Force Configuration Screen & Upload Screen to respect hidden state completely */
+#configurationScreenState.hidden,
+#uploadScreenInitialState.hidden {
+    display: none !important;
+}
+
+/* 🍞 MODERN TOAST NOTIFICATION CONTAINER */
+#appToastContainer {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    pointer-events: none;
+    width: 90%;
+    max-width: 400px;
+}
+
+.app-toast-item {
+    background: rgba(15, 23, 42, 0.95);
+    color: #ffffff;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    pointer-events: auto;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+@keyframes toastSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 🌧️ RAINY SEASON THEME & REAL ANIMATED RAIN OVERRIDES */
+body.theme-rainy-season {
+    background: linear-gradient(to bottom, #cbd5e1 0%, #94a3b8 100%) !important;
+}
+
+body.theme-rainy-season .brand-premium-header {
+    background: linear-gradient(to bottom, #64748b 0%, #94a3b8 100%) !important;
+    border-bottom: 1px solid #475569;
+}
+
+/* Real Falling Raindrops & Lightning Engine Styles */
+#rainAnimationContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 999;
+    overflow: hidden;
+    display: none;
+}
+
+body.theme-rainy-season #rainAnimationContainer {
+    display: block;
+}
+
+.raindrop {
+    position: absolute;
+    background: linear-gradient(transparent, rgba(255, 255, 255, 0.75));
+    width: 1.5px;
+    height: 30px;
+    opacity: 0.8;
+    animation: fall linear infinite;
+}
+
+@keyframes fall {
+    0% { transform: translateY(-40px); }
+    100% { transform: translateY(105vh); }
+}
+
+@keyframes lightningFlash {
+    0%, 88%, 92%, 96%, 100% { opacity: 0; }
+    90%, 94% { opacity: 0.4; background-color: #ffffff; }
+}
+
+body.theme-rainy-season::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1000;
+    animation: lightningFlash 6s infinite;
+}
+
+/* Highlighted Rainy / Cravings Card Badge */
+.rain-craving-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: #0284c7;
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 6px;
+    z-index: 5;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+/* 🔥 Low Stock Urgency Badge */
+.low-stock-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 2px 5px;
+    border-radius: 6px;
+    z-index: 5;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+/* 🎨 FESTIVE THEME FULL BACKGROUND & CARD OVERRIDES */
+body.theme-festive-republic { background-color: #fffaf5 !important; }
+body.theme-festive-holi { background-color: #fffbeb !important; }
+body.theme-festive-diwali { background-color: #fefce8 !important; }
+body.theme-festive-christmas { background-color: #fef2f2 !important; }
+
+body.theme-festive-diwali .verbatim-docs-promo-card,
+body.theme-festive-diwali .auth-card,
+body.theme-festive-diwali .side-drawer,
+body.theme-festive-diwali .wallet-modal-card {
+    background-color: #fffbeb !important;
+    border-color: #fde047 !important;
+}
+
+/* 🚀 SPLASH & AUTHENTICATION SCREENS */
+.splash-container { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh; 
+    background: var(--blinkit-yellow); 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 99999; 
+    transition: opacity 0.5s ease; 
+}
+.splash-content { text-align: center; }
+.splash-logo { font-size: 2.5rem; font-weight: 800; color: #000000; }
+.logo-green { color: var(--blinkit-green); }
+.splash-tagline { font-size: 1rem; font-weight: 600; color: #1e293b; margin-top: 5px; }
+
+.auth-container { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh; 
+    background: var(--bg-primary); 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 9999; 
+    transition: background 0.5s ease; 
+}
+.auth-card { 
+    background: var(--surface); 
+    border: 1px solid var(--border-color); 
+    border-radius: 24px; 
+    padding: 30px; 
+    max-width: 400px; 
+    width: 90%; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+    text-align: center; 
+}
+.auth-brand { font-size: 1.8rem; font-weight: 800; color: #000000; margin-bottom: 10px; }
+.brand-green { color: var(--blinkit-green); }
+.auth-card h2 { font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 20px; }
+.form-group { text-align: left; margin-bottom: 15px; width: 100%; }
+.form-group label { font-size: 0.8rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 4px; }
+.form-group input, .form-group textarea { 
+    width: 100%; 
+    padding: 12px; 
+    border: 2px solid var(--border-color); 
+    border-radius: 12px; 
+    font-size: 0.9rem; 
+    font-weight: 600; 
+    outline: none; 
+}
+.btn-auth-submit { 
+    width: 100%; 
+    padding: 14px; 
+    background: var(--blinkit-green); 
+    color: white; 
+    border: none; 
+    border-radius: 12px; 
+    font-weight: 700; 
+    font-size: 1rem; 
+    cursor: pointer; 
+    margin-top: 10px; 
+}
+.auth-toggle-text { font-size: 0.8rem; font-weight: 600; color: var(--text-sub); margin-top: 15px; }
+.auth-toggle-text a { color: var(--blinkit-green); text-decoration: none; font-weight: 700; }
+
+/* 👑 PREMIUM APP HEADER */
+.brand-premium-header {
+    background: linear-gradient(to bottom, #FFF3B3 0%, #FFFBE6 100%);
+    padding: 16px 20px;
+    width: 100%;
+    border-bottom: 1px solid rgba(244,196,48,0.15);
+    transition: background 0.5s ease;
+}
+.header-container { max-width: 1200px; margin: 0 auto; position: relative; }
+.header-meta-row { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
+
+.delivery-brand-box { display: flex; flex-direction: column; text-align: left; }
+.user-greeting-inline { font-size: 0.85rem; font-weight: 700; color: #2d3748; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+.delivery-time-title { font-size: 0.75rem; font-weight: 700; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
+.delivery-time-countdown { font-size: 1.5rem; font-weight: 900; color: #111111; margin-top: -2px; }
+
+.header-profile-cluster { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.status-micro-nav { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
+
+.shop-status-text-badge.open {
+    color: #16a34a;
+    background: #f0fdf4;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.shop-status-text-badge.closed {
+    color: #dc2626;
+    background: #fef2f2;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+.shop-timing-subtext { font-size: 0.65rem; font-weight: 700; color: #718096; }
+
+.profile-wallet-row { display: flex; align-items: center; gap: 10px; }
+.wallet-micro-badge { background: #ffffff; border-radius: 14px; border: 1px solid var(--border-color); padding: 6px 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.wallet-cash-value { font-size: 0.85rem; font-weight: 800; color: #000000; }
+.avatar-circle-trigger { width: 44px; height: 44px; background: #000000; color: #ffffff; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; font-size: 1.1rem; border: 2px solid #ffffff; }
+
+/* 📱 SLIDING SIDE DRAWER & OVERLAYS */
+.drawer-overlay { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh; 
+    background: rgba(0,0,0,0.4); 
+    z-index: 1999; 
+    display: none; 
+    opacity: 0; 
+    transition: opacity 0.3s ease; 
+}
+.drawer-overlay.active { display: block; opacity: 1; }
+
+.side-drawer { 
+    position: fixed; 
+    top: 0; 
+    right: -380px; 
+    width: 340px; 
+    max-width: 85vw;
+    height: 100vh; 
+    background: var(--surface); 
+    z-index: 2000; 
+    box-shadow: -10px 0 30px rgba(0,0,0,0.08); 
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    padding: 25px 18px; 
+    display: flex; 
+    flex-direction: column; 
+    border-left: 1px solid var(--border-color); 
+}
+.side-drawer.active { right: 0; }
+.drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; }
+
+.drawer-menu-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; }
+.drawer-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; font-weight: 600; font-size: 0.85rem; color: var(--text-main); cursor: pointer; transition: all 0.2s; }
+.drawer-item:hover, .drawer-item.active { background: #f1f5f9; color: var(--blinkit-green); }
+
+.drawer-subpanel-content { flex: 1; overflow-y: auto; display: none; }
+.drawer-subpanel-content.active { display: block; }
+
+.drawer-input-group { margin-bottom: 12px; text-align: left; }
+.drawer-input-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 4px; }
+.drawer-input-group input { width: 100%; padding: 10px 12px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 0.85rem; font-weight: 600; outline: none; }
+
+.btn-drawer-action { width: 100%; padding: 10px; background: var(--blinkit-green); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; margin-top: 5px; }
+.whatsapp-support-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background-color: #25D366; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; text-decoration: none; margin-top: 15px; box-shadow: 0 4px 12px rgba(37,211,102,0.25); }
+
+/* 💰 WALLET MODAL */
+.wallet-modal-overlay { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh; 
+    background: rgba(0,0,0,0.5); 
+    z-index: 15000; 
+    display: none; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 20px; 
+}
+.wallet-modal-card { background: var(--surface); border-radius: 24px; padding: 25px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); border: 2px solid var(--blinkit-yellow); }
+.wallet-chip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+.wallet-chip-btn { background: var(--bg-primary); border: 2px solid var(--border-color); padding: 8px; border-radius: 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+
+/* 📄 MAIN LAYOUT CONTAINER & VIEW SECTIONS (Fixed blank white screen bugs) */
+.container { 
+    width: 100%; 
+    max-width: 900px; 
+    margin: 0 auto; 
+    padding: 15px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px; 
+    box-sizing: border-box; 
+}
+
+.compact-offers-bar { display: flex; align-items: center; gap: 8px; background: #fffbeb; border: 1px solid #fed7aa; padding: 10px 14px; border-radius: 12px; font-size: 0.78rem; font-weight: 600; color: #b45309; width: 100%; overflow: hidden; }
+.compact-offers-bar marquee { width: 100%; font-weight: 600; }
+
+/* 🔥 Bulletproof View Section Toggle Rule to Prevent Blank Screens */
+.view-section { 
+    display: none !important; 
+    width: 100% !important; 
+    box-sizing: border-box !important; 
+}
+
+.view-section.active { 
+    display: block !important; 
+    width: 100% !important; 
+}
+.store-header-box { text-align: center; padding: 10px 5px; width: 100%; box-sizing: border-box; }
+.store-header-box h2 { font-size: 2.1rem; font-weight: 800; color: #1a202c; letter-spacing: -1px; }
+.store-header-box p { font-size: 0.88rem; color: var(--text-sub); font-weight: 600; margin-top: 2px; }
+
+@media (max-width: 768px) {
+    .store-header-box h2 { font-size: 1.8rem !important; }
+    .store-header-box p { font-size: 0.78rem !important; }
+}
+
+.verbatim-docs-promo-card { background: var(--surface); border: 1px solid var(--border-color); border-radius: 24px; padding: 22px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02); width: 100%; position: relative; margin-top: 8px; box-sizing: border-box; }
+.promo-details-block { text-align: left; z-index: 2; max-width: 65%; }
+.promo-main-title { font-size: 1.4rem; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
+.promo-bullet-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.promo-bullet-item { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #4a5568; }
+.verbatim-upload-btn { background-color: #2e7d32; color: #ffffff; border: none; padding: 10px 24px; border-radius: 12px; font-size: 0.9rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; }
+.promo-graphic-mockup { position: absolute; right: 15px; bottom: 15px; width: 35%; max-width: 110px; z-index: 1; }
+
+/* 🍟 ISOLATED HORIZONTAL SLIDING SNACKS CONTAINER */
+.category-section-title { font-size: 1.05rem; font-weight: 800; color: #1e293b; margin: 15px 0 8px 0; text-align: left; width: 100%; }
+.snacks-horizontal-slider {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 4px 2px 12px 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    box-sizing: border-box;
+}
+.snacks-horizontal-slider::-webkit-scrollbar { display: none; }
+
+.blinkit-cat-card {
+    min-width: 125px;
+    max-width: 125px;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 10px;
+    text-align: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+.blinkit-cat-img { font-size: 1.8rem; margin-bottom: 4px; }
+.blinkit-cat-name { font-size: 0.7rem; font-weight: 700; color: #1e293b; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.blinkit-cat-price { font-size: 0.65rem; font-weight: 600; color: var(--text-sub); margin-bottom: 6px; }
+.btn-quick-add { background: #f0fdf4; color: var(--blinkit-green); border: 1px solid #bbf7d0; padding: 5px 8px; font-size: 0.7rem; font-weight: 700; border-radius: 8px; cursor: pointer; width: 100%; }
+.btn-quick-add:hover { background: var(--blinkit-green); color: white; }
+
+/* 📦 STABLE FLOATING CART BAR */
+.floating-cart-footer { 
+    position: fixed; 
+    bottom: 20px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: 90%; 
+    max-width: 420px; 
+    background: var(--blinkit-green); 
+    color: white; 
+    border-radius: 30px; 
+    padding: 12px 20px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    box-shadow: 0 10px 25px rgba(12,131,70,0.4); 
+    z-index: 10000; 
+    cursor: pointer; 
+}
+
+/* ========================================
+   🖨️ UNIVERSAL A4 PRINT STUDIO & CANVAS ENGINE
+   ======================================== */
+.print-studio-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(8px);
+    z-index: 100000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.studio-toolbar {
+    background: #1e293b;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #334155;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.studio-workspace {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+    padding: 30px 10px;
+    background: #0f172a;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* --- Virtual A4 Sheet Canvas --- */
+.a4-page-wrapper {
+    width: 210mm;
+    min-height: 297mm;
+    max-width: 95vw;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    position: relative;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+.a4-page-wrapper.landscape {
+    width: 297mm;
+    min-height: 210mm;
+}
+
+.a4-page-canvas {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.page-badge-toolbar {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.85);
+    padding: 4px 10px;
+    border-radius: 8px;
+    z-index: 10;
+}
+
+/* ========================================
+   HARDWARE A4 PRINT ENFORCER (MEDIA PRINT)
+   ======================================== */
+@media print {
+    body * {
+        visibility: hidden !important;
+    }
+    
+    #printStudioModal, 
+    #printStudioModal *,
+    .print-studio-overlay,
+    .print-studio-overlay * {
+        visibility: visible !important;
+    }
+
+    #printStudioModal,
+    .print-studio-overlay {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        background: #ffffff !important;
+        overflow: visible !important;
+    }
+
+    .studio-toolbar, 
+    .page-badge-toolbar, 
+    #floatingCartFooterBar, 
+    #userInstallBanner, 
+    .side-drawer, 
+    .drawer-overlay,
+    .admin-sidebar,
+    #appToastContainer,
+    #rainAnimationContainer {
+        display: none !important;
+    }
+
+    #a4PagesContainer,
+    .studio-workspace {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: none !important;
+        display: block !important;
+    }
+
+    .a4-page-wrapper {
+        width: 100% !important;
+        min-height: 100vh !important;
+        height: 100% !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        page-break-after: always !important;
+        break-after: page !important;
+    }
+
+    @page {
+        size: A4 portrait;
+        margin: 0;
+    }
+}
+
+/* ========================================
+   MOBILE VIEW & CART DRAWER OPTIMIZATIONS
+   ======================================== */
+/* Cart Drawer: Border yellow/cream mix, inner background full white */
+.cart-drawer-card {
+    background: #ffffff !important;
+    border: 3px solid #FFF3B3 !important;
+    border-left: 2px solid #F4C430 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    display: flex;
+    flex-direction: column;
+}
+
+#cartDrawerItemsList {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.blinkit-file-card img, .blinkit-cat-card img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Payment box selection effect */
+input[name="cartPaymentMode"]:checked + .payment-option-box {
+    border-color: var(--blinkit-green) !important;
+    background: #f0fdf4 !important;
+    box-shadow: 0 0 0 2px var(--blinkit-green);
+}
+.payment-option-box { transition: all 0.2s ease; }
+
+/* ========================================
+   🔥 ADDED ANIMATIONS & PULSE EFFECTS (NEW)
+   ======================================== */
+
+/* Active Timeline Step Glowing Pulse */
+.timeline-step.active .step-node-dot {
+    background: var(--blinkit-green);
+    box-shadow: 0 0 0 0 rgba(16, 163, 74, 0.7);
+    animation: timelinePulseAnimation 2s infinite;
+}
+
+@keyframes timelinePulseAnimation {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 163, 74, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 163, 74, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 163, 74, 0); }
+}
+
+/* Smooth Button Click Scale Feedback */
+button:active {
+    transform: scale(0.96);
+    transition: transform 0.1s ease;
+}
+/* ==========================================
+   🎆 ADVANCED DYNAMIC FESTIVE THEMES & ANIMATED PARTICLES
+   ========================================== */
+
+/* 1. Festival Specific Background Gradients & Colors */
+body.theme-festive-diwali {
+    background: linear-gradient(135deg, #1e1b4b 0%, #31103f 50%, #451a03 100%) !important;
+    color: #fefce8 !important;
+}
+
+body.theme-festive-navratri {
+    background: linear-gradient(135deg, #431407 0%, #7c2d12 50%, #451a03 100%) !important;
+    color: #ffedd5 !important;
+}
+
+body.theme-festive-republic {
+    background: linear-gradient(135deg, #065f46 0%, #1e3a8a 50%, #7f1d1d 100%) !important;
+    color: #f8fafc !important;
+}
+
+body.theme-festive-christmas {
+    background: linear-gradient(135deg, #7f1d1d 0%, #14532d 50%, #1e293b 100%) !important;
+    color: #f8fafc !important;
+}
+
+body.theme-festive-holi {
+    background: linear-gradient(135deg, #831843 0%, #581c87 100%) !important;
+    color: #fdf4ff !important;
+}
+
+/* 2. Card, Drawer & Modal Overrides during Festivals */
+body.theme-festive-diwali .verbatim-docs-promo-card,
+body.theme-festive-diwali .auth-card,
+body.theme-festive-diwali .side-drawer,
+body.theme-festive-diwali .wallet-modal-card,
+body.theme-festive-diwali .cart-drawer-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: #0f172a !important;
+    border: 2px solid #f59e0b !important;
+    box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3) !important;
+}
+
+body.theme-festive-christmas .verbatim-docs-promo-card,
+body.theme-festive-christmas .auth-card,
+body.theme-festive-christmas .side-drawer,
+body.theme-festive-christmas .wallet-modal-card,
+body.theme-festive-christmas .cart-drawer-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: #0f172a !important;
+    border: 2px solid #ef4444 !important;
+    box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3) !important;
+}
+
+/* 🎆 3. Particle Animation Containers (Fireworks / Snow / Sparkles) */
+#festivalAnimationContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 998;
+    overflow: hidden;
+    display: none;
+}
+
+body.theme-festive-diwali #festivalAnimationContainer,
+body.theme-festive-christmas #festivalAnimationContainer,
+body.theme-festive-republic #festivalAnimationContainer {
+    display: block;
+}
+
+/* Snowflake / Sparkle particle styles */
+.festive-particle {
+    position: absolute;
+    background: #ffffff;
+    border-radius: 50%;
+    animation: particleFall linear infinite;
+}
+
+@keyframes particleFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(105vh) rotate(360deg); opacity: 0.2; }
+}
+
+/* Fireworks Sparkle Effect for Diwali */
+.firework-spark {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #f59e0b;
+    border-radius: 50%;
+    animation: fireworkExplode 1.5s ease-out infinite;
+}
+
+@keyframes fireworkExplode {
+    0% { transform: scale(1); opacity: 1; box-shadow: 0 0 4px #f59e0b; }
+    100% { transform: scale(6); opacity: 0; box-shadow: 0 0 20px #ef4444; }
+}
+
+/* ========================================
+   📱 RESPONSIVE PHOTO GRID & SLIDER FIXES (NEW)
+   ======================================== */
+
+/* 1. Prevent Photo/Copies Grid from overflowing on mobile */
+.photo-grid-preview, 
+.copies-grid-container, 
+.print-copies-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+    gap: 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+}
+
+/* 2. Mobile screen optimizations for 8-copies and other grid layouts */
+@media (max-width: 768px) {
+    .photo-grid-preview, 
+    .copies-grid-container, 
+    .print-copies-grid {
+        grid-template-columns: repeat(2, 1fr) !important; /* Mobile par 2 columns fix rakhne ke liye taaki bahar na jaye */
+        gap: 8px !important;
+        padding: 0 4px !important;
+    }
+
+    /* Prevent any horizontal slider breaking out of container */
+    .snacks-horizontal-slider, 
+    .horizontal-scroll-container {
+        max-width: 100vw !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+/* 🖼️ GLOSSY & PASSPORT PHOTO GRID / SLIDER FIX */
+.glossy-photo-container, 
+.photo-selection-grid, 
+.print-copies-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+    gap: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Ensure photo card items maintain fixed proportions (prevent portrait/landscape shifting) */
+.glossy-photo-card, 
+.photo-item-box {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    aspect-ratio: unset !important; /* Forces items not to distort */
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+/* Mobile screen par strictly 2 columns aur proper padding */
+@media (max-width: 768px) {
+    .glossy-photo-container, 
+    .photo-selection-grid, 
+    .print-copies-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        padding: 0 2px !important;
+    }
+}
+
+/* ========================================
+   📱 ULTIMATE GLOSSY & PHOTO GRID MOBILE FIX
+   ======================================== */
+
+/* Glossy section container ko phone screen ke andar lock karne ke liye */
+.glossy-section-container, 
+.photo-selection-wrapper, 
+.print-copies-grid-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+}
+
+/* Grids ko mobile friendly banane ke liye (Single, 2-grid, 4-grid, 8-grid sabke liye) */
+.photo-grid-preview, 
+.copies-grid-container, 
+.print-copies-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important; /* Mobile par default 2 columns */
+    gap: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Single grid ya full-width items ke liye */
+.photo-grid-preview.single-grid,
+.print-copies-grid.full-width {
+    grid-template-columns: 1fr !important;
+}
+
+/* Photo card aur image containers ko portrait/landscape stretch hone se bachane ke liye */
+.glossy-photo-card, 
+.photo-item-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+/* Images ko box ke andar properly fit rakhne ke liye taaki distortion na ho */
+.glossy-photo-card img, 
+.photo-item-box img {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 220px !important;
+    object-fit: contain !important; /* Image ka aspect ratio maintain rahega, cut nahi hogi */
+    border-radius: 8px;
+}
+
+/* Mobile Screens Specific Tweaks (<= 768px) */
+@media (max-width: 768px) {
+    .glossy-section-container {
+        padding: 8px !important;
+    }
+    
+    .photo-grid-preview, 
+    .copies-grid-container, 
+    .print-copies-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+}
+
+/* ========================================
+   🎯 GLOSSY PHOTO GRID & PREVIEW FIX (FINAL)
+   ======================================== */
+
+/* A4 Page wrapper aur preview canvas ke andar photo grids ko properly fit rakhne ke liye */
+.a4-page-wrapper .photo-grid-preview,
+.a4-page-wrapper .copies-grid-container,
+.a4-page-wrapper [class*="grid"] {
+    width: 100% !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Grids ke andar jitni bhi images hain, unka aspect ratio 100% lock karne ke liye taaki stretch na ho */
+.a4-page-wrapper img,
+.a4-page-wrapper .photo-item-box img,
+.glossy-photo-card img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important; /* Image kabhi nahi kategi aur original shape mein rahegi */
+    display: block !important;
+    margin: auto !important;
+}
+
+/* Mobile responsive container fix taaki layout bahar na nikle */
+@media (max-width: 768px) {
+    .studio-workspace {
+        padding: 10px 4px !important;
+    }
+    .a4-page-wrapper {
+        max-width: 100% !important;
+        transform: scale(0.95);
+        transform-origin: top center;
+    }
+}
+
+/* ========================================
+   📱 STRICT MOBILE VIEWPORT & OVERFLOW FIX
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* 1. Prevent entire body and HTML from horizontal scrolling */
+    html, body {
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* 2. Container and Studio workspace padding fix for mobile */
+    .container, 
+    .studio-workspace {
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding: 8px !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+    }
+
+    /* 3. A4 Preview Page Mobile Scaling (Fit to mobile screen without breaking) */
+    .a4-page-wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: auto !important;
+        aspect-ratio: 1 / 1.414; /* Maintains A4 proportion perfectly on mobile */
+        margin: 0 auto !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 4. Glossy & Document Grids inside mobile */
+    .photo-grid-preview, 
+    .copies-grid-container, 
+    .print-copies-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
+        width: 100% !important;
+    }
+
+    /* 5. Form cards and buttons full width fit */
+    .auth-card, 
+    .wallet-modal-card, 
+    .verbatim-docs-promo-card {
+        width: 95% !important;
+        max-width: 100% !important;
+        margin: 0 auto !important;
+        padding: 15px !important;
+    }
+}
+
+
+/* ========================================
+   📱 FOCUSED MOBILE & GLOSSY GRID FIX (APPEND TO BOTTOM)
+   ======================================== */
+
+/* 1. Prevent Photo/Copies Grid from overflowing on mobile */
+.photo-grid-preview, 
+.copies-grid-container, 
+.print-copies-grid,
+.glossy-photo-container, 
+.photo-selection-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+    gap: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+}
+
+/* 2. Image aspect ratio safeguard inside preview and cards */
+.a4-page-wrapper img,
+.a4-page-wrapper .photo-item-box img,
+.glossy-photo-card img,
+.photo-item-box img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    display: block !important;
+    margin: auto !important;
+}
+
+/* 3. Mobile screen strict optimizations */
+@media (max-width: 768px) {
+    html, body {
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+    }
+
+    .container, 
+    .studio-workspace {
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding: 8px !important;
+        box-sizing: border-box !important;
+    }
+
+    .photo-grid-preview, 
+    .copies-grid-container, 
+    .print-copies-grid,
+    .glossy-photo-container, 
+    .photo-selection-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        padding: 0 4px !important;
+    }
+
+    .a4-page-wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: auto !important;
+        aspect-ratio: 1 / 1.414;
+        margin: 0 auto !important;
+    }
+}
+
+/* ========================================
+   🖨️ STRICT A4 SHEET & GLOSSY GRID PROPORTION LOCK
+   ======================================== */
+
+/* 1. Virtual A4 Sheet container ko sabhi devices pe exact proportions par lock karna */
+.a4-page-wrapper {
+    width: 210mm !important;
+    max-width: 210mm !important;
+    min-height: 297mm !important;
+    height: 297mm !important;
+    background: #ffffff !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    position: relative !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+}
+
+/* Landscape mode ke liye */
+.a4-page-wrapper.landscape {
+    width: 297mm !important;
+    max-width: 297mm !important;
+    min-height: 210mm !important;
+    height: 210mm !important;
+}
+
+/* 2. Grids aur Photos ko A4 sheet ke andar strict fit rakhna */
+.a4-page-wrapper .photo-grid-preview,
+.a4-page-wrapper .copies-grid-container,
+.a4-page-wrapper .print-copies-grid {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    padding: 10mm !important; /* A4 margin spacing */
+    gap: 5mm !important;
+    align-content: center !important;
+    justify-content: center !important;
+}
+
+/* Single Photo Layout: Full A4 Fit */
+.a4-page-wrapper .photo-grid-preview.single-grid,
+.a4-page-wrapper .print-copies-grid.full-width {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 1fr !important;
+    padding: 5mm !important;
+}
+
+/* 2 Photos Layout: Exact 2 large sections on A4 */
+.a4-page-wrapper .photo-grid-preview.two-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: repeat(2, 1fr) !important;
+}
+
+/* Images inside A4: Never stretch, maintain strict aspect ratio */
+.a4-page-wrapper img,
+.a4-page-wrapper .photo-item-box img,
+.glossy-photo-card img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important; /* Strict proportion without cutting or stretching */
+    display: block !important;
+    margin: auto !important;
+}
+
+/* 3. Mobile aur Tablet screens par A4 sheet ko properly scale down karna taaki cut na ho */
+@media (max-width: 768px) {
+    .studio-workspace {
+        padding: 15px 5px !important;
+        overflow-x: auto !important;
+    }
+
+    /* Mobile screen par A4 sheet ko responsive scale dena jabki physical ratio wahi rahe */
+    .a4-page-wrapper {
+        transform: scale(0.65);
+        transform-origin: top center;
+        margin-bottom: -100mm !important; /* Scale gap adjustment */
+    }
+}
+
+@media (max-width: 480px) {
+    .a4-page-wrapper {
+        transform: scale(0.52);
+        transform-origin: top center;
+        margin-bottom: -130mm !important;
+    }
+}
+
+/* ========================================
+   📸 STRICT PASSPORT & GLOSSY A4 GRID LOCK
+   ======================================== */
+
+/* Passport / Multi-photo grid layout on A4 */
+.a4-page-wrapper .photo-grid-preview,
+.a4-page-wrapper .copies-grid-container,
+.a4-page-wrapper .print-copies-grid {
+    display: grid !important;
+    width: 100% !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+    padding: 12mm !important;
+    gap: 4mm !important;
+    align-content: start !important;
+    justify-content: center !important;
+}
+
+/* 8/12 Copies (Passport size): 4 photos per row */
+.a4-page-wrapper .copies-grid-container,
+.a4-page-wrapper .photo-grid-preview.passport-grid {
+    grid-template-columns: repeat(4, 1fr) !important; /* Ek line mein strict 4 photos */
+}
+
+/* 2 Photos Layout: 2 side-by-side or stacked correctly */
+.a4-page-wrapper .photo-grid-preview.two-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+}
+
+/* Single Photo Layout: Full A4 */
+.a4-page-wrapper .photo-grid-preview.single-grid,
+.a4-page-wrapper .print-copies-grid.full-width {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 1fr !important;
+}
+
+/* Grid items aur images par strict proportions */
+.a4-page-wrapper .photo-item-box,
+.a4-page-wrapper .glossy-photo-card {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+}
+
+.a4-page-wrapper img,
+.a4-page-wrapper .photo-item-box img,
+.glossy-photo-card img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    display: block !important;
+}
+
+/* Mobile & Tablet scaling adjustments for exact A4 preview */
+@media (max-width: 768px) {
+    .studio-workspace {
+        padding: 10px 4px !important;
+    }
+    .a4-page-wrapper {
+        transform: scale(0.62);
+        transform-origin: top center;
+        margin-bottom: -110mm !important;
+    }
+}
+
+/* ========================================
+   🖨️ SAFE & FOCUSED A4 & GLOSSY GRID LOCK
+   ======================================== */
+
+/* 1. Virtual A4 Sheet container exact proportions par lock */
+.a4-page-wrapper {
+    width: 210mm !important;
+    max-width: 210mm !important;
+    min-height: 297mm !important;
+    height: 297mm !important;
+    background: #ffffff !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    position: relative !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+}
+
+/* Landscape mode ke liye */
+.a4-page-wrapper.landscape {
+    width: 297mm !important;
+    max-width: 297mm !important;
+    min-height: 210mm !important;
+    height: 210mm !important;
+}
+
+/* 2. Passport & Glossy Grids alignment inside A4 */
+.a4-page-wrapper .photo-grid-preview,
+.a4-page-wrapper .copies-grid-container,
+.a4-page-wrapper .print-copies-grid {
+    display: grid !important;
+    width: 100% !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+    padding: 12mm !important;
+    gap: 4mm !important;
+    align-content: start !important;
+    justify-content: center !important;
+}
+
+/* 3. Images inside A4: Strict contain without stretching or cutting */
+.a4-page-wrapper img,
+.a4-page-wrapper .photo-item-box img,
+.glossy-photo-card img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    display: block !important;
+    margin: auto !important;
+}
+
+/* 4. Mobile & Tablet responsive scaling */
+@media (max-width: 768px) {
+    .studio-workspace {
+        padding: 10px 4px !important;
+        overflow-x: auto !important;
+    }
+    .a4-page-wrapper {
+        transform: scale(0.62);
+        transform-origin: top center;
+        margin-bottom: -110mm !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .a4-page-wrapper {
+        transform: scale(0.50);
+        transform-origin: top center;
+        margin-bottom: -140mm !important;
+    }
+}
+
+/* ========================================
+   📸 GLOSSY GRID WRAPPER MOBILE RESPONSIVE SCALING
+   ======================================== */
+.glossy-grid-wrapper {
+    width: 210mm !important;
+    max-width: 210mm !important;
+    min-height: 297mm !important;
+    background: #ffffff !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+}
+
+@media (max-width: 768px) {
+    .glossy-grid-wrapper {
+        transform: scale(0.62);
+        transform-origin: top center;
+        margin-bottom: -110mm !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .glossy-grid-wrapper {
+        transform: scale(0.50);
+        transform-origin: top center;
+        margin-bottom: -140mm !important;
+    }
+}

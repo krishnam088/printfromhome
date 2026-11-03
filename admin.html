@@ -1,0 +1,2326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="data:,">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Print From Home - Admin Control Center</title>
+    
+    <link rel="manifest" href="/manifest-admin.json">
+    <meta name="theme-color" content="#0070f3">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root {
+            --bg-dark: #0f172a;
+            --surface-card: #1e293b;
+            --surface-card-hover: #273549;
+            --accent-blue: #0070f3;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --border-color: #334155;
+        }
+
+        /* 🔥 Blinking Animation for Low Stock Alert */
+        @keyframes blink { 
+            0% { opacity: 1; } 
+            50% { opacity: 0.2; } 
+            100% { opacity: 1; } 
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        .admin-sidebar {
+            width: 260px;
+            background: var(--surface-card);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 20px;
+            position: fixed;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+        .sidebar-brand h2 { font-size: 1.1rem; font-weight: 800; color: white; }
+        .sidebar-brand h2 span { color: var(--accent-blue); }
+        .sidebar-menu { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+        .sidebar-item {
+            padding: 12px 16px; border-radius: 10px; font-size: 0.88rem; font-weight: 700;
+            color: var(--text-sub); cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 10px;
+        }
+        .sidebar-item:hover, .sidebar-item.active { background: var(--surface-card-hover); color: var(--text-main); }
+
+        .admin-main-content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 24px;
+            width: calc(100% - 260px);
+            max-width: 1400px;
+        }
+
+        .admin-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface-card);
+            padding: 18px 24px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .brand-title h1 { font-size: 1.3rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .brand-title h1 span { color: var(--accent-blue); }
+        .brand-title p { font-size: 0.72rem; color: var(--text-sub); margin-top: 2px; }
+
+        .header-action-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-badge-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .btn-store-open { background: var(--accent-green); color: white; }
+        .btn-store-closed { background: var(--accent-red); color: white; }
+        .btn-autoprint-on { background: #0284c7; color: white; }
+        .btn-autoprint-off { background: #475569; color: #cbd5e1; }
+        .btn-rain-on { background: #0284c7; color: white; border: 1px solid #38bdf8; }
+        .btn-rain-off { background: #334155; color: #94a3b8; border: 1px solid #475569; }
+        .btn-scanner { background: #8b5cf6; color: white; }
+        .btn-history { background: #3b82f6; color: white; }
+        .btn-storeqr { background: #f59e0b; color: #000000; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; }
+
+        .admin-section { display: none; }
+        .admin-section.active { display: block; }
+
+        #barcodeScannerModal {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 20000;
+            display: none; justify-content: center; align-items: center; padding: 20px;
+        }
+        .scanner-card {
+            background: var(--surface-card); border-radius: 20px; padding: 24px;
+            max-width: 420px; width: 100%; border: 1px solid var(--border-color); text-align: center;
+        }
+
+        #oldOrdersArchiveModal {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 30000;
+            display: none; justify-content: flex-end;
+        }
+        .archive-drawer-card {
+            background: var(--surface-card); width: 100%; max-width: 540px; height: 100vh;
+            display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.3); overflow: hidden;
+            border-left: 1px solid var(--border-color); animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideLeft { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+        .stat-card {
+            background: var(--surface-card); border: 1px solid var(--border-color);
+            padding: 16px; border-radius: 14px; display: flex; flex-direction: column; gap: 4px;
+        }
+        .stat-title { font-size: 0.78rem; font-weight: 600; color: var(--text-sub); text-transform: uppercase; }
+        .stat-num { font-size: 1.6rem; font-weight: 800; color: var(--text-main); }
+
+        .section-heading-bar {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 4px;
+            flex-wrap: wrap; gap: 10px;
+        }
+        .section-heading-bar h2 { font-size: 1.15rem; font-weight: 800; }
+        .audio-test-btn {
+            background: transparent; border: 1px solid var(--border-color); color: var(--text-sub);
+            padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; font-weight: 600;
+        }
+
+        .order-queue-list { display: flex; flex-direction: column; gap: 16px; }
+
+        .order-card {
+            background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px;
+            padding: 20px; display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden;
+        }
+        .order-card.cancelled { border-color: var(--accent-red); opacity: 0.85; background: rgba(239, 68, 68, 0.03); }
+
+        .order-card-header {
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start;
+            border-bottom: 1px dashed var(--border-color); padding-bottom: 12px; gap: 10px;
+        }
+        .order-id-meta h3 { font-size: 1.05rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .order-time { font-size: 0.72rem; color: var(--text-sub); margin-top: 2px; }
+
+        .order-customer-box {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;
+            background: rgba(15, 23, 42, 0.6); padding: 12px 16px; border-radius: 12px; font-size: 0.82rem; border: 1px solid rgba(255,255,255,0.04);
+        }
+        .cust-field b { color: var(--accent-blue); font-size: 0.72rem; display: block; text-transform: uppercase; margin-bottom: 2px; }
+
+        .specs-container { background: rgba(0, 112, 243, 0.05); border: 1px solid rgba(0, 112, 243, 0.2); border-radius: 12px; padding: 14px; }
+        .specs-title { font-size: 0.8rem; font-weight: 800; color: var(--accent-blue); text-transform: uppercase; margin-bottom: 8px; }
+        .spec-tag { background: var(--surface-card); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; color: var(--text-main); }
+        .spec-tag.highlight { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-green); color: var(--accent-green); }
+
+        .packing-list-box { background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 12px; padding: 12px 14px; }
+        .packing-title { font-size: 0.78rem; font-weight: 800; color: var(--accent-yellow); text-transform: uppercase; margin-bottom: 6px; }
+        .packing-item-row { display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,0.05); align-items: center; }
+
+        .file-action-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+        .btn-download-file { background: #334155; color: white; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-manual-print { background: var(--accent-blue); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+
+        .stepper-actions-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 10px; border-top: 1px dashed var(--border-color); }
+        .stepper-label { font-size: 0.75rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; margin-right: 4px; }
+        .btn-step {
+            padding: 8px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;
+            border: 1px solid var(--border-color); background: var(--surface-card); color: var(--text-sub); transition: all 0.15s ease;
+        }
+        .btn-step.active { background: var(--accent-green); color: white; border-color: var(--accent-green); }
+        .btn-step.current-phase { background: var(--accent-yellow); color: black; border-color: var(--accent-yellow); font-weight: 800; }
+        .btn-step:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .inventory-table {
+            width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.82rem; background: var(--surface-card); border-radius: 12px; overflow: hidden;
+        }
+        .inventory-table th, .inventory-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .inventory-table th { background: rgba(0,0,0,0.2); font-weight: 800; color: var(--text-sub); text-transform: uppercase; font-size: 0.72rem; }
+        .inventory-table tr:hover { background: var(--surface-card-hover); }
+
+        #silentPrintFrame { display: none; width: 0; height: 0; border: 0; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .admin-sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 12px;
+                gap: 10px;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+            .sidebar-brand { display: none; }
+            .sidebar-menu { flex-direction: row; width: 100%; justify-content: space-around; gap: 4px; }
+            .sidebar-item { padding: 8px 12px; font-size: 0.78rem; white-space: nowrap; }
+            .admin-main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <iframe id="silentPrintFrame"></iframe>
+
+    <div id="barcodeScannerModal">
+        <div class="scanner-card">
+            <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 6px;">📷 Product Barcode & SKU Scanner</h3>
+            <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 10px;">Use live camera or type SKU/UPC manually below.</p>
+            
+            <div id="cameraScannerContainer" style="display:none; width: 100%; height: 180px; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 10px; position: relative;">
+                <div id="liveCameraVideoFeed" style="width: 100%; height: 100%;"></div>
+                <div style="position: absolute; inset: 0; border: 2px dashed rgba(16,185,129,0.7); pointer-events: none; z-index: 10;"></div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <button type="button" id="btnToggleCamera" onclick="toggleCameraScanner()" style="flex: 1; padding: 8px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">📷 Open Camera</button>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 14px; border: 2px dashed var(--border-color); margin-bottom: 12px;">
+                <input type="text" id="barcodeInputScanField" placeholder="Type Barcode / UPC / SKU..." oninput="autoDetectProductByBarcode(this.value)" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 700; text-align: center; outline: none;">
+            </div>
+
+            <div id="scannerDetectedFeedbackBox" style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-green); border-radius: 10px; padding: 10px; margin-bottom: 15px; display: none; text-align: left;">
+                <p style="font-size: 0.72rem; font-weight: 800; color: var(--accent-green); text-transform: uppercase;">⚡ Verified Match:</p>
+                <p id="detectedProductNameText" style="font-size: 0.85rem; font-weight: 700; color: white; margin-top: 2px;"></p>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="button" onclick="processScannedBarcode()" style="flex: 1; padding: 10px; background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Verify / Fill</button>
+                <button type="button" onclick="closeBarcodeScannerModal()" style="padding: 10px 16px; background: var(--accent-red); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ORDER HISTORY REGISTER DRAWER -->
+    <div id="oldOrdersArchiveModal" onclick="toggleOldOrdersArchiveModal(false)">
+        <div class="archive-drawer-card" onclick="event.stopPropagation()">
+            <div style="padding: 18px 20px; background: var(--bg-dark); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-size: 1.05rem; font-weight: 800; color: white;">📁 Order History Register</h3>
+                <span style="cursor: pointer; font-size: 1.5rem; font-weight: bold; color: var(--text-sub);" onclick="toggleOldOrdersArchiveModal(false)">&times;</span>
+            </div>
+            <div style="padding: 12px 20px; background: rgba(59, 130, 246, 0.08); border-bottom: 1px solid var(--border-color); display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <!-- 🔥 Yahan onclick="this.showPicker()" add kar diya gaya hai -->
+                <input type="date" id="historyDateFilter" onclick="this.showPicker()" onchange="renderOrderHistoryList()" style="padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.78rem; outline: none; cursor: pointer;">
+                <input type="text" id="historySearchInput" placeholder="Search by Order ID (#)..." oninput="renderOrderHistoryList()" style="flex: 1; min-width: 130px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.78rem; outline: none;">
+            </div>
+            <div style="padding: 10px 20px; background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 700;">
+                <span style="color: var(--text-sub);">Selected Date Total Orders:</span>
+                <span id="historyDateTotalCountBadge" style="color: var(--accent-green); font-size: 0.95rem;">0 orders</span>
+            </div>
+            <div id="oldOrdersArchiveList" style="flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                <div style="text-align: center; padding: 30px; color: var(--text-sub);">Loading order history...</div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 🛠️ ADMIN ADD & EDIT PRODUCT MODAL (NEW UPDATE) -->
+    <div id="adminProductModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:99999; align-items:center; justify-content:center;">
+        <div style="background:var(--surface-card); padding:24px; border-radius:16px; width:90%; max-width:480px; max-height:90vh; overflow-y:auto; border:1px solid var(--border-color); box-shadow:0 10px 25px rgba(0,0,0,0.3);">
+            <h3 id="adminModalTitle" style="font-weight:800; font-size:1.15rem; margin-bottom:16px; color:white;">Add New Store Product</h3>
+            
+            <form id="adminProductForm" onsubmit="submitAdminProductForm(event)">
+                <input type="hidden" id="editProductId" value="">
+                
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">Product Name *</label>
+                    <input type="text" id="adminProdName" placeholder="e.g. Lays Magic Masala" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); background:var(--bg-dark); color:white; border-radius:8px; font-size:0.85rem;" required>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+                    <div>
+                        <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">Selling Price (₹) *</label>
+                        <input type="number" id="adminProdPrice" placeholder="20" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); background:var(--bg-dark); color:white; border-radius:8px; font-size:0.85rem;" required>
+                    </div>
+                    <div>
+                        <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">Stock Qty *</label>
+                        <input type="number" id="adminProdStock" placeholder="50" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); background:var(--bg-dark); color:white; border-radius:8px; font-size:0.85rem;" required>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">Category / Department *</label>
+                    <input type="text" id="adminProdCategory" placeholder="e.g. Munchies, Pharma, Milk, Dairy, Bakery" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); background:var(--bg-dark); color:white; border-radius:8px; font-size:0.85rem;" list="categorySuggestions" required>
+                    <datalist id="categorySuggestions">
+                        <option value="munchies">
+                        <option value="snacks">
+                        <option value="socks">
+                        <option value="dairy">
+                        <option value="pharma">
+                        <option value="bakery">
+                        <option value="beverages">
+                    </datalist>
+                </div>
+
+                <!-- 📝 Optional Description -->
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">Optional Description</label>
+                    <textarea id="adminProdDesc" placeholder="Enter product ingredients, weight, size, or details..." rows="3" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); background:var(--bg-dark); color:white; border-radius:8px; font-size:0.85rem; resize:none;"></textarea>
+                </div>
+
+                <!-- 🖼️ Multiple Image URLs -->
+                <div style="margin-bottom:16px;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-sub);">Product Image URLs (Comma separated for multiple)</label>
+                    <input type="text" id="adminProdImages" placeholder="https://img1.com/a.jpg, https://img2.com/b.jpg" style="width:100%; padding:10px 12px; border:1px solid var(--border-color); background:var(--bg-dark); color:white; border-radius:8px; font-size:0.85rem;">
+                    <span style="font-size:0.65rem; color:var(--text-sub);">You can paste multiple image links separated by commas. First image will be primary.</span>
+                </div>
+
+                <div style="display:flex; gap:10px;">
+                    <button type="submit" style="flex:1; background:var(--accent-green); color:white; border:none; padding:12px; border-radius:8px; font-weight:800; font-size:0.85rem; cursor:pointer;">Save Product</button>
+                    <button type="button" onclick="closeAdminProductModal()" style="background:var(--border-color); color:white; border:none; padding:12px 16px; border-radius:8px; font-weight:700; font-size:0.85rem; cursor:pointer;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <nav class="admin-sidebar">
+        <div class="sidebar-brand">
+            <h2>Print<span>Admin</span></h2>
+        </div>
+      <ul class="sidebar-menu">
+    <li class="sidebar-item active" id="nav_dashboard" onclick="switchAdminTab('dashboard')">📊 Dashboard</li>
+    <li class="sidebar-item" id="nav_orders" onclick="switchAdminTab('orders')">📦 Orders Queue</li>
+    <li class="sidebar-item" id="nav_inventory" onclick="switchAdminTab('inventory')">📦 Inventory</li>
+    <li class="sidebar-item" id="nav_users" onclick="switchAdminTab('users')">👥 Registered Users</li>
+    <li class="sidebar-item" id="nav_marketing" onclick="switchAdminTab('marketing')">📢 Marketing & Alerts</li>
+    <!-- 🔥 Yahan Store Timings ka item add karein -->
+        <li class="sidebar-item" id="nav_timings" onclick="switchAdminTab('timings')">⏰ Store Timings</li>
+        <li class="sidebar-item" id="nav_payouts" onclick="switchAdminTab('payouts')">🏦 Rider Payouts</li>
+        <li class="sidebar-item" id="nav_riders" onclick="switchAdminTab('riders')">🛵 Live Riders Monitor</li>
+    
+    <li class="sidebar-item" id="nav_fees" onclick="switchAdminTab('fees')">⚙️ Fee & Coupons Setup</li>
+   
+</ul>
+    </nav>
+
+    <div class="admin-main-content">
+        
+        <header class="admin-header">
+            <div class="brand-title">
+                <h1>Print From Home <span>Control Center</span></h1>
+                <p>Real-Time Hardware Dispatch & Store Operations</p>
+            </div>
+
+            <div class="header-action-group">
+    <a href="/store-qr" target="_blank" class="toggle-badge-btn btn-storeqr">📱 Store QR Screen</a>
+    <button type="button" class="toggle-badge-btn btn-history" onclick="toggleOldOrdersArchiveModal(true)">📁 Order History</button>
+    <button type="button" class="toggle-badge-btn btn-scanner" onclick="openBarcodeScannerModal()">📷 Scan Barcode</button>
+    <!-- 🔥 Yeh naya Print Service Toggle Button add karein -->
+    <button type="button" id="printToggleBtn" class="toggle-badge-btn btn-autoprint-on" onclick="toggleAdminPrintSwitch()">🖨️ Print Service: <span id="printSwitchStateText">ON</span></button>
+    <button type="button" id="rainSurgeToggleBtn" class="toggle-badge-btn btn-rain-off" onclick="toggleAdminRainSurge()">🌧️ Rain Surge: <span id="rainSurgeStateText">OFF</span></button>
+    <button type="button" id="autoPrintToggleBtn" class="toggle-badge-btn btn-autoprint-on" onclick="toggleAutoPrintEngine()">🖨️ Auto-Print: <span id="autoPrintStatusText">ON</span></button>
+   
+    <button type="button" id="storeStatusToggleBtn" class="toggle-badge-btn btn-store-open" onclick="toggleStoreStatus()">🏪 Store: <span id="storeStatusStateText">OPEN</span></button>
+   <button type="button" id="glossyToggleBtn" class="toggle-badge-btn btn-rain-off" onclick="toggleAdminGlossySystem()">✨ Glossy System: <span id="glossyStateText">OFF</span></button>
+    <button type="button" id="btnInstallAdmin">📥 Install Admin App</button>
+</div>
+
+<div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+    <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+        <span style="font-weight: 800; font-size: 0.85rem; color: #0f172a;">💵 Enable COD for Print Orders (Admin Control)</span>
+        <input type="checkbox" id="adminCodForPrintToggle" style="width: 20px; height: 20px; accent-color: #065f46; cursor: pointer;">
+    </label>
+    <p style="font-size: 0.72rem; color: #64748b; margin-top: 4px;">Turn this ON to allow Cash on Delivery for print orders (used for testing and future scaling).</p>
+</div>
+               
+        </header>
+
+    <!-- TAB 1: DASHBOARD -->
+        <div id="section_dashboard" class="admin-section active">
+            <div class="section-heading-bar" style="margin-bottom: 16px;">
+                <h2>📊 Dashboard Analytics</h2>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-sub);">Filter Date:</label>
+                    <!-- 🔥 Yahan onclick="this.showPicker()" add kar diya gaya hai -->
+                    <input type="date" id="dashboardDateFilter" onclick="this.showPicker()" onchange="fetchDashboardStats()" style="padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-card); color: white; font-size: 0.78rem; font-weight: 700; outline: none; cursor: pointer;">
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-title">Total Orders (Selected Date)</span>
+                    <span class="stat-num" id="statDashTotalOrders">0</span>
+                </div>
+              
+                <div class="stat-card">
+                    <span class="stat-title">Total Sales</span>
+                    <span class="stat-num" id="statDashTotalSales" style="color: #38bdf8;">₹0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Store Varieties</span>
+                    <span class="stat-num" id="statDashVarieties" style="color: #38bdf8;">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Stock Valuation</span>
+                    <span class="stat-num" id="statDashStockVal" style="color: var(--accent-yellow);">₹0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Net Profit (Selected Date)</span>
+                    <span class="stat-num" id="statDashNetProfit" style="color: var(--accent-green);">₹0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Delivery Fees Coll.</span>
+                    <span class="stat-num" id="statDashDeliveryFees" style="color: var(--accent-blue);">₹0</span>
+                </div>
+                <div class="stat-card" id="restockSuggestionCard">
+                    <span class="stat-title">🚨 Predictive Restock</span>
+                    <div id="restockList" style="font-size: 0.75rem; color: var(--accent-red);">Checking sales...</div>
+                </div>
+            </div>
+
+            <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px;">
+                <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px;">📈 Store Financial & Profit/Loss Overview</h3>
+                <div style="background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
+                    <canvas id="storeProfitTrendChart" style="width: 100%; max-height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: ORDERS SECTION -->
+        <div id="section_orders" class="admin-section">
+            <div class="section-heading-bar">
+                <h2>📦 Today's Live Print & Product Queue (Newest First)</h2>
+                <button type="button" class="audio-test-btn" onclick="playLoudOrderChime()">🔔 Test Sound Alert</button>
+            </div>
+            <div class="order-queue-list" id="adminOrderQueue">
+                <div style="text-align: center; padding: 40px; color: var(--text-sub);">⏳ Connecting to live orders stream...</div>
+            </div>
+        </div>
+        
+        <!-- 🔥 Diwali Launch Mode Toggle Button -->
+<button type="button" id="diwaliToggleBtn" class="toggle-badge-btn btn-rain-off" onclick="toggleAdminDiwaliLaunch()">🪔 Diwali Launch: <span id="diwaliSwitchStateText">OFF</span></button>
+        <!-- TAB: LIVE RIDERS MONITOR -->
+<div id="section_riders" class="admin-section" style="background: var(--surface-card); border-radius: 16px; padding: 22px; border: 1px solid var(--border-color);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="font-size: 1.15rem; font-weight: 800;">🛵 Delivery Partners Live Status & Quick Reminders</h3>
+        <button type="button" onclick="fetchAdminActiveRiders()" style="background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.75rem; cursor: pointer;">🔄 Refresh Status</button>
+    </div>
+    <div style="overflow-x: auto;">
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th>Partner Name</th>
+                    <th>Mobile</th>
+                    <th>Duty Status</th>
+                    <th>Today Earnings</th>
+                    <th>Action / Quick Alert</th>
+                </tr>
+            </thead>
+            <tbody id="adminActiveRidersTableBody">
+                <tr><td colspan="5" style="text-align: center; color: var(--text-sub); padding: 20px;">Loading delivery partners...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+        <!-- TAB 3: INVENTORY MANAGEMENT SECTION -->
+        <div id="section_inventory" class="admin-section">
+            <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px; margin-bottom: 22px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <h3 style="font-size: 1.15rem; font-weight: 800;">📊 Store Inventory, UPC Barcode & Restock Tracker</h3>
+                    <button type="button" onclick="openAddProductModal()" style="background: var(--accent-blue); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; cursor: pointer;">+ Add New Product (Advanced)</button>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 15px;">
+                    <div style="display: flex; gap: 6px;">
+                        <input type="text" id="invSkuInput" placeholder="Scan/Type Barcode (UPC)" oninput="autoFillInventoryProduct(this.value)" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
+                        <button type="button" onclick="openBarcodeScannerModal('inventory')" style="background: #8b5cf6; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; padding: 0 12px; font-size: 0.8rem;">📷 Scan</button>
+                    </div>
+                    <input type="text" id="invNameInput" placeholder="Product Name (e.g. Lays)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
+                    <input type="number" id="invPurchasePrice" placeholder="Purchase Price (₹)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
+                    <input type="number" id="invSellingPrice" placeholder="Selling Price (₹)" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
+                    <input type="number" id="invQtyInput" placeholder="Add / Restock Qty" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-weight: 600; font-size: 0.8rem; outline: none;">
+                    
+                    <div style="grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; background: var(--bg-dark); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <label style="font-size: 0.75rem; color: var(--text-sub); font-weight:700;">HD Product Image (Optional):</label>
+                        <input type="file" id="invImageFile" accept="image/*" style="color: white; font-size: 0.8rem;">
+                    </div>
+                    <button type="button" onclick="addNewStockItem()" style="background: var(--accent-green); color: white; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; padding: 12px; grid-column: 1 / -1;">+ Save / Restock Product</button>
+                </div>
+            </div>
+
+            <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px;">
+                <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 10px;">📋 Live Store Stock Register</h3>
+                <div style="overflow-x: auto;">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Image</th>
+                                <th>Product Name</th>
+                                <th>UPC Barcode / SKU</th>
+                                <th>Purchase Cost</th>
+                                <th>Selling Price</th>
+                                <th>Stock Left</th>
+                                <th>Total Sold</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryProductsTableBody">
+                            <tr><td colspan="9" style="text-align: center; color: var(--text-sub); padding: 30px;">Loading inventory...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: REGISTERED USERS MANAGEMENT -->
+<div id="section_users" class="admin-section">
+    <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 style="font-size: 1.15rem; font-weight: 800;">👥 Registered App Users Directory</h3>
+            <span id="adminUsersCountBadge" style="background: rgba(0, 112, 243, 0.15); color: #38bdf8; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.8rem;">Total Users: 0</span>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>User Name</th>
+                        <th>Mobile Number (Identity)</th>
+                        <th>Gmail Address</th>
+                        <th>Account Created On</th>
+                    </tr>
+                </thead>
+                <tbody id="adminUsersTableBody">
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-sub); padding: 30px;">Loading users directory...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+        <!-- TAB 4: MARKETING SECTION -->
+        <div id="section_marketing" class="admin-section">
+            <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; max-width: 750px;">
+                <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 8px;">📢 Broadcast Gmail Notifications</h3>
+                <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 20px;">Send personalized 2026 festive offers, deals, or stock alerts directly to all registered users' Gmail inboxes.</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div style="background: rgba(0, 112, 243, 0.08); border: 1px solid rgba(0, 112, 243, 0.3); border-radius: 12px; padding: 14px;">
+                        <label style="font-size: 0.8rem; font-weight: 800; color: #38bdf8; display: block; margin-bottom: 6px;">⚡ Quick Festival / Holiday Template (2026):</label>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <select id="festivalTemplateDropdown" onchange="applySelectedFestivalTemplate(this.value)" style="flex: 1; min-width: 200px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.82rem; font-weight: 700; outline: none;">
+                                <option value="">-- Choose Festival Template to Auto-Fill --</option>
+                            </select>
+                            <button type="button" onclick="loadFestivalTemplatesFromServer()" style="background: #334155; color: white; border: none; padding: 10px 14px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">🔄 Refresh</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-sub); display: block; margin-bottom: 6px;">Notification Subject / Title:</label>
+                        <input type="text" id="broadcastSubjectInput" placeholder="e.g. Special Festive Offer: Exclusive Printing Deals for You!" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.85rem; outline: none;">
+                    </div>
+
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label style="font-size: 0.78rem; font-weight: 700; color: var(--text-sub);">Message Body (Personalized Greeting Added Automatically):</label>
+                            <button type="button" onclick="saveCurrentDraftAsPermanent()" style="background: transparent; border: none; color: #38bdf8; font-size: 0.72rem; font-weight: 700; cursor: pointer;">💾 Save as Default</button>
+                        </div>
+                        <textarea id="broadcastMessageInput" rows="6" placeholder="We are excited to share our latest festive calendar deals with you..." style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; font-size: 0.85rem; outline: none; resize: vertical;"></textarea>
+                    </div>
+
+                    <button type="button" onclick="sendBroadcastNotification(event)" style="background: var(--accent-blue); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 800; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        🚀 Send Broadcast Email to All Users
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- TAB: STORE TIMINGS SETUP -->
+<div id="section_timings" class="admin-section" style="background: var(--surface-card); border-radius: 16px; padding: 28px; border: 1px solid var(--border-color); max-width: 650px;">
+    <h3 style="font-size: 1.25rem; font-weight: 900; color: white; margin-bottom: 6px;">⏰ Store Operating Timings</h3>
+    <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 22px;">Set daily opening and closing hours for the store. Orders will be restricted outside these hours if auto-timing is enforced.</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+        <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
+            <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Opening Time</label>
+            <input type="time" id="adminStoreOpenTime" value="07:00" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
+        </div>
+        <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
+            <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Closing Time</label>
+            <input type="time" id="adminStoreCloseTime" value="22:00" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
+        </div>
+    </div>
+
+    <button type="button" onclick="saveAdminStoreTimings()" style="width: 100%; padding: 14px; background: var(--accent-green); color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">Save Store Timings</button>
+</div>
+
+        <!-- TAB 5: DEDICATED STORE FEES & COUPONS SETUP PANEL -->
+        <div id="section_fees" class="admin-section">
+            <div style="background: var(--surface-card); border: 1px solid var(--border-color); border-radius: 18px; padding: 28px; max-width: 650px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                <h3 style="font-size: 1.25rem; font-weight: 900; color: white; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">⚙️ Store Fees & Live Coupons Management</h3>
+                <p style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 22px;">Configure instant delivery charges, platform fees, rain surge surcharges, and active customer discount codes.</p>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px;">
+                    <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
+                        <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Delivery Fee (₹)</label>
+                        <input type="number" id="adminSettingDeliveryFee" value="25" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
+                    </div>
+                    <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
+                        <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Handling Fee (₹)</label>
+                        <input type="number" id="adminSettingHandlingFee" value="5" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
+                    </div>
+                    <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px;">
+                        <label style="font-size: 0.72rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; display: block; margin-bottom: 6px;">Rain Surge (₹)</label>
+                        <input type="number" id="adminSettingRainFee" value="15" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-weight: 800; font-size: 1rem; outline: none;" />
+                    </div>
+                </div>
+
+                <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+                    <label style="font-size: 0.78rem; font-weight: 800; color: var(--text-main); display: block; margin-bottom: 8px;">🎫 Add New Discount Coupon</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="adminNewCouponCode" placeholder="Code (e.g. SAVE50)" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; outline: none;" />
+                        <input type="text" id="adminNewCouponDesc" placeholder="Description (e.g. Flat ₹50 off)" style="flex: 2; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: white; border-radius: 8px; font-size: 0.85rem; outline: none;" />
+                        <button type="button" onclick="adminAddNewCoupon()" style="background: var(--accent-green); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 800; cursor: pointer;">Add</button>
+                    </div>
+                </div>
+
+                <!-- 🔥 NEW: Printer Hardware Mode Setup Card -->
+                <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+                    <label style="font-size: 0.78rem; font-weight: 800; color: var(--text-main); display: block; margin-bottom: 8px;">🖨️ Printer Hardware Routing Mode</label>
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-dark); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div>
+                            <div style="font-size: 0.82rem; font-weight: 800; color: white;">Single Printer Mode (Paper Swap & Pause)</div>
+                            <div style="font-size: 0.7rem; color: var(--text-sub);">Enabled: Agent pauses for glossy paper prompt on HP Smart Tank 580.<br>Disabled: Routes jobs directly to dual dedicated printers.</div>
+                        </div>
+                        <label style="position: relative; display: inline-block; width: 50px; height: 26px; flex-shrink: 0;">
+                            <input type="checkbox" id="adminSettingSinglePrinterMode" checked style="opacity: 0; width: 0; height: 0;" onchange="saveAdminStoreSettings()">
+                            <span style="position: absolute; cursor: pointer; inset: 0; background-color: #334155; transition: .4s; border-radius: 26px;"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="button" onclick="saveAdminStoreSettings()" style="width: 100%; padding: 14px; background: var(--accent-green); color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">Save Store Settings & Fees</button>
+            </div>
+        </div>
+<div id="section_payouts" class="admin-section" style="display:none; background: var(--surface-card); border-radius: 16px; padding: 22px; border: 1px solid var(--border-color);">
+    <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px;">🏦 Delivery Partner NEFT Payout Register</h3>
+    <div style="overflow-x: auto;">
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th>Partner Name</th>
+                    <th>Mobile</th>
+                    <th>Today Earning</th>
+                    <th>Weekly Earning</th>
+                    <th>Bank Account Details</th>
+                </tr>
+            </thead>
+            <tbody id="adminRidersPayoutTableBody">
+                <tr><td colspan="5" style="text-align: center; color: var(--text-sub); padding: 20px;">Loading payouts...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+    </div>
+
+    <script>
+        async function loadAdminStoreTimings() {
+    try {
+        // 🔥 /api/admin/settings ki jagah /api/store-status se fetch karein taaki exact live timings milein
+        const res = await fetch('/api/store-status');
+        const data = await res.json();
+        if (data.success) {
+            if (data.openTime) {
+                document.getElementById('adminStoreOpenTime').value = data.openTime;
+            }
+            if (data.closeTime) {
+                document.getElementById('adminStoreCloseTime').value = data.closeTime;
+            }
+        }
+    } catch (e) {
+        console.warn("Could not load store timings");
+    }
+}
+
+async function saveAdminStoreTimings() {
+    const openTime = document.getElementById('adminStoreOpenTime').value;
+    const closeTime = document.getElementById('adminStoreCloseTime').value;
+
+    try {
+        const res = await fetch('/api/admin/settings/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ openTime, closeTime })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert('✅ Store timings updated successfully!');
+        } else {
+            alert('❌ Failed to update store timings.');
+        }
+    } catch (e) {
+        alert('❌ Server connection error.');
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    loadAdminStoreTimings();
+});
+
+        async function fetchAdminRegisteredUsers() {
+    try {
+        const res = await fetch('/api/admin/users');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.users)) {
+            const badge = document.getElementById('adminUsersCountBadge');
+            if (badge) badge.textContent = `Total Users: ${data.count}`;
+            
+            const tbody = document.getElementById('adminUsersTableBody');
+            if (!tbody) return;
+            
+            if (data.users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-sub); padding: 30px;">No registered users found yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.users.map((u, idx) => `
+                <tr>
+                    <td><b>${idx + 1}</b></td>
+                    <td style="font-weight: 800; color: white;">👤 ${u.name || 'N/A'}</td>
+                    <td><code>${u.identity || 'N/A'}</code></td>
+                    <td style="color: #38bdf8;">📧 ${u.email || 'Not Provided'}</td>
+                    <td style="color: var(--text-sub); font-size: 0.78rem;">${u.dateCreated || 'N/A'}</td>
+                </tr>
+            `).join('');
+        }
+    } catch (err) {
+        console.error("Failed to load users:", err);
+    }
+}
+        let cachedInventoryList = [];
+        let html5QrCodeScanner = null;
+        let globalLiveOrdersCache = [];
+        let activeTargetOrderIdForScan = null;
+        let temporaryFetchedImageUrl = '';
+        let openDrawers = new Set();
+        let profitChartInstance = null;
+        let globalFestivalTemplates = {};
+
+      function switchAdminTab(tabName) {
+            localStorage.setItem('admin_active_tab', tabName);
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.admin-section').forEach(el => el.classList.remove('active'));
+
+            if (tabName === 'dashboard') {
+                document.getElementById('nav_dashboard').classList.add('active');
+                document.getElementById('section_dashboard').classList.add('active');
+                if (!document.getElementById('dashboardDateFilter').value) {
+                    document.getElementById('dashboardDateFilter').value = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+                }
+                fetchDashboardStats();
+                fetchInventoryReport();
+            } else if (tabName === 'orders') {
+                document.getElementById('nav_orders').classList.add('active');
+                document.getElementById('section_orders').classList.add('active');
+      
+                fetchLiveOrdersStream();
+            } else if (tabName === 'inventory') {
+                document.getElementById('nav_inventory').classList.add('active');
+                document.getElementById('section_inventory').classList.add('active');
+                fetchInventoryReport();
+            } else if (tabName === 'users') {
+                document.getElementById('nav_users').classList.add('active');
+                document.getElementById('section_users').classList.add('active');
+                fetchAdminRegisteredUsers();
+            } else if (tabName === 'marketing') {
+                document.getElementById('nav_marketing').classList.add('active');
+                document.getElementById('section_marketing').classList.add('active');
+                loadFestivalTemplatesFromServer();
+                loadPermanentDraft();
+            } else if (tabName === 'timings') {
+                document.getElementById('nav_timings').classList.add('active');
+                document.getElementById('section_timings').classList.add('active');
+                loadAdminStoreTimings();
+            } else if (tabName === 'fees') {
+                document.getElementById('nav_fees').classList.add('active');
+                document.getElementById('section_fees').classList.add('active');
+            } else if (tabName === 'payouts') {
+                document.getElementById('nav_payouts').classList.add('active');
+                document.getElementById('section_payouts').classList.add('active');
+                fetchAdminRidersPayouts();
+            } else if (tabName === 'riders') {
+                document.getElementById('nav_riders').classList.add('active');
+                document.getElementById('section_riders').classList.add('active');
+                fetchAdminActiveRiders();
+            }
+        }
+        // 🔥 Load Live Settings into Admin Inputs on Panel Open
+      // 🔥 Load Live Settings into Admin Inputs on Panel Open
+     // 🔥 Load Live Settings into Admin Inputs on Panel Open
+   
+async function loadAdminPanelSettings() {
+            try {
+                const res = await fetch('/api/admin/settings');
+                const data = await res.json();
+                if (data.success && data.settings) {
+                    const dField = document.getElementById('adminSettingDeliveryFee');
+                    const hField = document.getElementById('adminSettingHandlingFee');
+                    const rField = document.getElementById('adminSettingRainFee');
+                    const singlePrinterToggle = document.getElementById('adminSettingSinglePrinterMode'); // 🔥 Added
+                    const codToggle = document.getElementById('adminCodForPrintToggle'); // 🔥 Added (COD Toggle)
+
+                    // 🔥 Strict checks supporting explicit 0 values without defaulting
+                    if (dField) dField.value = (data.settings.deliveryFee !== undefined && data.settings.deliveryFee !== null && data.settings.deliveryFee !== '') ? data.settings.deliveryFee : 25;
+                    if (hField) hField.value = (data.settings.handlingFee !== undefined && data.settings.handlingFee !== null && data.settings.handlingFee !== '') ? data.settings.handlingFee : 5;
+                    if (rField) rField.value = (data.settings.rainFee !== undefined && data.settings.rainFee !== null && data.settings.rainFee !== '') ? data.settings.rainFee : 15;
+                    
+                    // 🔥 Load Single Printer Mode state
+                    if (singlePrinterToggle) {
+                        singlePrinterToggle.checked = data.settings.singlePrinterMode !== false;
+                    }
+
+                    // 🔥 Load COD for Print state
+                    if (codToggle) {
+                        codToggle.checked = data.settings.codForPrintEnabled !== false;
+                    }
+                }
+            } catch (e) {
+                console.warn("Could not load admin settings");
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadAdminPanelSettings();
+        });
+
+     // 🔥 Admin Store Settings & Fees Save Engine (Including COD, Rain Fee & Single Printer Mode)
+window.saveAdminStoreSettings = async function() {
+    const deliveryField = document.getElementById('adminSettingDeliveryFee');
+    const handlingField = document.getElementById('adminSettingHandlingFee');
+    const rainField = document.getElementById('adminSettingRainFee');
+    const codPrintToggle = document.getElementById('adminCodForPrintToggle'); // 🔥 COD Toggle Element
+    const singlePrinterToggle = document.getElementById('adminSettingSinglePrinterMode'); // 🔥 Single Printer Toggle
+
+    const deliveryFee = deliveryField ? deliveryField.value : 25;
+    const handlingFee = handlingField ? handlingField.value : 5;
+    const rainFee = rainField ? rainField.value : 15;
+    const codForPrintEnabled = codPrintToggle ? codPrintToggle.checked : true; // 🔥 Captured value
+    const singlePrinterMode = singlePrinterToggle ? singlePrinterToggle.checked : true;
+
+    try {
+        const res = await fetch('/api/admin/settings/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                deliveryFee, 
+                handlingFee, 
+                rainFee, 
+                codForPrintEnabled, // 🔥 Sent to backend
+                singlePrinterMode 
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert('✅ Admin store settings, fees & COD preferences updated successfully!');
+            if (typeof loadAdminConfiguredFeesAndCoupons === 'function') {
+                loadAdminConfiguredFeesAndCoupons();
+            }
+        } else {
+            alert('❌ Failed to update settings.');
+        }
+    } catch(e) {
+        alert('❌ Server connection error.');
+    }
+};
+
+// 🔥 Admin Add New Coupon Engine
+window.adminAddNewCoupon = async function() {
+    const codeInput = document.getElementById('adminNewCouponCode');
+    const descInput = document.getElementById('adminNewCouponDesc');
+    
+    if (!codeInput || !descInput) return;
+    const code = codeInput.value.trim().toUpperCase();
+    const desc = descInput.value.trim();
+
+    if (!code || !desc) {
+        alert("⚠️ Please enter both Coupon Code and Description!");
+        return;
+    }
+
+    if (!window.adminCouponsList) window.adminCouponsList = [];
+    window.adminCouponsList.push({ code: code, desc: desc });
+
+    try {
+        const res = await fetch('/api/admin/settings/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ coupons: window.adminCouponsList })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(`✅ Coupon "${code}" added successfully!`);
+            codeInput.value = '';
+            descInput.value = '';
+        } else {
+            alert('❌ Failed to save coupon on server.');
+        }
+    } catch(e) {
+        alert('❌ Server connection error.');
+    }
+};
+        
+        // 🛠️ ADMIN ADD & EDIT PRODUCT MODAL LOGIC (NEW UPDATE)
+        window.openAddProductModal = function() {
+            document.getElementById('adminModalTitle').textContent = "Add New Store Product";
+            document.getElementById('editProductId').value = "";
+            document.getElementById('adminProdName').value = "";
+            document.getElementById('adminProdPrice').value = "";
+            document.getElementById('adminProdStock').value = "";
+            document.getElementById('adminProdDesc').value = "";
+            document.getElementById('adminProdImages').value = "";
+            document.getElementById('adminProductModal').style.display = 'flex';
+        };
+
+        window.openEditProductModal = function(productId) {
+            const prod = cachedInventoryList.find(p => p._id === productId || p.sku === productId || p.name === productId);
+            if (!prod) return;
+
+            document.getElementById('adminModalTitle').textContent = "Edit Product Details";
+            document.getElementById('editProductId').value = prod._id || prod.sku;
+            document.getElementById('adminProdName').value = prod.name || "";
+            document.getElementById('adminProdPrice').value = prod.sellingPrice || prod.price || 0;
+            document.getElementById('adminProdStock').value = prod.stockQuantity || 0;
+            document.getElementById('adminProdCategory').value = prod.category || 'munchies';
+            document.getElementById('adminProdDesc').value = prod.description || "";
+            
+            let imgString = "";
+            if (Array.isArray(prod.images) && prod.images.length > 0) {
+                imgString = prod.images.join(', ');
+            } else if (prod.imageUrl) {
+                imgString = prod.imageUrl;
+            }
+            document.getElementById('adminProdImages').value = imgString;
+            document.getElementById('adminProductModal').style.display = 'flex';
+        };
+
+        window.closeAdminProductModal = function() {
+            document.getElementById('adminProductModal').style.display = 'none';
+        };
+
+        window.submitAdminProductForm = async function(e) {
+            e.preventDefault();
+            const idToEdit = document.getElementById('editProductId').value;
+            const name = document.getElementById('adminProdName').value.trim();
+            const price = parseFloat(document.getElementById('adminProdPrice').value) || 0;
+            const stock = parseInt(document.getElementById('adminProdStock').value) || 0;
+            const category = document.getElementById('adminProdCategory').value;
+            const description = document.getElementById('adminProdDesc').value.trim();
+            const imagesRaw = document.getElementById('adminProdImages').value.trim();
+
+            const imagesArray = imagesRaw ? imagesRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+            const primaryImage = imagesArray.length > 0 ? imagesArray[0] : "";
+
+            const payload = {
+                id: idToEdit || undefined,
+                name: name,
+                sellingPrice: price,
+                stockQuantity: stock,
+                category: category,
+                description: description,
+                imageUrl: primaryImage,
+                images: imagesArray
+            };
+
+            try {
+                const endpoint = idToEdit ? '/api/admin/product/update' : '/api/admin/product/add';
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert("✅ Product saved successfully!");
+                    closeAdminProductModal();
+                    fetchInventoryReport();
+                } else {
+                    alert(`⚠️ Error: ${data.message}`);
+                }
+            } catch (err) {
+                alert("❌ Connection error while saving product.");
+            }
+        };
+
+        async function loadFestivalTemplatesFromServer() {
+            const dropdown = document.getElementById('festivalTemplateDropdown');
+            if (!dropdown) return;
+            try {
+                const res = await fetch('/api/admin/festival-templates');
+                const data = await res.json();
+                if (data.success && data.templates) {
+                    globalFestivalTemplates = data.templates;
+                    dropdown.innerHTML = `<option value="">-- Choose Festival Template (2026) --</option>`;
+                    
+                    for (const [dateKey, item] of Object.entries(globalFestivalTemplates)) {
+                        const opt = document.createElement('option');
+                        opt.value = dateKey;
+                        opt.textContent = `📅 ${dateKey} - ${item.subject.split(':')[0].trim()}`;
+                        dropdown.appendChild(opt);
+                    }
+                }
+            } catch (err) {
+                console.warn("Could not fetch festival templates from server:", err);
+            }
+        }
+
+
+        function applySelectedFestivalTemplate(dateKey) {
+            if (!dateKey || !globalFestivalTemplates[dateKey]) return;
+            const tpl = globalFestivalTemplates[dateKey];
+            document.getElementById('broadcastSubjectInput').value = tpl.subject || '';
+            document.getElementById('broadcastMessageInput').value = tpl.message || '';
+        }
+
+        function saveCurrentDraftAsPermanent() {
+            const subject = document.getElementById('broadcastSubjectInput').value.trim();
+            const message = document.getElementById('broadcastMessageInput').value.trim();
+            localStorage.setItem('admin_broadcast_default_subject', subject);
+            localStorage.setItem('admin_broadcast_default_message', message);
+            alert("💾 Template saved as default permanent draft!");
+        }
+
+        function loadPermanentDraft() {
+            const savedSubject = localStorage.getItem('admin_broadcast_default_subject');
+            const savedMessage = localStorage.getItem('admin_broadcast_default_message');
+            
+            if (!document.getElementById('broadcastSubjectInput').value && savedSubject) {
+                document.getElementById('broadcastSubjectInput').value = savedSubject;
+            }
+            if (!document.getElementById('broadcastMessageInput').value && savedMessage) {
+                document.getElementById('broadcastMessageInput').value = savedMessage;
+            } else if (!document.getElementById('broadcastMessageInput').value) {
+                document.getElementById('broadcastMessageInput').value = "We are excited to share our latest festive calendar deals with you! As a valued member of Print From Home, we are offering you an exclusive discount on all your printing requirements. Visit our store to check out the new offers and place your order today.";
+            }
+        }
+
+        async function sendBroadcastNotification(event) {
+            const btn = event ? event.target : document.querySelector("button[onclick*='sendBroadcastNotification']");
+            const subject = document.getElementById('broadcastSubjectInput').value.trim();
+            const message = document.getElementById('broadcastMessageInput').value.trim();
+
+            if (!subject || !message) {
+                alert("⚠️ Please fill in both Subject and Message!");
+                return;
+            }
+
+            if (!confirm("⚠️ Are you sure you want to broadcast this email to all registered users?")) return;
+
+            try {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = "Sending Broadcast...";
+                }
+
+                const res = await fetch('/api/admin/send-notification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subject, message })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert(data.message);
+                } else {
+                    alert(`⚠️ ${data.message}`);
+                }
+            } catch (err) {
+                alert("❌ Failed to broadcast notification.");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = "🚀 Send Broadcast Email to All Users";
+                }
+            }
+        }
+
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+            return audioCtx;
+        }
+
+        function playLoudOrderChime() {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.type = 'triangle';
+                osc1.frequency.setValueAtTime(880, now);
+                gain1.gain.setValueAtTime(0.4, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.35);
+            } catch (e) {}
+        }
+
+        window.addEventListener('click', () => { getAudioContext(); }, { once: true });
+
+        async function autoDetectProductByBarcode(inputVal) {
+            const cleanVal = inputVal.trim();
+            const feedbackBox = document.getElementById('scannerDetectedFeedbackBox');
+            const feedbackText = document.getElementById('detectedProductNameText');
+
+            if (!cleanVal) {
+                feedbackBox.style.display = 'none';
+                temporaryFetchedImageUrl = '';
+                return;
+            }
+
+            let matchedProd = cachedInventoryList.find(p => p.barcode === cleanVal || p.sku === cleanVal);
+            
+            if (matchedProd) {
+                feedbackBox.style.display = 'block';
+                feedbackText.innerHTML = `📦 <b>${matchedProd.name}</b> (Stock: ${matchedProd.stockQuantity})<br>${matchedProd.imageUrl ? `<img src="${matchedProd.imageUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; margin-top:4px;" />` : ''}`;
+                
+                temporaryFetchedImageUrl = matchedProd.imageUrl || '';
+
+                if (document.getElementById('invNameInput')) {
+                    document.getElementById('invNameInput').value = matchedProd.name || '';
+                    document.getElementById('invPurchasePrice').value = matchedProd.purchasePrice || '';
+                    document.getElementById('invSellingPrice').value = matchedProd.sellingPrice || '';
+                    if (document.getElementById('invSkuInput')) {
+                        document.getElementById('invSkuInput').value = matchedProd.barcode || matchedProd.sku || cleanVal;
+                    }
+                }
+                return;
+            }
+
+            try {
+                feedbackBox.style.display = 'block';
+                feedbackText.textContent = "🌐 Searching global product database...";
+
+                const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${cleanVal}.json`);
+                const data = await response.json();
+
+                if (data.status === 1 && data.product) {
+                    const prodName = data.product.product_name || data.product.brands || "Unknown Product";
+                    const prodImage = data.product.image_url || '';
+                    temporaryFetchedImageUrl = prodImage;
+
+                    feedbackText.innerHTML = `✨ <b>Found: ${prodName}</b><br>${prodImage ? `<img src="${prodImage}" style="width:55px; height:55px; object-fit:cover; border-radius:6px; margin-top:4px;" />` : ''}`;
+
+                    if (document.getElementById('invNameInput')) {
+                        document.getElementById('invNameInput').value = prodName;
+                        if (document.getElementById('invSkuInput')) {
+                            document.getElementById('invSkuInput').value = cleanVal;
+                        }
+                    }
+                } else {
+                    feedbackText.textContent = "⚠️ Product not found in local or global database. Enter details manually.";
+                    temporaryFetchedImageUrl = '';
+                }
+            } catch (err) {
+                feedbackText.textContent = "⚠️ Barcode detected, but unable to fetch global details.";
+                temporaryFetchedImageUrl = '';
+            }
+        }
+
+        function autoFillInventoryProduct(barcodeVal) {
+            autoDetectProductByBarcode(barcodeVal);
+        }
+
+        async function addNewStockItem() {
+            const barcode = document.getElementById('invSkuInput').value.trim();
+            const name = document.getElementById('invNameInput').value.trim();
+            const purchasePrice = document.getElementById('invPurchasePrice').value;
+            const sellingPrice = document.getElementById('invSellingPrice').value;
+            const quantity = document.getElementById('invQtyInput').value;
+            const imageFile = document.getElementById('invImageFile').files[0];
+
+            if (!barcode || !name || !quantity) {
+                alert("⚠️ Please enter Barcode/UPC, Product Name, and Quantity!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('sku', barcode);
+            formData.append('barcode', barcode);
+            formData.append('name', name);
+            formData.append('purchasePrice', purchasePrice);
+            formData.append('sellingPrice', sellingPrice);
+            formData.append('quantity', quantity);
+            
+            if (imageFile) {
+                formData.append('productImage', imageFile);
+            } else if (temporaryFetchedImageUrl) {
+                formData.append('externalImageUrl', temporaryFetchedImageUrl);
+            }
+
+            try {
+                const res = await fetch('/api/admin/inventory/add', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("✅ Stock updated and registered successfully with image!");
+                    document.getElementById('invSkuInput').value = '';
+                    document.getElementById('invNameInput').value = '';
+                    document.getElementById('invPurchasePrice').value = '';
+                    document.getElementById('invSellingPrice').value = '';
+                    document.getElementById('invQtyInput').value = '';
+                    document.getElementById('invImageFile').value = '';
+                    temporaryFetchedImageUrl = '';
+                    fetchInventoryReport();
+                    fetchDashboardStats();
+                }
+            } catch (e) {
+                alert("❌ Error saving product.");
+            }
+        }
+
+        async function deleteInventoryItem(productId) {
+            if (!confirm("⚠️ Are you sure you want to remove this product from inventory?")) return;
+            try {
+                const res = await fetch(`/api/admin/inventory/${productId}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("✅ Product removed successfully!");
+                    fetchInventoryReport();
+                    fetchDashboardStats();
+                } else {
+                    alert("❌ Failed to remove product.");
+                }
+            } catch (err) {
+                alert("❌ Error deleting product.");
+            }
+        }
+
+        async function fetchDashboardStats() {
+            try {
+                const filterDate = document.getElementById('dashboardDateFilter').value || new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+                const res = await fetch(`/api/admin/stats?date=${filterDate}`);
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('statDashTotalOrders').textContent = data.totalOrders;
+                    document.getElementById('statDashTotalSales').textContent = `₹${data.totalSales}`;
+                    document.getElementById('statDashNetProfit').textContent = `₹${data.totalProfit}`;
+                    document.getElementById('statDashDeliveryFees').textContent = `₹${data.totalDeliveryFees}`;
+                    renderProfitChart([0, 0, 0, 0, parseFloat(data.totalProfit)]);
+                }
+            } catch (e) {}
+        }
+
+        function renderProfitChart(profitValues) {
+            const ctx = document.getElementById('storeProfitTrendChart').getContext('2d');
+            if (profitChartInstance) {
+                profitChartInstance.destroy();
+            }
+            profitChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Selected Date'],
+                    datasets: [{
+                        label: 'Net Profit Trend (₹)',
+                        data: profitValues,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#f8fafc' } } },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                    }
+                }
+            });
+        }
+
+        async function fetchInventoryReport() {
+            try {
+                const res = await fetch('/api/admin/inventory/report');
+                const data = await res.json();
+                if (data.success) {
+                    cachedInventoryList = data.products || [];
+                    document.getElementById('statDashVarieties').textContent = data.products.length;
+                    document.getElementById('statDashStockVal').textContent = `₹${data.financials.totalStockValue.toFixed(2)}`;
+
+                    const tbody = document.getElementById('inventoryProductsTableBody');
+                    if (data.products.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-sub); padding: 30px;">No products added in store inventory yet.</td></tr>`;
+                        return;
+                    }
+
+                    tbody.innerHTML = data.products.map((p, idx) => `
+                        <tr>
+                            <td><b>${idx + 1}</b></td>
+                            <td>${p.imageUrl ? `<img src="${p.imageUrl}" style="width:36px; height:36px; object-fit:cover; border-radius:6px;" />` : '🖼️'}</td>
+                            <td style="font-weight: 800; color: white;">📦 ${p.name}</td>
+                            <td><code>${p.barcode || p.sku || 'N/A'}</code></td>
+                            <td>₹${p.purchasePrice || 0}</td>
+                            <td style="color: var(--accent-green); font-weight: 700;">₹${p.sellingPrice || 0}</td>
+                            <td><span style="background:${p.stockQuantity > 0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; color:${p.stockQuantity > 0 ? '#10b981' : '#ef4444'}; padding:3px 8px; border-radius:6px; font-weight:700;">${p.stockQuantity} units</span></td>
+                            <td style="font-weight: 700;">${p.totalSold || 0} sold</td>
+                            <td>
+                                <div style="display:flex; gap:6px;">
+                                    <button type="button" onclick="openEditProductModal('${p._id}')" style="background: rgba(0, 112, 243, 0.15); color: #38bdf8; border: 1px solid #38bdf8; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">✏️ Edit</button>
+                                    <button type="button" onclick="deleteInventoryItem('${p._id}')" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.75rem;">🗑️ Remove</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (e) {}
+        }
+
+        async function fetchRestockSuggestions() {
+            try {
+                const res = await fetch('/api/admin/inventory/predictive-restock');
+                const data = await res.json();
+                const list = document.getElementById('restockList');
+                
+                if (list && data.success) {
+                    if(data.suggestions && data.suggestions.length > 0) {
+                        list.style.color = '#ef4444';
+                        list.style.fontWeight = 'bold';
+                        list.innerHTML = data.suggestions.map(p => 
+                            `<div style="margin-bottom:4px; padding:4px; border-bottom:1px solid #334155;">
+                                <span style="animation: blink 1s infinite;">⚠️</span> ${p.name}: <b>${p.stockQuantity} Left</b>
+                             </div>`
+                        ).join('');
+                    } else {
+                        list.style.color = '#10b981';
+                        list.innerHTML = "✅ Inventory Healthy";
+                    }
+                }
+            } catch (e) { console.error("Restock fetch error", e); }
+        }
+        setInterval(fetchRestockSuggestions, 60000);
+        setTimeout(fetchRestockSuggestions, 1000);
+
+        function openBarcodeScannerModal(orderId = null) {
+            activeTargetOrderIdForScan = orderId;
+            document.getElementById('barcodeScannerModal').style.display = 'flex';
+            document.getElementById('scannerDetectedFeedbackBox').style.display = 'none';
+            setTimeout(() => { document.getElementById('barcodeInputScanField').focus(); }, 100);
+        }
+
+        function closeBarcodeScannerModal() {
+            if (html5QrCodeScanner) {
+                try {
+                    html5QrCodeScanner.stop();
+                    html5QrCodeScanner.clear();
+                } catch(e) {}
+                html5QrCodeScanner = null;
+            }
+            document.getElementById('cameraScannerContainer').style.display = 'none';
+            document.getElementById('btnToggleCamera').textContent = '📷 Open Camera';
+            document.getElementById('barcodeScannerModal').style.display = 'none';
+            activeTargetOrderIdForScan = null;
+            document.getElementById('barcodeInputScanField').value = '';
+            document.getElementById('scannerDetectedFeedbackBox').style.display = 'none';
+            temporaryFetchedImageUrl = '';
+        }
+
+        async function toggleCameraScanner() {
+            const container = document.getElementById('cameraScannerContainer');
+            const btn = document.getElementById('btnToggleCamera');
+
+            if (html5QrCodeScanner) {
+                try {
+                    await html5QrCodeScanner.stop();
+                    html5QrCodeScanner.clear();
+                } catch(e) {}
+                html5QrCodeScanner = null;
+                container.style.display = 'none';
+                btn.textContent = '📷 Open Camera';
+                return;
+            }
+
+            container.style.display = 'block';
+            btn.textContent = '❌ Close Camera';
+
+            html5QrCodeScanner = new Html5Qrcode("liveCameraVideoFeed");
+            const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+            
+            html5QrCodeScanner.start(
+                { facingMode: "environment" }, 
+                config, 
+                (decodedText, decodedResult) => {
+                    document.getElementById('barcodeInputScanField').value = decodedText;
+                    autoDetectProductByBarcode(decodedText);
+                    toggleCameraScanner();
+                    processScannedBarcode();
+                },
+                (errorMessage) => {}
+            ).catch(err => {
+                alert("⚠️ Camera start error: " + err);
+                container.style.display = 'none';
+                btn.textContent = '📷 Open Camera';
+            });
+        }
+
+        async function processScannedBarcode() {
+            const val = document.getElementById('barcodeInputScanField').value.trim();
+            if (!val) {
+                alert("⚠️ Please scan or enter a valid barcode/UPC!");
+                return;
+            }
+
+            if (activeTargetOrderIdForScan === 'inventory') {
+                document.getElementById('invSkuInput').value = val;
+                autoDetectProductByBarcode(val);
+                closeBarcodeScannerModal();
+                return;
+            }
+
+            const targetOrder = globalLiveOrdersCache.find(o => o.orderId === activeTargetOrderIdForScan);
+            if (targetOrder && targetOrder.status && targetOrder.status.includes('Cancelled')) {
+                try {
+                    const res = await fetch('/api/admin/inventory/restock-scanned', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId: targetOrder.orderId, barcodeOrName: val })
+                    });
+                    const data = await res.json();
+                    alert(data.message);
+                    if (data.success) {
+                        closeBarcodeScannerModal();
+                        fetchLiveOrdersStream();
+                        fetchInventoryReport();
+                    }
+                } catch (e) {
+                    alert("❌ Failed to restock scanned item.");
+                }
+                return;
+            }
+
+            const matchedProd = cachedInventoryList.find(p => p.barcode === val || p.sku === val || p.name.toLowerCase().includes(val.toLowerCase()));
+            if (!matchedProd) {
+                alert(`❌ Invalid UPC: "${val}" is not registered in your inventory!`);
+                return;
+            }
+
+            let targetOrderId = activeTargetOrderIdForScan;
+            if (!targetOrderId) {
+                const pendingOrder = globalLiveOrdersCache.find(o => 
+                    o.status !== 'Delivered' && Array.isArray(o.configDetails) && o.configDetails.some(item => item.fileName && item.fileName.toLowerCase().includes(matchedProd.name.toLowerCase()))
+                );
+                if (!pendingOrder) {
+                    alert(`⚠️ No active pending order found containing "${matchedProd.name}"!`);
+                    return;
+                }
+                targetOrderId = pendingOrder.orderId;
+            }
+
+            try {
+                const res = await fetch('/api/admin/verify-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: targetOrderId, barcode: val, skuOrName: matchedProd.name })
+                });
+                const data = res.ok ? await res.json() : { success: false, message: "Server error during verification." };
+                if (data.success) {
+                    alert(data.message);
+                    closeBarcodeScannerModal();
+                    fetchLiveOrdersStream();
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert("❌ Verification failed.");
+            }
+        }
+
+        function toggleOrderDetailsDrawer(orderId) {
+            const panel = document.getElementById(`orderDetailsPanel_${orderId}`);
+            if (panel) {
+                if (panel.style.display === 'none' || panel.style.display === '') {
+                    panel.style.display = 'block';
+                    openDrawers.add(orderId);
+                } else {
+                    panel.style.display = 'none';
+                    openDrawers.delete(orderId);
+                }
+            }
+        }
+
+        function formatOrderDisplay(order) {
+            let rawId = String(order.orderId || '');
+            let numericId = rawId.replace(/\D/g, '');
+            if (numericId.length > 6) {
+                numericId = numericId.slice(-6);
+            }
+            if (!numericId) {
+                numericId = Math.floor(100000 + Math.random() * 900000);
+            }
+            
+            let dateObj = order.timestamp ? new Date(order.timestamp) : new Date();
+            let istString = dateObj.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+            return { cleanId: numericId, istString, rawDateObj: dateObj };
+        }
+
+        function toggleOldOrdersArchiveModal(open) {
+            document.getElementById('oldOrdersArchiveModal').style.display = open ? 'flex' : 'none';
+            if (open) {
+                if (!document.getElementById('historyDateFilter').value) {
+                    document.getElementById('historyDateFilter').value = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+                }
+                renderOrderHistoryList();
+            }
+        }
+
+        let autoPrintEnabled = localStorage.getItem('admin_autoprint') !== 'false';
+        const processedAutoPrintOrderIds = new Set(JSON.parse(localStorage.getItem('printed_orders') || '[]'));
+
+        function toggleAutoPrintEngine() {
+            autoPrintEnabled = !autoPrintEnabled;
+            localStorage.setItem('admin_autoprint', autoPrintEnabled);
+            updateAutoPrintButtonUI();
+        }
+
+        function updateAutoPrintButtonUI() {
+            const btn = document.getElementById('autoPrintToggleBtn');
+            const txt = document.getElementById('autoPrintStatusText');
+            if (autoPrintEnabled) {
+                btn.className = "toggle-badge-btn btn-autoprint-on";
+                txt.textContent = "ON";
+            } else {
+                btn.className = "toggle-badge-btn btn-autoprint-off";
+                txt.textContent = "OFF";
+            }
+        }
+        updateAutoPrintButtonUI();
+
+        let adminRainSurgeActive = localStorage.getItem('admin_manual_rain') === 'true';
+
+        async function fetchAdminRainSurgeStatus() {
+            try {
+                const res = await fetch('/api/admin/rain-status');
+                const data = await res.json();
+                if (data.success !== undefined) {
+                    adminRainSurgeActive = data.isRainActive;
+                    updateRainSurgeButtonUI();
+                }
+            } catch (e) {}
+        }
+
+        async function toggleAdminRainSurge() {
+            const nextState = !adminRainSurgeActive;
+            try {
+                const res = await fetch('/api/admin/toggle-rain', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isRainActive: nextState })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    adminRainSurgeActive = data.isRainActive;
+                    localStorage.setItem('admin_manual_rain', adminRainSurgeActive);
+                    updateRainSurgeButtonUI();
+                }
+            } catch (e) {
+                adminRainSurgeActive = nextState;
+                localStorage.setItem('admin_manual_rain', adminRainSurgeActive);
+                updateRainSurgeButtonUI();
+            }
+        }
+
+        function updateRainSurgeButtonUI() {
+            const btn = document.getElementById('rainSurgeToggleBtn');
+            const txt = document.getElementById('rainSurgeStateText');
+            if (adminRainSurgeActive) {
+                btn.className = "toggle-badge-btn btn-rain-on";
+                txt.textContent = "ON (Forced)";
+            } else {
+                btn.className = "toggle-badge-btn btn-rain-off";
+                txt.textContent = "OFF (Forced)";
+            }
+        }
+        updateRainSurgeButtonUI();
+        fetchAdminRainSurgeStatus();
+        setInterval(fetchAdminRainSurgeStatus, 4000);
+
+        let adminGlossyActive = false;
+
+async function fetchAdminGlossyStatus() {
+    try {
+        const res = await fetch('/api/store-status');
+        const data = await res.json();
+        if (data.success !== undefined && data.glossySystemEnabled !== undefined) {
+            adminGlossyActive = data.glossySystemEnabled;
+            updateGlossyButtonUI();
+        }
+    } catch (e) {}
+}
+
+async function toggleAdminGlossySystem() {
+    const nextState = !adminGlossyActive;
+    try {
+        const res = await fetch('/api/admin/toggle-glossy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ glossySystemEnabled: nextState })
+        });
+        const data = await res.json();
+        if (data.success) {
+            adminGlossyActive = data.glossySystemEnabled;
+            updateGlossyButtonUI();
+        }
+    } catch (e) {
+        adminGlossyActive = nextState;
+        updateGlossyButtonUI();
+    }
+}
+
+function updateGlossyButtonUI() {
+    const btn = document.getElementById('glossyToggleBtn');
+    const txt = document.getElementById('glossyStateText');
+    if (adminGlossyActive) {
+        if (btn) btn.className = "toggle-badge-btn btn-store-open";
+        if (txt) txt.textContent = "ON";
+    } else {
+        if (btn) btn.className = "toggle-badge-btn btn-rain-off";
+        if (txt) txt.textContent = "OFF";
+    }
+}
+
+fetchAdminGlossyStatus();
+setInterval(fetchAdminGlossyStatus, 4000);
+
+        async function assignOrderToDeliveryBoy(orderId) {
+            const boyPhone = prompt("Enter Delivery Executive Mobile Number (10 digits):");
+            if (!boyPhone || boyPhone.trim().length !== 10) {
+                if (boyPhone !== null) alert("Please enter a valid 10-digit mobile number.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'Out for Delivery', assignedDeliveryBoy: boyPhone.trim() })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(`✅ Order assigned to delivery executive (${boyPhone}) successfully! Status updated to Out for Delivery.`);
+                    fetchLiveOrdersStream();
+                } else {
+                    alert("⚠️ Failed to assign order.");
+                }
+            } catch (err) {
+                alert("❌ Connection error while assigning order.");
+            }
+        }
+
+  // 🔥 Updated Self-Healing Print Engine (Fixes ERR_FILE_NOT_FOUND completely)
+   // 🔥 100% Fail-Safe Print Engine (Directly fetches blob to bypass ERR_FILE_NOT_FOUND)
+        async function triggerPrintJob(fileUrl, orderId) {
+            let resolvedUrl = fileUrl;
+            
+            // Agar direct fileUrl nahi mila, toh global live orders cache se find karo
+            if (!resolvedUrl || resolvedUrl === '#') {
+                const matchOrder = globalLiveOrdersCache.find(o => String(o.orderId) === String(orderId));
+                if (matchOrder) {
+                    resolvedUrl = matchOrder.fileUrl || 
+                                  (Array.isArray(matchOrder.files) && matchOrder.files[0]?.url) || 
+                                  (matchOrder.file ? `${window.location.origin}/uploads/${matchOrder.file}` : null);
+                    
+                    if ((!resolvedUrl || resolvedUrl === '#') && Array.isArray(matchOrder.configDetails)) {
+                        const configItem = matchOrder.configDetails.find(i => i.fileUrl || i.url);
+                        if (configItem) resolvedUrl = configItem.fileUrl || configItem.url;
+                    }
+                }
+            }
+
+            if (!resolvedUrl || resolvedUrl === '#') {
+                alert("⚠️ Document file URL is not available for this print job. Order ID: " + orderId);
+                return;
+            }
+
+            try {
+                console.log("🔄 Fetching and self-healing file for print:", resolvedUrl);
+                
+                // Server ko request bhejo taaki self-healing middleware active ho kar file restore kar de
+                const response = await fetch(resolvedUrl);
+                if (!response.ok) throw new Error("Server failed to recover the file (Status: " + response.status + ")");
+
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+
+                // Ab ERR_FILE_NOT_FOUND ka koi chance nahi hai kyunki yeh local browser memory (blob) ban chuka hai!
+                const frame = document.getElementById('silentPrintFrame');
+                if (frame) {
+                    frame.src = blobUrl;
+                    frame.onload = function () {
+                        try { 
+                            frame.contentWindow.focus(); 
+                            frame.contentWindow.print(); 
+                        } catch (e) { 
+                            window.open(blobUrl, '_blank'); 
+                        }
+                    };
+                } else {
+                    window.open(blobUrl, '_blank');
+                }
+
+                if (orderId) {
+                    processedAutoPrintOrderIds.add(String(orderId));
+                    localStorage.setItem('printed_orders', JSON.stringify(Array.from(processedAutoPrintOrderIds)));
+                }
+            } catch (err) {
+                alert("❌ Print Error: " + err.message + "\nURL: " + resolvedUrl);
+            }
+        }      
+
+        let isStoreOpen = true;
+        async function fetchStoreStatus() {
+            try {
+                const res = await fetch('/api/store-status');
+                const data = await res.json();
+                if (data.success !== undefined) { isStoreOpen = data.isOpen; updateStoreButtonUI(); }
+            } catch (err) {}
+        }
+
+        async function toggleStoreStatus() {
+            const nextState = !isStoreOpen;
+            try {
+                const res = await fetch('/api/admin/toggle-store', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isOpen: nextState })
+                });
+                const data = await res.json();
+                if (data.success) { isStoreOpen = data.isOpen; updateStoreButtonUI(); }
+            } catch (e) { isStoreOpen = nextState; updateStoreButtonUI(); }
+        }
+
+        function updateStoreButtonUI() {
+            const btn = document.getElementById('storeStatusToggleBtn');
+            const txt = document.getElementById('storeStatusStateText');
+            if (isStoreOpen) { btn.className = "toggle-badge-btn btn-store-open"; txt.textContent = "OPEN"; } 
+            else { btn.className = "toggle-badge-btn btn-store-closed"; txt.textContent = "CLOSED"; }
+        }
+
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                await fetch(`/api/admin/orders/${orderId}/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                fetchLiveOrdersStream();
+            } catch (err) {}
+        }
+
+        async function adminCancelOrder(orderId) {
+            if (!confirm("⚠️ Are you sure you want to cancel this order manually?")) return;
+            try {
+                const res = await fetch('/api/orders/cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("✅ " + data.message);
+                    fetchLiveOrdersStream();
+                    fetchInventoryReport();
+                } else {
+                    alert(`⚠️ ${data.message}`);
+                }
+            } catch (e) {
+                alert("❌ Connection error while cancelling order.");
+            }
+        }
+
+        let previousOrderCount = -1;
+
+        // 🔥 STEP 1: Page khulte hi agar local cache mein orders hain, toh unhe TURANT render kar do (Zero Delay!)
+        try {
+            const initialCachedOrders = localStorage.getItem('pfh_admin_instant_cache');
+            if (initialCachedOrders) {
+                globalLiveOrdersCache = JSON.parse(initialCachedOrders);
+                renderOrdersList(globalLiveOrdersCache);
+            }
+        } catch (e) {}
+
+      async function fetchLiveOrdersStream() {
+            try {
+                const res = await fetch('/api/admin/orders', { cache: 'no-store' });
+                if (!res.ok) {
+                    if (res.status === 429) {
+                        console.warn("⚠️ Rate limited (429). Skipping this tick...");
+                        return;
+                    }
+                    throw new Error("Server responded with status " + res.status);
+                }
+                const contentType = res.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) return; // HTML error page ignore karo
+                
+                const orders = await res.json();
+                if (!Array.isArray(orders)) return;
+
+                // 🔥 Light cache save (Storage quota full error se bachne ke liye)
+                try {
+                    const lightCache = orders.map(o => ({
+                        orderId: o.orderId,
+                        customerName: o.customerName,
+                        totalAmount: o.totalAmount || o.amount,
+                        status: o.status,
+                        timestamp: o.timestamp,
+                        date: o.date,
+                        deliveryMode: o.deliveryMode,
+                        phone: o.phone,
+                        configDetails: o.configDetails
+                    }));
+                    localStorage.setItem('pfh_admin_instant_cache', JSON.stringify(lightCache));
+                } catch (e) {}
+
+                globalLiveOrdersCache = orders;
+
+                if (previousOrderCount !== -1 && orders.length > previousOrderCount) { 
+                    playLoudOrderChime(); 
+                }
+                previousOrderCount = orders.length;
+
+                // 🔥 SMART QUEUE & PAUSE LOGIC FOR AUTO-PRINT
+                if (autoPrintEnabled) {
+                    const isAnyPrintJobActive = orders.some(o => 
+                        (o.status === 'Ready for Print' || o.status === 'Printing' || o.status === 'Processing') && 
+                        processedAutoPrintOrderIds.has(o.orderId)
+                    );
+
+                    if (!isAnyPrintJobActive) {
+                        const nextPrintOrder = orders.find(o => 
+                            (o.status === 'Ready for Print' || o.status === 'Ready') && 
+                            !processedAutoPrintOrderIds.has(o.orderId)
+                        );
+
+                        if (nextPrintOrder) {
+                            const hasPrintJob = Array.isArray(nextPrintOrder.configDetails) && nextPrintOrder.configDetails.some(item => item.printType !== 'snack');
+                            const fileUrl = nextPrintOrder.fileUrl || (Array.isArray(nextPrintOrder.files) && nextPrintOrder.files[0]?.url);
+                            
+                            if (hasPrintJob && fileUrl && fileUrl !== '#') {
+                                console.log(`🖨️ Auto-printing next queued order #${nextPrintOrder.orderId}`);
+                                triggerPrintJob(fileUrl, nextPrintOrder.orderId);
+                            }
+                        }
+                    }
+                }
+
+                renderOrdersList(orders);
+                if (document.getElementById('oldOrdersArchiveModal') && document.getElementById('oldOrdersArchiveModal').style.display === 'flex') {
+                    renderOrderHistoryList();
+                }
+            } catch (err) {
+                console.warn("Stream warning:", err.message);
+            
+                
+                // ⚠️ Agar network error aaye, tab bhi agar cache mein data hai toh screen blank nahi hogi!
+                const container = document.getElementById('adminOrderQueue');
+                if (container && container.innerHTML.includes('Connecting') && globalLiveOrdersCache.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; background: var(--surface-card); border-radius: 16px; border: 1px solid var(--border-color);">
+                            <div style="font-size: 2rem; margin-bottom: 8px;">⚠️</div>
+                            <h3 style="color: #ef4444; margin-bottom: 6px;">Connection to Live Stream Failed</h3>
+                            <p style="font-size: 0.78rem; color: var(--text-sub); margin-bottom: 14px;">Render server might be waking up or internet is disconnected.</p>
+                            <button type="button" onclick="fetchLiveOrdersStream()" style="background: var(--accent-blue); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer;">Retry Connection</button>
+                        </div>
+                    `;
+                }
+            }
+        }
+        let adminPrintServiceActive = true;
+
+        async function fetchAdminPrintStatus() {
+            try {
+                const res = await fetch('/api/store-status');
+                const data = await res.json();
+                if (data.success !== undefined && data.printEnabled !== undefined) {
+                    adminPrintServiceActive = data.printEnabled;
+                    updatePrintSwitchButtonUI();
+                }
+            } catch (e) {}
+        }
+
+        async function toggleAdminPrintSwitch() {
+            const nextState = !adminPrintServiceActive;
+            try {
+                const res = await fetch('/api/admin/toggle-print', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ printEnabled: nextState })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    adminPrintServiceActive = data.printEnabled;
+                    updatePrintSwitchButtonUI();
+                }
+            } catch (e) {
+                adminPrintServiceActive = nextState;
+                updatePrintSwitchButtonUI();
+            }
+        }
+
+        function updatePrintSwitchButtonUI() {
+            const btn = document.getElementById('printToggleBtn');
+            const txt = document.getElementById('printSwitchStateText');
+            if (adminPrintServiceActive) {
+                if (btn) btn.className = "toggle-badge-btn btn-autoprint-on";
+                if (txt) txt.textContent = "ON";
+            } else {
+                if (btn) btn.className = "toggle-badge-btn btn-store-closed";
+                if (txt) txt.textContent = "OFF (Maintenance)";
+            }
+        }
+
+        // Call status sync on load
+        fetchAdminPrintStatus();
+        setInterval(fetchAdminPrintStatus, 4000);
+
+        function buildOrderCardHtml(order) {
+            let printFilesList = [];
+            let productItemsList = [];
+
+            let configItems = order.configDetails || [];
+            if (typeof configItems === 'string') {
+                try { configItems = JSON.parse(configItems); } catch(e) { configItems = []; }
+            }
+
+            if (Array.isArray(configItems)) {
+                configItems.forEach(item => {
+                    if (item.printType === 'snack' || (item.fileName && item.fileName.startsWith('Product:'))) {
+                        productItemsList.push(item);
+                    } else {
+                        printFilesList.push(item);
+                    }
+                });
+            }
+
+            const hasRealFiles = Array.isArray(order.files) && order.files.length > 0;
+            const isPureProductOrder = productItemsList.length > 0 && printFilesList.length === 0 && !hasRealFiles;
+
+            if (printFilesList.length === 0 && hasRealFiles && !isPureProductOrder) {
+                printFilesList.push({
+                    fileName: order.fileName || (order.files[0] ? order.files[0].name : 'Document.pdf'),
+                    pages: order.pages || 1,
+                    copies: order.copies || 1,
+                    printType: order.printType || 'bw'
+                });
+            }
+
+            if (isPureProductOrder) {
+                printFilesList = [];
+            }
+
+            let totalPackingItems = productItemsList.length;
+            let verifiedItemsList = Array.isArray(order.verifiedItems) ? order.verifiedItems : [];
+            let allProductsVerified = totalPackingItems === 0 || verifiedItemsList.length >= totalPackingItems;
+
+            const primaryFileUrl = order.fileUrl || (order.files && order.files[0]?.url) || (order.file ? `/uploads/${order.file}` : '#');
+            const isDrawerOpen = openDrawers.has(order.orderId);
+            const currentStatus = order.status || 'Pending';
+            
+            const isDelivered = currentStatus.includes('Delivered');
+            const isCancelled = currentStatus.includes('Cancelled') || currentStatus.includes('Restock');
+            const { cleanId, istString } = formatOrderDisplay(order);
+
+            const assignedBoy = order.assignedDeliveryBoy;
+
+            // 🔥 Store Pickup vs Doorstep Delivery Badge Logic
+            let deliveryBadge = (order.deliveryMode === 'pickup') 
+                ? `<span style="background:#fef3c7; color:#b45309; padding:3px 8px; border-radius:6px; font-weight:800; font-size:0.7rem;">🏪 Store Pickup (Self-Service)</span>`
+                : `<span style="background:#dbeafe; color:#1e40af; padding:3px 8px; border-radius:6px; font-weight:800; font-size:0.7rem;">🚚 Doorstep Delivery</span>`;
+
+            return `
+                <div class="order-card ${isCancelled ? 'cancelled' : ''}" id="card_${order.orderId}">
+                    <div class="order-card-header">
+                        <div class="order-id-meta">
+                            <h3>Order #${cleanId} <span style="font-size:0.7rem; color:var(--text-sub); font-weight:normal;">(Ref: ${order.orderId})</span></h3>
+                            <div class="order-time">Received: ${istString} | <b style="color:var(--accent-yellow);">Status: ${currentStatus}</b> | ${deliveryBadge}</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="font-size: 1.25rem; font-weight: 800; color: ${isCancelled ? 'var(--accent-red)' : 'var(--accent-green)'};">₹${order.totalAmount || order.amount || 0}</div>
+                            <button type="button" onclick="toggleOrderDetailsDrawer('${order.orderId}')" style="background: var(--surface-card-hover); color: white; border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">📋 View Details</button>
+                        </div>
+                    </div>
+
+                    <!-- 🛵 Delivery Assignment Banner -->
+                    <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid ${assignedBoy ? 'var(--accent-green)' : 'var(--border-color)'}; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <div style="font-size: 0.8rem; font-weight: 700;">
+                            🛵 Delivery Executive: <span style="color: ${assignedBoy ? 'var(--accent-green)' : 'var(--accent-yellow)'};">${assignedBoy ? 'Assigned (' + assignedBoy + ')' : (order.deliveryMode === 'pickup' ? 'Store Pickup (No Rider Needed)' : 'Not Assigned Yet')}</span>
+                        </div>
+                        ${order.deliveryMode !== 'pickup' ? `
+                            <button type="button" onclick="assignOrderToDeliveryBoy('${order.orderId}')" style="background: #3b82f6; color: white; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">
+                                ${assignedBoy ? '🔄 Reassign' : '👉 Assign Boy'}
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    ${isCancelled ? `
+                        <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid var(--accent-red); padding: 10px 14px; border-radius: 10px; font-size: 0.8rem; font-weight: 800; color: #f87171; text-align: center;">
+                            🚫 THIS ORDER HAS BEEN CANCELLED. ${order.needsStockRestockScan ? '<br><b>⚠️ ACTION REQUIRED:</b> Scan picked items using barcode scanner to restock inventory shelves.' : 'Inventory automatically recovered.'}
+                        </div>
+                        ${order.needsStockRestockScan ? `
+                            <div style="text-align: right;">
+                                <button type="button" onclick="openBarcodeScannerModal('${order.orderId}')" style="background: var(--accent-yellow); color: #000; border: none; padding: 6px 14px; border-radius: 8px; font-weight: 800; font-size: 0.78rem; cursor: pointer;">
+                                    📷 Scan Cancelled Items to Restock
+                                </button>
+                            </div>
+                        ` : ''}
+                    ` : ''}
+
+                    <div id="orderDetailsPanel_${order.orderId}" style="display: ${isDrawerOpen ? 'block' : 'none'}; background: rgba(15,23,42,0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px;">
+                        <div class="order-customer-box" style="margin-bottom: 12px;">
+                            <div class="cust-field"><b>Customer Name</b><span>${order.customerName || 'Customer'}</span></div>
+                            <div class="cust-field"><b>Contact Number</b><span><a href="tel:${order.phone || ''}" style="color: #38bdf8; text-decoration: none;">${order.phone || 'N/A'}</a></span></div>
+                            <div class="cust-field" style="grid-column: 1 / -1;"><b>📍 Address / Mode</b><span>${order.address || 'N/A'}</span></div>
+                        </div>
+
+                        ${printFilesList.length > 0 ? `
+                        <div class="specs-container" style="margin-bottom: 12px;">
+                            <div class="specs-title">🖨️ Print Job Files</div>
+                            ${printFilesList.map(job => `<div class="spec-tag highlight" style="margin-bottom:6px; display:block;">📑 ${job.fileName || 'File'} (${job.pages || 1} Pages | ✖️ ${job.copies || 1} Copies | 🎨 ${String(job.printType || 'bw').toUpperCase()})</div>`).join('')}
+                            <div class="file-action-row" style="margin-top:8px;">
+                                ${primaryFileUrl !== '#' ? `<a href="${primaryFileUrl}" target="_blank" download class="btn-download-file">📥 Download File</a>` : ''}
+                                <button type="button" class="btn-manual-print" onclick="triggerPrintJob('${primaryFileUrl}', '${order.orderId}')">🖨️ Print Now</button>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        ${productItemsList.length > 0 ? `
+                        <div class="packing-list-box">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <div class="packing-title" style="margin-bottom:0;">🛒 Item Verification (${verifiedItemsList.length}/${totalPackingItems} verified)</div>
+                                <button type="button" onclick="openBarcodeScannerModal('${order.orderId}')" style="background: #8b5cf6; color: white; border: none; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer;">📷 Scan Item</button>
+                            </div>
+                            ${productItemsList.map(prod => {
+                                let prodCleanName = prod.fileName ? prod.fileName.replace('Product: ', '').split(' (Qty:')[0].trim() : 'Item';
+                                let isItemVerified = verifiedItemsList.some(v => v.toLowerCase().includes(prodCleanName.toLowerCase()));
+                                return `
+                                    <div class="packing-item-row">
+                                        <span style="color:${isItemVerified ? 'var(--accent-green)' : 'white'};">📦 ${prod.fileName}</span>
+                                        <span>${isItemVerified ? '✅ VERIFIED' : '⏳ PENDING'}</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div class="stepper-actions-bar" style="border-top: none; padding-top: 0; flex: 1;">
+                            <span class="stepper-label">Set Status:</span>
+                            <button type="button" class="btn-step ${currentStatus.includes('Ready') || currentStatus.includes('Placed') ? 'current-phase' : ''}" ${isCancelled ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Ready for Print')">1. Ready</button>
+                            <button type="button" class="btn-step ${currentStatus.includes('Processing') || currentStatus.includes('Picking') || currentStatus === 'Printing' ? 'current-phase' : ''}" ${isCancelled ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Printing')">2. Processing</button>
+                            <button type="button" class="btn-step ${currentStatus === 'Out for Delivery' ? 'current-phase' : ''}" ${isCancelled || !allProductsVerified ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Out for Delivery')">3. Out for Delivery</button>
+                            <button type="button" class="btn-step ${currentStatus.includes('Delivered') ? 'active' : ''}" ${isCancelled && !currentStatus.includes('Delivered') ? 'disabled' : ''} onclick="updateOrderStatus('${order.orderId}', 'Delivered 🟢')">4. Delivered</button>
+                        </div>
+                        ${!isCancelled ? `
+                            <button type="button" onclick="adminCancelOrder('${order.orderId}')" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; padding: 8px 12px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+                                ❌ Cancel Order
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderOrdersList(orders) {
+            const container = document.getElementById('adminOrderQueue');
+            if (!container) return;
+
+            if (!Array.isArray(orders) || orders.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background: var(--surface-card); border-radius: 16px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 2.5rem; margin-bottom: 8px;">📭</div>
+                        <h3>No Active Orders Today</h3>
+                    </div>
+                `;
+                return;
+            }
+
+            const todayDateKey = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+            let liveHtml = '';
+
+            const sorted = [...orders].sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
+
+            sorted.forEach(order => {
+                const { rawDateObj } = formatOrderDisplay(order);
+                const orderDateKey = rawDateObj.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+                
+                if (orderDateKey === todayDateKey) {
+                    liveHtml += buildOrderCardHtml(order);
+                }
+            });
+
+            container.innerHTML = liveHtml || `
+                <div style="text-align: center; padding: 40px; background: var(--surface-card); border-radius: 16px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 2.5rem; margin-bottom: 8px;">📭</div>
+                    <h3>No Active Orders Today</h3>
+                    <p style="font-size: 0.78rem; color: var(--text-sub); margin-top: 4px;">Previous orders are saved in Order History.</p>
+                </div>
+            `;
+        }
+
+        function renderOrderHistoryList() {
+            const archiveContainer = document.getElementById('oldOrdersArchiveList');
+            const dateFilterVal = document.getElementById('historyDateFilter').value;
+            const searchVal = document.getElementById('historySearchInput').value.toLowerCase().trim();
+            const countBadge = document.getElementById('historyDateTotalCountBadge');
+
+            if (!archiveContainer) return;
+
+            if (!globalLiveOrdersCache || globalLiveOrdersCache.length === 0) {
+                archiveContainer.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--text-sub);">No orders recorded in history.</div>`;
+                if (countBadge) countBadge.textContent = '0 orders';
+                return;
+            }
+
+            const sorted = [...globalLiveOrdersCache].sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date));
+            let filteredHtml = '';
+            let matchedCount = 0;
+
+            sorted.forEach(order => {
+                const { cleanId, rawDateObj } = formatOrderDisplay(order);
+                const orderDateIso = rawDateObj.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+
+                if (dateFilterVal && orderDateIso !== dateFilterVal) {
+                    return;
+                }
+
+                if (searchVal) {
+                    const matchId = cleanId.toLowerCase().includes(searchVal) || order.orderId.toLowerCase().includes(searchVal);
+                    const matchName = (order.customerName || '').toLowerCase().includes(searchVal);
+                    if (!matchId && !matchName) return;
+                }
+
+                matchedCount++;
+                filteredHtml += buildOrderCardHtml(order);
+            });
+
+            if (countBadge) countBadge.textContent = `${matchedCount} order${matchedCount !== 1 ? 's' : ''}`;
+            archiveContainer.innerHTML = filteredHtml || `<div style="text-align: center; padding: 30px; color: var(--text-sub);">No matching orders found for selected date/search.</div>`;
+        }
+
+     // 🚀 Updated: Polling interval reduced to 2 seconds for zero delay
+        fetchStoreStatus();
+        fetchInventoryReport();
+        fetchDashboardStats();
+        fetchLiveOrdersStream();
+        setInterval(fetchLiveOrdersStream, 1000);
+
+        async function fetchAdminRidersPayouts() {
+    const res = await fetch('/api/admin/riders-payouts');
+    const data = await res.json();
+    if (data.success && Array.isArray(data.riders)) {
+        const tbody = document.getElementById('adminRidersPayoutTableBody');
+        if (!tbody) return;
+        if (data.riders.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-sub);">No delivery partners registered.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = data.riders.map(r => `
+            <tr>
+                <td style="font-weight: 800; color: white;">🛵 ${r.name}</td>
+                <td><code>${r.phone}</code></td>
+                <td style="color: #38bdf8; font-weight: 700;">₹${r.earningsToday || 0}</td>
+                <td style="color: #10b981; font-weight: 800;">₹${r.earningsWeekly || 0}</td>
+                <td>
+                    ${r.bankDetails && r.bankDetails.accountNumber ? `
+                        <b>Holder:</b> ${r.bankDetails.holderName}<br>
+                        <b>A/C:</b> <code>${r.bankDetails.accountNumber}</code><br>
+                        <b>IFSC:</b> <code>${r.bankDetails.ifscCode}</code>
+                    ` : '<span style="color: #ef4444;">Not Provided</span>'}
+                </td>
+            </tr>
+        `).join('');
+    }
+}
+
+async function fetchAdminActiveRiders() {
+    try {
+        const res = await fetch('/api/admin/riders-payouts');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.riders)) {
+            const tbody = document.getElementById('adminActiveRidersTableBody');
+            if (!tbody) return;
+            if (data.riders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-sub);">No delivery partners registered yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.riders.map(r => {
+                const onlineBadge = r.isOnline 
+                    ? `<span style="background: rgba(16,185,129,0.15); color: #10b981; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.72rem;">🟢 ONLINE</span>` 
+                    : `<span style="background: rgba(239,68,68,0.15); color: #ef4444; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.72rem;">🔴 OFFLINE</span>`;
+                
+                const whatsappMsg = encodeURIComponent(`Hello ${r.name}, please come ONLINE on the Print From Home delivery app immediately. New orders are waiting for delivery!`);
+                const whatsappLink = `https://api.whatsapp.com/send?phone=91${r.phone}&text=${whatsappMsg}`;
+
+                return `
+                    <tr>
+                        <td style="font-weight: 800; color: white;">🛵 ${r.name}</td>
+                        <td><code>${r.phone}</code></td>
+                        <td>${onlineBadge}</td>
+                        <td style="color: #38bdf8; font-weight: 700;">₹${r.earningsToday || 0}</td>
+                        <td>
+                            <a href="${whatsappLink}" target="_blank" style="background: #25D366; color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; text-decoration: none; display: inline-block;">
+                                💬 Remind on WhatsApp
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    } catch (e) {
+        console.error("Error fetching riders live status:", e);
+    }
+}
+
+// Admin panel load hote hi aur har 10 seconds mein auto-refresh ho
+window.addEventListener('DOMContentLoaded', () => {
+    fetchAdminActiveRiders();
+    setInterval(fetchAdminActiveRiders, 10000);
+});
+let adminDiwaliLaunchActive = false;
+
+async function fetchAdminDiwaliStatus() {
+    try {
+        const res = await fetch('/api/store-status');
+        const data = await res.json();
+        if (data.success !== undefined && data.diwaliLaunchMode !== undefined) {
+            adminDiwaliLaunchActive = data.diwaliLaunchMode;
+            updateDiwaliSwitchButtonUI();
+        }
+    } catch (e) {}
+}
+
+async function toggleAdminDiwaliLaunch() {
+    const nextState = !adminDiwaliLaunchActive;
+    try {
+        const res = await fetch('/api/admin/toggle-diwali-launch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ diwaliLaunchMode: nextState })
+        });
+        const data = await res.json();
+        if (data.success) {
+            adminDiwaliLaunchActive = data.diwaliLaunchMode;
+            updateDiwaliSwitchButtonUI();
+        }
+    } catch (e) {
+        adminDiwaliLaunchActive = nextState;
+        updateDiwaliSwitchButtonUI();
+    }
+}
+
+function updateDiwaliSwitchButtonUI() {
+    const btn = document.getElementById('diwaliToggleBtn');
+    const txt = document.getElementById('diwaliSwitchStateText');
+    if (adminDiwaliLaunchActive) {
+        if (btn) btn.className = "toggle-badge-btn btn-store-open";
+        if (txt) txt.textContent = "ON (Hold Orders)";
+    } else {
+        if (btn) btn.className = "toggle-badge-btn btn-rain-off";
+        if (txt) txt.textContent = "OFF";
+    }
+}
+
+// Page load par aur har 4 seconds mein status sync karne ke liye
+fetchAdminDiwaliStatus();
+setInterval(fetchAdminDiwaliStatus, 4000);
+
+    </script>
+</body>
+</html>

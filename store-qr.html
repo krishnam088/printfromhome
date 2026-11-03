@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print From Home - Store Counter Check-in QR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: #0f172a; color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; text-align: center; }
+        
+        .qr-card {
+            background: #1e293b; border: 2px solid #334155; border-radius: 28px; padding: 40px;
+            max-width: 480px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .qr-image-wrapper {
+            background: #ffffff; padding: 20px; border-radius: 20px; display: inline-block; margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .token-badge {
+            font-family: monospace; font-size: 0.85rem; color: #f59e0b; background: rgba(245,158,11,0.1);
+            padding: 8px 16px; border-radius: 8px; border: 1px dashed #f59e0b; display: inline-block; margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="qr-card">
+        <h1 style="font-size: 1.6rem; font-weight: 900; color: #38bdf8; margin-bottom: 8px;">🏪 Store Counter Check-in</h1>
+        <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">Delivery executives must scan this live screen using their Delivery App to check in and automatically pick up orders.</p>
+        
+        <div class="qr-image-wrapper">
+            <img id="storeLiveQrImage" src="" alt="Loading Live QR..." style="width: 240px; height: 240px; display: block;" />
+        </div>
+
+        <div>
+            <p style="font-size: 0.72rem; font-weight: 700; color: #10b981; text-transform: uppercase;">⚡ Auto-refreshes every 10 seconds for security</p>
+            <div id="storeLiveTokenText" class="token-badge">Syncing token...</div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchAndUpdateStoreCounterQr() {
+            try {
+                const res = await fetch('/api/admin/live-store-qr');
+                const data = await res.json();
+                if (data.success && data.qrToken) {
+                    const token = data.qrToken;
+                    document.getElementById('storeLiveTokenText').textContent = `Token: ${token}`;
+                    
+                    // Generate QR image using free public API
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(token)}`;
+                    document.getElementById('storeLiveQrImage').src = qrUrl;
+                }
+            } catch (e) {
+                console.error("Failed to load store QR:", e);
+            }
+        }
+
+        fetchAndUpdateStoreCounterQr();
+        setInterval(fetchAndUpdateStoreCounterQr, 10000); // Refresh every 10 seconds
+    </script>
+</body>
+</html>

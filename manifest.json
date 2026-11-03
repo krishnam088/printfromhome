@@ -1,0 +1,100 @@
+{
+  "name": "Print From Home",
+  "short_name": "PrintFromHome",
+  "description": "India's Last Minute Printing App - Upload, configure, and order document prints with doorstep delivery.",
+  "start_url": "/",
+  "id": "/print-from-home-app",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "tabbed",
+    "standalone",
+    "fullscreen",
+    "minimal-ui"
+  ],
+  "background_color": "#F4C430",
+  "theme_color": "#F4C430",
+  "orientation": "portrait",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": [
+    "shopping",
+    "utilities",
+    "productivity"
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://printfromhome.onrender.com/manifest.json"
+    }
+  ],
+  "scope_extensions": [
+    {
+      "type": "origin",
+      "origin": "https://printfromhome.onrender.com"
+    }
+  ],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "shortcuts": [
+    {
+      "name": "Print Store",
+      "short_name": "Store",
+      "description": "Open the Print Store to upload and print documents",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/app_icon_192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": {
+        "application/pdf": [".pdf"],
+        "image/png": [".png"],
+        "image/jpeg": [".jpg", ".jpeg"],
+        "application/msword": [".doc"],
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"]
+      }
+    }
+  ],
+  "iarc_rating_id": "e58286c1-65f5-48b4-b830-a8cd1e8605c4",
+  "icons": [
+    {
+      "src": "/app_icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/app_icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/app_icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Print From Home Mobile Dashboard"
+    },
+    {
+      "src": "/app_icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Print From Home Desktop Dashboard"
+    }
+  ]
+}
