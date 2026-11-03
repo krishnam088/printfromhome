@@ -368,6 +368,7 @@
     <li class="sidebar-item" id="nav_orders" onclick="switchAdminTab('orders')">📦 Orders Queue</li>
     <li class="sidebar-item" id="nav_inventory" onclick="switchAdminTab('inventory')">📦 Inventory</li>
     <li class="sidebar-item" id="nav_users" onclick="switchAdminTab('users')">👥 Registered Users</li>
+    <li class="sidebar-item" id="nav_schedule" onclick="switchAdminTab('schedule')">⏰ Schedule Broadcast</li>
     <li class="sidebar-item" id="nav_marketing" onclick="switchAdminTab('marketing')">📢 Marketing & Alerts</li>
     <!-- 🔥 Yahan Store Timings ka item add karein -->
         <li class="sidebar-item" id="nav_timings" onclick="switchAdminTab('timings')">⏰ Store Timings</li>
@@ -574,6 +575,28 @@
             </table>
         </div>
     </div>
+</div>
+
+<div class="admin-card" style="background: #1e293b; padding: 20px; border-radius: 12px; margin-top: 20px; border: 1px solid #334155;">
+    <h3 style="color: #38bdf8; margin-top: 0;">📅 Schedule Launch Countdown Email to All Users</h3>
+    <p style="color: #94a3b8; font-size: 0.85rem;">Yahan message type karein aur date/time select karke schedule kar dein.</p>
+    
+    <div style="margin-bottom: 12px;">
+        <label style="display: block; color: #cbd5e1; font-size: 0.8rem; margin-bottom: 4px;">Email Subject:</label>
+        <input type="text" id="scheduleSubject" value="🚀 Print From Home Launching Very Soon!" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 6px;">
+    </div>
+
+    <div style="margin-bottom: 12px;">
+        <label style="display: block; color: #cbd5e1; font-size: 0.8rem; margin-bottom: 4px;">Message Body:</label>
+        <textarea id="scheduleMessage" rows="4" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 6px;">Hello! Humara naya platform bohot jald live hone ja raha hai. Taiyar rahiye.</textarea>
+    </div>
+
+    <div style="margin-bottom: 15px;">
+        <label style="display: block; color: #cbd5e1; font-size: 0.8rem; margin-bottom: 4px;">Select Date & Time:</label>
+        <input type="datetime-local" id="scheduleDateTime" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 6px;">
+    </div>
+
+    <button onclick="submitScheduledBroadcast()" style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;">⏰ Schedule Broadcast Email</button>
 </div>
 
         <!-- TAB 4: MARKETING SECTION -->
@@ -2366,6 +2389,35 @@ function updateDiwaliSwitchButtonUI() {
 // Page load par aur har 4 seconds mein status sync karne ke liye
 fetchAdminDiwaliStatus();
 setInterval(fetchAdminDiwaliStatus, 4000);
+
+
+async function submitScheduledBroadcast() {
+    const subject = document.getElementById('scheduleSubject').value.trim();
+    const message = document.getElementById('scheduleMessage').value.trim();
+    const scheduledTime = document.getElementById('scheduleDateTime').value;
+
+    if (!subject || !message || !scheduledTime) {
+        alert("Kripya subject, message aur date/time sabhi bharein!");
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/admin/schedule-broadcast', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subject, message, scheduledTime })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            alert("✅ " + data.message);
+        } else {
+            alert("❌ Error: " + data.message);
+        }
+    } catch (err) {
+        alert("❌ Network Error: " + err.message);
+    }
+}
 
     </script>
 </body>

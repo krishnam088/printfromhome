@@ -105,6 +105,17 @@ const orderSchema = new mongoose.Schema({
 });
 orderSchema.index({ status: 1, timestamp: -1 });
 const Order = mongoose.models.Order || mongoose.model('Order', orderSchema);
+
+// 🔥 Scheduled Email Mongoose Schema
+const scheduledEmailSchema = new mongoose.Schema({
+    subject: String,
+    message: String,
+    scheduledTime: Date,
+    status: { type: String, default: 'Pending' }, 
+    dateCreated: { type: String, default: () => new Date().toISOString() }
+});
+const ScheduledEmail = mongoose.model('ScheduledEmail', scheduledEmailSchema);
+
 // ==========================================
 // 📋 STORE CONFIG & PRODUCT MODELS (MOVE HERE)
 // ==========================================
@@ -1966,6 +1977,28 @@ app.get('/api/admin/users', async (req, res) => {
     }
 });
 
+// 🔥 Admin API to Schedule Broadcast
+app.post('/api/admin/schedule-broadcast', async (req, res) => {
+    try {
+        const { subject, message, scheduledTime } = req.body;
+        if (!subject || !message || !scheduledTime) {
+            return res.status(400).json({ success: false, message: 'Sabhi fields bharna zaroori hai!' });
+        }
+
+        const newSchedule = new ScheduledEmail({
+            subject,
+            message,
+            scheduledTime: new Date(scheduledTime),
+            status: 'Pending'
+        });
+        await newSchedule.save();
+
+        res.json({ success: true, message: 'Broadcast successfully schedule ho gaya hai!' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 
 app.get('/api/admin/settings', async (req, res) => {
     try {
@@ -2097,6 +2130,31 @@ mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb+sr
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+// 🔥 Background Scheduler (Har 1 minute mein check karega)
+setInterval(async () => {
+    try {
+        const now = new Date();
+        const pendingEmails = await ScheduledEmail.find({ status: 'Pending', scheduledTime: { $lte: now } });
+
+        for (let item of pendingEmails) {
+            console.log(`⏰ Executing scheduled broadcast: ${item.subject}`);
+            
+            const users = await User.find({ email: { $exists: true, $ne: null } });
+            for (let user of users) {
+                if (user.email && typeof sendBroadcastEmail === 'function') {
+                    await sendBroadcastEmail(user.email, item.subject, item.message);
+                }
+            }
+
+            item.status = 'Sent';
+            await item.save();
+            console.log(`✅ Scheduled broadcast sent successfully to all users!`);
+        }
+    } catch (err) {
+        console.error('❌ Background Scheduler Error:', err.message);
+    }
+}, 60000);
 
 
 
