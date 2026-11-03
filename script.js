@@ -858,13 +858,26 @@ if (fileUpload) {
                     fileUrl = '';
                 }
 
-                // 🔥 Har uploaded file ko turant Base64 mein convert karein taaki localStorage mein loss na ho
-                let base64Data = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.readAsDataURL(file);
-                });
+              // 🔥 Har uploaded file ko turant Base64 mein convert karein taaki localStorage mein loss na ho
+let base64Data = await new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(file);
+});
 
+uploadedFilesList.push({
+    name: file.name || 'Document.pdf',
+    size: file.size || 0,
+    fileBlob: file,
+    fileUrl: fileUrl,
+    fileBase64: base64Data, // 🔥 Yeh sabse zaroori line hai jo base64 data ko aage pass karegi!
+    pageImages: pageImages.length > 0 ? pageImages : [fileUrl],
+    pages: pageCount,
+    copies: 1,
+    printType: 'bw',
+    orientation: 'portrait',
+    binding: 'none'
+});
                 if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
                     try {
                         if (typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
