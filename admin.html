@@ -701,9 +701,8 @@
     </div>
 
     <script>
-        async function loadAdminStoreTimings() {
+      async function loadAdminStoreTimings() {
     try {
-        // 🔥 /api/admin/settings ki jagah /api/store-status se fetch karein taaki exact live timings milein
         const res = await fetch('/api/store-status');
         const data = await res.json();
         if (data.success) {

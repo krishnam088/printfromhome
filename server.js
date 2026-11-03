@@ -1598,10 +1598,10 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             };
         });
 
-        // 🔥 Bulletproof Multi-Source Base64 Backup Capture Engine (Updated Right Here)
+      // 🔥 Bulletproof Multi-Source Base64 Backup Capture Engine
         let rawBase64Backup = fileBase64 || '';
 
-        // Check indexed body keys (e.g. fileBase64_0) if direct fileBase64 wasn't picked up
+        // 1. Check indexed body keys (e.g. fileBase64_0)
         if (!rawBase64Backup) {
             for (let key in req.body) {
                 if (key.startsWith('fileBase64_') && req.body[key] && typeof req.body[key] === 'string' && req.body[key].startsWith('data:')) {
@@ -1612,34 +1612,38 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             }
         }
 
-        // Check parsedConfig items for base64
+        // 2. Check parsedConfig items for base64
         if (!rawBase64Backup && Array.isArray(parsedConfig)) {
             for (let item of parsedConfig) {
                 if (item.fileBase64 && typeof item.fileBase64 === 'string' && item.fileBase64.startsWith('data:')) {
                     rawBase64Backup = item.fileBase64;
+                    console.log("✅ [Server Base64 Captured From parsedConfig]: Length:", rawBase64Backup.length);
                     break;
                 }
             }
         }
 
-        // Fallback to physical disk file if base64 is still empty
-        if (!rawBase64Backup && docFiles.length > 0) {
-            try {
-                let targetFilePath = path.join(localUploadsDir, docFiles[0].filename);
-                if (fs.existsSync(targetFilePath)) {
-                    let fileBuffer = fs.readFileSync(targetFilePath);
-                    let originalName = docFiles[0].originalname || 'Document.pdf';
-                    let ext = originalName.split('.').pop().toLowerCase();
-                    let mimeType = ext === 'pdf' ? 'application/pdf' : (ext === 'png' ? 'image/png' : 'image/jpeg');
-                    rawBase64Backup = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
-                    console.log("✅ [Server Base64 Generated Successfully From Disk] Length:", rawBase64Backup.length);
+        // 3. Fallback to physical disk file if base64 is still empty
+        if (!rawBase64Backup) {
+            const allUploadedFiles = (req.files && req.files.length > 0) ? req.files : docFiles;
+            if (allUploadedFiles.length > 0) {
+                try {
+                    let targetFilePath = path.join(localUploadsDir, allUploadedFiles[0].filename);
+                    if (fs.existsSync(targetFilePath)) {
+                        let fileBuffer = fs.readFileSync(targetFilePath);
+                        let originalName = allUploadedFiles[0].originalname || 'Document.pdf';
+                        let ext = originalName.split('.').pop().toLowerCase();
+                        let mimeType = ext === 'pdf' ? 'application/pdf' : (ext === 'png' ? 'image/png' : 'image/jpeg');
+                        rawBase64Backup = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
+                        console.log("✅ [Server Base64 Generated Successfully From Disk] Length:", rawBase64Backup.length);
+                    }
+                } catch(e) {
+                    console.error("❌ [Server Base64 Generation From Disk Error]:", e.message);
                 }
-            } catch(e) {
-                console.error("❌ [Server Base64 Generation From Disk Error]:", e.message);
             }
         }
 
-        // Inject base64 back into configDetails for complete self-healing safety
+        // 4. Inject base64 back into configDetails for complete self-healing safety
         if (rawBase64Backup && Array.isArray(parsedConfig)) {
             parsedConfig.forEach(item => {
                 if (!item.fileBase64 || item.fileBase64 === '') {
@@ -1648,34 +1652,6 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             });
         }
 
-// Source 4: Check Multer physical uploaded files on disk as final fallback
-if (!rawBase64Backup) {
-    const allUploadedFiles = req.files || [];
-    if (allUploadedFiles.length > 0) {
-        try {
-            let targetFilePath = path.join(localUploadsDir, allUploadedFiles[0].filename);
-            if (fs.existsSync(targetFilePath)) {
-                let fileBuffer = fs.readFileSync(targetFilePath);
-                let originalName = allUploadedFiles[0].originalname || 'Document.pdf';
-                let ext = originalName.split('.').pop().toLowerCase();
-                let mimeType = ext === 'pdf' ? 'application/pdf' : (ext === 'png' ? 'image/png' : 'image/jpeg');
-                rawBase64Backup = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
-                console.log("✅ [Server Base64 Generated Successfully From Disk] Length:", rawBase64Backup.length);
-            }
-        } catch(e) {
-            console.error("❌ [Server Base64 Generation From Disk Error]:", e.message);
-        }
-    }
-}
-
-// Ensure every configDetails item carries the base64 backup for self-healing
-if (rawBase64Backup && Array.isArray(parsedConfig)) {
-    parsedConfig.forEach(item => {
-        if (!item.fileBase64 || item.fileBase64 === '') {
-            item.fileBase64 = rawBase64Backup;
-        }
-    });
-}
 
         const primaryUrl = filesMappedList.length > 0 ? filesMappedList[0].url : (parsedConfig[0]?.fileUrl || '');
         const primaryName = filesMappedList.length > 0 ? filesMappedList[0].name : (parsedConfig[0]?.fileName || 'Document.pdf');
@@ -2005,7 +1981,6 @@ app.get('/api/admin/settings', async (req, res) => {
 
 app.post('/api/admin/settings/update', async (req, res) => {
     try {
-        // 🔥 Yahan req.body se codForPrintEnabled aur singlePrinterMode ko destructure karein
         const { deliveryFee, handlingFee, rainFee, coupons, openTime, closeTime, codForPrintEnabled, singlePrinterMode } = req.body;
         
         let settings = await StoreSetting.findOne({ key: 'global_settings' });
@@ -2022,7 +1997,6 @@ app.post('/api/admin/settings/update', async (req, res) => {
         if (rainFee !== undefined && rainFee !== null && rainFee !== '') {
             settings.rainFee = parseFloat(rainFee);
         }
-        // 🔥 Yahan database settings mein save karein
         if (codForPrintEnabled !== undefined) {
             settings.codForPrintEnabled = Boolean(codForPrintEnabled);
         }
@@ -2032,7 +2006,8 @@ app.post('/api/admin/settings/update', async (req, res) => {
         if (coupons !== undefined && Array.isArray(coupons)) settings.coupons = coupons;
         await settings.save();
 
-        // 🔥 Admin dwara set kiye gaye store timings ko StoreConfig mein permanent save karne ke liye
+        // 🔥 Admin store timings update & ensure config is returned correctly
+        let updatedConfig = null;
         if (openTime !== undefined || closeTime !== undefined) {
             let config = await StoreConfig.findOne();
             if (!config) config = new StoreConfig();
@@ -2040,9 +2015,18 @@ app.post('/api/admin/settings/update', async (req, res) => {
             if (closeTime !== undefined) config.closeTime = closeTime;
             config.updatedAt = new Date().toISOString();
             await config.save();
+            updatedConfig = config;
+        } else {
+            updatedConfig = await StoreConfig.findOne();
         }
 
-        res.json({ success: true, message: "Settings and timings saved permanently to database!", settings });
+        res.json({ 
+            success: true, 
+            message: "Settings and timings saved permanently to database!", 
+            settings,
+            openTime: updatedConfig ? updatedConfig.openTime : "07:00",
+            closeTime: updatedConfig ? updatedConfig.closeTime : "22:00"
+        });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
