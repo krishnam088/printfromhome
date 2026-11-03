@@ -40,6 +40,24 @@ function saveToHistory(orderId) {
     }
 }
 
+function saveBase64ToFile(base64String, localPath) {
+    return new Promise((resolve, reject) => {
+        try {
+            let matches = base64String.match(/^data:(.+);base64,(.+)$/);
+            let buffer;
+            if (matches && matches.length === 3) {
+                buffer = Buffer.from(matches[2], 'base64');
+            } else {
+                buffer = Buffer.from(base64String, 'base64');
+            }
+            fs.writeFileSync(localPath, buffer);
+            resolve();
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
+
 function downloadFilePromise(url, localPath) {
     return new Promise((resolve, reject) => {
         const writer = fs.createWriteStream(localPath);
@@ -168,14 +186,35 @@ async function fetchAndPrintLiveJobs() {
                         fileUrl = `${BASE_URL}/uploads/${cleanFileName}`;
                     }
 
-                    if (fileUrl && fileUrl !== '#' && !fileUrl.startsWith('blob:')) {
+if (fileUrl && fileUrl !== '#' && !fileUrl.startsWith('blob:')) {
                         const localPath = path.join(__dirname, `temp_print_${order.orderId}_${i}.pdf`);
 
                         try {
                             if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
 
                             console.log(`📥 Downloading file for item ${i + 1} from: ${fileUrl}`);
-                            await downloadFilePromise(fileUrl, localPath);
+                            
+                            // 🔥 Smart Self-Healing Try-Catch Block (URL vs Base64 Fallback)
+                            try {
+                                await downloadFilePromise(fileUrl, localPath);
+                                
+                                // Check if downloaded file is invalid or 404 HTML page (< 200 bytes)
+                                const fileStats = fs.statSync(localPath);
+                                if (fileStats.size < 200) {
+                                    throw new Error("File size too small (< 200 bytes), likely a 404 response.");
+                                }
+                            } catch (urlErr) {
+                                console.warn(`⚠️ URL download failed (404/Network). Automatically switching to MongoDB Base64 fallback...`);
+                                
+                                // 🔥 Database se direct Base64 uthakar file generate karo
+                                const base64Data = fileMeta.fileBase64 || order.fileBase64Data;
+                                if (base64Data) {
+                                    await saveBase64ToFile(base64Data, localPath);
+                                    console.log(`✅ [Self-Healing Success] File successfully reconstructed from database Base64!`);
+                                } else {
+                                    throw urlErr; // Agar base64 bhi na ho toh error aane do
+                                }
+                            }
                             
                             const fileStats = fs.statSync(localPath);
                             if (fileStats.size < 200) {
@@ -206,7 +245,9 @@ async function fetchAndPrintLiveJobs() {
                         } catch (fileErr) {
                             console.error(`❌ Failed printing item file (${fileUrl}):`, fileErr.message);
                         }
-                    } else {
+                    }
+
+                    else {
                         console.warn(`⚠️ Warning: No valid downloadable file URL found for print item ${fileMeta.fileName || i}`);
                     }
                 }
