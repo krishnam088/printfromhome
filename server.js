@@ -226,20 +226,6 @@ const DeliveryBoy = mongoose.model('DeliveryBoy', deliveryBoySchema);
 
 // Reuse the StoreConfig/Product models already defined above. Duplicate declarations removed to avoid redeclaration errors.
 
-// 🔔 Safe Web Push Notification Configuration
-try {
-    if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-        webpush.setVapidDetails(
-            'mailto:printfromhomesupport@gmail.com',
-            process.env.VAPID_PUBLIC_KEY,
-            process.env.VAPID_PRIVATE_KEY
-        );
-    } else {
-        console.warn('⚠️ VAPID keys not configured in environment variables. Push notifications are running in safe fallback mode.');
-    }
-} catch (vapidErr) {
-    console.error('⚠️ VAPID Setup Warning:', vapidErr.message);
-}
 
 const pushSubscriptionSchema = new mongoose.Schema({
     identity: String,
