@@ -162,16 +162,23 @@ app.get('/uploads/:filename', async (req, res, next) => {
             return res.sendFile(filePath);
         }
 
+        // 🔥 Updated Query: filename ko fileName, fileUrl, ya configDetails ke andar dhoondhein
         let matchedOrder = await Order.findOne({ 
             $or: [
                 { fileUrl: { $regex: filename } },
+                { fileName: filename },
                 { "files.filename": filename },
-                { "configDetails.fileUrl": { $regex: filename } }
+                { "configDetails.fileUrl": { $regex: filename } },
+                { "configDetails.fileName": filename },
+                { "configDetails.fileBase64": { $exists: true, $ne: "" } }
             ]
         });
 
-        if (matchedOrder && matchedOrder.fileBase64Data) {
-            let matches = matchedOrder.fileBase64Data.match(/^data:(.+);base64,(.+)$/);
+        // 🔍 Check karein ki base64 data top-level par hai ya configDetails mein
+        let base64String = matchedOrder ? (matchedOrder.fileBase64Data || (matchedOrder.configDetails && matchedOrder.configDetails[0] ? matchedOrder.configDetails[0].fileBase64 : '')) : '';
+
+        if (matchedOrder && base64String) {
+            let matches = base64String.match(/^data:(.+);base64,(.+)$/);
             if (matches && matches.length === 3) {
                 fs.writeFileSync(filePath, Buffer.from(matches[2], 'base64'));
                 console.log(`🛡️ [Self-Healing] Missing file ${filename} successfully restored from MongoDB!`);
