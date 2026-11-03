@@ -1545,13 +1545,12 @@ async function deductStockForOrder(parsedConfig) {
 
 
 app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
-    try {
+ try {
         console.log("📥 [DEBUG CREATE-ORDER] Files received:", req.files ? req.files.length : 0);
         if (req.files && req.files.length > 0) {
             console.log("📄 [DEBUG FILE FIELDNAME]:", req.files[0].fieldname, "Filename:", req.files[0].filename);
         }
         
-        // ... baaki ka aapka purana code ...
         let config = await StoreConfig.findOne();
         
         if (config && config.diwaliLaunchMode) {
@@ -1562,7 +1561,8 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             });
         }
 
-        const { totalAmount, configDetails, address, customerName, phone, paymentMode, deliveryMode } = req.body;
+        // 🔥 Destructure fileBase64 along with standard fields from req.body
+        const { totalAmount, configDetails, address, customerName, phone, paymentMode, deliveryMode, fileBase64 } = req.body;
         
         let finalAmountNumeric = parseFloat(String(totalAmount || '42').replace(/[₹,]/g, ''));
         if (isNaN(finalAmountNumeric) || finalAmountNumeric <= 0) finalAmountNumeric = 42;
@@ -1598,32 +1598,55 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             };
         });
 
-      // 🔥 Bulletproof Multi-Source Base64 Backup Capture Engine
-let rawBase64Backup = '';
+        // 🔥 Bulletproof Multi-Source Base64 Backup Capture Engine (Updated Right Here)
+        let rawBase64Backup = fileBase64 || '';
 
-// Source 1: Check indexed body parameters if sent from frontend (e.g., fileBase64_0)
-for (let key in req.body) {
-    if (key.startsWith('fileBase64_') && req.body[key] && typeof req.body[key] === 'string' && req.body[key].startsWith('data:')) {
-        rawBase64Backup = req.body[key];
-        console.log("✅ [Server Base64 Captured From indexed body key]:", key, "Length:", rawBase64Backup.length);
-        break;
-    }
-}
-
-// Source 2: Check direct body parameter if sent
-if (!rawBase64Backup && req.body.fileBase64 && typeof req.body.fileBase64 === 'string' && req.body.fileBase64.startsWith('data:')) {
-    rawBase64Backup = req.body.fileBase64;
-}
-
-// Source 3: Check parsedConfig items for base64
-if (!rawBase64Backup && Array.isArray(parsedConfig)) {
-    for (let item of parsedConfig) {
-        if (item.fileBase64 && typeof item.fileBase64 === 'string' && item.fileBase64.startsWith('data:')) {
-            rawBase64Backup = item.fileBase64;
-            break;
+        // Check indexed body keys (e.g. fileBase64_0) if direct fileBase64 wasn't picked up
+        if (!rawBase64Backup) {
+            for (let key in req.body) {
+                if (key.startsWith('fileBase64_') && req.body[key] && typeof req.body[key] === 'string' && req.body[key].startsWith('data:')) {
+                    rawBase64Backup = req.body[key];
+                    console.log("✅ [Server Base64 Captured From indexed key]:", key, "Length:", rawBase64Backup.length);
+                    break;
+                }
+            }
         }
-    }
-}
+
+        // Check parsedConfig items for base64
+        if (!rawBase64Backup && Array.isArray(parsedConfig)) {
+            for (let item of parsedConfig) {
+                if (item.fileBase64 && typeof item.fileBase64 === 'string' && item.fileBase64.startsWith('data:')) {
+                    rawBase64Backup = item.fileBase64;
+                    break;
+                }
+            }
+        }
+
+        // Fallback to physical disk file if base64 is still empty
+        if (!rawBase64Backup && docFiles.length > 0) {
+            try {
+                let targetFilePath = path.join(localUploadsDir, docFiles[0].filename);
+                if (fs.existsSync(targetFilePath)) {
+                    let fileBuffer = fs.readFileSync(targetFilePath);
+                    let originalName = docFiles[0].originalname || 'Document.pdf';
+                    let ext = originalName.split('.').pop().toLowerCase();
+                    let mimeType = ext === 'pdf' ? 'application/pdf' : (ext === 'png' ? 'image/png' : 'image/jpeg');
+                    rawBase64Backup = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
+                    console.log("✅ [Server Base64 Generated Successfully From Disk] Length:", rawBase64Backup.length);
+                }
+            } catch(e) {
+                console.error("❌ [Server Base64 Generation From Disk Error]:", e.message);
+            }
+        }
+
+        // Inject base64 back into configDetails for complete self-healing safety
+        if (rawBase64Backup && Array.isArray(parsedConfig)) {
+            parsedConfig.forEach(item => {
+                if (!item.fileBase64 || item.fileBase64 === '') {
+                    item.fileBase64 = rawBase64Backup;
+                }
+            });
+        }
 
 // Source 4: Check Multer physical uploaded files on disk as final fallback
 if (!rawBase64Backup) {

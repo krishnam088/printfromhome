@@ -3448,29 +3448,43 @@ window.executeFinalCartOrderPlacement = async function() {
         let totalSnacksVal = 0;
         const finalMetaConfig = [];
 
-        window.cartPrintJobsArray.forEach(job => {
-            let cost = 0;
-            if (job.paperType === 'photo' || job.jobType === 'photo_print') {
-                cost = Number(job.price || 50);
-            } else {
-                let rate = (job.printType === 'bw') ? 3 : 10;
-                cost = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
-            }
-            
-            totalPrintVal += cost;
-            finalMetaConfig.push({ 
-                fileName: job.fileName, 
-                pages: job.pages, 
-                printType: job.printType, 
-                binding: job.binding, 
-                copies: job.copies,
-                paperType: job.paperType || 'document',
-                photoLayout: job.photoLayout || null,
-                fileUrl: job.fileUrl || '', 
-                fileBase64: job.fileBase64 || '',
-                price: cost
-            });
-        });
+      window.cartPrintJobsArray.forEach((job, index) => {
+    let cost = 0;
+    if (job.paperType === 'photo' || job.jobType === 'photo_print') {
+        cost = Number(job.price || 50);
+    } else {
+        let rate = (job.printType === 'bw') ? 3 : 10;
+        cost = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
+    }
+    
+    totalPrintVal += cost;
+
+    // 🔥 Sabse zaroori fix: Base64 ensure karne ke liye multiple fallbacks check karein
+    let resolvedBase64 = job.fileBase64 || '';
+    
+    // Agar job.fileBase64 khali hai par window.studioMasterFiles mein mil jaye
+    if (!resolvedBase64 && window.studioMasterFiles && window.studioMasterFiles[index]) {
+        resolvedBase64 = window.studioMasterFiles[index].fileBase64 || '';
+    }
+
+    finalMetaConfig.push({ 
+        fileName: job.fileName, 
+        pages: job.pages, 
+        printType: job.printType, 
+        binding: job.binding, 
+        copies: job.copies,
+        paperType: job.paperType || 'document',
+        photoLayout: job.photoLayout || null,
+        fileUrl: job.fileUrl || '', 
+        fileBase64: resolvedBase64, // 🔥 Ab yahan guaranteed base64 string jayegi!
+        price: cost
+    });
+
+    // 🔥 FormData ke liye bhi explicitly append kar do taaki server ko direct mil jaye
+    if (resolvedBase64) {
+        formData.append(`fileBase64_${index}`, resolvedBase64);
+    }
+});
 
         window.cartSnacksArray.forEach(snack => {
             totalSnacksVal += snack.price * snack.qty;
