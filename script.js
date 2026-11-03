@@ -3543,11 +3543,14 @@ window.executeFinalCartOrderPlacement = async function() {
             console.warn("Using store location fallback for order coordinates.");
         }
 
-    const formData = new FormData();
+   const formData = new FormData();
 window.cartPrintJobsArray.forEach((job, index) => {
+    // 1. Agar physical file blob hai
     if (job.fileData) {
         formData.append('document', job.fileData);
-    } else if (job.fileBase64 && typeof job.fileBase64 === 'string' && job.fileBase64.includes(',')) {
+    } 
+    // 2. Agar base64 string hai, toh usko File object mein convert karke 'document' field mein daal do
+    else if (job.fileBase64 && typeof job.fileBase64 === 'string' && job.fileBase64.includes(',')) {
         try {
             let arr = job.fileBase64.split(',');
             let mime = arr[0].match(/:(.*?);/)[1] || 'application/pdf';
@@ -3562,7 +3565,7 @@ window.cartPrintJobsArray.forEach((job, index) => {
         }
     }
 
-    // 🔥 Sabse zaroori addition: Direct base64 string ko bhi append kar do taaki backend kabhi fail na ho!
+    // 🔥 3. Sabse zaroori line: Direct base64 string ko bhi text ke roop mein append karo!
     if (job.fileBase64) {
         formData.append(`fileBase64_${index}`, job.fileBase64);
     }
