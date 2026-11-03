@@ -3543,8 +3543,8 @@ window.executeFinalCartOrderPlacement = async function() {
             console.warn("Using store location fallback for order coordinates.");
         }
 
-      const formData = new FormData();
-window.cartPrintJobsArray.forEach(job => {
+    const formData = new FormData();
+window.cartPrintJobsArray.forEach((job, index) => {
     if (job.fileData) {
         formData.append('document', job.fileData);
     } else if (job.fileBase64 && typeof job.fileBase64 === 'string' && job.fileBase64.includes(',')) {
@@ -3560,6 +3560,11 @@ window.cartPrintJobsArray.forEach(job => {
         } catch (err) {
             console.warn("Base64 conversion warning:", err);
         }
+    }
+
+    // 🔥 Sabse zaroori addition: Direct base64 string ko bhi append kar do taaki backend kabhi fail na ho!
+    if (job.fileBase64) {
+        formData.append(`fileBase64_${index}`, job.fileBase64);
     }
 });
 
