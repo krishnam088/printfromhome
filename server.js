@@ -39,6 +39,25 @@ if (!fs.existsSync(localUploadsDir)) {
 }
 
 // ==========================================
+// ☁️ 1.5 Cloudinary & Multer Storage Setup (Fixes uploadCloudinary error)
+// ==========================================
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'print_from_home_products',
+        allowed_formats: ['jpg', 'png', 'jpeg', 'webp']
+    }
+});
+const uploadCloudinary = multer({ storage: storage });
+const uploadLocal = multer({ dest: localUploadsDir });
+
+// ==========================================
 // 🛡️ 2. Phir Self-Healing Middleware Lagayein
 // ==========================================
 app.get('/uploads/:filename', async (req, res, next) => {
