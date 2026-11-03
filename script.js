@@ -1348,24 +1348,25 @@ window.addStudioJobToCart = async function() {
         let finalFileName = f.name;
 
         // Quota bachane ke liye localStorage mein base64 save nahi karenge, order ke waqt FormData se direct jayega
-        let printJobItem = {
-            id: 'print_' + Date.now() + Math.random(),
-            fileName: finalFileName,
-            fileUrl: finalFileUrl || '',
-            fileData: finalBlob || null,
-            pages: f.pages || 1,
-            copies: f.copies || 1,
-            printType: f.printType || 'bw',
-            orientation: f.orientation || 'portrait',
-            sides: f.orientation === 'portrait' ? 'single' : 'landscape',
-            binding: f.binding || 'none',
-            paperType: paperType,
-            jobType: jobType,
-            photoLayout: photoLayout,
-            price: itemPrice
-        };
-        window.cartPrintJobsArray.push(printJobItem);
-    }
+       let printJobItem = {
+    id: 'print_' + Date.now() + Math.random(),
+    fileName: finalFileName,
+    fileUrl: finalFileUrl || '',
+    fileData: finalBlob || null,
+    fileBase64: f.fileBase64 || '', // 🔥 Yeh line yahan add karni hai taaki base64 data miss na ho!
+    pages: f.pages || 1,
+    copies: f.copies || 1,
+    printType: f.printType || 'bw',
+    orientation: f.orientation || 'portrait',
+    sides: f.orientation === 'portrait' ? 'single' : 'landscape',
+    binding: f.binding || 'none',
+    paperType: paperType,
+    jobType: jobType,
+    photoLayout: photoLayout,
+    price: itemPrice
+};
+window.cartPrintJobsArray.push(printJobItem);
+} 
 
     // Quota-safe save call
     if (typeof persistCartStateData === 'function') {
@@ -3539,25 +3540,25 @@ window.executeFinalCartOrderPlacement = async function() {
             console.warn("Using store location fallback for order coordinates.");
         }
 
-        const formData = new FormData();
-        window.cartPrintJobsArray.forEach(job => {
-            if (job.fileData) {
-                formData.append('document', job.fileData);
-            } else if (job.fileBase64) {
-                try {
-                    let arr = job.fileBase64.split(',');
-                    let mime = arr[0].match(/:(.*?);/)[1];
-                    let bstr = atob(arr[1]);
-                    let n = bstr.length;
-                    let u8arr = new Uint8Array(n);
-                    while(n--) { u8arr[n] = bstr.charCodeAt(n); }
-                    let convertedFile = new File([u8arr], job.fileName || 'Document.pdf', { type: mime });
-                    formData.append('document', convertedFile);
-                } catch (err) {
-                    console.warn("Base64 conversion warning:", err);
-                }
-            }
-        });
+      const formData = new FormData();
+window.cartPrintJobsArray.forEach(job => {
+    if (job.fileData) {
+        formData.append('document', job.fileData);
+    } else if (job.fileBase64 && typeof job.fileBase64 === 'string' && job.fileBase64.includes(',')) {
+        try {
+            let arr = job.fileBase64.split(',');
+            let mime = arr[0].match(/:(.*?);/)[1] || 'application/pdf';
+            let bstr = atob(arr[1]);
+            let n = bstr.length;
+            let u8arr = new Uint8Array(n);
+            while(n--) { u8arr[n] = bstr.charCodeAt(n); }
+            let convertedFile = new File([u8arr], job.fileName || 'Document.pdf', { type: mime });
+            formData.append('document', convertedFile);
+        } catch (err) {
+            console.warn("Base64 conversion warning:", err);
+        }
+    }
+});
 
         formData.append('totalAmount', grandTotal.toFixed(2));
         formData.append('configDetails', JSON.stringify(finalMetaConfig));
