@@ -641,7 +641,7 @@ app.post('/api/auth/verify-signup-otp', async (req, res) => {
             identity: tempData.identity,
             email: tempData.email,
             isEmailVerified: true,
-            dateCreated: new Date().toLocaleString()
+            dateCreated: new Date().toISOString() // 🔥 Yahan toLocaleString() ki jagah toISOString() daal do
         });
         
         await newUser.save();

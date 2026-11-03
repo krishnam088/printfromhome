@@ -3442,7 +3442,7 @@ window.executeFinalCartOrderPlacement = async function() {
         window.adminHandlingFee = (cachedHan !== null && cachedHan !== undefined && cachedHan !== '') ? parseFloat(cachedHan) : 0;
         window.adminRainFee = (cachedRai !== null && cachedRai !== undefined && cachedRai !== '') ? parseFloat(cachedRai) : 0;
         
-        let totalItemsCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0) + window.cartPrintJobsArray.length;
+       let totalItemsCount = window.cartSnacksArray.reduce((acc, item) => acc + item.qty, 0) + window.cartPrintJobsArray.length;
         if (totalItemsCount === 0) {
             if (typeof showAppToast === 'function') {
                 showAppToast("Your cart is empty. Please add items first.", "error");
@@ -3453,7 +3453,10 @@ window.executeFinalCartOrderPlacement = async function() {
             return;
         }
 
-let totalPrintVal = 0;
+        // 🔥 YAHAN PAR INITIALIZE KARNA HAI:
+        const formData = new FormData();
+
+        let totalPrintVal = 0;
         let totalSnacksVal = 0;
         const finalMetaConfig = [];
 
@@ -3503,7 +3506,7 @@ let totalPrintVal = 0;
                 price: cost
             });
 
-            // FormData ke liye bhi explicitly append kar do
+            // FormData ke liye bhi explicitly append kar do (Ab error nahi aayegi!)
             if (resolvedBase64) {
                 formData.append(`fileBase64_${i}`, resolvedBase64);
             }
@@ -3580,7 +3583,7 @@ let totalPrintVal = 0;
             console.warn("Using store location fallback for order coordinates.");
         }
 
-   const formData = new FormData();
+
 window.cartPrintJobsArray.forEach((job, index) => {
     // 1. Agar physical file blob hai
     if (job.fileData) {

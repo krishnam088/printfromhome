@@ -743,7 +743,7 @@ window.addEventListener('DOMContentLoaded', () => {
     loadAdminStoreTimings();
 });
 
-        async function fetchAdminRegisteredUsers() {
+async function fetchAdminRegisteredUsers() {
     try {
         const res = await fetch('/api/admin/users');
         const data = await res.json();
@@ -759,20 +759,35 @@ window.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            tbody.innerHTML = data.users.map((u, idx) => `
-                <tr>
-                    <td><b>${idx + 1}</b></td>
-                    <td style="font-weight: 800; color: white;">👤 ${u.name || 'N/A'}</td>
-                    <td><code>${u.identity || 'N/A'}</code></td>
-                    <td style="color: #38bdf8;">📧 ${u.email || 'Not Provided'}</td>
-                    <td style="color: var(--text-sub); font-size: 0.78rem;">${u.dateCreated || 'N/A'}</td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = data.users.map((u, idx) => {
+                // 🔥 Server se aaye ISO date ko 100% accurate IST time mein convert karne ke liye
+                let formattedDate = 'N/A';
+                if (u.dateCreated) {
+                    let dObj = new Date(u.dateCreated);
+                    if (!isNaN(dObj.getTime())) {
+                        formattedDate = dObj.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+                    } else {
+                        formattedDate = u.dateCreated; // Purane string formats ke liye fallback
+                    }
+                }
+
+                return `
+                    <tr>
+                        <td><b>${idx + 1}</b></td>
+                        <td style="font-weight: 800; color: white;">👤 ${u.name || 'N/A'}</td>
+                        <td><code>${u.identity || 'N/A'}</code></td>
+                        <td style="color: #38bdf8;">📧 ${u.email || 'Not Provided'}</td>
+                        <td style="color: var(--text-sub); font-size: 0.78rem;">${formattedDate}</td>
+                    </tr>
+                `;
+            }).join('');
         }
     } catch (err) {
         console.error("Failed to load users:", err);
     }
-}
+}       
+
+
         let cachedInventoryList = [];
         let html5QrCodeScanner = null;
         let globalLiveOrdersCache = [];
