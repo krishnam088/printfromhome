@@ -858,67 +858,54 @@ if (fileUpload) {
                     fileUrl = '';
                 }
 
-              // 🔥 Har uploaded file ko turant Base64 mein convert karein taaki localStorage mein loss na ho
+// 🔥 Har uploaded file ko turant Base64 mein convert karein
 let base64Data = await new Promise((resolve) => {
     const reader = new FileReader();
     reader.onloadend = () => resolve(reader.result);
     reader.readAsDataURL(file);
 });
 
+if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+    try {
+        if (typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
+            const arrayBuffer = await file.arrayBuffer();
+            const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+            const pdfDoc = await loadingTask.promise;
+            pageCount = pdfDoc.numPages || 1;
+            
+            if (pdfDoc && typeof window.convertPdfPageToImage === 'function') {
+                for (let p = 1; p <= pageCount; p++) {
+                    let pageImgUrl = await window.convertPdfPageToImage(pdfDoc, p);
+                    if (pageImgUrl) {
+                        pageImages.push(pageImgUrl);
+                    }
+                }
+            }
+            if (pageImages.length > 0) {
+                fileUrl = pageImages[0];
+            }
+        }
+    } catch (e) {
+        pageCount = 1;
+    }
+} else {
+    pageImages.push(fileUrl);
+} 
+
+// 🔥 Ab yahan sabhi data (page count, images, aur base64) ready hone ke baad sirf ek baar push hoga
 uploadedFilesList.push({
     name: file.name || 'Document.pdf',
     size: file.size || 0,
     fileBlob: file,
     fileUrl: fileUrl,
-    fileBase64: base64Data, // 🔥 Yeh sabse zaroori line hai jo base64 data ko aage pass karegi!
+    fileBase64: base64Data, // 🔥 Base64 data yahan securely pass ho gaya!
     pageImages: pageImages.length > 0 ? pageImages : [fileUrl],
     pages: pageCount,
     copies: 1,
     printType: 'bw',
     orientation: 'portrait',
     binding: 'none'
-});
-                if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-                    try {
-                        if (typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
-                            const arrayBuffer = await file.arrayBuffer();
-                            const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-                            const pdfDoc = await loadingTask.promise;
-                            pageCount = pdfDoc.numPages || 1;
-                            
-                            if (pdfDoc && typeof window.convertPdfPageToImage === 'function') {
-                                for (let p = 1; p <= pageCount; p++) {
-                                    let pageImgUrl = await window.convertPdfPageToImage(pdfDoc, p);
-                                    if (pageImgUrl) {
-                                        pageImages.push(pageImgUrl);
-                                    }
-                                }
-                            }
-                            if (pageImages.length > 0) {
-                                fileUrl = pageImages[0];
-                            }
-                        }
-                    } catch (e) {
-                        pageCount = 1;
-                    }
-                } else {
-                    pageImages.push(fileUrl);
-                } 
-
-                uploadedFilesList.push({
-                    name: file.name || 'Document.pdf',
-                    size: file.size || 0,
-                    fileBlob: file,
-                    fileUrl: fileUrl,
-                    fileBase64: base64Data, // 🔥 Yeh line sabse zaroori hai!
-                    pageImages: pageImages.length > 0 ? pageImages : [fileUrl],
-                    pages: pageCount,
-                    copies: 1,
-                    printType: 'bw',
-                    orientation: 'portrait',
-                    binding: 'none'
-                });
-            }
+});            }
 
             fileUpload.value = '';
             
@@ -2728,17 +2715,20 @@ window.clearEntireCartData = function() {
 
 window.persistCartStateData = function() {
     try {
-        // Heavy base64 strings aur blobs ko localStorage se strip karke sirf clean metadata save karein
+        // 🔥 Base64 aur clean data ko localStorage mein safely save karein
+        localStorage.setItem('cart_print_jobs', JSON.stringify(window.cartPrintJobsArray || []));
+        localStorage.setItem('cart_snacks', JSON.stringify(window.cartSnacksArray || []));
+    } catch (e) {
+        console.warn("Storage quota limit reached, handling safely:", e);
+        // Agar storage full ho jaye tabhi sirf heavy blobs strip hon, base64 safe rahe
         const cleanJobs = (window.cartPrintJobsArray || []).map(job => {
             const copy = { ...job };
-            delete copy.fileBase64;
             delete copy.fileData;
             return copy;
         });
-        localStorage.setItem('cart_print_jobs', JSON.stringify(cleanJobs));
-        localStorage.setItem('cart_snacks', JSON.stringify(window.cartSnacksArray || []));
-    } catch (e) {
-        console.warn("Storage quota warning handled safely:", e);
+        try {
+            localStorage.setItem('cart_print_jobs', JSON.stringify(cleanJobs));
+        } catch (err) {}
     }
     updateFloatingCartBar();
 };
