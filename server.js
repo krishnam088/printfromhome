@@ -39,7 +39,7 @@ if (!fs.existsSync(localUploadsDir)) {
 }
 
 // ==========================================
-// ☁️ 1.5 Cloudinary & Multer Storage Setup (Fixes uploadCloudinary error)
+// ☁️ 1.5 Cloudinary & Multer Storage Setup
 // ==========================================
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -58,19 +58,110 @@ const uploadCloudinary = multer({ storage: storage });
 const uploadLocal = multer({ dest: localUploadsDir });
 
 // ==========================================
-// 🛡️ 2. Phir Self-Healing Middleware Lagayein
+// 📋 2. MONGOOSE SCHEMAS & MODELS (MUST BE BEFORE MIDDLEWARES)
+// ==========================================
+const accountUserSchema = new mongoose.Schema({
+    name: String,
+    identity: { type: String, unique: true }, 
+    email: { type: String, unique: true, required: true }, 
+    emailOtp: String,                            
+    otpExpires: Date,                            
+    isEmailVerified: { type: Boolean, default: false }, 
+    addresses: { type: Array, default: [] },   
+    dateCreated: String
+});
+const User = mongoose.models.User || mongoose.model('User', accountUserSchema);
+
+const orderSchema = new mongoose.Schema({
+    orderId: { type: String, unique: true },
+    customerName: String,
+    phone: String,
+    deliveryMode: { type: String, default: 'doorstep' }, 
+    files: Array,
+    fileUrl: String,
+    fileName: String,
+    fileBase64Data: String, 
+    configDetails: Array,
+    pages: Number,
+    copies: Number,
+    printType: String,
+    binding: String,
+    address: String,
+    userLat: { type: Number, default: 25.3451 }, 
+    userLng: { type: Number, default: 83.0012 }, 
+    amount: String,
+    totalAmount: String,
+    status: String,
+    date: String,
+    timestamp: String,
+    paymentId: String,
+    verifiedItems: { type: Array, default: [] },
+    assignedDeliveryBoy: { type: String, default: '' }, 
+    needsStockRestockScan: { type: Boolean, default: false }, 
+    netProfitRecorded: { type: Number, default: 0 },
+    deliveryFeeCharged: { type: Number, default: 0 },
+    isRefundableAmount: { type: Number, default: 0 },
+    manualNeftRefundRequired: { type: Boolean, default: false }
+});
+orderSchema.index({ status: 1, timestamp: -1 });
+const Order = mongoose.models.Order || mongoose.model('Order', orderSchema);
+// ==========================================
+// 📋 STORE CONFIG & PRODUCT MODELS (MOVE HERE)
+// ==========================================
+const storeConfigSchema = new mongoose.Schema({
+    isOpen: { type: Boolean, default: true },
+    printEnabled: { type: Boolean, default: true }, 
+    rainSurgeActive: { type: Boolean, default: false },
+    diwaliLaunchMode: { type: Boolean, default: false },
+    glossySystemEnabled: { type: Boolean, default: false },
+    diwaliMessage: { type: String, default: "🚀 Launching on Diwali!..." },
+    openTime: { type: String, default: "07:00" },
+    closeTime: { type: String, default: "22:00" },
+    updatedAt: String
+});
+const StoreConfig = mongoose.models.StoreConfig || mongoose.model('StoreConfig', storeConfigSchema);
+
+const productSchema = new mongoose.Schema({
+    sku: { type: String, unique: true },
+    name: String,
+    purchasePrice: Number,
+    sellingPrice: Number,
+    stockQuantity: Number,
+    totalSold: { type: Number, default: 0 },
+    barcode: { type: String, default: '' },
+    category: { type: String, default: 'munchies' },
+    description: { type: String, default: '' },
+    imageUrl: { type: String, default: '' },
+    images: { type: Array, default: [] }
+});
+const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
+
+const storeSettingsSchema = mongoose.models.StoreSettingSchema || new mongoose.Schema({
+    key: { type: String, unique: true, default: 'global_settings' },
+    deliveryFee: { type: Number, default: 25.00 },
+    handlingFee: { type: Number, default: 5.00 },
+    rainFee: { type: Number, default: 15.00 },
+    codForPrintEnabled: { type: Boolean, default: true }, 
+    singlePrinterMode: { type: Boolean, default: true }, 
+    coupons: { type: Array, default: [
+        { code: 'FREEDEL', desc: 'Free delivery on orders above ₹99', discount: 25 },
+        { code: 'PRINT20', desc: 'Flat ₹20 off on print orders', discount: 20 }
+    ]}
+});
+const StoreSetting = mongoose.models.StoreSetting || mongoose.model('StoreSetting', storeSettingsSchema);
+
+// ==========================================
+// 🛡️ 3. Phir Self-Healing Middleware Lagayein (Ab Order model defined hai!)
 // ==========================================
 app.get('/uploads/:filename', async (req, res, next) => {
     try {
         let filename = req.params.filename;
         let filePath = path.join(localUploadsDir, filename);
 
-        // Agar file disk par maujood hai, toh seedha bhej do
         if (fs.existsSync(filePath)) {
             return res.sendFile(filePath);
         }
 
-        // Agar file disk par nahi mili, toh Database mein search karo
         let matchedOrder = await Order.findOne({ 
             $or: [
                 { fileUrl: { $regex: filename } },
@@ -94,58 +185,7 @@ app.get('/uploads/:filename', async (req, res, next) => {
     }
 });
 
-// Normal static middleware
 app.use('/uploads', express.static(localUploadsDir));
-
-// 🔥 Yahan purane userSchema ki jagah yeh updated schema rakhein
-const userSchema = new mongoose.Schema({
-    name: String,
-    identity: { type: String, unique: true }, // Mobile Number
-    email: { type: String, unique: true, required: true }, // Gmail Address (Unique & Required for OTP Login)
-    emailOtp: String,                            // OTP ke liye
-    otpExpires: Date,                            // OTP expiry ke liye
-    isEmailVerified: { type: Boolean, default: false }, // Verification status
-    addresses: { type: Array, default: [] },   // Multi-address support
-    dateCreated: String
-});
-const User = mongoose.model('User', userSchema);
-
-const orderSchema = new mongoose.Schema({
-    orderId: { type: String, unique: true },
-    customerName: String,
-    phone: String,
-    deliveryMode: { type: String, default: 'doorstep' }, // 🔥 Yahan add kiya gaya hai ('doorstep' ya 'pickup')
-    files: Array,
-    fileUrl: String,
-    fileName: String,
-    fileBase64Data: String, // 🔥 Yeh naya field yahan add karna hai (Database Backup & Self-Healing ke liye)
-    configDetails: Array,
-    pages: Number,
-    copies: Number,
-    printType: String,
-    binding: String,
-    address: String,
-    userLat: { type: Number, default: 25.3451 }, 
-    userLng: { type: Number, default: 83.0012 }, 
-    amount: String,
-    totalAmount: String,
-    status: String,
-    date: String,
-    timestamp: String,
-    paymentId: String,
-    
-    verifiedItems: { type: Array, default: [] },
-    assignedDeliveryBoy: { type: String, default: '' }, 
-    needsStockRestockScan: { type: Boolean, default: false }, 
-    netProfitRecorded: { type: Number, default: 0 },
-    deliveryFeeCharged: { type: Number, default: 0 },
-    isRefundableAmount: { type: Number, default: 0 },
-    manualNeftRefundRequired: { type: Boolean, default: false }
-});
-// 🔥 Yeh naya index line yahan orderSchema ke theek niche paste karein:
-orderSchema.index({ status: 1, timestamp: -1 });
-const Order = mongoose.model('Order', orderSchema);
-
 
 // Yahan userSchema aur baaki schemas ke niche paste karein:
 const tempSignupSchema = new mongoose.Schema({
@@ -177,34 +217,7 @@ const deliveryBoySchema = new mongoose.Schema({
 });
 const DeliveryBoy = mongoose.model('DeliveryBoy', deliveryBoySchema);
 
-const storeConfigSchema = new mongoose.Schema({
-    isOpen: { type: Boolean, default: true },
-    printEnabled: { type: Boolean, default: true }, 
-    rainSurgeActive: { type: Boolean, default: false },
-    diwaliLaunchMode: { type: Boolean, default: false },
-    glossySystemEnabled: { type: Boolean, default: false }, // 🔥 Yahan add karein
-    diwaliMessage: { type: String, default: "🚀 Launching on Diwali!..." },
-    openTime: { type: String, default: "07:00" },
-    closeTime: { type: String, default: "22:00" },
-    updatedAt: String
-});
-const StoreConfig = mongoose.model('StoreConfig', storeConfigSchema);
-
-// 🔥 Updated Product Schema with Description & Multiple Images Support
-const productSchema = new mongoose.Schema({
-    sku: { type: String, unique: true },
-    name: String,
-    purchasePrice: Number,
-    sellingPrice: Number,
-    stockQuantity: Number,
-    totalSold: { type: Number, default: 0 },
-    barcode: { type: String, default: '' },
-    category: { type: String, default: 'munchies' },
-    description: { type: String, default: '' },
-    imageUrl: { type: String, default: '' },
-    images: { type: Array, default: [] }
-});
-const Product = mongoose.model('Product', productSchema);
+// Reuse the StoreConfig/Product models already defined above. Duplicate declarations removed to avoid redeclaration errors.
 
 // 🔔 Safe Web Push Notification Configuration
 try {
@@ -1943,21 +1956,6 @@ app.get('/api/admin/users', async (req, res) => {
     }
 });
 
-
-// 🔥 Persistent Database-Backed Admin Store Settings & Fees Schema
-const storeSettingsSchema = new mongoose.Schema({
-    key: { type: String, unique: true, default: 'global_settings' },
-    deliveryFee: { type: Number, default: 25.00 },
-    handlingFee: { type: Number, default: 5.00 },
-    rainFee: { type: Number, default: 15.00 },
-    codForPrintEnabled: { type: Boolean, default: true }, // 🔥 Yahan add karein
-    singlePrinterMode: { type: Boolean, default: true },  // 🔥 Yahan add karein
-    coupons: { type: Array, default: [
-        { code: 'FREEDEL', desc: 'Free delivery on orders above ₹99', discount: 25 },
-        { code: 'PRINT20', desc: 'Flat ₹20 off on print orders', discount: 20 }
-    ]}
-});
-const StoreSetting = mongoose.model('StoreSetting', storeSettingsSchema);
 
 app.get('/api/admin/settings', async (req, res) => {
     try {
