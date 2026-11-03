@@ -3444,48 +3444,62 @@ window.executeFinalCartOrderPlacement = async function() {
             return;
         }
 
-        let totalPrintVal = 0;
+let totalPrintVal = 0;
         let totalSnacksVal = 0;
         const finalMetaConfig = [];
 
-      window.cartPrintJobsArray.forEach((job, index) => {
-    let cost = 0;
-    if (job.paperType === 'photo' || job.jobType === 'photo_print') {
-        cost = Number(job.price || 50);
-    } else {
-        let rate = (job.printType === 'bw') ? 3 : 10;
-        cost = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
-    }
-    
-    totalPrintVal += cost;
+        // 🔥 Asynchronous loop taaki saari files ka base64 100% capture ho sake
+        for (let i = 0; i < window.cartPrintJobsArray.length; i++) {
+            let job = window.cartPrintJobsArray[i];
+            let cost = 0;
+            if (job.paperType === 'photo' || job.jobType === 'photo_print') {
+                cost = Number(job.price || 50);
+            } else {
+                let rate = (job.printType === 'bw') ? 3 : 10;
+                cost = job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0);
+            }
+            
+            totalPrintVal += cost;
 
-    // 🔥 Sabse zaroori fix: Base64 ensure karne ke liye multiple fallbacks check karein
-    let resolvedBase64 = job.fileBase64 || '';
-    
-    // Agar job.fileBase64 khali hai par window.studioMasterFiles mein mil jaye
-    if (!resolvedBase64 && window.studioMasterFiles && window.studioMasterFiles[index]) {
-        resolvedBase64 = window.studioMasterFiles[index].fileBase64 || '';
-    }
+            // 🔥 Bulletproof Base64 Resolver: Agar job.fileBase64 khali hai par fileData/fileBlob maujood hai
+            let resolvedBase64 = job.fileBase64 || '';
+            
+            if (!resolvedBase64 && job.fileData && job.fileData instanceof Blob) {
+                resolvedBase64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(job.fileData);
+                });
+            } else if (!resolvedBase64 && window.studioMasterFiles && window.studioMasterFiles[i]) {
+                let studioFile = window.studioMasterFiles[i];
+                if (studioFile.fileBlob && studioFile.fileBlob instanceof Blob) {
+                    resolvedBase64 = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.readAsDataURL(studioFile.fileBlob);
+                    });
+                }
+            }
 
-    finalMetaConfig.push({ 
-        fileName: job.fileName, 
-        pages: job.pages, 
-        printType: job.printType, 
-        binding: job.binding, 
-        copies: job.copies,
-        paperType: job.paperType || 'document',
-        photoLayout: job.photoLayout || null,
-        fileUrl: job.fileUrl || '', 
-        fileBase64: resolvedBase64, // 🔥 Ab yahan guaranteed base64 string jayegi!
-        price: cost
-    });
+            finalMetaConfig.push({ 
+                fileName: job.fileName, 
+                pages: job.pages, 
+                printType: job.printType, 
+                binding: job.binding, 
+                copies: job.copies,
+                paperType: job.paperType || 'document',
+                photoLayout: job.photoLayout || null,
+                fileUrl: job.fileUrl || '', 
+                fileBase64: resolvedBase64, // 🔥 Ab yahan 100% guaranteed base64 jayega!
+                price: cost
+            });
 
-    // 🔥 FormData ke liye bhi explicitly append kar do taaki server ko direct mil jaye
-    if (resolvedBase64) {
-        formData.append(`fileBase64_${index}`, resolvedBase64);
-    }
-});
-
+            // FormData ke liye bhi explicitly append kar do
+            if (resolvedBase64) {
+                formData.append(`fileBase64_${i}`, resolvedBase64);
+            }
+        }
+        
         window.cartSnacksArray.forEach(snack => {
             totalSnacksVal += snack.price * snack.qty;
             finalMetaConfig.push({ 
