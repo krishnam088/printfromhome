@@ -1339,7 +1339,7 @@ window.addStudioJobToCart = async function() {
         else if (photoLayout === 'photo_single_glossy') photoCalculatedPrice = 100;
     }
 
-    for (const f of window.studioMasterFiles) {
+   for (const f of window.studioMasterFiles) {
         let rate = (f.printType === 'bw') ? 3 : 10;
         let itemPrice = (paperType === 'photo') ? photoCalculatedPrice : (f.pages * rate * f.copies);
 
@@ -1347,26 +1347,35 @@ window.addStudioJobToCart = async function() {
         let finalFileUrl = f.fileUrl;
         let finalFileName = f.name;
 
-        // Quota bachane ke liye localStorage mein base64 save nahi karenge, order ke waqt FormData se direct jayega
-       let printJobItem = {
-    id: 'print_' + Date.now() + Math.random(),
-    fileName: finalFileName,
-    fileUrl: finalFileUrl || '',
-    fileData: finalBlob || null,
-    fileBase64: f.fileBase64 || '', // 🔥 Yeh line yahan add karni hai taaki base64 data miss na ho!
-    pages: f.pages || 1,
-    copies: f.copies || 1,
-    printType: f.printType || 'bw',
-    orientation: f.orientation || 'portrait',
-    sides: f.orientation === 'portrait' ? 'single' : 'landscape',
-    binding: f.binding || 'none',
-    paperType: paperType,
-    jobType: jobType,
-    photoLayout: photoLayout,
-    price: itemPrice
-};
-window.cartPrintJobsArray.push(printJobItem);
-} 
+        // 🔥 Guaranteed Base64 Resolver: Agar studio file ke paas base64 nahi hai, toh blob se read kar lo!
+        let resolvedBase64 = f.fileBase64 || '';
+        if (!resolvedBase64 && finalBlob && finalBlob instanceof Blob) {
+            resolvedBase64 = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(finalBlob);
+            });
+        }
+
+        let printJobItem = {
+            id: 'print_' + Date.now() + Math.random(),
+            fileName: finalFileName,
+            fileUrl: finalFileUrl || '',
+            fileData: finalBlob || null,
+            fileBase64: resolvedBase64, // 🔥 Ab yahan 100% guaranteed base64 string save hogi!
+            pages: f.pages || 1,
+            copies: f.copies || 1,
+            printType: f.printType || 'bw',
+            orientation: f.orientation || 'portrait',
+            sides: f.orientation === 'portrait' ? 'single' : 'landscape',
+            binding: f.binding || 'none',
+            paperType: paperType,
+            jobType: jobType,
+            photoLayout: photoLayout,
+            price: itemPrice
+        };
+        window.cartPrintJobsArray.push(printJobItem);
+    }
 
     // Quota-safe save call
     if (typeof persistCartStateData === 'function') {
@@ -3499,7 +3508,7 @@ let totalPrintVal = 0;
                 formData.append(`fileBase64_${i}`, resolvedBase64);
             }
         }
-        
+
         window.cartSnacksArray.forEach(snack => {
             totalSnacksVal += snack.price * snack.qty;
             finalMetaConfig.push({ 
