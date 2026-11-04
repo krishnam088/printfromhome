@@ -1673,32 +1673,6 @@ app.post('/api/create-order', async (req, res) => {
     }
 });
 
-        let calculatedDeliveryFee = (deliveryMode === 'pickup') ? 0 : (finalAmountNumeric >= 99 ? 0 : 25);
-        let selectedPaymentMode = paymentMode || "online";
-
-if (selectedPaymentMode === 'cod' || selectedPaymentMode === 'wallet' || selectedPaymentMode === 'cash') {
-            const newOrder = new Order({
-                orderId: numericId,
-                customerName: customerName || 'Customer',
-                phone: phone || 'N/A',
-                deliveryMode: deliveryMode || 'doorstep',
-                files: filesMappedList,
-                fileUrl: primaryUrl,
-                fileName: primaryName,
-                fileBase64Data: rawBase64Backup, // 🔥 1st Block: COD / Wallet / Cash ke liye yahan add karein
-                configDetails: parsedConfig,
-                amount: finalAmountNumeric.toFixed(2),
-                totalAmount: finalAmountNumeric.toFixed(2),
-                status: 'Ready for Print',
-                date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-                timestamp: new Date().toISOString(),
-                paymentId: selectedPaymentMode === 'wallet' ? 'PAID VIA WALLET' : 'CASH ON DELIVERY',
-                deliveryFeeCharged: calculatedDeliveryFee
-            });
-
-            await newOrder.save();
-            return res.status(201).json({ success: true, order_id: numericId });
-        }
 
         let razorpayOrder = await razorpay.orders.create({ 
             amount: Math.round(finalAmountNumeric * 100), 
