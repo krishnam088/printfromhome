@@ -801,7 +801,7 @@ async function sendBroadcastEmail(subject, message) {
     }
 }
 
-// ==========================================
+// // ==========================================
 // 📦 ADVANCED AUTOMATED GMAIL NOTIFICATION ENGINE
 // ==========================================
 async function sendOrderEmailNotification(userEmail, userName, orderId, orderStatus, amount, itemsList, paymentMode, deliveryFee) {
@@ -900,6 +900,60 @@ async function sendOrderEmailNotification(userEmail, userName, orderId, orderSta
     }
 }
 
+// ==========================================
+// 📢 BROADCAST EMAIL ENGINE (FIXED)
+// ==========================================
+async function sendBroadcastEmail(subject, message) {
+    const users = await User.find({});
+    const recipients = users.filter(u => u.email && u.email.includes('@'));
+    if (recipients.length === 0) return;
+
+    for (const user of recipients) {
+        try {
+            const personalizedHTML = `
+                <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <div style="background: #065f46; color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+                        <h2 style="margin: 0; font-size: 1.3rem; letter-spacing: 0.5px;">Print From Home</h2>
+                        <p style="margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.9;">Professional Printing & Delivery Services</p>
+                    </div>
+                    <div style="background: #ffffff; padding: 24px; border-radius: 0 0 10px 10px; color: #1e293b;">
+                        <p style="font-size: 1rem; color: #0f172a; margin-top: 0;">Hello <strong>${user.name || 'Valued Customer'}</strong>,</p>
+                        <p style="font-size: 0.95rem; line-height: 1.6; color: #475569; white-space: pre-line;">${message}</p>
+                        <div style="margin: 25px 0; text-align: center;">
+                            <a href="https://printfromhomes.com" style="background-color: #065f46; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.95rem; display: inline-block;">Visit Store & Order Now</a>
+                        </div>
+                        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+                        <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-bottom: 0;">Print From Home, Varanasi | You are receiving this update as a registered user.</p>
+                    </div>
+                </div>
+            `;
+
+            const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'api-key': process.env.SMTP_PASS,
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sender: { name: "Print From Home Support", email: "support@printfromhomes.com" },
+                    to: [{ email: user.email, name: user.name || 'Customer' }],
+                    subject: subject,
+                    htmlContent: personalizedHTML
+                })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                console.error(`❌ Failed for ${user.email}:`, JSON.stringify(errData));
+            }
+        } catch (innerErr) {
+            console.error(`❌ Error sending to ${user.email}:`, innerErr.message);
+        }
+    }
+}
+
+// Admin Send Notification Route
 app.post('/api/admin/send-notification', async (req, res) => {
     try {
         const { subject, message } = req.body;
@@ -928,223 +982,223 @@ const festivalCalendar = {
     "2026-11-06": {
         name: "Dhanteras",
         subject: "✨ Wishing You Golden Prosperity this Dhanteras! | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay this auspicious day of Dhanteras shower you with wealth, success, and endless happiness. Just like a perfectly detailed golden foil print, may your future shine bright with prosperity. Wishing you and your family a wonderful year ahead!\n\nWarm regards,\nTeam Print From Home"
+        message: "May this auspicious day of Dhanteras shower you with wealth, success, and endless happiness. Just like a perfectly detailed golden foil print, may your future shine bright with prosperity. Wishing you and your family a wonderful year ahead!\n\nWarm regards,\nTeam Print From Home"
     },
     "2026-11-08": {
         name: "Diwali / Deepavali",
         subject: "🪔 Happy Diwali! Let's Print Beautiful Memories This Festive Season",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay the divine light of Diwali illuminate your life with joy, good health, and vibrant colors. As you celebrate the victory of light, let us help you frame and print the beautiful moments you capture today. Have a safe, sparkling, and joyous Deepavali!\n\nWarm regards,\nTeam Print From Home"
+        message: "May the divine light of Diwali illuminate your life with joy, good health, and vibrant colors. As you celebrate the victory of light, let us help you frame and print the beautiful moments you capture today. Have a safe, sparkling, and joyous Deepavali!\n\nWarm regards,\nTeam Print From Home"
     },
     "2026-11-09": {
         name: "Govardhan Puja",
         subject: "🌱 Blessed Govardhan Puja to You and Your Family | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay Lord Krishna lift all your worries and bless you with abundance, protection, and boundless joy. Wishing you a very happy and blessed Govardhan Puja from all of us!\n\nWarm regards,\nTeam Print From Home"
+        message: "May Lord Krishna lift all your worries and bless you with abundance, protection, and boundless joy. Wishing you a very happy and blessed Govardhan Puja from all of us!\n\nWarm regards,\nTeam Print From Home"
     },
     "2026-11-11": {
         name: "Bhai Dooj",
         subject: "💫 Celebrating Sibling Bonds this Bhai Dooj | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nWishing you a beautiful day celebrating love, protection, and lifelong sibling ties. Don't let your favorite childhood memories fade away—keep them printed forever. Happy Bhai Dooj to you and your family!\n\nWarm regards,\nTeam Print From Home"
+        message: "Wishing you a beautiful day celebrating love, protection, and lifelong sibling ties. Don't let your favorite childhood memories fade away—keep them printed forever. Happy Bhai Dooj to you and your family!\n\nWarm regards,\nTeam Print From Home"
     },
     "2026-11-13": {
         name: "Chhath Puja Begins",
         subject: "☀️ Warm Wishes on Chhath Puja from Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay the Sun God (Surya Dev) and Chhathi Maiya bless you with good health, ultimate purity, and the strength to fulfill your dreams. Sending you warm, bright, and peaceful festive greetings!\n\nWarm regards,\nTeam Print From Home"
+        message: "May the Sun God (Surya Dev) and Chhathi Maiya bless you with good health, ultimate purity, and the strength to fulfill your dreams. Sending you warm, bright, and peaceful festive greetings!\n\nWarm regards,\nTeam Print From Home"
     },
     "2026-11-15": {
         name: "Chhath Puja (Arghya)",
         subject: "☀️ Warm Wishes on Chhath Puja from Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay the Sun God (Surya Dev) and Chhathi Maiya bless you with good health, ultimate purity, and the strength to fulfill your dreams. Sending you warm, bright, and peaceful festive greetings!\n\nWarm regards,\nTeam Print From Home"
+        message: "May the Sun God (Surya Dev) and Chhathi Maiya bless you with good health, ultimate purity, and the strength to fulfill your dreams. Sending you warm, bright, and peaceful festive greetings!\n\nWarm regards,\nTeam Print From Home"
     },
     "2026-11-24": {
         name: "Guru Nanak Jayanti",
         subject: "🕊️ Happy Guru Nanak Jayanti | Warm Festive Greetings",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay the holy teachings of Guru Nanak Dev Ji inspire you to walk the path of truth, compassion, and peace. Wishing you a spiritually fulfilling and joyful Gurpurab!\n\nWarm regards,\nTeam Print From Home"
+        message: "May the holy teachings of Guru Nanak Dev Ji inspire you to walk the path of truth, compassion, and peace. Wishing you a spiritually fulfilling and joyful Gurpurab!\n\nWarm regards,\nTeam Print From Home"
     },
 
     // --- DECEMBER 2026 ---
     "2026-12-25": {
         name: "Christmas",
         subject: "🌲 Merry Christmas! Wishing You Joy & Warmth | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay your holiday season be wrapped in joy, filled with laughter, and brightened by love. Sending you our warmest wishes for a wonderful Christmas and a fantastic season ahead!\n\nWarm regards,\nTeam Print From Home"
+        message: "May your holiday season be wrapped in joy, filled with laughter, and brightened by love. Sending you our warmest wishes for a wonderful Christmas and a fantastic season ahead!\n\nWarm regards,\nTeam Print From Home"
     },
 
     // --- JANUARY 2027 ---
     "2027-01-01": {
         name: "New Year's Day",
         subject: "🎉 Cheers to a Brilliant 2027! Happy New Year from Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nThank you for letting us print your memories and be a part of your journey. May the year 2027 unlock fresh pages of growth, success, and wonderful moments for you. Happy New Year!\n\nWarm regards,\nTeam Print From Home"
+        message: "Thank you for letting us print your memories and be a part of your journey. May the year 2027 unlock fresh pages of growth, success, and wonderful moments for you. Happy New Year!\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-01-15": {
         name: "Makar Sankranti / Pongal",
         subject: "🪁 Wishing You a Harvest of Joy! | Makar Sankranti & Pongal",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nAs the sun transitions into new beginnings, may your life be filled with sweet moments and high-flying success. Wishing you a colorful and joyful harvest festival!\n\nWarm regards,\nTeam Print From Home"
+        message: "As the sun transitions into new beginnings, may your life be filled with sweet moments and high-flying success. Wishing you a colorful and joyful harvest festival!\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-01-26": {
         name: "Republic Day",
         subject: "🇮🇳 Proudly Celebrating India's 78th Republic Day | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nLet us salute the spirit of unity, freedom, and our rich heritage on this Republic Day. Wishing you a proud, inspiring, and patriotic day!\n\nWarm regards,\nTeam Print From Home"
+        message: "Let us salute the spirit of unity, freedom, and our rich heritage on this Republic Day. Wishing you a proud, inspiring, and patriotic day!\n\nWarm regards,\nTeam Print From Home"
     },
 
     // --- FEBRUARY 2027 ---
     "2027-02-11": {
         name: "Vasant Panchami",
         subject: "💛 Happy Vasant Panchami! May Knowledge & Art Guide You",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay Goddess Saraswati bless you with wisdom, intellect, and creativity to reach new heights. Wishing you a beautiful, vibrant, and artistic Vasant Panchami!\n\nWarm regards,\nTeam Print From Home"
+        message: "May Goddess Saraswati bless you with wisdom, intellect, and creativity to reach new heights. Wishing you a beautiful, vibrant, and artistic Vasant Panchami!\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-02-19": {
         name: "Shivaji Jayanti",
         subject: "⚔️ Remembering the Great Chhatrapati Shivaji Maharaj | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nOn this Shivaji Jayanti, let's honor the legacy of courage, righteousness, and visionary leadership. Warm greetings to you on this proud day.\n\nWarm regards,\nTeam Print From Home"
+        message: "On this Shivaji Jayanti, let's honor the legacy of courage, righteousness, and visionary leadership. Warm greetings to you on this proud day.\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-02-20": {
         name: "Guru Ravidas Jayanti",
         subject: "🙏 Happy Guru Ravidas Jayanti | Peace & Equality",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay the universal teachings of dignity, love, and equality by Guru Ravidas Ji bring harmony and deep peace into your life.\n\nWarm regards,\nTeam Print From Home"
+        message: "May the universal teachings of dignity, love, and equality by Guru Ravidas Ji bring harmony and deep peace into your life.\n\nWarm regards,\nTeam Print From Home"
     },
 
     // --- MARCH 2027 ---
     "2027-03-06": {
         name: "Maha Shivaratri",
         subject: "🔱 Har Har Mahadev! Blessed Maha Shivaratri | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay the divine energy of Lord Shiva protect you, eliminate all obstacles, and lead you to ultimate inner peace and strength. Have a blessed Maha Shivaratri!\n\nWarm regards,\nTeam Print From Home"
+        message: "May the divine energy of Lord Shiva protect you, eliminate all obstacles, and lead you to ultimate inner peace and strength. Have a blessed Maha Shivaratri!\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-03-10": {
         name: "Eid-ul-Fitr",
         subject: "🌙 Eid Mubarak from Print From Home! Wishing You Peace & Joy",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nOn this joyous day of Eid, may you be blessed with absolute kindness, prosperity, and endless joy. Eid Mubarak to you and your loved ones!\n\nWarm regards,\nTeam Print From Home"
+        message: "On this joyous day of Eid, may you be blessed with absolute kindness, prosperity, and endless joy. Eid Mubarak to you and your loved ones!\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-03-22": {
         name: "Holi / Holika Dahan",
         subject: "🎨 Wishing You a Vibrant & Colorful Happy Holi! | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay the colors of Holi fill your life with love, success, and positive energy. Just like a high-definition, premium color print, may your days ahead be bright and cheerful! Happy Holi!\n\nWarm regards,\nTeam Print From Home"
+        message: "May the colors of Holi fill your life with love, success, and positive energy. Just like a high-definition, premium color print, may your days ahead be bright and cheerful! Happy Holi!\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-03-26": {
         name: "Good Friday",
         subject: "🕊️ Blessed Good Friday | A Day of Grace & Reflection",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nWishing you a peaceful Good Friday filled with solemn reflection, divine grace, and the comforting blessings of love and sacrifice.\n\nWarm regards,\nTeam Print From Home"
+        message: "Wishing you a peaceful Good Friday filled with solemn reflection, divine grace, and the comforting blessings of love and sacrifice.\n\nWarm regards,\nTeam Print From Home"
     },
 
     // --- APRIL 2027 ---
     "2027-04-07": {
         name: "Ugadi / Gudi Padwa",
         subject: "🌾 Happy New Year! Blessed Ugadi & Gudi Padwa | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay this auspicious start of the traditional New Year bring fresh hope, new milestones, and vibrant health into your life. Have a wonderful celebration!\n\nWarm regards,\nTeam Print From Home"
+        message: "May this auspicious start of the traditional New Year bring fresh hope, new milestones, and vibrant health into your life. Have a wonderful celebration!\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-04-14": {
         name: "Ambedkar Jayanti / Baisakhi",
         subject: "✨ Celebrating Ambedkar Jayanti & Baisakhi Greetings",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nHonoring the legacy of Dr. B.R. Ambedkar and celebrating the joyous harvest spirit of Baisakhi. May this day bring equality, growth, and success to you.\n\nWarm regards,\nTeam Print From Home"
+        message: "Honoring the legacy of Dr. B.R. Ambedkar and celebrating the joyous harvest spirit of Baisakhi. May this day bring equality, growth, and success to you.\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-04-15": {
         name: "Ram Navami",
         subject: "🏹 Happy Ram Navami | May Virtue & Prosperity Prevail",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nWishing you a divine Ram Navami. May the virtues and wisdom of Lord Rama guide your steps and bring eternal peace to your household.\n\nWarm regards,\nTeam Print From Home"
+        message: "Wishing you a divine Ram Navami. May the virtues and wisdom of Lord Rama guide your steps and bring eternal peace to your household.\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-04-19": {
         name: "Mahavir Jayanti",
         subject: "🕊️ Peaceful Wishes on Mahavir Jayanti | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay the profound path of Ahimsa (non-violence), truth, and peace shown by Lord Mahavira bring deep contentment and joy to your life.\n\nWarm regards,\nTeam Print From Home"
+        message: "May the profound path of Ahimsa (non-violence), truth, and peace shown by Lord Mahavira bring deep contentment and joy to your life.\n\nWarm regards,\nTeam Print From Home"
     },
 
     // --- MAY 2027 ---
     "2027-05-17": {
         name: "Eid-ul-Zuha / Bakrid",
         subject: "🌙 Eid-ul-Zuha Mubarak! | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nWishing you a blessed Bakrid. May the spirit of absolute devotion, sacrifice, and kindness bring unity and joy to your family.\n\nWarm regards,\nTeam Print From Home"
+        message: "Wishing you a blessed Bakrid. May the spirit of absolute devotion, sacrifice, and kindness bring unity and joy to your family.\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-05-20": {
         name: "Buddha Purnima",
         subject: "🌸 Happy Buddha Purnima | May Peace Prevail",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay the timeless wisdom and enlightened teachings of Lord Buddha fill your heart with inner peace, harmony, and joy.\n\nWarm regards,\nTeam Print From Home"
+        message: "May the timeless wisdom and enlightened teachings of Lord Buddha fill your heart with inner peace, harmony, and joy.\n\nWarm regards,\nTeam Print From Home"
     },
 
     // --- JUNE 2027 ---
     "2027-06-15": {
         name: "Muharram",
         subject: "🕊️ Observance of Muharram | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nAs we observe the holy month of Muharram, sending you warm wishes for a peaceful, reflective, and safe year ahead.\n\nWarm regards,\nTeam Print From Home"
+        message: "As we observe the holy month of Muharram, sending you warm wishes for a peaceful, reflective, and safe year ahead.\n\nWarm regards,\nTeam Print From Home"
     },
 
     // --- JULY 2027 ---
     "2027-07-05": {
         name: "Jagannath Rathyatra",
         subject: "🎪 Jai Jagannath! Blessed Rathyatra to You | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay the majestic chariot of Lord Jagannath pull away all your troubles and guide your life toward ultimate success and divine happiness!\n\nWarm regards,\nTeam Print From Home"
+        message: "May the majestic chariot of Lord Jagannath pull away all your troubles and guide your life toward ultimate success and divine happiness!\n\nWarm regards,\nTeam Print From Home"
     },
 
     // --- AUGUST 2027 ---
     "2027-08-15": {
         name: "Independence Day / Eid-e-Milad",
         subject: "🇮🇳 Celebrating Freedom & Progress | Happy Independence Day!",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nLet’s salute the heroes and pledge to carry our great nation forward with pride and integrity. Wishing you a happy 81st Independence Day!\n\nWarm regards,\nTeam Print From Home"
+        message: "Let’s salute the heroes and pledge to carry our great nation forward with pride and integrity. Wishing you a happy 81st Independence Day!\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-08-17": {
         name: "Raksha Bandhan",
         subject: "💝 Happy Raksha Bandhan! Frame Your Bonds | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nWishing you a beautiful Raksha Bandhan filled with sweet memories, laughter, and the unmatched love of family. Don't forget to capture and print these memories today!\n\nWarm regards,\nTeam Print From Home"
+        message: "Wishing you a beautiful Raksha Bandhan filled with sweet memories, laughter, and the unmatched love of family. Don't forget to capture and print these memories today!\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-08-25": {
         name: "Krishna Janmashtami",
         subject: "🍼 Jai Shree Krishna! Happy Janmashtami | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay the playful charms of Bal Gopal bring love, spiritual peace, and delicious moments of joy to your home today. Happy Janmashtami!\n\nWarm regards,\nTeam Print From Home"
+        message: "May the playful charms of Bal Gopal bring love, spiritual peace, and delicious moments of joy to your home today. Happy Janmashtami!\n\nWarm regards,\nTeam Print From Home"
     },
 
     // --- SEPTEMBER 2027 ---
     "2027-09-04": {
         name: "Ganesh Chaturthi",
         subject: "🐘 Ganpati Bappa Morya! Happy Ganesh Chaturthi ✨ | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay the Lord of Wisdom, Vignaharta Lord Ganesha, remove all your roadblocks and bless your new ventures with grand success!\n\nWarm regards,\nTeam Print From Home"
+        message: "May the Lord of Wisdom, Vignaharta Lord Ganesha, remove all your roadblocks and bless your new ventures with grand success!\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-09-12": {
         name: "Onam",
         subject: "🌾 Wishing You a Harvest of Prosperity this Onam!",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay the festive spirit of King Mahabali fill your life with vibrant colors, sweet feasts, and endless harmony. Happy Onam!\n\nWarm regards,\nTeam Print From Home"
+        message: "May the festive spirit of King Mahabali fill your life with vibrant colors, sweet feasts, and endless harmony. Happy Onam!\n\nWarm regards,\nTeam Print From Home"
     },
 
     // --- OCTOBER 2027 ---
     "2027-10-02": {
         name: "Mahatma Gandhi Jayanti",
         subject: "🕊️ Remembering the Mahatma | Gandhi Jayanti Greetings",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nLet us embrace the ideals of peace, truth, and simplicity on the birth anniversary of the Father of the Nation.\n\nWarm regards,\nTeam Print From Home"
+        message: "Let us embrace the ideals of peace, truth, and simplicity on the birth anniversary of the Father of the Nation.\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-10-09": {
         name: "Dussehra / Vijayadashami",
         subject: "🏹 Happy Dussehra! Celebrating the Triumph of Good | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay all your challenges burn down like the effigy of Ravana, leaving you with paths of righteousness, victory, and success. Happy Vijayadashami!\n\nWarm regards,\nTeam Print From Home"
+        message: "May all your challenges burn down like the effigy of Ravana, leaving you with paths of righteousness, victory, and success. Happy Vijayadashami!\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-10-18": {
         name: "Karwa Chauth",
         subject: "✨ Wishing You a Blessed & Beautiful Karwa Chauth | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nCelebrating the enduring strength of love and devotion. May this beautiful day bring lifelong happiness and strong marital bonds to your life.\n\nWarm regards,\nTeam Print From Home"
+        message: "Celebrating the enduring strength of love and devotion. May this beautiful day bring lifelong happiness and strong marital bonds to your life.\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-10-29": {
         name: "Diwali / Deepavali",
         subject: "🪔 Happy Diwali! Let's Print Beautiful Memories This Festive Season",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay the divine light of Diwali illuminate your life with joy, good health, and vibrant colors. As you celebrate the victory of light, let us help you frame and print the beautiful moments you capture today. Have a safe, sparkling, and joyous Deepavali!\n\nWarm regards,\nTeam Print From Home"
+        message: "May the divine light of Diwali illuminate your life with joy, good health, and vibrant colors. As you celebrate the victory of light, let us help you frame and print the beautiful moments you capture today. Have a safe, sparkling, and joyous Deepavali!\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-10-31": {
         name: "Bhai Dooj",
         subject: "💫 Celebrating Sibling Bonds this Bhai Dooj | Print From Home",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nWishing you a beautiful day celebrating love, protection, and lifelong sibling ties. Don't forget to keep your favorite memories printed forever. Happy Bhai Dooj!\n\nWarm regards,\nTeam Print From Home"
+        message: "Wishing you a beautiful day celebrating love, protection, and lifelong sibling ties. Don't forget to keep your favorite memories printed forever. Happy Bhai Dooj!\n\nWarm regards,\nTeam Print From Home"
     },
 
     // --- NOVEMBER 2027 ---
     "2027-11-04": {
         name: "Chhath Puja",
         subject: "Blessed Chhath Puja 2027! ☀️",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay Chhath Maiya and Surya Dev bless your family with purity, devotion, and good health.\n\nWarm regards,\nTeam Print From Home"
+        message: "May Chhath Maiya and Surya Dev bless your family with purity, devotion, and good health.\n\nWarm regards,\nTeam Print From Home"
     },
     "2027-11-14": {
         name: "Guru Nanak Jayanti",
         subject: "Happy Guru Nanak Jayanti Greetings! 🥻",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nMay the holy words of Guru Nanak Dev Ji guide you towards universal brotherhood and peace.\n\nWarm regards,\nTeam Print From Home"
+        message: "May the holy words of Guru Nanak Dev Ji guide you towards universal brotherhood and peace.\n\nWarm regards,\nTeam Print From Home"
     },
 
     // --- DECEMBER 2027 ---
     "2027-12-25": {
         name: "Christmas",
         subject: "Merry Christmas 2027! 🎄",
-        message: "Hello ${user.name || 'Valued Customer'},\n\nWishing you a warm and cheerful Christmas as we wrap up the year with love and gratitude.\n\nWarm regards,\nTeam Print From Home"
+        message: "Wishing you a warm and cheerful Christmas as we wrap up the year with love and gratitude.\n\nWarm regards,\nTeam Print From Home"
     }
 };
 
@@ -2140,11 +2194,10 @@ setInterval(async () => {
         for (let item of pendingEmails) {
             console.log(`⏰ Executing scheduled broadcast: ${item.subject}`);
             
-            const users = await User.find({ email: { $exists: true, $ne: null } });
-            for (let user of users) {
-                if (user.email && typeof sendBroadcastEmail === 'function') {
-                    await sendBroadcastEmail(user.email, item.subject, item.message);
-                }
+            // 🔥 Yahan hum sirf item.subject aur item.message bhejenge,
+            // kyunki sendBroadcastEmail function khud hi database se saare users (User.find) nikal kar unko loop kar leta hai!
+            if (typeof sendBroadcastEmail === 'function') {
+                await sendBroadcastEmail(item.subject, item.message);
             }
 
             item.status = 'Sent';
@@ -2155,7 +2208,6 @@ setInterval(async () => {
         console.error('❌ Background Scheduler Error:', err.message);
     }
 }, 60000);
-
 
 
 
