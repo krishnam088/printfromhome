@@ -1613,6 +1613,7 @@ async function deductStockForOrder(parsedConfig) {
 }
 
 
+// Server.js ka final clean create-order route aisa dikhega:
 app.post('/api/create-order', async (req, res) => {
     try {
         console.log("📥 [DEBUG CREATE-ORDER] Order received with Cloudinary Direct Upload flow");
@@ -1626,7 +1627,6 @@ app.post('/api/create-order', async (req, res) => {
             });
         }
 
-        // 🔥 Frontend se ab seedha Cloudinary URL aur baaki parameters aayengi
         const { totalAmount, configDetails, address, customerName, phone, paymentMode, deliveryMode, fileUrl } = req.body;
         
         let finalAmountNumeric = parseFloat(String(totalAmount || '42').replace(/[₹,]/g, ''));
@@ -1640,66 +1640,32 @@ app.post('/api/create-order', async (req, res) => {
         }
 
         const numericId = String(Math.floor(100000 + Math.random() * 900000));
-
-        // 🔥 Cloudinary ka direct secure URL yahan map hoga (Server par 0 MB disk usage)
         const primaryFileUrl = fileUrl || (parsedConfig[0] ? parsedConfig[0].fileUrl : '');
         const primaryFileName = parsedConfig[0] ? parsedConfig[0].fileName : 'Document.pdf';
 
         let calculatedDeliveryFee = (deliveryMode === 'pickup') ? 0 : (finalAmountNumeric >= 99 ? 0 : 25);
         let selectedPaymentMode = paymentMode || "online";
 
-        if (selectedPaymentMode === 'cod' || selectedPaymentMode === 'wallet' || selectedPaymentMode === 'cash') {
-            const newOrder = new Order({
-                orderId: numericId,
-                customerName: customerName || 'Customer',
-                phone: phone || 'N/A',
-                deliveryMode: deliveryMode || 'doorstep',
-                fileUrl: primaryFileUrl, // 👈 Cloudinary Direct URL
-                fileName: primaryFileName,
-                configDetails: parsedConfig,
-                amount: finalAmountNumeric.toFixed(2),
-                totalAmount: finalAmountNumeric.toFixed(2),
-                status: 'Ready for Print',
-                date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-                timestamp: new Date().toISOString(),
-                paymentId: selectedPaymentMode === 'wallet' ? 'PAID VIA WALLET' : 'CASH ON DELIVERY',
-                deliveryFeeCharged: calculatedDeliveryFee
-            });
-
-            await newOrder.save();
-            return res.status(201).json({ success: true, order_id: numericId });
-        }
-
-        let razorpayOrder = await razorpay.orders.create({ 
-            amount: Math.round(finalAmountNumeric * 100), 
-            currency: "INR", 
-            receipt: `rcpt_${numericId}` 
-        });
-
+        // Yahan ab async function ke andar hi await save() chal raha hai:
         const newOrder = new Order({
             orderId: numericId,
             customerName: customerName || 'Customer',
             phone: phone || 'N/A',
             deliveryMode: deliveryMode || 'doorstep',
-            fileUrl: primaryFileUrl, // 👈 Cloudinary Direct URL
+            fileUrl: primaryFileUrl, 
             fileName: primaryFileName,
             configDetails: parsedConfig,
             amount: finalAmountNumeric.toFixed(2),
             totalAmount: finalAmountNumeric.toFixed(2),
-            status: 'Pending Payment',
+            status: 'Ready for Print',
             date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
             timestamp: new Date().toISOString(),
+            paymentId: selectedPaymentMode === 'wallet' ? 'PAID VIA WALLET' : 'CASH ON DELIVERY',
             deliveryFeeCharged: calculatedDeliveryFee
         });
 
-        await newOrder.save();
-        res.status(201).json({ 
-            success: true, 
-            order_id: numericId, 
-            rzp_order_id: razorpayOrder.id,
-            amount: razorpayOrder.amount, 
-            key_id: razorpay.key_id 
-        });
+        await newOrder.save(); // ✅ Ab yeh 100% async function ke andar hai!
+        return res.status(201).json({ success: true, order_id: numericId });
 
     } catch (error) {
         console.error("Order creation error:", error);
