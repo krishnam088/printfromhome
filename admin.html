@@ -2262,12 +2262,29 @@ setInterval(fetchAdminGlossyStatus, 4000);
             archiveContainer.innerHTML = filteredHtml || `<div style="text-align: center; padding: 30px; color: var(--text-sub);">No matching orders found for selected date/search.</div>`;
         }
 
-     // 🚀 Updated: Polling interval reduced to 2 seconds for zero delay
+// 🚀 Optimized Single Unified Polling Loop (Server Overload & Latency Fix)
         fetchStoreStatus();
         fetchInventoryReport();
         fetchDashboardStats();
         fetchLiveOrdersStream();
-        setInterval(fetchLiveOrdersStream, 1000);
+        fetchAdminActiveRiders();
+
+        // Sabhi status checks ko safe aur optimized intervals mein baant diya gaya hai
+        setInterval(() => {
+            fetchLiveOrdersStream();
+            fetchStoreStatus();
+        }, 6000); // Har 6 seconds mein orders aur store status check honge
+
+        setInterval(() => {
+            fetchAdminRainSurgeStatus();
+            fetchAdminGlossyStatus();
+            fetchAdminDiwaliStatus();
+            fetchAdminPrintStatus();
+        }, 15000); // Secondary toggles har 15 seconds mein
+
+        setInterval(() => {
+            fetchAdminActiveRiders();
+        }, 20000); // Riders status har 20 seconds mein
 
         async function fetchAdminRidersPayouts() {
     const res = await fetch('/api/admin/riders-payouts');
@@ -2337,11 +2354,6 @@ async function fetchAdminActiveRiders() {
     }
 }
 
-// Admin panel load hote hi aur har 10 seconds mein auto-refresh ho
-window.addEventListener('DOMContentLoaded', () => {
-    fetchAdminActiveRiders();
-    setInterval(fetchAdminActiveRiders, 10000);
-});
 let adminDiwaliLaunchActive = false;
 
 async function fetchAdminDiwaliStatus() {
@@ -2386,10 +2398,8 @@ function updateDiwaliSwitchButtonUI() {
     }
 }
 
-// Page load par aur har 4 seconds mein status sync karne ke liye
+// Page load par status sync karne ke liye
 fetchAdminDiwaliStatus();
-setInterval(fetchAdminDiwaliStatus, 4000);
-
 
 async function submitScheduledBroadcast() {
     const subject = document.getElementById('scheduleSubject').value.trim();
