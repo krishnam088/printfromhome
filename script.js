@@ -3518,68 +3518,6 @@ window.executeFinalCartOrderPlacement = async function() {
             });
         });
 
-        // ==========================================
-        // 🔥 YAHAN APNA CLOUDINARY DIRECT UPLOAD LOOP RAKHNA HAI:
-        // ==========================================
-        for (let index = 0; index < window.cartPrintJobsArray.length; index++) {
-            let job = window.cartPrintJobsArray[index];
-            
-            if (!job.fileUrl && (job.fileData || job.fileBase64)) {
-                let blobToUpload = job.fileData;
-                
-                if (!blobToUpload && job.fileBase64 && job.fileBase64.includes(',')) {
-                    try {
-                        let arr = job.fileBase64.split(',');
-                        let mime = arr[0].match(/:(.*?);/)[1] || 'application/pdf';
-                        let bstr = atob(arr[1]);
-                        let n = bstr.length;
-                        let u8arr = new Uint8Array(n);
-                        while(n--) { u8arr[n] = bstr.charCodeAt(n); }
-                        blobToUpload = new File([u8arr], job.fileName || 'Document.pdf', { type: mime });
-                    } catch (err) {
-                        console.warn("Base64 to File conversion warning:", err);
-                    }
-                }
-
-                if (blobToUpload) {
-                    // 🚀 Direct browser-to-Cloudinary upload call!
-                    let cloudSecureUrl = await uploadFileDirectToCloudinary(blobToUpload);
-                    if (cloudSecureUrl) {
-                        job.fileUrl = cloudSecureUrl; // 🔥 Server par sirf lightweight URL jayega!
-                    }
-                }
-            }
-
-            if (finalMetaConfig[index]) {
-                finalMetaConfig[index].fileUrl = job.fileUrl || '';
-            }
-
-            if (job.fileUrl) {
-                formData.append(`fileUrl_${index}`, job.fileUrl);
-            }
-        }
-        // ==========================================
-
-        // [Baaki ke formData appends jaise totalAmount, address, etc. yahan rahenge...]
-        formData.append('totalAmount', grandTotal.toFixed(2));
-        formData.append('configDetails', JSON.stringify(finalMetaConfig));
-        formData.append('address', activeAddress);
-        formData.append('customerName', sessionActiveUser);
-        formData.append('phone', userPhone);
-
-        // Fetch request to backend server...
-        const response = await fetch('/api/create-order', { method: 'POST', body: formData });
-        const data = await response.json();
-        
-        // [Razorpay / Wallet / COD handler code...]
-
-    } catch (error) {
-        console.error("Order placement exception:", error);
-        alert("Connection error or server failure during checkout.");
-        releaseButton();
-    }
-};
-
         let subtotal = totalPrintVal + totalSnacksVal;
         const freeDeliveryThreshold = window.getDynamicFreeDeliveryThreshold ? window.getDynamicFreeDeliveryThreshold() : 99.00;
         
