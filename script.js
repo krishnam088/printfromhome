@@ -3471,19 +3471,18 @@ window.executeFinalCartOrderPlacement = async function() {
     }
 
     try {
-        // [1. Store Status & Address Validation checks yahan rahenge...]
+        // 🔥 YAHAN DEFINE HOGI activeAddress taaki ReferenceError na aaye!
+        const activeAddress = localStorage.getItem('selected_active_address') || 'Varanasi Delivery Address';
 
         window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
         window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
-
-        // [2. Fees aur Grand Total calculation yahan hogi...]
 
         const formData = new FormData();
         let totalPrintVal = 0;
         let totalSnacksVal = 0;
         const finalMetaConfig = [];
 
-        // Pehle print jobs ki config push karein (jaise aapka purana code karta hai)
+        // Pehle print jobs ki config push karein
         for (let i = 0; i < window.cartPrintJobsArray.length; i++) {
             let job = window.cartPrintJobsArray[i];
             let cost = (job.paperType === 'photo' || job.jobType === 'photo_print') ? Number(job.price || 50) : (job.pages * ((job.printType === 'bw') ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0));
@@ -3574,33 +3573,28 @@ window.executeFinalCartOrderPlacement = async function() {
             console.warn("Using store location fallback for order coordinates.");
         }
 
+        window.cartPrintJobsArray.forEach((job, index) => {
+            if (job.fileData) {
+                formData.append('document', job.fileData);
+            } else if (job.fileBase64 && typeof job.fileBase64 === 'string' && job.fileBase64.includes(',')) {
+                try {
+                    let arr = job.fileBase64.split(',');
+                    let mime = arr[0].match(/:(.*?);/)[1] || 'application/pdf';
+                    let bstr = atob(arr[1]);
+                    let n = bstr.length;
+                    let u8arr = new Uint8Array(n);
+                    while(n--) { u8arr[n] = bstr.charCodeAt(n); }
+                    let convertedFile = new File([u8arr], job.fileName || 'Document.pdf', { type: mime });
+                    formData.append('document', convertedFile);
+                } catch (err) {
+                    console.warn("Base64 conversion warning:", err);
+                }
+            }
 
-window.cartPrintJobsArray.forEach((job, index) => {
-    // 1. Agar physical file blob hai
-    if (job.fileData) {
-        formData.append('document', job.fileData);
-    } 
-    // 2. Agar base64 string hai, toh usko File object mein convert karke 'document' field mein daal do
-    else if (job.fileBase64 && typeof job.fileBase64 === 'string' && job.fileBase64.includes(',')) {
-        try {
-            let arr = job.fileBase64.split(',');
-            let mime = arr[0].match(/:(.*?);/)[1] || 'application/pdf';
-            let bstr = atob(arr[1]);
-            let n = bstr.length;
-            let u8arr = new Uint8Array(n);
-            while(n--) { u8arr[n] = bstr.charCodeAt(n); }
-            let convertedFile = new File([u8arr], job.fileName || 'Document.pdf', { type: mime });
-            formData.append('document', convertedFile);
-        } catch (err) {
-            console.warn("Base64 conversion warning:", err);
-        }
-    }
-
-    // 🔥 3. Sabse zaroori line: Direct base64 string ko bhi text ke roop mein append karo!
-    if (job.fileBase64) {
-        formData.append(`fileBase64_${index}`, job.fileBase64);
-    }
-});
+            if (job.fileBase64) {
+                formData.append(`fileBase64_${index}`, job.fileBase64);
+            }
+        });
 
         formData.append('totalAmount', grandTotal.toFixed(2));
         formData.append('configDetails', JSON.stringify(finalMetaConfig));
