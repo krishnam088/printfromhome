@@ -446,30 +446,44 @@ app.post('/api/create-order', async (req, res) => {
         const primaryFileUrl = fileUrl || (parsedConfig[0] ? parsedConfig[0].fileUrl : '');
         const primaryFileName = parsedConfig[0] ? parsedConfig[0].fileName : 'Document.pdf';
 
-        let calculatedDeliveryFee = (deliveryMode === 'pickup') ? 0 : (finalAmountNumeric >= 99 ? 0 : 25);
-        let selectedPaymentMode = paymentMode || "online";
+      let calculatedDeliveryFee = (deliveryMode === 'pickup') ? 0 : (finalAmountNumeric >= 99 ? 0 : 25);
+        let selectedPaymentMode = (paymentMode || "online").toLowerCase();
 
-        if (selectedPaymentMode === 'cod' || selectedPaymentMode === 'wallet' || selectedPaymentMode === 'cash') {
-            const newOrder = new Order({
-                orderId: numericId,
-                customerName: customerName || 'Customer',
-                phone: phone || 'N/A',
-                deliveryMode: deliveryMode || 'doorstep',
-                fileUrl: primaryFileUrl, 
-                fileName: primaryFileName,
-                configDetails: parsedConfig,
-                amount: finalAmountNumeric.toFixed(2),
-                totalAmount: finalAmountNumeric.toFixed(2),
-                status: 'Ready for Print',
-                date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-                timestamp: new Date().toISOString(),
-                paymentId: selectedPaymentMode === 'wallet' ? 'PAID VIA WALLET' : 'CASH ON DELIVERY',
-                deliveryFeeCharged: calculatedDeliveryFee
-            });
+        // 🔥 Robust check for COD, Cash, Wallet or any variation
+        if (selectedPaymentMode.includes('cod') || selectedPaymentMode.includes('cash') || selectedPaymentMode.includes('wallet') || selectedPaymentMode === 'cod' || selectedPaymentMode === 'cash') {
+            
+            // Check karo ki order mein sirf store products hain ya print files bhi hain
+            const hasPrintFiles = parsedConfig.some(item => item.printType !== 'snack' && item.printType !== 'product' && (!item.fileName || !item.fileName.startsWith('Product:')));
+            
+            // Agar print file hai toh 'Ready for Print', agar sirf product/snack hai toh 'Processing'
+            const assignedInitialStatus = hasPrintFiles ? 'Ready for Print' : 'Processing';
 
-            await newOrder.save();
-            return res.status(201).json({ success: true, order_id: numericId });
-        }
+            const newOrder = new Order({
+                orderId: numericId,
+                customerName: customerName || 'Customer',
+                phone: phone || 'N/A',
+                deliveryMode: deliveryMode || 'doorstep',
+                fileUrl: primaryFileUrl, 
+                fileName: primaryFileName,
+                configDetails: parsedConfig,
+                amount: finalAmountNumeric.toFixed(2),
+                totalAmount: finalAmountNumeric.toFixed(2),
+                status: assignedInitialStatus, // 🔥 Ab yeh kabhi 'Pending Payment' nahi hoga!
+                date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                timestamp: new Date().toISOString(),
+                paymentId: selectedPaymentMode.includes('wallet') ? 'PAID VIA WALLET' : 'CASH ON DELIVERY',
+                deliveryFeeCharged: calculatedDeliveryFee
+            });
+
+            await newOrder.save();
+            
+            // 🔥 Turant inventory decrement karo taaki stock update ho jaye
+            if (typeof deductStockForOrder === 'function') {
+                await deductStockForOrder(parsedConfig);
+            }
+
+            return res.status(201).json({ success: true, order_id: numericId });
+        }
 
         let razorpayOrder = await razorpay.orders.create({ 
             amount: Math.round(finalAmountNumeric * 100), 
