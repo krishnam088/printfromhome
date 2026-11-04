@@ -1613,15 +1613,11 @@ async function deductStockForOrder(parsedConfig) {
 }
 
 
-app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
- try {
-        console.log("📥 [DEBUG CREATE-ORDER] Files received:", req.files ? req.files.length : 0);
-        if (req.files && req.files.length > 0) {
-            console.log("📄 [DEBUG FILE FIELDNAME]:", req.files[0].fieldname, "Filename:", req.files[0].filename);
-        }
+app.post('/api/create-order', async (req, res) => {
+    try {
+        console.log("📥 [DEBUG CREATE-ORDER] Order received with Cloudinary Direct Upload flow");
         
         let config = await StoreConfig.findOne();
-        
         if (config && config.diwaliLaunchMode) {
             return res.status(403).json({ 
                 success: false, 
@@ -1630,8 +1626,8 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
             });
         }
 
-        // 🔥 Destructure fileBase64 along with standard fields from req.body
-        const { totalAmount, configDetails, address, customerName, phone, paymentMode, deliveryMode, fileBase64 } = req.body;
+        // 🔥 Frontend se ab seedha Cloudinary URL aur baaki parameters aayengi
+        const { totalAmount, configDetails, address, customerName, phone, paymentMode, deliveryMode, fileUrl } = req.body;
         
         let finalAmountNumeric = parseFloat(String(totalAmount || '42').replace(/[₹,]/g, ''));
         if (isNaN(finalAmountNumeric) || finalAmountNumeric <= 0) finalAmountNumeric = 42;
@@ -1644,95 +1640,72 @@ app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
         }
 
         const numericId = String(Math.floor(100000 + Math.random() * 900000));
-        const host = req.get('host');
-        const docFiles = req.files ? req.files.filter(f => f.fieldname === 'document') : [];
-        
-        // 🔥 Ensure uploads directory exists
-        if (!fs.existsSync(localUploadsDir)) {
-            fs.mkdirSync(localUploadsDir, { recursive: true });
-        }
 
-        const filesMappedList = docFiles.map((f, idx) => {
-            const fullPath = path.join(localUploadsDir, f.filename);
-            if (fs.existsSync(fullPath)) {
-                console.log(`✅ [File Write Success] ${f.filename} (${fs.statSync(fullPath).size} bytes) written to disk.`);
-            } else {
-                console.error(`❌ [File Write Error] File missing from disk: ${f.filename}`);
-            }
+        // 🔥 Cloudinary ka direct secure URL yahan map hoga (Server par 0 MB disk usage)
+        const primaryFileUrl = fileUrl || (parsedConfig[0] ? parsedConfig[0].fileUrl : '');
+        const primaryFileName = parsedConfig[0] ? parsedConfig[0].fileName : 'Document.pdf';
 
-            return { 
-                name: f.originalname || `Document_${idx}.pdf`, 
-                filename: f.filename, 
-                url: `https://${host}/uploads/${f.filename}` 
-            };
-        });
+        let calculatedDeliveryFee = (deliveryMode === 'pickup') ? 0 : (finalAmountNumeric >= 99 ? 0 : 25);
+        let selectedPaymentMode = paymentMode || "online";
 
-      // 🔥 Bulletproof Multi-Source Base64 Backup Capture Engine
-        let rawBase64Backup = fileBase64 || '';
-
-        // 1. Check indexed body keys (e.g. fileBase64_0)
-        if (!rawBase64Backup) {
-            for (let key in req.body) {
-                if (key.startsWith('fileBase64_') && req.body[key] && typeof req.body[key] === 'string' && req.body[key].startsWith('data:')) {
-                    rawBase64Backup = req.body[key];
-                    console.log("✅ [Server Base64 Captured From indexed key]:", key, "Length:", rawBase64Backup.length);
-                    break;
-                }
-            }
-        }
-
-        // 2. Check parsedConfig items for base64
-        if (!rawBase64Backup && Array.isArray(parsedConfig)) {
-            for (let item of parsedConfig) {
-                if (item.fileBase64 && typeof item.fileBase64 === 'string' && item.fileBase64.startsWith('data:')) {
-                    rawBase64Backup = item.fileBase64;
-                    console.log("✅ [Server Base64 Captured From parsedConfig]: Length:", rawBase64Backup.length);
-                    break;
-                }
-            }
-        }
-
-        // 3. Fallback to physical disk file if base64 is still empty
-        if (!rawBase64Backup) {
-            const allUploadedFiles = (req.files && req.files.length > 0) ? req.files : docFiles;
-            if (allUploadedFiles.length > 0) {
-                try {
-                    let targetFilePath = path.join(localUploadsDir, allUploadedFiles[0].filename);
-                    if (fs.existsSync(targetFilePath)) {
-                        let fileBuffer = fs.readFileSync(targetFilePath);
-                        let originalName = allUploadedFiles[0].originalname || 'Document.pdf';
-                        let ext = originalName.split('.').pop().toLowerCase();
-                        let mimeType = ext === 'pdf' ? 'application/pdf' : (ext === 'png' ? 'image/png' : 'image/jpeg');
-                        rawBase64Backup = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
-                        console.log("✅ [Server Base64 Generated Successfully From Disk] Length:", rawBase64Backup.length);
-                    }
-                } catch(e) {
-                    console.error("❌ [Server Base64 Generation From Disk Error]:", e.message);
-                }
-            }
-        }
-
-        // 4. Inject base64 back into configDetails for complete self-healing safety
-        if (rawBase64Backup && Array.isArray(parsedConfig)) {
-            parsedConfig.forEach(item => {
-                if (!item.fileBase64 || item.fileBase64 === '') {
-                    item.fileBase64 = rawBase64Backup;
-                }
+        if (selectedPaymentMode === 'cod' || selectedPaymentMode === 'wallet' || selectedPaymentMode === 'cash') {
+            const newOrder = new Order({
+                orderId: numericId,
+                customerName: customerName || 'Customer',
+                phone: phone || 'N/A',
+                deliveryMode: deliveryMode || 'doorstep',
+                fileUrl: primaryFileUrl, // 👈 Cloudinary Direct URL
+                fileName: primaryFileName,
+                configDetails: parsedConfig,
+                amount: finalAmountNumeric.toFixed(2),
+                totalAmount: finalAmountNumeric.toFixed(2),
+                status: 'Ready for Print',
+                date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                timestamp: new Date().toISOString(),
+                paymentId: selectedPaymentMode === 'wallet' ? 'PAID VIA WALLET' : 'CASH ON DELIVERY',
+                deliveryFeeCharged: calculatedDeliveryFee
             });
+
+            await newOrder.save();
+            return res.status(201).json({ success: true, order_id: numericId });
         }
 
-
-        const primaryUrl = filesMappedList.length > 0 ? filesMappedList[0].url : (parsedConfig[0]?.fileUrl || '');
-        const primaryName = filesMappedList.length > 0 ? filesMappedList[0].name : (parsedConfig[0]?.fileName || 'Document.pdf');
-        
-        parsedConfig.forEach((item, index) => {
-            if (!item.fileUrl || item.fileUrl.startsWith('blob:') || item.fileUrl.startsWith('data:')) {
-                let matched = filesMappedList[index] || filesMappedList[0];
-                if (matched) {
-                    item.fileUrl = matched.url;
-                }
-            }
+        let razorpayOrder = await razorpay.orders.create({ 
+            amount: Math.round(finalAmountNumeric * 100), 
+            currency: "INR", 
+            receipt: `rcpt_${numericId}` 
         });
+
+        const newOrder = new Order({
+            orderId: numericId,
+            customerName: customerName || 'Customer',
+            phone: phone || 'N/A',
+            deliveryMode: deliveryMode || 'doorstep',
+            fileUrl: primaryFileUrl, // 👈 Cloudinary Direct URL
+            fileName: primaryFileName,
+            configDetails: parsedConfig,
+            amount: finalAmountNumeric.toFixed(2),
+            totalAmount: finalAmountNumeric.toFixed(2),
+            status: 'Pending Payment',
+            date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+            timestamp: new Date().toISOString(),
+            deliveryFeeCharged: calculatedDeliveryFee
+        });
+
+        await newOrder.save();
+        res.status(201).json({ 
+            success: true, 
+            order_id: numericId, 
+            rzp_order_id: razorpayOrder.id,
+            amount: razorpayOrder.amount, 
+            key_id: razorpay.key_id 
+        });
+
+    } catch (error) {
+        console.error("Order creation error:", error);
+        res.status(500).json({ success: false, message: error.message || "Order creation failed" });
+    }
+});
 
         let calculatedDeliveryFee = (deliveryMode === 'pickup') ? 0 : (finalAmountNumeric >= 99 ? 0 : 25);
         let selectedPaymentMode = paymentMode || "online";
@@ -2789,57 +2762,117 @@ app.get('/api/rider/live-location/:phone', async (req, res) => {
 });
 
 // ==========================================
-// 📍 RIDER & ADMIN LIVE GPS LOCATION TRACKING
+// 📍 RIDER & ADMIN LIVE GPS LOCATION TRACKING (Aapka purana code...)
 // ==========================================
-// Reuse activeRiderLocations declared above for rider location updates.
-
-// 1. Rider ya Admin apni current GPS location update karega
-app.post('/api/admin/update-location', async (req, res) => {
+app.get('/api/admin/live-location', async (req, res) => {
     try {
-        const { orderId, lat, lng } = req.body;
-        if (lat && lng) {
-            const targetKey = orderId || 'default';
-            activeRiderLocations[targetKey] = { 
-                lat: Number(lat), 
-                lng: Number(lng), 
-                timestamp: Date.now() 
-            };
-            return res.json({ success: true, message: "Location updated successfully" });
-        }
-        res.status(400).json({ success: false, message: "Latitude and Longitude are required" });
+        const { orderId } = req.query;
+        let locationData = (orderId && activeRiderLocations[orderId]) ? activeRiderLocations[orderId] : null;
+        // ... (purana tracking code)
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// 2. User tracking page rider ki latest live coordinates fetch karega
-app.get('/api/admin/live-location', async (req, res) => {
+
+// 🔥 NAYA OPTIMIZED CLOUDINARY DIRECT UPLOAD ORDER CREATION ROUTE (Yahan paste karein)
+app.post('/api/create-order', async (req, res) => {
     try {
-        const { orderId } = req.query;
-        let locationData = (orderId && activeRiderLocations[orderId]) ? activeRiderLocations[orderId] : null;
-
-        if (!locationData) {
-            const keys = Object.keys(activeRiderLocations);
-            if (keys.length > 0) {
-                locationData = activeRiderLocations[keys[keys.length - 1]];
-            }
-        }
-
-        if (locationData) {
-            return res.json({
-                success: true,
-                lat: locationData.lat,
-                lng: locationData.lng
+        console.log("📥 [DEBUG CREATE-ORDER] Order received with Cloudinary Direct Upload flow");
+        
+        let config = await StoreConfig.findOne();
+        if (config && config.diwaliLaunchMode) {
+            return res.status(403).json({ 
+                success: false, 
+                isDiwaliHold: true,
+                message: config.diwaliMessage || "🚀 Launching on Diwali! Service starts from Diwali. Thanks for downloading Print From Home! 🙏" 
             });
         }
 
-        // Fallback: Default Varanasi Store coordinates
-        res.json({
-            success: true,
-            lat: 25.3451,
-            lng: 83.0012
+        const { totalAmount, configDetails, address, customerName, phone, paymentMode, deliveryMode, fileUrl } = req.body;
+        
+        let finalAmountNumeric = parseFloat(String(totalAmount || '42').replace(/[₹,]/g, ''));
+        if (isNaN(finalAmountNumeric) || finalAmountNumeric <= 0) finalAmountNumeric = 42;
+
+        let parsedConfig = [];
+        try { 
+            parsedConfig = typeof configDetails === 'string' ? JSON.parse(configDetails) : (configDetails || []); 
+        } catch(e) {
+            parsedConfig = [];
+        }
+
+        const numericId = String(Math.floor(100000 + Math.random() * 900000));
+        const primaryFileUrl = fileUrl || (parsedConfig[0] ? parsedConfig[0].fileUrl : '');
+        const primaryFileName = parsedConfig[0] ? parsedConfig[0].fileName : 'Document.pdf';
+
+        let calculatedDeliveryFee = (deliveryMode === 'pickup') ? 0 : (finalAmountNumeric >= 99 ? 0 : 25);
+        let selectedPaymentMode = paymentMode || "online";
+
+        if (selectedPaymentMode === 'cod' || selectedPaymentMode === 'wallet' || selectedPaymentMode === 'cash') {
+            const newOrder = new Order({
+                orderId: numericId,
+                customerName: customerName || 'Customer',
+                phone: phone || 'N/A',
+                deliveryMode: deliveryMode || 'doorstep',
+                fileUrl: primaryFileUrl, // Cloudinary Direct URL
+                fileName: primaryFileName,
+                configDetails: parsedConfig,
+                amount: finalAmountNumeric.toFixed(2),
+                totalAmount: finalAmountNumeric.toFixed(2),
+                status: 'Ready for Print',
+                date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                timestamp: new Date().toISOString(),
+                paymentId: selectedPaymentMode === 'wallet' ? 'PAID VIA WALLET' : 'CASH ON DELIVERY',
+                deliveryFeeCharged: calculatedDeliveryFee
+            });
+
+            await newOrder.save();
+            return res.status(201).json({ success: true, order_id: numericId });
+        }
+
+        let razorpayOrder = await razorpay.orders.create({ 
+            amount: Math.round(finalAmountNumeric * 100), 
+            currency: "INR", 
+            receipt: `rcpt_${numericId}` 
         });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+
+        const newOrder = new Order({
+            orderId: numericId,
+            customerName: customerName || 'Customer',
+            phone: phone || 'N/A',
+            deliveryMode: deliveryMode || 'doorstep',
+            fileUrl: primaryFileUrl, // Cloudinary Direct URL
+            fileName: primaryFileName,
+            configDetails: parsedConfig,
+            amount: finalAmountNumeric.toFixed(2),
+            totalAmount: finalAmountNumeric.toFixed(2),
+            status: 'Pending Payment',
+            date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+            timestamp: new Date().toISOString(),
+            deliveryFeeCharged: calculatedDeliveryFee
+        });
+
+        await newOrder.save();
+        res.status(201).json({ 
+            success: true, 
+            order_id: numericId, 
+            rzp_order_id: razorpayOrder.id,
+            amount: razorpayOrder.amount, 
+            key_id: razorpay.key_id 
+        });
+
+    } catch (error) {
+        console.error("Order creation error:", error);
+        res.status(500).json({ success: false, message: error.message || "Order creation failed" });
     }
+});
+
+
+// 🔥 MongoDB Connection (Aapka purana connection code...)
+mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb+srv://...')
+.then(() => console.log('📦 Connected to MongoDB Atlas successfully!'))
+.catch(err => console.error('❌ MongoDB Connection Error:', err.message));
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });

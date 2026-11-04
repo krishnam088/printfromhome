@@ -73,7 +73,7 @@ function downloadFilePromise(url, localPath) {
 
 async function fetchAndPrintLiveJobs() {
     try {
-        console.log("🔍 Scanning LIVE Cloud Queue... (ADVANCED COLOR MATRIX MODE)");
+        console.log("🔍 Scanning LIVE Cloud Queue... (ADVANCED CLOUDINARY & COLOR MATRIX MODE)");
         
         let response;
         let retries = 3;
@@ -155,14 +155,16 @@ async function fetchAndPrintLiveJobs() {
 
                 for (let i = 0; i < validPrintJobs.length; i++) {
                     const fileMeta = validPrintJobs[i];
-                    let fileUrl = fileMeta.fileUrl || fileMeta.url;
+                    
+                    // 🔥 Priority 1: Direct Cloudinary / Remote fileUrl from configDetails or order
+                    let fileUrl = fileMeta.fileUrl || fileMeta.url || order.fileUrl;
                     
                     // Ignore local blob or data URLs for desktop print agent
                     if (fileUrl && (fileUrl.startsWith('blob:') || fileUrl.startsWith('data:'))) {
                         fileUrl = null; 
                     }
                     
-                    // 🔥 Smart Fallback: Check order.files array matching filename or index
+                    // 🔥 Priority 2: Smart Fallback via order.files array
                     if (!fileUrl && order.files && Array.isArray(order.files) && order.files.length > 0) {
                         const cleanMetaName = (fileMeta.fileName || fileMeta.name || '').replace(/\.[^/.]+$/, "").toLowerCase();
                         const targetFile = order.files.find(f => {
@@ -175,18 +177,13 @@ async function fetchAndPrintLiveJobs() {
                         }
                     }
 
-                    // Fallback to order.fileUrl if item level url is missing
-                    if (!fileUrl && order.fileUrl) {
-                        fileUrl = order.fileUrl;
-                    }
-
-                    // Fallback to fileMeta.fileName direct uploads path
+                    // Fallback to fileMeta.fileName direct uploads path if still missing
                     if (!fileUrl && fileMeta.fileName) {
                         const cleanFileName = fileMeta.fileName.replace(/^Product:\s*/i, '').trim();
                         fileUrl = `${BASE_URL}/uploads/${cleanFileName}`;
                     }
 
-if (fileUrl && fileUrl !== '#' && !fileUrl.startsWith('blob:')) {
+                    if (fileUrl && fileUrl !== '#' && !fileUrl.startsWith('blob:')) {
                         const localPath = path.join(__dirname, `temp_print_${order.orderId}_${i}.pdf`);
 
                         try {
@@ -194,7 +191,7 @@ if (fileUrl && fileUrl !== '#' && !fileUrl.startsWith('blob:')) {
 
                             console.log(`📥 Downloading file for item ${i + 1} from: ${fileUrl}`);
                             
-                            // 🔥 Smart Self-Healing Try-Catch Block (URL vs Base64 Fallback)
+                            // 🔥 Smart Self-Healing Try-Catch Block (Cloudinary URL vs Database Base64 Fallback)
                             try {
                                 await downloadFilePromise(fileUrl, localPath);
                                 
@@ -204,7 +201,7 @@ if (fileUrl && fileUrl !== '#' && !fileUrl.startsWith('blob:')) {
                                     throw new Error("File size too small (< 200 bytes), likely a 404 response.");
                                 }
                             } catch (urlErr) {
-                                console.warn(`⚠️ URL download failed (404/Network). Automatically switching to MongoDB Base64 fallback...`);
+                                console.warn(`⚠️ Download from URL failed. Automatically switching to Database Base64 fallback...`);
                                 
                                 // 🔥 Database se direct Base64 uthakar file generate karo
                                 const base64Data = fileMeta.fileBase64 || order.fileBase64Data;
@@ -212,13 +209,13 @@ if (fileUrl && fileUrl !== '#' && !fileUrl.startsWith('blob:')) {
                                     await saveBase64ToFile(base64Data, localPath);
                                     console.log(`✅ [Self-Healing Success] File successfully reconstructed from database Base64!`);
                                 } else {
-                                    throw urlErr; // Agar base64 bhi na ho toh error aane do
+                                    throw urlErr; 
                                 }
                             }
                             
                             const fileStats = fs.statSync(localPath);
                             if (fileStats.size < 200) {
-                                throw new Error("Downloaded file is empty or invalid (Size < 200 bytes). Check server upload path.");
+                                throw new Error("Downloaded file is empty or invalid (Size < 200 bytes).");
                             }
                             
                             const isPhoto = fileMeta.jobType === 'photo_print' || fileMeta.paperType === 'photo' || fileMeta.printType === 'photo';
@@ -245,9 +242,7 @@ if (fileUrl && fileUrl !== '#' && !fileUrl.startsWith('blob:')) {
                         } catch (fileErr) {
                             console.error(`❌ Failed printing item file (${fileUrl}):`, fileErr.message);
                         }
-                    }
-
-                    else {
+                    } else {
                         console.warn(`⚠️ Warning: No valid downloadable file URL found for print item ${fileMeta.fileName || i}`);
                     }
                 }
