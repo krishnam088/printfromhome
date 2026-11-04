@@ -415,6 +415,100 @@ app.get('/api/store-status', async (req, res) => {
     }
 });
 
+
+// 🔥 SINGLE & CLEAN CREATE-ORDER ROUTE (100% Async)
+app.post('/api/create-order', async (req, res) => {
+    try {
+        console.log("📥 [DEBUG CREATE-ORDER] Order received with Cloudinary Direct Upload flow");
+        
+        let config = await StoreConfig.findOne();
+        if (config && config.diwaliLaunchMode) {
+            return res.status(403).json({ 
+                success: false, 
+                isDiwaliHold: true,
+                message: config.diwaliMessage || "🚀 Launching on Diwali! Service starts from Diwali. Thanks for downloading Print From Home! 🙏" 
+            });
+        }
+
+        const { totalAmount, configDetails, address, customerName, phone, paymentMode, deliveryMode, fileUrl } = req.body;
+        
+        let finalAmountNumeric = parseFloat(String(totalAmount || '42').replace(/[₹,]/g, ''));
+        if (isNaN(finalAmountNumeric) || finalAmountNumeric <= 0) finalAmountNumeric = 42;
+
+        let parsedConfig = [];
+        try { 
+            parsedConfig = typeof configDetails === 'string' ? JSON.parse(configDetails) : (configDetails || []); 
+        } catch(e) {
+            parsedConfig = [];
+        }
+
+        const numericId = String(Math.floor(100000 + Math.random() * 900000));
+        const primaryFileUrl = fileUrl || (parsedConfig[0] ? parsedConfig[0].fileUrl : '');
+        const primaryFileName = parsedConfig[0] ? parsedConfig[0].fileName : 'Document.pdf';
+
+        let calculatedDeliveryFee = (deliveryMode === 'pickup') ? 0 : (finalAmountNumeric >= 99 ? 0 : 25);
+        let selectedPaymentMode = paymentMode || "online";
+
+        if (selectedPaymentMode === 'cod' || selectedPaymentMode === 'wallet' || selectedPaymentMode === 'cash') {
+            const newOrder = new Order({
+                orderId: numericId,
+                customerName: customerName || 'Customer',
+                phone: phone || 'N/A',
+                deliveryMode: deliveryMode || 'doorstep',
+                fileUrl: primaryFileUrl, 
+                fileName: primaryFileName,
+                configDetails: parsedConfig,
+                amount: finalAmountNumeric.toFixed(2),
+                totalAmount: finalAmountNumeric.toFixed(2),
+                status: 'Ready for Print',
+                date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                timestamp: new Date().toISOString(),
+                paymentId: selectedPaymentMode === 'wallet' ? 'PAID VIA WALLET' : 'CASH ON DELIVERY',
+                deliveryFeeCharged: calculatedDeliveryFee
+            });
+
+            await newOrder.save();
+            return res.status(201).json({ success: true, order_id: numericId });
+        }
+
+        let razorpayOrder = await razorpay.orders.create({ 
+            amount: Math.round(finalAmountNumeric * 100), 
+            currency: "INR", 
+            receipt: `rcpt_${numericId}` 
+        });
+
+        const newOrder = new Order({
+            orderId: numericId,
+            customerName: customerName || 'Customer',
+            phone: phone || 'N/A',
+            deliveryMode: deliveryMode || 'doorstep',
+            fileUrl: primaryFileUrl, 
+            fileName: primaryFileName,
+            configDetails: parsedConfig,
+            amount: finalAmountNumeric.toFixed(2),
+            totalAmount: finalAmountNumeric.toFixed(2),
+            status: 'Pending Payment',
+            date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+            timestamp: new Date().toISOString(),
+            deliveryFeeCharged: calculatedDeliveryFee
+        });
+
+        await newOrder.save();
+        res.status(201).json({ 
+            success: true, 
+            order_id: numericId, 
+            rzp_order_id: razorpayOrder.id,
+            amount: razorpayOrder.amount, 
+            key_id: razorpay.key_id 
+        });
+
+    } catch (error) {
+        console.error("Order creation error:", error);
+        res.status(500).json({ success: false, message: error.message || "Order creation failed" });
+    }
+});
+   
+
 const handlePrintToggle = async (req, res) => {
     try {
         const { printEnabled } = req.body;
@@ -1612,98 +1706,6 @@ async function deductStockForOrder(parsedConfig) {
     }
 }
 
-
-// 🔥 SINGLE & CLEAN CREATE-ORDER ROUTE (100% Async)
-app.post('/api/create-order', async (req, res) => {
-    try {
-        console.log("📥 [DEBUG CREATE-ORDER] Order received with Cloudinary Direct Upload flow");
-        
-        let config = await StoreConfig.findOne();
-        if (config && config.diwaliLaunchMode) {
-            return res.status(403).json({ 
-                success: false, 
-                isDiwaliHold: true,
-                message: config.diwaliMessage || "🚀 Launching on Diwali! Service starts from Diwali. Thanks for downloading Print From Home! 🙏" 
-            });
-        }
-
-        const { totalAmount, configDetails, address, customerName, phone, paymentMode, deliveryMode, fileUrl } = req.body;
-        
-        let finalAmountNumeric = parseFloat(String(totalAmount || '42').replace(/[₹,]/g, ''));
-        if (isNaN(finalAmountNumeric) || finalAmountNumeric <= 0) finalAmountNumeric = 42;
-
-        let parsedConfig = [];
-        try { 
-            parsedConfig = typeof configDetails === 'string' ? JSON.parse(configDetails) : (configDetails || []); 
-        } catch(e) {
-            parsedConfig = [];
-        }
-
-        const numericId = String(Math.floor(100000 + Math.random() * 900000));
-        const primaryFileUrl = fileUrl || (parsedConfig[0] ? parsedConfig[0].fileUrl : '');
-        const primaryFileName = parsedConfig[0] ? parsedConfig[0].fileName : 'Document.pdf';
-
-        let calculatedDeliveryFee = (deliveryMode === 'pickup') ? 0 : (finalAmountNumeric >= 99 ? 0 : 25);
-        let selectedPaymentMode = paymentMode || "online";
-
-        if (selectedPaymentMode === 'cod' || selectedPaymentMode === 'wallet' || selectedPaymentMode === 'cash') {
-            const newOrder = new Order({
-                orderId: numericId,
-                customerName: customerName || 'Customer',
-                phone: phone || 'N/A',
-                deliveryMode: deliveryMode || 'doorstep',
-                fileUrl: primaryFileUrl, 
-                fileName: primaryFileName,
-                configDetails: parsedConfig,
-                amount: finalAmountNumeric.toFixed(2),
-                totalAmount: finalAmountNumeric.toFixed(2),
-                status: 'Ready for Print',
-                date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-                timestamp: new Date().toISOString(),
-                paymentId: selectedPaymentMode === 'wallet' ? 'PAID VIA WALLET' : 'CASH ON DELIVERY',
-                deliveryFeeCharged: calculatedDeliveryFee
-            });
-
-            await newOrder.save();
-            return res.status(201).json({ success: true, order_id: numericId });
-        }
-
-        let razorpayOrder = await razorpay.orders.create({ 
-            amount: Math.round(finalAmountNumeric * 100), 
-            currency: "INR", 
-            receipt: `rcpt_${numericId}` 
-        });
-
-        const newOrder = new Order({
-            orderId: numericId,
-            customerName: customerName || 'Customer',
-            phone: phone || 'N/A',
-            deliveryMode: deliveryMode || 'doorstep',
-            fileUrl: primaryFileUrl, 
-            fileName: primaryFileName,
-            configDetails: parsedConfig,
-            amount: finalAmountNumeric.toFixed(2),
-            totalAmount: finalAmountNumeric.toFixed(2),
-            status: 'Pending Payment',
-            date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-            timestamp: new Date().toISOString(),
-            deliveryFeeCharged: calculatedDeliveryFee
-        });
-
-        await newOrder.save();
-        res.status(201).json({ 
-            success: true, 
-            order_id: numericId, 
-            rzp_order_id: razorpayOrder.id,
-            amount: razorpayOrder.amount, 
-            key_id: razorpay.key_id 
-        });
-
-    } catch (error) {
-        console.error("Order creation error:", error);
-        res.status(500).json({ success: false, message: error.message || "Order creation failed" });
-    }
-});
 
       
 
