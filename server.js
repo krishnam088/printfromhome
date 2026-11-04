@@ -417,7 +417,7 @@ app.get('/api/store-status', async (req, res) => {
 
 
 // 🔥 SINGLE & CLEAN CREATE-ORDER ROUTE (100% Async)
-app.post('/api/create-order', async (req, res) => {
+app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
     try {
         console.log("📥 [DEBUG CREATE-ORDER] Order received with Cloudinary Direct Upload flow");
         
@@ -465,7 +465,7 @@ const { totalAmount, address, paymentMode, deliveryMode, fileUrl } = req.body;
         let selectedPaymentMode = (paymentMode || "online").toLowerCase();
 
         // 🔥 Robust check for COD, Cash, Wallet or any variation
-        if (selectedPaymentMode.includes('cod') || selectedPaymentMode.includes('cash') || selectedPaymentMode.includes('wallet') || selectedPaymentMode === 'cod' || selectedPaymentMode === 'cash') {
+        if (selectedPaymentMode.includes('cod') || selectedPaymentMode.includes('cash') || selectedPaymentMode.includes('wallet') || selectedPaymentMode === 'cod' || selectedPaymentMode === 'cash' || selectedPaymentMode === 'wallet') {
             
             // Check karo ki order mein sirf store products hain ya print files bhi hain
             const hasPrintFiles = parsedConfig.some(item => item.printType !== 'snack' && item.printType !== 'product' && (!item.fileName || !item.fileName.startsWith('Product:')));
