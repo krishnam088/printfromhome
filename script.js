@@ -2374,19 +2374,13 @@ window.renderCartDrawerContents = function() {
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
     window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
-    // 🔥 Print Job hone par sirf COD lock karna (Online aur Wallet dono allow honge)
-    const hasPrintJobs = window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0;
-    const paymentSelect = document.getElementById('cartDrawerPaymentSelect');
-    
-    if (paymentSelect) {
-        if (hasPrintJobs) {
-            // COD option ko disable ya hide kar sakte hain agar select mein ho, ya fir dropdown ko enable rakhain taaki Online / Wallet select ho sake
-            paymentSelect.disabled = false;
-            paymentSelect.title = "Online payment or Print Wallet is required for print orders";
-        } else {
-            paymentSelect.disabled = false;
-        }
-    }
+   // 🔥 Strict COD Check for Print Orders
+const hasPrintJobsCheck = window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0;
+if ((paymentMode === 'cod' || paymentMode === 'cash') && hasPrintJobsCheck && window.adminCodForPrintEnabled === false) {
+    showPrintPaymentRestrictionNotice();
+    if (typeof releaseButton === 'function') releaseButton();
+    return;
+}
 
     let hasItems = (window.cartSnacksArray.length > 0) || (window.cartPrintJobsArray.length > 0);
     
@@ -2486,6 +2480,11 @@ window.renderCartDrawerContents = function() {
         calculateTotal();
     }
 };
+// 🔥 Yahan par isko add kar dena hai taaki cart khulte hi COD restriction apply ho jaye
+    if (typeof checkAndApplyCodRestrictions === 'function') {
+        checkAndApplyCodRestrictions();
+    }
+
 
 // 🔍 1. CART DRAWER LIVE SEARCH FUNCTION FOR INVENTORY ITEMS (Global Scope)
 window.filterCartItemsSearch = function(query) {
@@ -2691,6 +2690,7 @@ window.removeSnackItemCompletely = function(index) {
     renderCartDrawerContents();
     updateFloatingCartBar();
     calculateTotal();
+    checkAndApplyCodRestrictions(); // 🔥 Refresh COD state
 };
 
 window.removePrintJobFromCart = function(index) {
@@ -2700,6 +2700,7 @@ window.removePrintJobFromCart = function(index) {
         renderCartDrawerContents();
         updateFloatingCartBar();
         calculateTotal();
+        checkAndApplyCodRestrictions(); // 🔥 Refresh COD state (Agar print job hata toh COD wapas enable ho jayega)
     }
 };
 
@@ -2717,6 +2718,7 @@ window.clearEntireCartData = function() {
             updateFloatingCartBar();
             toggleCartDrawer(false);
             showAppToast("Cart cleared successfully!", "success");
+            checkAndApplyCodRestrictions(); // 🔥 Refresh COD state
         }, 
         "🛒"
     );
@@ -2724,12 +2726,10 @@ window.clearEntireCartData = function() {
 
 window.persistCartStateData = function() {
     try {
-        // 🔥 Base64 aur clean data ko localStorage mein safely save karein
         localStorage.setItem('cart_print_jobs', JSON.stringify(window.cartPrintJobsArray || []));
         localStorage.setItem('cart_snacks', JSON.stringify(window.cartSnacksArray || []));
     } catch (e) {
         console.warn("Storage quota limit reached, handling safely:", e);
-        // Agar storage full ho jaye tabhi sirf heavy blobs strip hon, base64 safe rahe
         const cleanJobs = (window.cartPrintJobsArray || []).map(job => {
             const copy = { ...job };
             delete copy.fileData;
@@ -2740,7 +2740,69 @@ window.persistCartStateData = function() {
         } catch (err) {}
     }
     updateFloatingCartBar();
+    checkAndApplyCodRestrictions(); // 🔥 Har state save par COD check run hoga
 };
+
+// 🔥 Core COD Restriction & Stylish Popup Logic
+window.showPrintPaymentRestrictionNotice = function() {
+    let existingModal = document.getElementById('printPaymentNoticeModal');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'printPaymentNoticeModal';
+    modal.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px); z-index:999999; display:flex; align-items:center; justify-content:center; padding:16px; font-family:'Poppins', sans-serif;";
+    
+    modal.innerHTML = `
+        <div style="background:#ffffff; border-radius:24px; width:100%; max-width:380px; padding:28px; text-align:center; box-shadow:0 15px 35px rgba(0,0,0,0.25); position:relative;">
+            <div style="font-size:3.5rem; margin-bottom:12px;">🔒</div>
+            <h3 style="font-size:1.2rem; font-weight:900; color:#0f172a; margin-bottom:8px;">Online Payment Required</h3>
+            <p style="font-size:0.85rem; color:#475569; line-height:1.5; margin-bottom:22px;">For print orders, Cash on Delivery (COD) is temporarily disabled to prevent paper and ink waste. Please use <b>Online Payment</b> or <b>Print Wallet</b>.</p>
+            <button type="button" onclick="document.getElementById('printPaymentNoticeModal').remove()" style="width:100%; padding:13px; background:#065f46; color:white; border:none; border-radius:14px; font-weight:900; font-size:0.9rem; cursor:pointer; box-shadow:0 4px 15px rgba(6,95,70,0.3);">Got it, thanks!</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+};
+
+window.checkAndApplyCodRestrictions = function() {
+    const hasPrintJobs = window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0;
+    const codRadioButton = document.getElementById('paymentOptionCod'); 
+    const codContainerBox = document.getElementById('codOptionContainerBox'); 
+
+    if (hasPrintJobs && window.adminCodForPrintEnabled === false) {
+        if (codRadioButton) {
+            codRadioButton.disabled = true;
+            codRadioButton.checked = false;
+        }
+        if (codContainerBox) {
+            codContainerBox.style.opacity = '0.5';
+            codContainerBox.style.cursor = 'not-allowed';
+            codContainerBox.title = "COD is disabled for print orders to prevent ink and paper waste.";
+            codContainerBox.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                showPrintPaymentRestrictionNotice();
+            };
+        }
+        if (typeof window.updateCartPaymentMode === 'function') {
+            window.updateCartPaymentMode('online');
+        }
+    } else {
+        if (codRadioButton) {
+            codRadioButton.disabled = false;
+        }
+        if (codContainerBox) {
+            codContainerBox.style.opacity = '1';
+            codContainerBox.style.cursor = 'pointer';
+            codContainerBox.title = "";
+            codContainerBox.onclick = null; 
+        }
+    }
+};
+
+// Cart render ya drawer khulte hi COD check chalane ke liye
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(checkAndApplyCodRestrictions, 500);
+});
 
 window.loadUserAddressesFromStorage = function() {
     const raw = localStorage.getItem('saved_addresses');
@@ -3124,7 +3186,10 @@ window.forceReturnToUploadView = function() {
 window.adminDeliveryFee = parseFloat(localStorage.getItem('cached_delivery_fee')) || 0;
 window.adminHandlingFee = parseFloat(localStorage.getItem('cached_handling_fee')) || 0;
 window.adminRainFee = parseFloat(localStorage.getItem('cached_rain_fee')) || 0;
-window.adminCodForPrintEnabled = localStorage.getItem('cached_cod_print') !== 'false'; // Default true
+// 🔥 Server sync hone tak default false ya secure rakhein taaki flash na ho
+// 🔥 Server sync hone tak default false ya secure rakhein taaki flash na ho
+window.adminCodForPrintEnabled = localStorage.getItem('cached_cod_print') === 'true';
+
 window.adminCouponsList = JSON.parse(localStorage.getItem('cached_coupons') || '[]');
 
 window.loadAdminConfiguredFeesAndCoupons = async function() {
@@ -5891,3 +5956,24 @@ function hideGlobalLoader() {
         loader.classList.remove('active');
     }
 }
+
+
+
+window.showPrintPaymentRestrictionNotice = function() {
+    let existingModal = document.getElementById('printPaymentNoticeModal');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'printPaymentNoticeModal';
+    modal.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px); z-index:999999; display:flex; align-items:center; justify-content:center; padding:16px; font-family:'Poppins', sans-serif;";
+    
+    modal.innerHTML = `
+        <div style="background:#ffffff; border-radius:24px; width:100%; max-width:380px; padding:28px; text-align:center; box-shadow:0 15px 35px rgba(0,0,0,0.25); position:relative;">
+            <div style="font-size:3.5rem; margin-bottom:12px;">🔒</div>
+            <h3 style="font-size:1.2rem; font-weight:900; color:#0f172a; margin-bottom:8px;">Online Payment Required</h3>
+            <p style="font-size:0.85rem; color:#475569; line-height:1.5; margin-bottom:22px;">For print orders, Cash on Delivery (COD) is temporarily disabled to prevent paper and ink waste. Please use <b>Online Payment</b> or <b>Print Wallet</b>.</p>
+            <button type="button" onclick="document.getElementById('printPaymentNoticeModal').remove()" style="width:100%; padding:13px; background:#065f46; color:white; border:none; border-radius:14px; font-weight:900; font-size:0.9rem; cursor:pointer; box-shadow:0 4px 15px rgba(6,95,70,0.3);">Got it, thanks!</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+};
