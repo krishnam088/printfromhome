@@ -23,10 +23,9 @@ const cron = require('node-cron');
 const webpush = require('web-push');
 require('dotenv').config();
 
-// 🔥 Yeh rahi body parser ki size limit (50mb)
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
-
+// 🔥 Yeh rahi body parser ki size limit (100mb)
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true, parameterLimit: 100000 }));
 app.use(cors());
 app.use(express.static(__dirname)); 
 
@@ -55,7 +54,12 @@ const storage = new CloudinaryStorage({
     }
 });
 const uploadCloudinary = multer({ storage: storage });
-const uploadLocal = multer({ dest: localUploadsDir });
+
+// 🔥 Corrected Multer Storage with 50MB Field Size Limit for Base64 Strings
+const uploadLocal = multer({ 
+    dest: localUploadsDir,
+    limits: { fieldSize: 50 * 1024 * 1024 } 
+});
 
 // ==========================================
 // 📋 2. MONGOOSE SCHEMAS & MODELS (MUST BE BEFORE MIDDLEWARES)
