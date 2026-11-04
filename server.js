@@ -429,8 +429,23 @@ app.post('/api/create-order', async (req, res) => {
                 message: config.diwaliMessage || "🚀 Launching on Diwali! Service starts from Diwali. Thanks for downloading Print From Home! 🙏" 
             });
         }
+const { totalAmount, address, paymentMode, deliveryMode, fileUrl } = req.body;
+        
+        // 🔥 Robust fallback extraction for multipart/form-data text fields
+        let customerName = req.body.customerName || req.body.name || 'Customer';
+        let phone = req.body.phone || req.body.identity || 'N/A';
+        let configDetails = req.body.configDetails;
 
-        const { totalAmount, configDetails, address, customerName, phone, paymentMode, deliveryMode, fileUrl } = req.body;
+        // Agar address ke andar contact info chhupi hai toh wahan se bhi extract kar lo
+        if (address && address.includes('Contact:')) {
+            try {
+                let contactPart = address.split('Contact:')[1].trim();
+                let namePart = contactPart.split('(')[0].trim();
+                let phonePart = contactPart.split('(')[1].replace(')', '').trim();
+                if (namePart && customerName === 'Customer') customerName = namePart;
+                if (phonePart && phone === 'N/A') phone = phonePart;
+            } catch (e) {}
+        }
         
         let finalAmountNumeric = parseFloat(String(totalAmount || '42').replace(/[₹,]/g, ''));
         if (isNaN(finalAmountNumeric) || finalAmountNumeric <= 0) finalAmountNumeric = 42;
