@@ -1613,7 +1613,7 @@ async function deductStockForOrder(parsedConfig) {
 }
 
 
-// Server.js ka final clean create-order route aisa dikhega:
+// 🔥 SINGLE & CLEAN CREATE-ORDER ROUTE (100% Async)
 app.post('/api/create-order', async (req, res) => {
     try {
         console.log("📥 [DEBUG CREATE-ORDER] Order received with Cloudinary Direct Upload flow");
@@ -1646,33 +1646,27 @@ app.post('/api/create-order', async (req, res) => {
         let calculatedDeliveryFee = (deliveryMode === 'pickup') ? 0 : (finalAmountNumeric >= 99 ? 0 : 25);
         let selectedPaymentMode = paymentMode || "online";
 
-        // Yahan ab async function ke andar hi await save() chal raha hai:
-        const newOrder = new Order({
-            orderId: numericId,
-            customerName: customerName || 'Customer',
-            phone: phone || 'N/A',
-            deliveryMode: deliveryMode || 'doorstep',
-            fileUrl: primaryFileUrl, 
-            fileName: primaryFileName,
-            configDetails: parsedConfig,
-            amount: finalAmountNumeric.toFixed(2),
-            totalAmount: finalAmountNumeric.toFixed(2),
-            status: 'Ready for Print',
-            date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-            timestamp: new Date().toISOString(),
-            paymentId: selectedPaymentMode === 'wallet' ? 'PAID VIA WALLET' : 'CASH ON DELIVERY',
-            deliveryFeeCharged: calculatedDeliveryFee
-        });
+        if (selectedPaymentMode === 'cod' || selectedPaymentMode === 'wallet' || selectedPaymentMode === 'cash') {
+            const newOrder = new Order({
+                orderId: numericId,
+                customerName: customerName || 'Customer',
+                phone: phone || 'N/A',
+                deliveryMode: deliveryMode || 'doorstep',
+                fileUrl: primaryFileUrl, 
+                fileName: primaryFileName,
+                configDetails: parsedConfig,
+                amount: finalAmountNumeric.toFixed(2),
+                totalAmount: finalAmountNumeric.toFixed(2),
+                status: 'Ready for Print',
+                date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                timestamp: new Date().toISOString(),
+                paymentId: selectedPaymentMode === 'wallet' ? 'PAID VIA WALLET' : 'CASH ON DELIVERY',
+                deliveryFeeCharged: calculatedDeliveryFee
+            });
 
-        await newOrder.save(); // ✅ Ab yeh 100% async function ke andar hai!
-        return res.status(201).json({ success: true, order_id: numericId });
-
-    } catch (error) {
-        console.error("Order creation error:", error);
-        res.status(500).json({ success: false, message: error.message || "Order creation failed" });
-    }
-});
-
+            await newOrder.save();
+            return res.status(201).json({ success: true, order_id: numericId });
+        }
 
         let razorpayOrder = await razorpay.orders.create({ 
             amount: Math.round(finalAmountNumeric * 100), 
@@ -1685,10 +1679,8 @@ app.post('/api/create-order', async (req, res) => {
             customerName: customerName || 'Customer',
             phone: phone || 'N/A',
             deliveryMode: deliveryMode || 'doorstep',
-            files: filesMappedList,
-            fileUrl: primaryUrl,
-            fileName: primaryName,
-            fileBase64Data: rawBase64Backup, // 🔥 2nd Block: Online Razorpay orders ke liye yahan add karein
+            fileUrl: primaryFileUrl, 
+            fileName: primaryFileName,
             configDetails: parsedConfig,
             amount: finalAmountNumeric.toFixed(2),
             totalAmount: finalAmountNumeric.toFixed(2),
@@ -1706,10 +1698,14 @@ app.post('/api/create-order', async (req, res) => {
             amount: razorpayOrder.amount, 
             key_id: razorpay.key_id 
         });
+
     } catch (error) {
+        console.error("Order creation error:", error);
         res.status(500).json({ success: false, message: error.message || "Order creation failed" });
     }
 });
+
+      
 
 app.post('/api/verify-payment', async (req, res) => {
     try {
@@ -2714,15 +2710,10 @@ app.get('/api/admin/live-location', async (req, res) => {
     }
 });
 
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('📦 Connected to MongoDB Atlas successfully!'))
+  .catch(err => console.error('❌ MongoDB Connection Error:', err.message));
 
-
-
-
-// 🔥 MongoDB Connection (Aapka purana connection code...)
-mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb+srv://...')
-.then(() => console.log('📦 Connected to MongoDB Atlas successfully!'))
-.catch(err => console.error('❌ MongoDB Connection Error:', err.message));
-
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
 });
