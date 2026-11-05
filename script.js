@@ -4523,7 +4523,7 @@ window.openOrderTrackingView = function(orderId) {
             if (callBtn) callBtn.href = "tel:7007626731";
         }
 
-        // 4. Render Item Manifest (🔥 FIX: Summary Slip Hidden & Accurate Rate Calculation for Colour & B/W)
+        // 4. Render Item Manifest (🔥 FIX: Summary Slip Hidden & Accurate Rate Calculation)
         const manifestList = document.getElementById('trackFilesManifestList');
         if (manifestList) {
             let detailsArray = order.details || order.configDetails || [];
@@ -4542,7 +4542,6 @@ window.openOrderTrackingView = function(orderId) {
                     let itemName = item.fileName || item.name || 'Print Item';
                     let itemCopies = item.copies || item.qty || 1;
                     
-                    // 🔥 Accurate Rate Calculation (Handles B/W vs Colour securely for multiple copies & pages)
                     let pType = (item.printType || '').toLowerCase();
                     let rate = (pType.includes('bw') || pType.includes('black')) ? 3 : 10;
                     
@@ -4710,34 +4709,7 @@ function calculateHaversineKm(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-// 3. Hook into openOrderTrackingView to initialize map automatically
-const existingOpenOrderTrackingView = window.openOrderTrackingView;
-window.openOrderTrackingView = function(orderId) {
-    if (typeof existingOpenOrderTrackingView === 'function') {
-        existingOpenOrderTrackingView(orderId);
-    }
-
-    const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
-    let history = [];
-    
-    try {
-        let rawHistory = localStorage.getItem(`history_${sessionActiveUser}`);
-        history = rawHistory ? JSON.parse(rawHistory) : [];
-    } catch(e) {
-        history = [];
-    }
-
-    // Safe array check before calling .find()
-    const order = Array.isArray(history) ? history.find(o => o && String(o.orderId || o.id) === String(orderId)) : null;
-
-    if (order) {
-        setTimeout(() => {
-            initLiveOrderTrackingGoogleMap(order);
-        }, 400);
-    }
-};
-
-// 4. Order Place hote hi direct naye order ke tracking page par bhejna
+// 3. Order Place hote hi direct naye order ke tracking page par bhejna
 const originalFinalizeOrderSuccessForTrackingRedirect = window.finalizeOrderSuccess;
 window.finalizeOrderSuccess = async function(orderId) {
     if (typeof originalFinalizeOrderSuccessForTrackingRedirect === 'function') {
@@ -4747,7 +4719,6 @@ window.finalizeOrderSuccess = async function(orderId) {
         window.openOrderTrackingView(orderId);
     }
 };
-
 // ==========================================
 // 🔥 SERVER-SYNCED REAL-TIME ORDER STATUS & CANCELLATION POLLING ENGINE
 // ==========================================
