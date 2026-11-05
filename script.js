@@ -1,3 +1,71 @@
+// ==========================================
+// 📄 AUTOMATIC ORDER SUMMARY COVER SLIP GENERATOR
+// ==========================================
+async function generateOrderSummaryCoverSlip(orderId, customerName, itemsList, grandTotal, dateStr) {
+    const slipDiv = document.createElement('div');
+    slipDiv.style.cssText = "position:fixed; left:-9999px; top:0; width:210mm; min-height:297mm; background:#ffffff; color:#000000; padding:20mm; font-family:'Poppins', sans-serif; box-sizing:border-box;";
+    
+    let itemsRowsHtml = itemsList.map(i => `
+        <tr>
+            <td style="padding:8px 4px; border-bottom:1px solid #cbd5e1; font-size:12px; font-weight:700; text-align:right;">₹${Number(i.price || 0).toFixed(2)}</td>
+        </tr>
+    `).join('');
+
+    slipDiv.innerHTML = `
+        <div style="text-align:center; border-bottom:3px solid #0f172a; padding-bottom:14px; margin-bottom:16px;">
+            <h1 style="font-size:22px; font-weight:900; color:#065f46; margin:0;">PRINT FROM HOME</h1>
+            <p style="font-size:11px; font-weight:700; color:#475569; margin:3px 0 0 0; text-transform:uppercase; letter-spacing:1px;">India's Last Minute Printing App | Varanasi</p>
+        </div>
+        
+        <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:12px 16px; margin-bottom:16px; font-size:12px; line-height:1.5;">
+            <div><b>Order ID:</b> #${orderId}</div>
+            <div><b>Customer Name:</b> ${customerName}</div>
+            <div><b>Order Date:</b> ${dateStr}</div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+            <h3 style="font-size:13px; font-weight:800; border-bottom:2px solid #0f172a; padding-bottom:4px; margin-bottom:8px; text-transform:uppercase;">Order Summary Manifest</h3>
+            <table style="width:100%; border-collapse:collapse;">
+                ${itemsRowsHtml}
+                <tr>
+                    <td style="padding:10px 4px; font-weight:900; font-size:13px; border-top:2px solid #0f172a;">Total Bill Details</td>
+                    <td style="padding:10px 4px; font-weight:900; font-size:13px; border-top:2px solid #0f172a; text-align:right; color:#065f46;">₹${grandTotal}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="background:#f0fdf4; border:2.5px dashed #16a34a; padding:18px; text-align:center; margin:24px 0; border-radius:12px;">
+            <h2 style="font-size:16px; font-weight:900; color:#065f46; margin:0 0 6px 0;">🌟 PRINT FROM HOME 🌟</h2>
+            <p style="font-size:11px; font-weight:700; color:#166534; margin:0;">Fastest Document & Snack Delivery in Varanasi in 15 Minutes!</p>
+            <p style="font-size:10px; color:#475569; margin:4px 0 0 0;">Need urgent prints at midnight or snacks during study sessions? We've got your back!</p>
+        </div>
+
+        <div style="text-align:center; margin-top:30px; font-size:11px; font-weight:700; border-top:1px solid #cbd5e1; padding-top:14px; color:#334155;">
+            <p style="margin:0;">🙏 Warm greetings from the Print From Home Team!</p>
+            <p style="font-size:9px; color:#94a3b8; margin:3px 0 0 0;">Official Website: www.printfromhomes.com</p>
+        </div>
+    `;
+
+    document.body.appendChild(slipDiv);
+    
+    try {
+        const canvas = await html2canvas(slipDiv, { scale: 2, useCORS: true });
+        document.body.removeChild(slipDiv);
+        
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], `Order_Summary_${orderId}.jpg`, { type: 'image/jpeg' });
+        
+        const coverUrl = await uploadFileDirectToCloudinary(file);
+        return coverUrl;
+    } catch (err) {
+        if (document.body.contains(slipDiv)) document.body.removeChild(slipDiv);
+        console.error("Cover slip generation error:", err);
+        return null;
+    }
+}
+
 window.currentCartDeliveryMode = 'doorstep'; // Default doorstep
 
 window.updateCartDeliveryMode = function(mode) {
@@ -55,6 +123,7 @@ window.showDiwaliPreLaunchNotice = function(message) {
     `;
     document.body.appendChild(modal);
 };
+
 
 // 🔥 GLOBAL STORE LOCATION
 const STORE_LOCATION = {
@@ -3439,7 +3508,8 @@ window.connectToHumanSupport = function() {
         updateFloatingCartBar();
     }, 1500);
 
-// ==========================================
+
+       // ==========================================
 // 💳 BULLETPROOF ORDER PLACEMENT & PAYMENT GATEWAY ENGINE (SINGLE-TAP SECURED WITH LOADER)
 // ==========================================
 window.executeFinalCartOrderPlacement = async function() {
@@ -3469,7 +3539,6 @@ window.executeFinalCartOrderPlacement = async function() {
     }
 
     try {
-        // 🔥 YAHAN DEFINE HOGI activeAddress taaki ReferenceError na aaye!
         const activeAddress = localStorage.getItem('selected_active_address') || 'Varanasi Delivery Address';
 
         window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
@@ -3480,7 +3549,7 @@ window.executeFinalCartOrderPlacement = async function() {
         let totalSnacksVal = 0;
         const finalMetaConfig = [];
 
-        // Pehle print jobs ki config push karein
+        // Pehle print jobs ki config push karein (printType bw ya color/coloured properly capture hoga)
         for (let i = 0; i < window.cartPrintJobsArray.length; i++) {
             let job = window.cartPrintJobsArray[i];
             let cost = (job.paperType === 'photo' || job.jobType === 'photo_print') ? Number(job.price || 50) : (job.pages * ((job.printType === 'bw') ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0));
@@ -3490,7 +3559,7 @@ window.executeFinalCartOrderPlacement = async function() {
             finalMetaConfig.push({ 
                 fileName: job.fileName, 
                 pages: job.pages, 
-                printType: job.printType, 
+                printType: job.printType || 'bw', // 🔥 Ensures B/W or Color is strictly passed
                 binding: job.binding, 
                 copies: job.copies,
                 paperType: job.paperType || 'document',
@@ -3553,7 +3622,7 @@ window.executeFinalCartOrderPlacement = async function() {
         const temporaryGeneratedOrderId = String(Math.floor(100000 + Math.random() * 900000));
 
         // =========================================================================
-        // 📄 🔥 AUTOMATIC ORDER SUMMARY COVER SLIP GENERATION & QUEUING
+        // 📄 🔥 AUTOMATIC ORDER SUMMARY COVER SLIP GENERATION & QUEUING (First in Queue)
         // =========================================================================
         if (hasPrintJobs) {
             if (typeof showGlobalLoader === 'function') {
@@ -3573,10 +3642,10 @@ window.executeFinalCartOrderPlacement = async function() {
                 finalMetaConfig.unshift({
                     fileName: `ORDER_SUMMARY_SLIP_${temporaryGeneratedOrderId}.jpg`,
                     pages: 1,
-                    printType: 'bw', 
+                    printType: 'bw', // Strictly B&W
                     binding: 'none',
                     copies: 1,
-                    paperType: 'document', 
+                    paperType: 'document', // Strictly 70 GSM
                     jobType: 'cover_slip',
                     fileUrl: coverSlipUrl,
                     price: 0
