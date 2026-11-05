@@ -242,6 +242,22 @@
                 padding: 12px;
             }
         }
+
+        @media print {
+    @page {
+        size: A4 portrait;
+        margin: 0;
+    }
+    body, html {
+        width: 210mm;
+        height: 297mm;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .order-card, .admin-sidebar, .admin-header, #silentPrintFrame {
+        display: none !important;
+    }
+}
     </style>
 </head>
 <body>
@@ -1811,7 +1827,7 @@ setInterval(fetchAdminGlossyStatus, 4000);
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);
         // ... baaki ka aapka code waisa hi rahega
-        
+
                     // Har file ke print ke beech smooth gap ke liye Promise use karenge
                     await new Promise((resolve) => {
                         const frame = document.getElementById('silentPrintFrame');
