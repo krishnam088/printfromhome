@@ -416,61 +416,64 @@ app.get('/api/store-status', async (req, res) => {
 });
 
 
+// ==========================================
 // 🔥 SINGLE & CLEAN CREATE-ORDER ROUTE (100% Async)
+// ==========================================
 app.post('/api/create-order', uploadLocal.any(), async (req, res) => {
-    try {
-        console.log("📥 [DEBUG CREATE-ORDER] Order received with Cloudinary Direct Upload flow");
-        
-        let config = await StoreConfig.findOne();
-        if (config && config.diwaliLaunchMode) {
-            return res.status(403).json({ 
-                success: false, 
-                isDiwaliHold: true,
-                message: config.diwaliMessage || "🚀 Launching on Diwali! Service starts from Diwali. Thanks for downloading Print From Home! 🙏" 
-            });
-        }
-const { totalAmount, address, paymentMode, deliveryMode, fileUrl } = req.body;
+    try {
+        console.log("📥 [DEBUG CREATE-ORDER] Order received with Cloudinary Direct Upload flow");
+        
+        let config = await StoreConfig.findOne();
+        if (config && config.diwaliLaunchMode) {
+            return res.status(403).json({ 
+                success: false, 
+                isDiwaliHold: true,
+                message: config.diwaliMessage || "🚀 Launching on Diwali! Service starts from Diwali. Thanks for downloading Print From Home! 🙏" 
+            });
+        }
+
+        const { totalAmount, address, paymentMode, deliveryMode, fileUrl, userLat, userLng } = req.body;
         
         // 🔥 Robust fallback extraction for multipart/form-data text fields
         let customerName = req.body.customerName || req.body.name || 'Customer';
         let phone = req.body.phone || req.body.identity || 'N/A';
         let configDetails = req.body.configDetails;
 
+        // Fallback address check
+        let finalAddress = address || req.body.dropAddress || 'Varanasi Delivery Address';
+
         // Agar address ke andar contact info chhupi hai toh wahan se bhi extract kar lo
-        if (address && address.includes('Contact:')) {
+        if (finalAddress && finalAddress.includes('Contact:')) {
             try {
-                let contactPart = address.split('Contact:')[1].trim();
+                let contactPart = finalAddress.split('Contact:')[1].trim();
                 let namePart = contactPart.split('(')[0].trim();
                 let phonePart = contactPart.split('(')[1].replace(')', '').trim();
                 if (namePart && customerName === 'Customer') customerName = namePart;
                 if (phonePart && phone === 'N/A') phone = phonePart;
             } catch (e) {}
         }
-        
-        let finalAmountNumeric = parseFloat(String(totalAmount || '42').replace(/[₹,]/g, ''));
-        if (isNaN(finalAmountNumeric) || finalAmountNumeric <= 0) finalAmountNumeric = 42;
+        
+        let finalAmountNumeric = parseFloat(String(totalAmount || '42').replace(/[₹,]/g, ''));
+        if (isNaN(finalAmountNumeric) || finalAmountNumeric <= 0) finalAmountNumeric = 42;
 
-        let parsedConfig = [];
-        try { 
-            parsedConfig = typeof configDetails === 'string' ? JSON.parse(configDetails) : (configDetails || []); 
-        } catch(e) {
-            parsedConfig = [];
-        }
+        let parsedConfig = [];
+        try { 
+            parsedConfig = typeof configDetails === 'string' ? JSON.parse(configDetails) : (configDetails || []); 
+        } catch(e) {
+            parsedConfig = [];
+        }
 
-        const numericId = String(Math.floor(100000 + Math.random() * 900000));
-        const primaryFileUrl = fileUrl || (parsedConfig[0] ? parsedConfig[0].fileUrl : '');
-        const primaryFileName = parsedConfig[0] ? parsedConfig[0].fileName : 'Document.pdf';
+        const numericId = String(Math.floor(100000 + Math.random() * 900000));
+        const primaryFileUrl = fileUrl || (parsedConfig[0] ? parsedConfig[0].fileUrl : '');
+        const primaryFileName = parsedConfig[0] ? parsedConfig[0].fileName : 'Document.pdf';
 
-      let calculatedDeliveryFee = (deliveryMode === 'pickup') ? 0 : (finalAmountNumeric >= 99 ? 0 : 25);
+        let calculatedDeliveryFee = (deliveryMode === 'pickup') ? 0 : (finalAmountNumeric >= 99 ? 0 : 25);
         let selectedPaymentMode = (paymentMode || "online").toLowerCase();
 
         // 🔥 Robust check for COD, Cash, Wallet or any variation
         if (selectedPaymentMode.includes('cod') || selectedPaymentMode.includes('cash') || selectedPaymentMode.includes('wallet') || selectedPaymentMode === 'cod' || selectedPaymentMode === 'cash' || selectedPaymentMode === 'wallet') {
             
-            // Check karo ki order mein sirf store products hain ya print files bhi hain
             const hasPrintFiles = parsedConfig.some(item => item.printType !== 'snack' && item.printType !== 'product' && (!item.fileName || !item.fileName.startsWith('Product:')));
-            
-            // Agar print file hai toh 'Ready for Print', agar sirf product/snack hai toh 'Processing'
             const assignedInitialStatus = hasPrintFiles ? 'Ready for Print' : 'Processing';
 
             const newOrder = new Order({
@@ -478,12 +481,16 @@ const { totalAmount, address, paymentMode, deliveryMode, fileUrl } = req.body;
                 customerName: customerName || 'Customer',
                 phone: phone || 'N/A',
                 deliveryMode: deliveryMode || 'doorstep',
+                address: finalAddress,     // 🔥 Address saved successfully
+                dropAddress: finalAddress, // 🔥 Rider app compatibility
+                userLat: userLat ? Number(userLat) : 25.3451,
+                userLng: userLng ? Number(userLng) : 83.0012,
                 fileUrl: primaryFileUrl, 
                 fileName: primaryFileName,
                 configDetails: parsedConfig,
                 amount: finalAmountNumeric.toFixed(2),
                 totalAmount: finalAmountNumeric.toFixed(2),
-                status: assignedInitialStatus, // 🔥 Ab yeh kabhi 'Pending Payment' nahi hoga!
+                status: assignedInitialStatus, 
                 date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
                 timestamp: new Date().toISOString(),
                 paymentId: selectedPaymentMode.includes('wallet') ? 'PAID VIA WALLET' : 'CASH ON DELIVERY',
@@ -492,7 +499,6 @@ const { totalAmount, address, paymentMode, deliveryMode, fileUrl } = req.body;
 
             await newOrder.save();
             
-            // 🔥 Turant inventory decrement karo taaki stock update ho jaye
             if (typeof deductStockForOrder === 'function') {
                 await deductStockForOrder(parsedConfig);
             }
@@ -500,43 +506,46 @@ const { totalAmount, address, paymentMode, deliveryMode, fileUrl } = req.body;
             return res.status(201).json({ success: true, order_id: numericId });
         }
 
-        let razorpayOrder = await razorpay.orders.create({ 
-            amount: Math.round(finalAmountNumeric * 100), 
-            currency: "INR", 
-            receipt: `rcpt_${numericId}` 
-        });
+        let razorpayOrder = await razorpay.orders.create({ 
+            amount: Math.round(finalAmountNumeric * 100), 
+            currency: "INR", 
+            receipt: `rcpt_${numericId}` 
+        });
 
-        const newOrder = new Order({
-            orderId: numericId,
-            customerName: customerName || 'Customer',
-            phone: phone || 'N/A',
-            deliveryMode: deliveryMode || 'doorstep',
-            fileUrl: primaryFileUrl, 
-            fileName: primaryFileName,
-            configDetails: parsedConfig,
-            amount: finalAmountNumeric.toFixed(2),
-            totalAmount: finalAmountNumeric.toFixed(2),
-            status: 'Pending Payment',
-            date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-            timestamp: new Date().toISOString(),
-            deliveryFeeCharged: calculatedDeliveryFee
-        });
+        const newOrder = new Order({
+            orderId: numericId,
+            customerName: customerName || 'Customer',
+            phone: phone || 'N/A',
+            deliveryMode: deliveryMode || 'doorstep',
+            address: finalAddress,     // 🔥 Address saved successfully for online orders too
+            dropAddress: finalAddress, // 🔥 Rider app compatibility
+            userLat: userLat ? Number(userLat) : 25.3451,
+            userLng: userLng ? Number(userLng) : 83.0012,
+            fileUrl: primaryFileUrl, 
+            fileName: primaryFileName,
+            configDetails: parsedConfig,
+            amount: finalAmountNumeric.toFixed(2),
+            totalAmount: finalAmountNumeric.toFixed(2),
+            status: 'Pending Payment',
+            date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+            timestamp: new Date().toISOString(),
+            deliveryFeeCharged: calculatedDeliveryFee
+        });
 
-        await newOrder.save();
-        res.status(201).json({ 
-            success: true, 
-            order_id: numericId, 
-            rzp_order_id: razorpayOrder.id,
-            amount: razorpayOrder.amount, 
-            key_id: razorpay.key_id 
-        });
+        await newOrder.save();
+        res.status(201).json({ 
+            success: true, 
+            order_id: numericId, 
+            rzp_order_id: razorpayOrder.id,
+            amount: razorpayOrder.amount, 
+            key_id: razorpay.key_id 
+        });
 
-    } catch (error) {
-        console.error("Order creation error:", error);
-        res.status(500).json({ success: false, message: error.message || "Order creation failed" });
-    }
-});
-   
+    } catch (error) {
+        console.error("Order creation error:", error);
+        res.status(500).json({ success: false, message: error.message || "Order creation failed" });
+    }
+});   
 
 const handlePrintToggle = async (req, res) => {
     try {
@@ -2028,12 +2037,15 @@ app.post('/api/admin/settings/update', async (req, res) => {
         if (rainFee !== undefined && rainFee !== null && rainFee !== '') {
             settings.rainFee = parseFloat(rainFee);
         }
+        
+        // 🔥 Strict Boolean Conversion for COD and Printer Toggles (Fixes the toggle reverting bug)
         if (codForPrintEnabled !== undefined) {
-            settings.codForPrintEnabled = Boolean(codForPrintEnabled);
+            settings.codForPrintEnabled = (codForPrintEnabled === true || codForPrintEnabled === 'true' || codForPrintEnabled === 1 || codForPrintEnabled === '1');
         }
         if (singlePrinterMode !== undefined) {
-            settings.singlePrinterMode = Boolean(singlePrinterMode);
+            settings.singlePrinterMode = (singlePrinterMode === true || singlePrinterMode === 'true' || singlePrinterMode === 1 || singlePrinterMode === '1');
         }
+
         if (coupons !== undefined && Array.isArray(coupons)) settings.coupons = coupons;
         await settings.save();
 
