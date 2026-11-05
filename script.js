@@ -3600,14 +3600,16 @@ window.executeFinalCartOrderPlacement = async function() {
         // Pehle print jobs ki config push karein (printType bw ya color/coloured properly capture hoga)
         for (let i = 0; i < window.cartPrintJobsArray.length; i++) {
             let job = window.cartPrintJobsArray[i];
-            let cost = (job.paperType === 'photo' || job.jobType === 'photo_print') ? Number(job.price || 50) : (job.pages * ((job.printType === 'bw') ? 3 : 10) * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0));
+            let pType = (job.printType || '').toLowerCase();
+            let rate = (pType.includes('bw') || pType.includes('black')) ? 3 : 10;
+            let cost = (job.paperType === 'photo' || job.jobType === 'photo_print') ? Number(job.price || 50) : (job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0));
             
             totalPrintVal += cost;
 
             finalMetaConfig.push({ 
                 fileName: job.fileName, 
                 pages: job.pages, 
-                printType: job.printType || 'bw', // 🔥 Ensures B/W or Color is strictly passed
+                printType: job.printType || 'bw', 
                 binding: job.binding, 
                 copies: job.copies,
                 paperType: job.paperType || 'document',
@@ -3686,14 +3688,13 @@ window.executeFinalCartOrderPlacement = async function() {
             );
 
             if (coverSlipUrl) {
-                // `unshift` se yeh queue mein sabse pehle add hoga (Strictly 70 GSM, Black & White)
                 finalMetaConfig.unshift({
                     fileName: `ORDER_SUMMARY_SLIP_${temporaryGeneratedOrderId}.jpg`,
                     pages: 1,
-                    printType: 'bw', // Strictly B&W
+                    printType: 'bw',
                     binding: 'none',
                     copies: 1,
-                    paperType: 'document', // Strictly 70 GSM
+                    paperType: 'document',
                     jobType: 'cover_slip',
                     fileUrl: coverSlipUrl,
                     price: 0
@@ -3708,19 +3709,28 @@ window.executeFinalCartOrderPlacement = async function() {
             deliveryInstructionText = activeCheckedInstruction.value;
         }
 
-        let userLat = STORE_LOCATION.lat;
-        let userLng = STORE_LOCATION.lng;
-        
-        try {
-            const position = await new Promise((resolve, reject) => {
-                if (!navigator.geolocation) reject("Geolocation not supported");
-                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000 });
-            });
-            userLat = position.coords.latitude;
-            userLng = position.coords.longitude;
-        } catch (e) {
-            console.warn("Using store location fallback for order coordinates.");
+        // 🔥 Exact GPS Coordinates Capture (Marker or Geolocation)
+        let targetLat = STORE_LOCATION.lat;
+        let targetLng = STORE_LOCATION.lng;
+
+        if (typeof deliveryMarker !== 'undefined' && deliveryMarker) {
+            const pos = deliveryMarker.getPosition();
+            targetLat = pos.lat();
+            targetLng = pos.lng();
+        } else {
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) reject("Geolocation not supported");
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000 });
+                });
+                targetLat = position.coords.latitude;
+                targetLng = position.coords.longitude;
+            } catch (e) {
+                console.warn("Using store location fallback for order coordinates.");
+            }
         }
+
+        console.log("Saving Order GPS -> Lat:", targetLat, "Lng:", targetLng);
 
         window.cartPrintJobsArray.forEach((job, index) => {
             if (job.fileData) {
@@ -3753,8 +3763,8 @@ window.executeFinalCartOrderPlacement = async function() {
         formData.append('deliveryTip', window.currentDeliveryTip || 0);
         formData.append('paymentMode', paymentMode);
         formData.append('deliveryMode', deliveryMode);
-        formData.append('userLat', userLat);
-        formData.append('userLng', userLng);
+        formData.append('userLat', targetLat);
+        formData.append('userLng', targetLng);
         formData.append('deliveryInstruction', deliveryInstructionText);
 
         let initialOrderStatus = (window.cartPrintJobsArray.length > 0) ? "Ready for Print" : "Order Placed & Picking";
@@ -3781,7 +3791,9 @@ window.executeFinalCartOrderPlacement = async function() {
                 address: activeAddress,
                 deliveryMode: deliveryMode,
                 deliveryInstruction: deliveryInstructionText, 
-                deliveryTip: window.currentDeliveryTip || 0
+                deliveryTip: window.currentDeliveryTip || 0,
+                userLat: targetLat, // 🔥 Rider tracking ke liye exact coordinates save kiye
+                userLng: targetLng  // 🔥 Rider tracking ke liye exact coordinates save kiye
             };
 
             historyKeys.forEach(key => {
@@ -4489,7 +4501,7 @@ window.openOrderTrackingView = function(orderId) {
             if (callBtn) callBtn.href = "tel:7007626731";
         }
 
-        // 4. Render Item Manifest (Fixed multiplication bug here)
+        // 4. Render Item Manifest (🔥 FIX: Summary Slip Hidden & Accurate Rate Calculation for Colour & B/W)
         const manifestList = document.getElementById('trackFilesManifestList');
         if (manifestList) {
             let detailsArray = order.details || order.configDetails || [];
@@ -4497,15 +4509,30 @@ window.openOrderTrackingView = function(orderId) {
                 try { detailsArray = JSON.parse(detailsArray); } catch(e) { detailsArray = []; }
             }
 
-            if (Array.isArray(detailsArray) && detailsArray.length > 0) {
-                manifestList.innerHTML = detailsArray.map(item => {
+            // Free Summary Slip / Cover Slip ko tracking bill se filter karke hide karein
+            let displayableTrackingItems = detailsArray.filter(item => {
+                let fName = (item.fileName || item.name || '').toLowerCase();
+                return !fName.includes('order_summary_slip') && item.jobType !== 'cover_slip';
+            });
+
+            if (Array.isArray(displayableTrackingItems) && displayableTrackingItems.length > 0) {
+                manifestList.innerHTML = displayableTrackingItems.map(item => {
                     let itemName = item.fileName || item.name || 'Print Item';
                     let itemCopies = item.copies || item.qty || 1;
-                    let itemPrice = item.price || 3;
+                    
+                    // 🔥 Accurate Rate Calculation (Handles B/W vs Colour securely for multiple copies & pages)
+                    let pType = (item.printType || '').toLowerCase();
+                    let rate = (pType.includes('bw') || pType.includes('black')) ? 3 : 10;
+                    
+                    let singleCopyPages = Math.round((item.pages || 1) / (itemCopies || 1));
+                    if (isNaN(singleCopyPages) || singleCopyPages < 1) singleCopyPages = item.pages || 1;
+                    
+                    let lineTotal = item.price ? Number(item.price) : (singleCopyPages * rate * itemCopies);
+
                     return `
                         <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:#334155; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;">
                             <span>📄 ${itemName} (×${itemCopies})</span>
-                            <b style="color:#065f46;">₹${Number(itemPrice) * Number(itemCopies)}</b>
+                            <b style="color:#065f46;">₹${lineTotal.toFixed(2)}</b>
                         </div>
                     `;
                 }).join('');
@@ -4538,7 +4565,7 @@ let userLiveAdminMarker = null;
 let userLiveStoreMarker = null;
 let userLiveDestinationMarker = null;
 
-// 1. Initialize Real Google Map on Tracking Page with Live Admin Marker
+// 1. Initialize Real Google Map on Tracking Page with Live Admin Marker & Route Polyline
 window.initLiveOrderTrackingGoogleMap = function(order) {
     const mapElement = document.getElementById('liveTrackingGoogleMap');
     const distanceBadge = document.getElementById('mapDistanceBadge');
@@ -4584,6 +4611,27 @@ window.initLiveOrderTrackingGoogleMap = function(order) {
         map: userLiveTrackingMap,
         title: "Delivery Partner (Admin Live)",
         icon: { url: "https://maps.google.com/mapfiles/ms/icons/motorcycle.png" }
+    });
+
+    // 🔥 Draw Store to User Route Line (Green Polyline Route)
+    const directionsService = new google.maps.DirectionsService();
+    const directionsRenderer = new google.maps.DirectionsRenderer({
+        suppressMarkers: true,
+        polylineOptions: {
+            strokeColor: "#059669",
+            strokeWeight: 5
+        }
+    });
+    directionsRenderer.setMap(userLiveTrackingMap);
+
+    directionsService.route({
+        origin: storeLatLng,
+        destination: userLatLng,
+        travelMode: 'DRIVING'
+    }, (response, status) => {
+        if (status === 'OK') {
+            directionsRenderer.setDirections(response);
+        }
     });
 
     // Start polling admin live location from server
@@ -5609,15 +5657,20 @@ window.openOrderTrackingView = function(orderId) {
         let existingModal = document.getElementById('customOrderTrackingModal');
         if (existingModal) existingModal.remove();
 
-        // 1. Items Manifest Breakdown
-        let itemsHtml = '';
+      let itemsHtml = '';
         let detailsArray = targetOrder.details || targetOrder.configDetails || [];
         if (typeof detailsArray === 'string') {
             try { detailsArray = JSON.parse(detailsArray); } catch(e) { detailsArray = []; }
         }
 
-        if (Array.isArray(detailsArray) && detailsArray.length > 0) {
-            itemsHtml = detailsArray.map(item => {
+        // 🔥 FIX 1: Cover Slip ko user tracking bill se filter karke hata dein
+        let displayableTrackingItems = detailsArray.filter(item => {
+            let fName = (item.fileName || item.name || '').toLowerCase();
+            return !fName.includes('order_summary_slip') && item.jobType !== 'cover_slip';
+        });
+
+        if (Array.isArray(displayableTrackingItems) && displayableTrackingItems.length > 0) {
+            itemsHtml = displayableTrackingItems.map(item => {
                 let itemName = item.fileName || item.name || 'Print Item';
                 let itemCopies = item.copies || item.qty || 1;
                 let itemPrice = item.price || 3;
@@ -5629,7 +5682,9 @@ window.openOrderTrackingView = function(orderId) {
                     </div>
                 `;
             }).join('');
-        } else {
+        }
+      
+        else {
             itemsHtml = `<p style="font-size: 0.78rem; color: #64748b; text-align: center;">No item manifest recorded.</p>`;
         }
 
@@ -5731,17 +5786,7 @@ window.openOrderTrackingView = function(orderId) {
                         </div>
                     </div>
 
-                    <!-- 🌟 Interactive Delivery Tip Option for User -->
-                    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 16px; padding: 14px 16px; margin-bottom: 16px;">
-                        <div style="font-weight: 800; font-size: 0.8rem; color: #92400e; margin-bottom: 6px;">💖 Say thanks to your delivery partner:</div>
-                        <div style="font-size: 0.72rem; color: #b45309; margin-bottom: 10px;">100% of the tip goes directly to the delivery executive.</div>
-                        <div style="display: flex; gap: 8px;">
-                            <button type="button" onclick="setPopupTrackingTip(10, this)" class="popup-tip-btn" style="flex: 1; background: #ffffff; border: 1px solid #fcd34d; border-radius: 10px; padding: 8px; font-weight: 800; font-size: 0.78rem; cursor: pointer; color: #78350f;">₹10</button>
-                            <button type="button" onclick="setPopupTrackingTip(20, this)" class="popup-tip-btn" style="flex: 1; background: #ffffff; border: 1px solid #fcd34d; border-radius: 10px; padding: 8px; font-weight: 800; font-size: 0.78rem; cursor: pointer; color: #78350f;">₹20</button>
-                            <button type="button" onclick="setPopupTrackingTip(30, this)" class="popup-tip-btn" style="flex: 1; background: #ffffff; border: 1px solid #fcd34d; border-radius: 10px; padding: 8px; font-weight: 800; font-size: 0.78rem; cursor: pointer; color: #78350f;">₹30</button>
-                        </div>
-                    </div>
-
+                    
                     <!-- Items Manifest Summary -->
                     <div style="font-weight: 900; font-size: 0.85rem; color: #0f172a; margin-bottom: 8px;">Items Manifest:</div>
                     <div style="margin-bottom: 16px;">${itemsHtml}</div>
@@ -5856,12 +5901,32 @@ function initLiveServerPollingMap(storeLatLng, userLatLng, mapEl, distBadge, tar
     });
 
     // Rider Live Marker (Motorcycle)
-    let riderPos = { ...storeLatLng };
     const riderMarker = new google.maps.Marker({
-        position: riderPos,
+        position: storeLatLng,
         map: map,
         title: "Delivery Executive Live",
         icon: { url: "https://maps.google.com/mapfiles/ms/icons/motorcycle.png" }
+    });
+
+    // 🔥 FIX 3: Store se User tak ka Rasta (Route Polyline) Draw karne ke liye DirectionsService
+    const directionsService = new google.maps.DirectionsService();
+    const directionsRenderer = new google.maps.DirectionsRenderer({
+        suppressMarkers: true, // Markers humne upar khud ke custom laga rakhe hain
+        polylineOptions: {
+            strokeColor: "#059669", // Attractive Green Route Line
+            strokeWeight: 5
+        }
+    });
+    directionsRenderer.setMap(map);
+
+    directionsService.route({
+        origin: storeLatLng,
+        destination: userLatLng,
+        travelMode: 'DRIVING'
+    }, (response, status) => {
+        if (status === 'OK') {
+            directionsRenderer.setDirections(response);
+        }
     });
 
     // Poll server every 4 seconds for live rider coordinates
@@ -5895,19 +5960,7 @@ function initLiveServerPollingMap(storeLatLng, userLatLng, mapEl, distBadge, tar
     }, 4000);
 }
 
-// 💖 Delivery Tip Selector Helper
-window.setPopupTrackingTip = function(amount, btnElement) {
-    document.querySelectorAll('.popup-tip-btn').forEach(btn => {
-        btn.style.background = '#ffffff';
-        btn.style.borderColor = '#fcd34d';
-        btn.style.color = '#78350f';
-    });
-    btnElement.style.background = '#065f46';
-    btnElement.style.borderColor = '#065f46';
-    btnElement.style.color = '#ffffff';
-    
-    alert(`💖 Thank you! ₹${amount} delivery tip added for your partner.`);
-};
+
 
 // 🔥 Order Success Hook
 (() => {
