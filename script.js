@@ -3557,7 +3557,7 @@ window.connectToHumanSupport = function() {
     }, 1500);
 
 
-       // ==========================================
+  // ==========================================
 // 💳 BULLETPROOF ORDER PLACEMENT & PAYMENT GATEWAY ENGINE (SINGLE-TAP SECURED WITH LOADER)
 // ==========================================
 window.executeFinalCartOrderPlacement = async function() {
@@ -3588,6 +3588,8 @@ window.executeFinalCartOrderPlacement = async function() {
 
     try {
         const activeAddress = localStorage.getItem('selected_active_address') || 'Varanasi Delivery Address';
+        const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+        const userPhone = localStorage.getItem('printAppUserIdentity') || '7398746551';
 
         window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
         window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
@@ -3597,21 +3599,26 @@ window.executeFinalCartOrderPlacement = async function() {
         let totalSnacksVal = 0;
         const finalMetaConfig = [];
 
-        // Pehle print jobs ki config push karein (printType bw ya color/coloured properly capture hoga)
+        // 1. Print Jobs Config Push
         for (let i = 0; i < window.cartPrintJobsArray.length; i++) {
             let job = window.cartPrintJobsArray[i];
             let pType = (job.printType || '').toLowerCase();
             let rate = (pType.includes('bw') || pType.includes('black')) ? 3 : 10;
-            let cost = (job.paperType === 'photo' || job.jobType === 'photo_print') ? Number(job.price || 50) : (job.pages * rate * job.copies + (job.binding === 'spiral' ? 30 * job.copies : 0));
+            let copiesCount = parseInt(job.copies || job.qty || 1);
+            let pagesCount = parseInt(job.pages || 1);
+            
+            let cost = (job.paperType === 'photo' || job.jobType === 'photo_print') ? Number(job.price || 50) : (pagesCount * rate * copiesCount + (job.binding === 'spiral' ? 30 * copiesCount : 0));
             
             totalPrintVal += cost;
 
             finalMetaConfig.push({ 
-                fileName: job.fileName, 
-                pages: job.pages, 
+                name: job.fileName || 'Print Document',
+                fileName: job.fileName || 'Print Document', 
+                pages: pagesCount, 
                 printType: job.printType || 'bw', 
-                binding: job.binding, 
-                copies: job.copies,
+                binding: job.binding || 'none', 
+                copies: copiesCount,
+                qty: copiesCount,
                 paperType: job.paperType || 'document',
                 photoLayout: job.photoLayout || null,
                 fileUrl: job.fileUrl || '', 
@@ -3619,17 +3626,21 @@ window.executeFinalCartOrderPlacement = async function() {
             });
         }
 
+        // 2. Snacks/Products Config Push
         window.cartSnacksArray.forEach(snack => {
-            totalSnacksVal += snack.price * snack.qty;
+            let snackQty = parseInt(snack.qty || 1);
+            let snackPrice = Number(snack.price || 0);
+            totalSnacksVal += snackPrice * snackQty;
+
             finalMetaConfig.push({ 
                 sku: snack.sku || '',
-                name: snack.name,
-                fileName: `Product: ${snack.name} (Qty: ${snack.qty})`, 
-                copies: snack.qty, 
-                qty: snack.qty,
+                name: snack.name || 'Store Item',
+                fileName: `Product: ${snack.name || 'Store Item'} (Qty: ${snackQuery})`, 
+                copies: snackQty, 
+                qty: snackQty,
                 printType: 'snack', 
                 pages: 1,
-                price: snack.price,
+                price: snackPrice,
                 imageUrl: snack.imageUrl || ''
             });
         });
@@ -3667,12 +3678,10 @@ window.executeFinalCartOrderPlacement = async function() {
             return;
         }
 
-        const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
-        const userPhone = localStorage.getItem('printAppUserIdentity') || 'N/A';
         const temporaryGeneratedOrderId = String(Math.floor(100000 + Math.random() * 900000));
 
         // =========================================================================
-        // 📄 🔥 AUTOMATIC ORDER SUMMARY COVER SLIP GENERATION & QUEUING (First in Queue)
+        // 📄 🔥 AUTOMATIC ORDER SUMMARY COVER SLIP GENERATION & QUEUING
         // =========================================================================
         if (hasPrintJobs) {
             if (typeof showGlobalLoader === 'function') {
@@ -3690,10 +3699,12 @@ window.executeFinalCartOrderPlacement = async function() {
             if (coverSlipUrl) {
                 finalMetaConfig.unshift({
                     fileName: `ORDER_SUMMARY_SLIP_${temporaryGeneratedOrderId}.jpg`,
+                    name: `ORDER_SUMMARY_SLIP_${temporaryGeneratedOrderId}.jpg`,
                     pages: 1,
                     printType: 'bw',
                     binding: 'none',
                     copies: 1,
+                    qty: 1,
                     paperType: 'document',
                     jobType: 'cover_slip',
                     fileUrl: coverSlipUrl,
@@ -3709,7 +3720,7 @@ window.executeFinalCartOrderPlacement = async function() {
             deliveryInstructionText = activeCheckedInstruction.value;
         }
 
-        // 🔥 Exact GPS Coordinates Capture (Marker or Geolocation)
+        // 🔥 Exact GPS Coordinates Capture
         let targetLat = STORE_LOCATION.lat;
         let targetLng = STORE_LOCATION.lng;
 
@@ -3758,8 +3769,11 @@ window.executeFinalCartOrderPlacement = async function() {
         formData.append('totalAmount', grandTotal.toFixed(2));
         formData.append('configDetails', JSON.stringify(finalMetaConfig));
         formData.append('address', activeAddress);
+        formData.append('dropAddress', activeAddress); // 🔥 Rider app compatibility
         formData.append('customerName', sessionActiveUser);
+        formData.append('name', sessionActiveUser);         // 🔥 Rider app compatibility
         formData.append('phone', userPhone);
+        formData.append('mobile', userPhone);       // 🔥 Rider app compatibility
         formData.append('deliveryTip', window.currentDeliveryTip || 0);
         formData.append('paymentMode', paymentMode);
         formData.append('deliveryMode', deliveryMode);
@@ -3782,18 +3796,26 @@ window.executeFinalCartOrderPlacement = async function() {
                 return cleanItem;
             });
 
+            // 🔥 Ensure all naming conventions are stored so Admin & Rider dashboard read them correctly without 'undefined' or 'N/A'
             const newOrderObj = { 
                 orderId: orderId,
                 date: new Date().toLocaleString(), 
                 amount: grandTotal.toFixed(2), 
+                totalAmount: grandTotal.toFixed(2),
                 status: initialOrderStatus, 
                 details: sanitizedDetails,
+                configDetails: sanitizedDetails,
                 address: activeAddress,
+                dropAddress: activeAddress,
+                customerName: sessionActiveUser,
+                name: sessionActiveUser,
+                phone: userPhone,
+                mobile: userPhone,
                 deliveryMode: deliveryMode,
                 deliveryInstruction: deliveryInstructionText, 
                 deliveryTip: window.currentDeliveryTip || 0,
-                userLat: targetLat, // 🔥 Rider tracking ke liye exact coordinates save kiye
-                userLng: targetLng  // 🔥 Rider tracking ke liye exact coordinates save kiye
+                userLat: targetLat, 
+                userLng: targetLng  
             };
 
             historyKeys.forEach(key => {
