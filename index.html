@@ -810,7 +810,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <div id="studioTotalPagesText" style="font-size:0.7rem; font-weight:700; color:#64748b;">Total 1 page</div>
             <div id="studioTotalPriceText" style="font-size:1.1rem; font-weight:900; color:#0f172a;">₹3</div>
         </div>
-        <button type="button" onclick="addStudioJobToCart()" style="background:#065f46; color:#ffffff; border:none; padding:12px 24px; border-radius:12px; font-weight:800; font-size:0.9rem; cursor:pointer; box-shadow:0 4px 10px rgba(6,95,70,0.3);">
+        <!-- 🔥 Yahan id="studioAddToCartBtn" add kar diya gaya hai -->
+        <button type="button" id="studioAddToCartBtn" onclick="addStudioJobToCart()" style="background:#065f46; color:#ffffff; border:none; padding:12px 24px; border-radius:12px; font-weight:800; font-size:0.9rem; cursor:pointer; box-shadow:0 4px 10px rgba(6,95,70,0.3);">
             Add to cart
         </button>
     </div>
@@ -1442,7 +1443,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div>🚨 <b>Store is Closed!</b> We are not taking orders currently.</div>
                 <button type="button" onclick="dismissStoreClosedNotice()" style="background: none; border: none; font-size: 1.3rem; font-weight: bold; color: #991b1b; cursor: pointer; padding: 0 5px;">&times;</button>
             </div>
-            
+
             <div class="store-header-box">
                 <h2>Print Store</h2>
                 <p>printfromhome ensures secure prints at every stage</p>

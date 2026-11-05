@@ -1448,11 +1448,22 @@ window.removeCurrentStudioFile = function() {
     }
 };
 
-// 🔥 Add Studio Job to Cart (Kiske niche: Purane addStudioJobToCart ki jagah poora function replace karein)
 window.addStudioJobToCart = async function() {
-    // 🚀 Add to cart click hote hi turant loading overlay shuru
+    const addCartBtn = document.getElementById('studioAddToCartBtn');
+    
+    // 🛑 Agar button pehle se disabled hai, toh dubara click hone hi mat do!
+    if (addCartBtn && addCartBtn.disabled) return;
+
+    if (addCartBtn) {
+        addCartBtn.disabled = true;
+        addCartBtn.style.opacity = '0.5';
+        addCartBtn.style.cursor = 'not-allowed';
+        addCartBtn.textContent = 'Adding... ⏳';
+    }
+
+    // 🚀 Turant loading overlay on karo
     if (typeof showGlobalLoader === 'function') {
-        showGlobalLoader("Uploading to Cloud...", "Securely uploading files to cloud ☁️");
+        showGlobalLoader("Uploading to Cloud...", "Securely uploading files to cloud, please wait ☁️");
     }
 
     try {
@@ -1461,12 +1472,14 @@ window.addStudioJobToCart = async function() {
         if (statusData.success && statusData.printEnabled === false) {
             alert("⚠️ Printing service is currently temporarily OFF due to technical maintenance. Please try again later.");
             if (typeof hideGlobalLoader === 'function') hideGlobalLoader();
+            if (addCartBtn) { addCartBtn.disabled = false; addCartBtn.style.opacity = '1'; addCartBtn.style.cursor = 'pointer'; addCartBtn.textContent = 'Add to cart'; }
             return;
         }
     } catch (e) {}
 
     if (!window.studioMasterFiles || window.studioMasterFiles.length === 0) {
         if (typeof hideGlobalLoader === 'function') hideGlobalLoader();
+        if (addCartBtn) { addCartBtn.disabled = false; addCartBtn.style.opacity = '1'; addCartBtn.style.cursor = 'pointer'; addCartBtn.textContent = 'Add to cart'; }
         return;
     }
 
@@ -1488,14 +1501,14 @@ window.addStudioJobToCart = async function() {
         else if (photoLayout === 'photo_single_glossy') photoCalculatedPrice = 100;
     }
 
-   for (const f of window.studioMasterFiles) {
+    for (const f of window.studioMasterFiles) {
         let rate = (f.printType === 'bw') ? 3 : 10;
         let itemPrice = (paperType === 'photo') ? photoCalculatedPrice : (f.pages * rate * f.copies);
 
         let finalFileName = f.name;
         let secureCloudinaryUrl = f.fileUrl;
 
-        // 🔥 AGAR URL CLOUDINARY KA NAHI HAI YA BLOB HAI, TOH DIRECT BROWSER SE CLOUDINARY UPLOAD KARO!
+        // 🔥 Cloudinary Direct Upload
         if (!secureCloudinaryUrl || secureCloudinaryUrl.startsWith('blob:') || secureCloudinaryUrl.startsWith('data:')) {
             if (typeof uploadFileDirectToCloudinary === 'function') {
                 let uploadedUrl = await uploadFileDirectToCloudinary(f.fileBlob || f);
@@ -1508,9 +1521,9 @@ window.addStudioJobToCart = async function() {
         let printJobItem = {
             id: 'print_' + Date.now() + Math.random(),
             fileName: finalFileName,
-            fileUrl: secureCloudinaryUrl || '', // 🔥 Ab yahan 100% direct Cloudinary ka secure URL save hoga!
+            fileUrl: secureCloudinaryUrl || '',
             fileData: null,
-            fileBase64: '', // 🔥 Server par heavy base64 bhejne ki ab koi zaroorat nahi!
+            fileBase64: '',
             pages: f.pages || 1,
             copies: f.copies || 1,
             printType: f.printType || 'bw',
@@ -1533,18 +1546,25 @@ window.addStudioJobToCart = async function() {
     }
 
     if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
-
     if (typeof closePrintStudio === 'function') closePrintStudio();
 
-    // 🛑 Kaam khatam hote hi loader hata dein aur cart drawer khol dein
+    // 🛑 Kaam poora hone par hi loader hatao aur button release karo
     if (typeof hideGlobalLoader === 'function') {
         hideGlobalLoader();
+    }
+
+    if (addCartBtn) {
+        addCartBtn.disabled = false;
+        addCartBtn.style.opacity = '1';
+        addCartBtn.style.cursor = 'pointer';
+        addCartBtn.textContent = 'Add to cart';
     }
 
     if (typeof toggleCartDrawer === 'function') {
         toggleCartDrawer(true);
     }
 };
+
 const slider = document.getElementById('studioInImageHorizontalSlider');
 if (slider) {
     slider.addEventListener('scroll', () => {

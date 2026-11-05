@@ -2038,18 +2038,21 @@ app.post('/api/admin/settings/update', async (req, res) => {
             settings.rainFee = parseFloat(rainFee);
         }
         
-        // 🔥 Strict Boolean Conversion for COD and Printer Toggles (Fixes the toggle reverting bug)
-        if (codForPrintEnabled !== undefined) {
+        // 🔥 Strict Boolean Conversion for COD (Handles explicit false values properly)
+        if (codForPrintEnabled !== undefined && codForPrintEnabled !== null) {
             settings.codForPrintEnabled = (codForPrintEnabled === true || codForPrintEnabled === 'true' || codForPrintEnabled === 1 || codForPrintEnabled === '1');
+        } else {
+            // Agar request mein explicitly false bheja gaya hai ya uncheck hua hai
+            settings.codForPrintEnabled = false;
         }
-        if (singlePrinterMode !== undefined) {
+
+        if (singlePrinterMode !== undefined && singlePrinterMode !== null) {
             settings.singlePrinterMode = (singlePrinterMode === true || singlePrinterMode === 'true' || singlePrinterMode === 1 || singlePrinterMode === '1');
         }
 
         if (coupons !== undefined && Array.isArray(coupons)) settings.coupons = coupons;
         await settings.save();
 
-        // 🔥 Admin store timings update & ensure config is returned correctly
         let updatedConfig = null;
         if (openTime !== undefined || closeTime !== undefined) {
             let config = await StoreConfig.findOne();
