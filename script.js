@@ -7,6 +7,7 @@ async function generateOrderSummaryCoverSlip(orderId, customerName, itemsList, g
     
     let itemsRowsHtml = itemsList.map(i => `
         <tr>
+            <td style="padding:8px 4px; border-bottom:1px solid #cbd5e1; font-size:12px; font-weight:600;">${i.fileName || i.name || 'Print Item'} (×${i.copies || i.qty || 1})</td>
             <td style="padding:8px 4px; border-bottom:1px solid #cbd5e1; font-size:12px; font-weight:700; text-align:right;">₹${Number(i.price || 0).toFixed(2)}</td>
         </tr>
     `).join('');
