@@ -125,13 +125,66 @@ window.showDiwaliPreLaunchNotice = function(message) {
     document.body.appendChild(modal);
 };
 
-
-// 🔥 GLOBAL STORE LOCATION
+// ==========================================
+// 🔥 STORE LOCATION & 10KM GEOFENCING CONFIGURATION
+// ==========================================
 const STORE_LOCATION = {
-    lat: 25.3451,
-    lng: 83.0012,
-    name: "Store"
+    lat: 25.3556279,
+    lng: 82.9943641,
+    name: "Print From Home, Premchand Colony, Pandeypur, Varanasi",
+    pincode: "221002"
 };
+
+// 🔥 High-Demand Allowed Pincodes (Pandeypur, Bhojubeer, Paharia, Maldahiya zones)
+const ALLOWED_DELIVERY_PINCODES = ["221002", "221007"]; 
+
+// 🔥 Combined Radius + Pincode Validation Function (Blinkit / Zomato style)
+window.checkDeliveryServiceAvailability = function(userLat, userLng, userPincode) {
+    const MAX_RADIUS_KM = 10.0; // Strictly 10 km distance limit
+
+    // 1. Pincode Check
+    if (userPincode && !ALLOWED_DELIVERY_PINCODES.includes(userPincode.trim())) {
+        showServiceNotAvailableModal("Your pin code is outside our active delivery zone.");
+        return false;
+    }
+
+    // 2. Haversine Distance Calculation from Store
+    const R = 6371; // Earth radius in km
+    const dLat = (userLat - STORE_LOCATION.lat) * Math.PI / 180;
+    const dLng = (userLng - STORE_LOCATION.lng) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(STORE_LOCATION.lat * Math.PI / 180) * Math.cos(userLat * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distanceKm = R * c;
+
+    if (distanceKm > MAX_RADIUS_KM) {
+        showServiceNotAvailableModal(`${distanceKm.toFixed(1)} km away (Max limit is 10 km).`);
+        return false;
+    }
+
+    return true;
+};
+
+// 🔥 Blinkit / Zomato style Service Not Available Popup Modal
+function showServiceNotAvailableModal(reasonText) {
+    let existingModal = document.getElementById('serviceNotAvailableModal');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'serviceNotAvailableModal';
+    modal.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); z-index:999999; display:flex; align-items:center; justify-content:center; padding:16px; font-family:'Poppins', sans-serif;";
+    
+    modal.innerHTML = `
+        <div style="background:#ffffff; border-radius:20px; width:100%; max-width:360px; padding:24px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.2); position:relative;">
+            <div style="font-size:3rem; margin-bottom:10px;">📍</div>
+            <h3 style="font-size:1.15rem; font-weight:800; color:#0f172a; margin-bottom:8px;">Location out of range</h3>
+            <p style="font-size:0.85rem; color:#475569; line-height:1.5; margin-bottom:20px;">Sorry, the service is not available at this location. ${reasonText}</p>
+            <button type="button" onclick="document.getElementById('serviceNotAvailableModal').remove()" style="width:100%; padding:12px; background:#065f46; color:white; border:none; border-radius:12px; font-weight:800; font-size:0.9rem; cursor:pointer;">Choose Different Location</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
 
 // ==========================================
 // 🔥 STRICTLY USER-SPECIFIC ORDER HISTORY RENDER ENGINE
@@ -2919,14 +2972,38 @@ window.saveFullAddressFormToStorage = function() {
     const landmark = document.getElementById('addrLandmark').value.trim();
     const name = document.getElementById('addrContactName').value.trim();
     const mobile = document.getElementById('addrContactMobile').value.trim();
+    const pincode = document.getElementById('addrPincodeInput') ? document.getElementById('addrPincodeInput').value.trim() : "";
     const fullGeo = document.getElementById('mapSelectedAddressInput').value.trim();
 
-    if (!flat || !name || !mobile) {
-        alert("⚠️ Please enter Building/Flat number, Contact Name, and Mobile Number!");
+    if (!flat || !name || !mobile || !pincode) {
+        alert("⚠️ Please enter Building/Flat number, Contact Name, Mobile Number, and 6-digit Pin Code!");
         return;
     }
 
-    const formattedAddress = `${flat}${floor ? ', Floor: ' + floor : ''}${landmark ? ', Landmark: ' + landmark : ''} | Area: ${fullGeo || 'Varanasi'} | Contact: ${name} (${mobile})`;
+    if (pincode.length !== 6) {
+        alert("⚠️ Please enter a valid 6-digit Pin Code!");
+        return;
+    }
+
+    // 🔥 10km Radius & Pincode Validation Check
+    if (typeof checkDeliveryServiceAvailability === 'function') {
+        // Agar delivery marker ya current map position available hai toh uske lat/lng lein, nahi toh store location
+        let targetLat = STORE_LOCATION.lat;
+        let targetLng = STORE_LOCATION.lng;
+        
+        if (typeof deliveryMarker !== 'undefined' && deliveryMarker) {
+            const pos = deliveryMarker.getPosition();
+            targetLat = pos.lat();
+            targetLng = pos.lng();
+        }
+
+        let isAllowed = checkDeliveryServiceAvailability(targetLat, targetLng, pincode);
+        if (!isAllowed) {
+            return; // Agar 10km ya pincode range ke baahar hai toh yahin rok dega aur popup dikha dega
+        }
+    }
+
+    const formattedAddress = `${flat}${floor ? ', Floor: ' + floor : ''}${landmark ? ', Landmark: ' + landmark : ''} | Pincode: ${pincode} | Area: ${fullGeo || 'Varanasi'} | Contact: ${name} (${mobile})`;
     
     if (!window.savedUserAddresses.includes(formattedAddress)) {
         window.savedUserAddresses.push(formattedAddress);
@@ -2994,97 +3071,67 @@ window.selectActiveAddressByIndex = function(idx) {
         renderSavedAddressesUI();
     }
 };
-// 🔥 Use Current Location GPS Fetch Function
 
+// 🔥 Use Current Location GPS Fetch Function (Auto-extracts Pincode & Address)
 window.fetchUserCurrentGpsLocation = function() {
-
     if (!navigator.geolocation) {
-
         alert("⚠️ Geolocation is not supported by your browser.");
-
         return;
-
     }
-
-
 
     alert("📍 Fetching your current GPS location...");
 
-
-
     navigator.geolocation.getCurrentPosition(
-
         (position) => {
-
             const lat = position.coords.latitude;
-
             const lng = position.coords.longitude;
-
             
-
             if (typeof google !== 'undefined' && google.maps && google.maps.Geocoder) {
-
                 const geocoder = new google.maps.Geocoder();
-
                 const latLng = { lat: lat, lng: lng };
-
                 
-
                 geocoder.geocode({ location: latLng }, (results, status) => {
-
                     if (status === "OK" && results[0]) {
-
                         const formattedAddr = results[0].formatted_address;
-
                         const addressInput = document.getElementById('mapSelectedAddressInput');
-
                         if (addressInput) {
-
                             addressInput.value = formattedAddr;
+                        }
 
+                        // 🔥 Auto-extract Pincode from Google Geocoder components and fill input field
+                        for (let component of results[0].address_components) {
+                            if (component.types.includes('postal_code')) {
+                                const pincodeInput = document.getElementById('addrPincodeInput');
+                                if (pincodeInput) {
+                                    pincodeInput.value = component.long_name;
+                                }
+                                break;
+                            }
                         }
 
                         if (typeof googleDeliveryMap !== 'undefined' && googleDeliveryMap) {
-
                             googleDeliveryMap.setCenter(latLng);
-
                             if (typeof deliveryMarker !== 'undefined' && deliveryMarker) {
-
                                 deliveryMarker.setPosition(latLng);
-
                             }
-
                         }
 
                         alert("✅ Current location fetched successfully!");
-
                     } else {
-
                         alert("⚠️ Could not retrieve address from coordinates.");
-
                     }
-
                 });
-
             } else {
-
                 alert(`✅ GPS coords fetched: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
-
             }
-
         },
-
         (error) => {
-
             alert("⚠️ Unable to retrieve your location. Please check location permissions.");
-
         },
-
         { timeout: 10000, enableHighAccuracy: true }
-
     );
+};
 
-}; 
 window.openAddressManagerModal = function() {
     const modal = document.getElementById('addressManagerModal');
     if (modal) {

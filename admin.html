@@ -1828,13 +1828,27 @@ setInterval(fetchAdminGlossyStatus, 4000);
         const blobUrl = URL.createObjectURL(blob);
         // ... baaki ka aapka code waisa hi rahega
 
-                    // Har file ke print ke beech smooth gap ke liye Promise use karenge
+                // Har file ke print ke beech smooth gap ke liye Promise use karenge
                     await new Promise((resolve) => {
                         const frame = document.getElementById('silentPrintFrame');
                         if (frame) {
                             frame.src = blobUrl;
+                            
+                            // ==========================================
+                            // 🖨️ YAHAN ISKO REPLACE KAREIN:
+                            // ==========================================
                             frame.onload = function () {
                                 try { 
+                                    // 🔥 Print frame ke andar exact A4 fit style inject karna taaki half-half na kate
+                                    const frameDoc = frame.contentDocument || frame.contentWindow.document;
+                                    const printStyle = frameDoc.createElement('style');
+                                    printStyle.innerHTML = `
+                                        @page { size: A4 portrait; margin: 0; }
+                                        body { width: 210mm; height: 297mm; margin: 0; padding: 10mm; box-sizing: border-box; }
+                                        img, canvas { max-width: 100% !important; height: auto !important; page-break-inside: avoid; }
+                                    `;
+                                    frameDoc.head.appendChild(printStyle);
+
                                     frame.contentWindow.focus(); 
                                     frame.contentWindow.print(); 
                                 } catch (e) { 
@@ -1843,11 +1857,14 @@ setInterval(fetchAdminGlossyStatus, 4000);
                                 // 2 seconds ka gap taaki printer queue jam na ho
                                 setTimeout(resolve, 2000);
                             };
+                            // ==========================================
+
                         } else {
                             window.open(blobUrl, '_blank');
                             setTimeout(resolve, 2000);
                         }
                     });
+                    
                 } catch (err) {
                     console.error(`❌ Error printing file ${i + 1}:`, err.message);
                     alert(`❌ Print Error on File ${i + 1}: ` + err.message);

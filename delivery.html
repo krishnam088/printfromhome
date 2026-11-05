@@ -306,56 +306,56 @@ let lastSeenOrderIdForRider = localStorage.getItem('last_dismissed_popup_order')
                 }
             }
 
-            const container = document.getElementById('riderOrdersListContainer');
+        const container = document.getElementById('riderOrdersListContainer');
             if (!container) return;
 
-           let htmlContent = '';
+            let htmlContent = '';
 
-                    // 1. Show Active Assigned Order and any queued orders
-                if (data.activeOrder || (data.secondaryOrders && data.secondaryOrders.length > 0)) {
-        if (data.activeOrder) {
-            const order = data.activeOrder;
-            
-            // 🔥 Bind active assigned order ID for precise GPS live tracking
-            window.currentActiveAssignedOrderId = order.orderId;
+            // 1. Show Active Assigned Order and any queued orders
+            if (data.activeOrder || (data.secondaryOrders && data.secondaryOrders.length > 0)) {
+                if (data.activeOrder) {
+                    const order = data.activeOrder;
+                    
+                    // 🔥 Bind active assigned order ID for precise GPS live tracking
+                    window.currentActiveAssignedOrderId = order.orderId;
 
-            htmlContent += `
-                <div class="order-card" style="border-color: #10b981;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span class="order-badge">1. Primary Active Order #${order.orderId}</span>
-                        <span style="font-size: 0.95rem; font-weight: 900; color: #10b981;">₹${order.totalAmount || order.amount || 0}</span>
-                    </div>
-                    <div class="customer-info">
-                        ${(() => {
-                            let configItemsHtml = '';
-                            if (order.configDetails) {
-                                try {
-                                    const items = typeof order.configDetails === 'string' ? JSON.parse(order.configDetails) : order.configDetails;
-                                    if (Array.isArray(items)) {
-                                        configItemsHtml = items.map(item => `
-                                            <div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px;">📦 ${item.fileName || item.name || 'Print/Item'} (Qty:${item.copies || item.qty || 1})</div>
-                                        `).join('');
+                    htmlContent += `
+                        <div class="order-card" style="border-color: #10b981;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span class="order-badge">1. Primary Active Order #${order.orderId}</span>
+                                <span style="font-size: 0.95rem; font-weight: 900; color: #10b981;">₹${order.totalAmount || order.amount || 0}</span>
+                            </div>
+                            <div class="customer-info">
+                                ${(() => {
+                                    let configItemsHtml = '';
+                                    if (order.configDetails) {
+                                        try {
+                                            const items = typeof order.configDetails === 'string' ? JSON.parse(order.configDetails) : order.configDetails;
+                                            if (Array.isArray(items)) {
+                                                configItemsHtml = items.map(item => `
+                                                    <div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px;">📦 ${item.fileName || item.name || 'Print/Item'} (Qty:${item.copies || item.qty || 1})</div>
+                                                `).join('');
+                                            }
+                                        } catch (e) {
+                                            console.error('Failed to parse order configDetails', e);
+                                        }
                                     }
-                                } catch (e) {
-                                    console.error('Failed to parse order configDetails', e);
-                                }
-                            }
-                            return configItemsHtml;
-                        })()}
-                        <p style="font-weight: 800; color: #38bdf8; margin-bottom: 4px;">👤 ${order.customerName} (<a href="tel:${order.phone}" style="color: #38bdf8;">📞 ${order.phone}</a>)</p>
-                        <p style="color: #cbd5e1;">📍 <b>Drop Address:</b> ${order.address}</p>
-                        <p style="color: #94a3b8; font-size: 0.75rem; margin-top: 4px;">Status: <b>${order.status}</b> (Must deliver this first)</p>
-                    </div>
-                    <div class="btn-row">
-                         <a href="${getGoogleMapsLink(order)}" target="_blank" class="btn-nav">🗺️ Navigate</a>
-                        <button type="button" onclick="markOrderAsDelivered('${order.orderId}')" class="btn-deliver">✅ Complete Delivery</button>
-                    </div>
-                </div>
-            `;
-        } else {
-            window.currentActiveAssignedOrderId = null;
-        }
-        
+                                    return configItemsHtml;
+                                })()}
+                                <p style="font-weight: 800; color: #38bdf8; margin-bottom: 4px;">👤 ${order.customerName} (<a href="tel:${order.phone}" style="color: #38bdf8;">📞 ${order.phone}</a>)</p>
+                                <p style="color: #cbd5e1;">📍 <b>Drop Address:</b> ${order.address}</p>
+                                <p style="color: #94a3b8; font-size: 0.75rem; margin-top: 4px;">Status: <b>${order.status}</b> (Must deliver this first)</p>
+                            </div>
+                            <div class="btn-row">
+                                 <a href="${getGoogleMapsLink(order)}" target="_blank" class="btn-nav">🗺️ Navigate</a>
+                                <button type="button" onclick="markOrderAsDelivered('${order.orderId}')" class="btn-deliver">✅ Complete Delivery</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    window.currentActiveAssignedOrderId = null;
+                }
+                
                 // 🔥 2. Show Admin Queued / Secondary Assigned Orders
                 if (data.secondaryOrders && data.secondaryOrders.length > 0) {
                     data.secondaryOrders.forEach((secOrder, index) => {
@@ -365,10 +365,8 @@ let lastSeenOrderIdForRider = localStorage.getItem('last_dismissed_popup_order')
                                     <span class="order-badge" style="background: rgba(245,158,11,0.15); color: #f59e0b;">${index + 2}. Queued Order #${secOrder.orderId}</span>
                                     <span style="font-size: 0.95rem; font-weight: 900; color: #f59e0b;">₹${secOrder.totalAmount || secOrder.amount || 0}</span>
                                 </div>
-                                <div class="customer-info">
-                                    <p style="font-weight: 800; color: #38bdf8; margin-bottom: 4px;">👤 ${secOrder.customerName}</p>
-                                    <p style="color: #cbd5e1;">📍 <b>Drop Address:</b> ${secOrder.address}</p>
-                                    <p style="color: #f59e0b; font-size: 0.72rem; margin-top: 4px;">⏳ <i>Will become active automatically after Primary Order is delivered.</i></p>
+                                <div style="margin-top: 6px; font-size: 0.8rem; color: #cbd5e1;">
+                                    📍 ${secOrder.address}
                                 </div>
                             </div>
                         `;
@@ -398,6 +396,7 @@ let lastSeenOrderIdForRider = localStorage.getItem('last_dismissed_popup_order')
             }
 
             container.innerHTML = htmlContent;
+            
         } catch (e) {
             console.error("Dashboard fetch error:", e);
         }
@@ -441,23 +440,40 @@ let lastSeenOrderIdForRider = localStorage.getItem('last_dismissed_popup_order')
                 alert("❌ Connection error.");
             }
         }
-       if (navigator.geolocation) {
+
+      if (navigator.geolocation) {
     navigator.geolocation.watchPosition((pos) => {
-        if (currentAgentPhone && isRiderOnline) {
+        if (typeof currentAgentPhone !== 'undefined' && currentAgentPhone && isRiderOnline) {
+            // Active order ID ko fetch karna (jo primary active order se bind hota hai)
+            const activeOrderId = window.currentActiveAssignedOrderId || null;
+
+            // 1. Admin tracking sync
             fetch('/api/admin/update-location', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude })
-            });
+                body: JSON.stringify({ 
+                    orderId: activeOrderId,
+                    lat: pos.coords.latitude, 
+                    lng: pos.coords.longitude,
+                    phone: currentAgentPhone 
+                })
+            }).catch(err => console.error("Admin GPS Sync Error:", err));
+
+            // 2. Rider location sync
             fetch('/api/rider/update-location', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone: currentAgentPhone, lat: pos.coords.latitude, lng: pos.coords.longitude })
-            });
+                body: JSON.stringify({ 
+                    phone: currentAgentPhone, 
+                    lat: pos.coords.latitude, 
+                    lng: pos.coords.longitude 
+                })
+            }).catch(err => console.error("Rider GPS Sync Error:", err));
         }
-    }, null, { enableHighAccuracy: true });
+    }, (err) => {
+        console.warn("Geolocation watch error:", err);
+    }, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 });
 }
-
 
 function closeRiderPopup() {
     const popup = document.getElementById('riderOrderPopupModal');
