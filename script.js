@@ -3374,15 +3374,15 @@ document.addEventListener('DOMContentLoaded', () => {
     loadAdminConfiguredFeesAndCoupons();
 });
 
-
+// ==========================================
 // 🔥 Admin Store Settings & Fees Save Engine
+// ==========================================
 
 window.saveAdminStoreSettings = async function() {
     const deliveryField = document.getElementById('adminSettingDeliveryFee');
     const handlingField = document.getElementById('adminSettingHandlingFee');
     const rainField = document.getElementById('adminSettingRainFee');
     
-    // 👉 Yeh raha pehla snippet jo aapko yahan add karna hai:
     const codPrintToggle = document.getElementById('adminCodForPrintToggle');
     const codForPrintEnabled = codPrintToggle ? codPrintToggle.checked : true;
 
@@ -3394,13 +3394,15 @@ window.saveAdminStoreSettings = async function() {
         const res = await fetch('/api/admin/settings/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ deliveryFee, handlingFee, rainFee, codForPrintEnabled }) // 👈 Yahan codForPrintEnabled pass karna mat bhoolna
+            body: JSON.stringify({ deliveryFee, handlingFee, rainFee, codForPrintEnabled })
         });
-        // ... baaki ka purana code
-
 
         const data = await res.json();
         if (data.success) {
+            // Local storage cache ko bhi turant update kar dein taaki page refresh par state na bhatke
+            localStorage.setItem('cached_cod_print', codForPrintEnabled);
+            window.adminCodForPrintEnabled = codForPrintEnabled;
+
             alert('✅ Admin store settings & COD preferences updated successfully!');
             if (typeof loadAdminConfiguredFeesAndCoupons === 'function') {
                 loadAdminConfiguredFeesAndCoupons();
@@ -3409,6 +3411,7 @@ window.saveAdminStoreSettings = async function() {
             alert('❌ Failed to update settings.');
         }
     } catch(e) {
+        console.error("Save Settings Error:", e);
         alert('❌ Server connection error.');
     }
 };
@@ -3626,7 +3629,7 @@ window.executeFinalCartOrderPlacement = async function() {
             });
         }
 
-        // 2. Snacks/Products Config Push
+       // 2. Snacks/Products Config Push
         window.cartSnacksArray.forEach(snack => {
             let snackQty = parseInt(snack.qty || 1);
             let snackPrice = Number(snack.price || 0);
@@ -3635,7 +3638,7 @@ window.executeFinalCartOrderPlacement = async function() {
             finalMetaConfig.push({ 
                 sku: snack.sku || '',
                 name: snack.name || 'Store Item',
-                fileName: `Product: ${snack.name || 'Store Item'} (Qty: ${snackQuery})`, 
+                fileName: `Product: ${snack.name || 'Store Item'} (Qty: ${snackQty})`, // ✅ Fix here
                 copies: snackQty, 
                 qty: snackQty,
                 printType: 'snack', 
