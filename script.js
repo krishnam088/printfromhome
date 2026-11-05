@@ -3550,6 +3550,40 @@ window.executeFinalCartOrderPlacement = async function() {
 
         const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
         const userPhone = localStorage.getItem('printAppUserIdentity') || 'N/A';
+        const temporaryGeneratedOrderId = String(Math.floor(100000 + Math.random() * 900000));
+
+        // =========================================================================
+        // 📄 🔥 AUTOMATIC ORDER SUMMARY COVER SLIP GENERATION & QUEUING
+        // =========================================================================
+        if (hasPrintJobs) {
+            if (typeof showGlobalLoader === 'function') {
+                showGlobalLoader("Generating Cover Slip...", "Creating order summary manifest 📄");
+            }
+            
+            const coverSlipUrl = await generateOrderSummaryCoverSlip(
+                temporaryGeneratedOrderId, 
+                sessionActiveUser, 
+                finalMetaConfig, 
+                grandTotal.toFixed(2), 
+                new Date().toLocaleString()
+            );
+
+            if (coverSlipUrl) {
+                // `unshift` se yeh queue mein sabse pehle add hoga (Strictly 70 GSM, Black & White)
+                finalMetaConfig.unshift({
+                    fileName: `ORDER_SUMMARY_SLIP_${temporaryGeneratedOrderId}.jpg`,
+                    pages: 1,
+                    printType: 'bw', 
+                    binding: 'none',
+                    copies: 1,
+                    paperType: 'document', 
+                    jobType: 'cover_slip',
+                    fileUrl: coverSlipUrl,
+                    price: 0
+                });
+            }
+        }
+        // =========================================================================
 
         let deliveryInstructionText = "Standard Delivery";
         const activeCheckedInstruction = document.querySelector('input[name="deliveryInstruction"]:checked');

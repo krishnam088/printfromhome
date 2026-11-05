@@ -78,7 +78,6 @@ async function fetchAndPrintLiveJobs() {
         let response;
         let retries = 3;
         
-        // 🔥 Robust Retry Loop: Handles Render Free Tier Cold Starts smoothly
         while (retries > 0) {
             try {
                 response = await axios.get(`${BASE_URL}/api/admin/orders`, { timeout: 45000 });
@@ -87,12 +86,11 @@ async function fetchAndPrintLiveJobs() {
                 retries--;
                 if (retries === 0) throw netErr;
                 console.log(`⚠️ Server waking up... retrying cloud scan (${retries} attempts left)...`);
-                await new Promise(res => setTimeout(res, 5000)); // Wait 5 seconds before retrying
+                await new Promise(res => setTimeout(res, 5000));
             }
         }
 
         const orders = response.data;
-
         if (!orders || !Array.isArray(orders)) return;
 
         let settings = { singlePrinterMode: true, printerName: PRINTER_NAME };
@@ -103,14 +101,11 @@ async function fetchAndPrintLiveJobs() {
             } else if (settingsRes.data) {
                 settings = settingsRes.data;
             }
-        } catch (e) {
-            // Fallback to default single printer mode if offline
-        }
+        } catch (e) {}
 
         const isSingleMode = settings.singlePrinterMode !== false;
         const primaryPrinter = settings.printerName || PRINTER_NAME;
 
-        // 🔥 Flexible filtering for active print-ready orders
         const paidOrders = orders.filter(o => {
             const st = (o.status || '').toLowerCase();
             return st.includes('ready for print') || st.includes('paid') || st.includes('processing');
@@ -119,9 +114,13 @@ async function fetchAndPrintLiveJobs() {
         const printedHistory = getPrintedHistory();
 
         for (let order of paidOrders) {
+            // 🔥 Duplicate processing rokne ke liye turant check aur lock lagayein
             if (printedHistory.has(order.orderId)) {
                 continue;
             }
+            
+            // Turant history mein add karke save kar do taaki agli tick mein yeh pick na ho
+            saveToHistory(order.orderId);
 
             console.log(`\n==================================================`);
             console.log(`📥 PROCESSING ORDER ID: #${order.orderId}`);
@@ -136,7 +135,6 @@ async function fetchAndPrintLiveJobs() {
                 console.log(`🛑 PAPER SWAP REQUIRED FOR ORDER #${order.orderId}!`);
                 console.log(`👉 PLEASE LOAD GLOSSY PHOTO PAPER INTO ${primaryPrinter}!`);
                 console.log(`==================================================\n`);
-
                 await promptUser('👉 Press [ENTER] in this terminal AFTER loading Glossy Photo Paper...');
             }
 
@@ -144,80 +142,31 @@ async function fetchAndPrintLiveJobs() {
                 const validPrintJobs = order.configDetails.filter(item => {
                     if (!item) return false;
                     let fName = (item.fileName || item.name || '').toLowerCase();
-                    
                     if (item.printType === 'snack' || item.isCoverSlip) return false;
                     if (fName.startsWith('product:')) return false;
-                    if (fName.includes('admin_icon') || fName.includes('app_icon') || fName.includes('favicon')) {
-                        return false;
-                    }
                     return true;
                 });
 
                 for (let i = 0; i < validPrintJobs.length; i++) {
                     const fileMeta = validPrintJobs[i];
-                    
-                    // 🔥 Priority 1: Direct Cloudinary / Remote fileUrl from configDetails or order
                     let fileUrl = fileMeta.fileUrl || fileMeta.url || order.fileUrl;
-                    
-                    // Ignore local blob or data URLs for desktop print agent
-                    if (fileUrl && (fileUrl.startsWith('blob:') || fileUrl.startsWith('data:'))) {
-                        fileUrl = null; 
-                    }
-                    
-                    // 🔥 Priority 2: Smart Fallback via order.files array
-                    if (!fileUrl && order.files && Array.isArray(order.files) && order.files.length > 0) {
-                        const cleanMetaName = (fileMeta.fileName || fileMeta.name || '').replace(/\.[^/.]+$/, "").toLowerCase();
-                        const targetFile = order.files.find(f => {
-                            const fName = (f.name || f.originalName || f.filename || '').toLowerCase();
-                            return fName.includes(cleanMetaName) || cleanMetaName.includes(fName);
-                        }) || order.files[i] || order.files[0]; 
-
-                        if (targetFile) {
-                            fileUrl = targetFile.url || `${BASE_URL}/uploads/${targetFile.filename || targetFile.savedName || targetFile.name}`;
-                        }
-                    }
-
-                    // Fallback to fileMeta.fileName direct uploads path if still missing
-                    if (!fileUrl && fileMeta.fileName) {
-                        const cleanFileName = fileMeta.fileName.replace(/^Product:\s*/i, '').trim();
-                        fileUrl = `${BASE_URL}/uploads/${cleanFileName}`;
-                    }
 
                     if (fileUrl && fileUrl !== '#' && !fileUrl.startsWith('blob:')) {
-                        const localPath = path.join(__dirname, `temp_print_${order.orderId}_${i}.pdf`);
+                        // Unique filename taaki EBUSY resource lock conflict kabhi na aaye
+                        const ext = fileUrl.includes('.png') ? '.png' : (fileUrl.includes('.jpg') || fileUrl.includes('.jpeg') ? '.jpg' : '.pdf');
+                        const localPath = path.join(__dirname, `temp_print_${order.orderId}_${i}_${Date.now()}${ext}`);
 
                         try {
                             if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
 
                             console.log(`📥 Downloading file for item ${i + 1} from: ${fileUrl}`);
-                            
-                            // 🔥 Smart Self-Healing Try-Catch Block (Cloudinary URL vs Database Base64 Fallback)
-                            try {
-                                await downloadFilePromise(fileUrl, localPath);
-                                
-                                // Check if downloaded file is invalid or 404 HTML page (< 200 bytes)
-                                const fileStats = fs.statSync(localPath);
-                                if (fileStats.size < 200) {
-                                    throw new Error("File size too small (< 200 bytes), likely a 404 response.");
-                                }
-                            } catch (urlErr) {
-                                console.warn(`⚠️ Download from URL failed. Automatically switching to Database Base64 fallback...`);
-                                
-                                // 🔥 Database se direct Base64 uthakar file generate karo
-                                const base64Data = fileMeta.fileBase64 || order.fileBase64Data;
-                                if (base64Data) {
-                                    await saveBase64ToFile(base64Data, localPath);
-                                    console.log(`✅ [Self-Healing Success] File successfully reconstructed from database Base64!`);
-                                } else {
-                                    throw urlErr; 
-                                }
-                            }
-                            
+                            await downloadFilePromise(fileUrl, localPath);
+
                             const fileStats = fs.statSync(localPath);
                             if (fileStats.size < 200) {
-                                throw new Error("Downloaded file is empty or invalid (Size < 200 bytes).");
+                                throw new Error("File size too small (< 200 bytes), likely a 404 response.");
                             }
-                            
+
                             const isPhoto = fileMeta.jobType === 'photo_print' || fileMeta.paperType === 'photo' || fileMeta.printType === 'photo';
                             const targetPrintDevice = isSingleMode ? primaryPrinter : (isPhoto ? (settings.photoPrinterName || primaryPrinter) : (settings.documentPrinterName || primaryPrinter));
 
@@ -233,38 +182,32 @@ async function fetchAndPrintLiveJobs() {
                                 printOptions.password = fileMeta.pdfPassword || order.pdfPassword;
                             }
 
-                            await pt.print(localPath, printOptions);
-                            console.log(`✓ Print signal released successfully for item ${i + 1} (${fileMeta.fileName || 'Document'}).`);
+                            // Print execution with small retry mechanism for printer spooler
+                            let printAttempts = 2;
+                            while (printAttempts > 0) {
+                                try {
+                                    await pt.print(localPath, printOptions);
+                                    console.log(`✓ Print signal released successfully for item ${i + 1} (${fileMeta.fileName || 'Document'}).`);
+                                    break;
+                                } catch (printErr) {
+                                    printAttempts--;
+                                    if (printAttempts === 0) throw printErr;
+                                    await new Promise(res => setTimeout(res, 2000));
+                                }
+                            }
 
                             if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
                             await new Promise(res => setTimeout(res, 3000));
 
                         } catch (fileErr) {
                             console.error(`❌ Failed printing item file (${fileUrl}):`, fileErr.message);
+                            if (fs.existsSync(localPath)) {
+                                try { fs.unlinkSync(localPath); } catch(e){}
+                            }
                         }
                     } else {
-                        console.warn(`⚠️ Warning: No valid downloadable file URL found for print item ${fileMeta.fileName || i}`);
+                        console.warn(`⚠️ Warning: No valid downloadable file URL found for print item.`);
                     }
-                }
-            } else {
-                // Fallback for simple orders lacking configDetails array
-                const fileUrl = order.fileUrl || `${BASE_URL}/uploads/${order.file || (order.files && order.files[0] ? order.files[0].filename : '')}`;
-                const localPath = path.join(__dirname, `temp_print_${order.orderId}_fallback.pdf`);
-                try {
-                    if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
-                    await downloadFilePromise(fileUrl, localPath);
-
-                    console.log(`[ROUTE CHECK] 📄 Target: DOCUMENT PRINTER (Fallback)`);
-                    const isFallbackPhoto = order.paperType === 'photo' || order.jobType === 'photo_print';
-                    
-                    await pt.print(localPath, {
-                        printer: primaryPrinter,
-                        copies: 1,
-                        monochrome: isFallbackPhoto ? false : (order.printType === 'bw')
-                    });
-                    if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
-                } catch (err) {
-                    console.error("❌ Fallback Print Blocked:", err.message);
                 }
             }
 
@@ -276,7 +219,6 @@ async function fetchAndPrintLiveJobs() {
                 await promptUser('👉 Press [ENTER] after putting normal 70 GSM paper back...');
             }
 
-            saveToHistory(order.orderId);
             console.log(`✅ Order #${order.orderId} processing completed successfully!\n`);
         }
     } catch (err) {
