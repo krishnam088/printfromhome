@@ -1789,14 +1789,16 @@ setInterval(fetchAdminGlossyStatus, 4000);
 
             console.log(`🖨️ Starting print sequence for ${filesToPrint.length} file(s) in Order #${orderId}`);
 
-            // 2. Ek-ek karke saari files ko fetch karke sequential print queue mein chalao
-           for (let i = 0; i < filesToPrint.length; i++) {
+          for (let i = 0; i < filesToPrint.length; i++) {
     let resolvedUrl = filesToPrint[i];
     
-    // 🔥 Yeh line add kar dein taaki blob URL secure server/Cloudinary link se map ho jaye:
+    // 🔥 Improved Blob Resolver Check:
     if (resolvedUrl && resolvedUrl.startsWith('blob:')) {
         if (matchOrder) {
-            resolvedUrl = matchOrder.fileUrl || (matchOrder.files && matchOrder.files[0] && matchOrder.files[0].url) || resolvedUrl;
+            resolvedUrl = matchOrder.fileUrl || 
+                          (matchOrder.files && matchOrder.files[0] && matchOrder.files[0].url) || 
+                          (matchOrder.file ? `${window.location.origin}/uploads/${matchOrder.file}` : null) || 
+                          resolvedUrl;
         }
     }
 
@@ -1807,9 +1809,9 @@ setInterval(fetchAdminGlossyStatus, 4000);
         if (!response.ok) throw new Error(`Server failed to recover file (Status: ${response.status})`);
         
         const blob = await response.blob();
-        // ... baaki ka aapka purana code waise hi rahega
-            const blobUrl = URL.createObjectURL(blob);
-
+        const blobUrl = URL.createObjectURL(blob);
+        // ... baaki ka aapka code waisa hi rahega
+        
                     // Har file ke print ke beech smooth gap ke liye Promise use karenge
                     await new Promise((resolve) => {
                         const frame = document.getElementById('silentPrintFrame');

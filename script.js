@@ -1329,7 +1329,7 @@ window.removeCurrentStudioFile = function() {
 window.addStudioJobToCart = async function() {
     // 🚀 Add to cart click hote hi turant loading overlay shuru
     if (typeof showGlobalLoader === 'function') {
-        showGlobalLoader("Adding to Cart...", "Saving your print configuration & files 🛒");
+        showGlobalLoader("Uploading to Cloud...", "Securely uploading files to cloud ☁️");
     }
 
     try {
@@ -1369,26 +1369,25 @@ window.addStudioJobToCart = async function() {
         let rate = (f.printType === 'bw') ? 3 : 10;
         let itemPrice = (paperType === 'photo') ? photoCalculatedPrice : (f.pages * rate * f.copies);
 
-        let finalBlob = f.fileBlob;
-        let finalFileUrl = f.fileUrl;
         let finalFileName = f.name;
+        let secureCloudinaryUrl = f.fileUrl;
 
-        // 🔥 Guaranteed Base64 Resolver: Agar studio file ke paas base64 nahi hai, toh blob se read kar lo!
-        let resolvedBase64 = f.fileBase64 || '';
-        if (!resolvedBase64 && finalBlob && finalBlob instanceof Blob) {
-            resolvedBase64 = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.readAsDataURL(finalBlob);
-            });
+        // 🔥 AGAR URL CLOUDINARY KA NAHI HAI YA BLOB HAI, TOH DIRECT BROWSER SE CLOUDINARY UPLOAD KARO!
+        if (!secureCloudinaryUrl || secureCloudinaryUrl.startsWith('blob:') || secureCloudinaryUrl.startsWith('data:')) {
+            if (typeof uploadFileDirectToCloudinary === 'function') {
+                let uploadedUrl = await uploadFileDirectToCloudinary(f.fileBlob || f);
+                if (uploadedUrl) {
+                    secureCloudinaryUrl = uploadedUrl;
+                }
+            }
         }
 
         let printJobItem = {
             id: 'print_' + Date.now() + Math.random(),
             fileName: finalFileName,
-            fileUrl: finalFileUrl || '',
-            fileData: finalBlob || null,
-            fileBase64: resolvedBase64, // 🔥 Ab yahan 100% guaranteed base64 string save hogi!
+            fileUrl: secureCloudinaryUrl || '', // 🔥 Ab yahan 100% direct Cloudinary ka secure URL save hoga!
+            fileData: null,
+            fileBase64: '', // 🔥 Server par heavy base64 bhejne ki ab koi zaroorat nahi!
             pages: f.pages || 1,
             copies: f.copies || 1,
             printType: f.printType || 'bw',
@@ -1423,7 +1422,6 @@ window.addStudioJobToCart = async function() {
         toggleCartDrawer(true);
     }
 };
-
 const slider = document.getElementById('studioInImageHorizontalSlider');
 if (slider) {
     slider.addEventListener('scroll', () => {
