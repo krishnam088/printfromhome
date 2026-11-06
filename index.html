@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Continuous Falling Rain Generation
-                const particleCount = 40;
+                const particleCount = 15; // Yahan 40 se 15 kar diya
                 for (let i = 0; i < particleCount; i++) {
                     const p = document.createElement('div');
                     p.className = 'festival-rain-drop';
@@ -1645,13 +1645,13 @@ document.addEventListener('DOMContentLoaded', () => {
         window.storeInventoryProducts = [];
         let lastRenderedData = "";
 
-        // 🌧️ Real Rain Animation Initializer
+       // 🌧️ Real Rain Animation Initializer
         function initRealRainAnimation() {
             const container = document.getElementById('rainAnimationContainer');
             if (!container) return;
             
             if (container.children.length === 0) {
-                const dropCount = 90;
+                const dropCount = 25; // Yahan 90 se 25 kar diya
                 for (let i = 0; i < dropCount; i++) {
                     const drop = document.createElement('div');
                     drop.className = 'raindrop';

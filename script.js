@@ -681,12 +681,24 @@ window.updateCartPaymentMode = function(mode) {
 
 window.toggleCouponDrawer = function() {
     let couponModal = document.getElementById('couponDropdownModal');
-    if (!couponModal) {
-        couponModal = document.createElement('div');
-        couponModal.id = 'couponDropdownModal';
-        couponModal.style.cssText = "position:fixed; bottom:0; left:0; width:100vw; background:#ffffff; border-top-left-radius:20px; border-top-right-radius:20px; box-shadow:0 -10px 30px rgba(0,0,0,0.2); z-index:999999; padding:20px; display:flex; flex-direction:column; gap:12px; font-family:'Poppins', sans-serif;";
-        
-        let couponsHTML = (window.adminCouponsList || []).map(c => `
+    
+    // Agar modal pehle se bana hai, toh naye used coupons ke hisab se content refresh karne ke liye pehle remove kar dein
+    if (couponModal) {
+        couponModal.remove();
+    }
+
+    // Naya fresh modal create karenge taaki used coupons hide ho jayein
+    couponModal = document.createElement('div');
+    couponModal.id = 'couponDropdownModal';
+    couponModal.style.cssText = "position:fixed; bottom:0; left:0; width:100vw; background:#ffffff; border-top-left-radius:20px; border-top-right-radius:20px; box-shadow:0 -10px 30px rgba(0,0,0,0.2); z-index:999999; padding:20px; display:flex; flex-direction:column; gap:12px; font-family:'Poppins', sans-serif;";
+    
+    // 🔥 Check used coupons for current user
+    const sessionActiveUser = localStorage.getItem('printAppUser') || 'Customer';
+    const usedCoupons = JSON.parse(localStorage.getItem(`used_coupons_${sessionActiveUser}`) || '[]');
+
+    let couponsHTML = (window.adminCouponsList || [])
+        .filter(c => !usedCoupons.includes(c.code)) // Sirf wahi coupons dikhayein jo use nahi hue hain
+        .map(c => `
             <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
                 <div>
                     <div style="font-weight:800; font-size:0.8rem; color:#16a34a;">${c.code}</div>
@@ -696,19 +708,17 @@ window.toggleCouponDrawer = function() {
             </div>
         `).join('');
 
-        couponModal.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
-                <h3 style="font-size:1rem; font-weight:800; color:#0f172a; margin:0;">Available Offers & Coupons</h3>
-                <span onclick="toggleCouponDrawer()" style="font-size:1.2rem; cursor:pointer; font-weight:bold; color:#64748b;">&times;</span>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:10px; max-height:250px; overflow-y:auto;">
-                ${couponsHTML || '<p style="text-align:center; color:#64748b; font-size:0.8rem;">No active coupons available right now.</p>'}
-            </div>
-        `;
-        document.body.appendChild(couponModal);
-    } else {
-        couponModal.style.display = couponModal.style.display === 'flex' ? 'none' : 'flex';
-    }
+    couponModal.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+            <h3 style="font-size:1rem; font-weight:800; color:#0f172a; margin:0;">Available Offers & Coupons</h3>
+            <span onclick="toggleCouponDrawer()" style="font-size:1.2rem; cursor:pointer; font-weight:bold; color:#64748b;">&times;</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px; max-height:250px; overflow-y:auto;">
+            ${couponsHTML || '<p style="text-align:center; color:#64748b; font-size:0.8rem;">No active coupons available right now.</p>'}
+        </div>
+    `;
+    document.body.appendChild(couponModal);
+    couponModal.style.display = 'flex';
 };
 
     // 🔥 Delivery Instructions Selector Helper
