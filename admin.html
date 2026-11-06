@@ -700,6 +700,14 @@
                     </div>
                 </div>
 
+                <!-- 🔥 YAHAN ACTIVE COUPONS LIST CONTAINER ADD KAREIN -->
+                <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+                    <label style="font-size: 0.78rem; font-weight: 800; color: var(--text-main); display: block; margin-bottom: 8px;">📋 Active Store Coupons Register</label>
+                    <div id="adminActiveCouponsContainer" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
+                        <p style="font-size: 0.75rem; color: var(--text-sub);">Loading active coupons...</p>
+                    </div>
+                </div>
+
                 <!-- 🔥 NEW: Printer Hardware Mode Setup Card -->
                 <div style="background: rgba(15,23,42,0.5); border: 1px solid var(--border-color); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
                     <label style="font-size: 0.78rem; font-weight: 800; color: var(--text-main); display: block; margin-bottom: 8px;">🖨️ Printer Hardware Routing Mode</label>
@@ -930,13 +938,13 @@ window.saveAdminStoreSettings = async function() {
     const deliveryField = document.getElementById('adminSettingDeliveryFee');
     const handlingField = document.getElementById('adminSettingHandlingFee');
     const rainField = document.getElementById('adminSettingRainFee');
-    const codPrintToggle = document.getElementById('adminCodForPrintToggle'); // 🔥 COD Toggle Element
-    const singlePrinterToggle = document.getElementById('adminSettingSinglePrinterMode'); // 🔥 Single Printer Toggle
+    const codPrintToggle = document.getElementById('adminCodForPrintToggle');
+    const singlePrinterToggle = document.getElementById('adminSettingSinglePrinterMode');
 
     const deliveryFee = deliveryField ? deliveryField.value : 25;
     const handlingFee = handlingField ? handlingField.value : 5;
     const rainFee = rainField ? rainField.value : 15;
-    const codForPrintEnabled = codPrintToggle ? codPrintToggle.checked : true; // 🔥 Captured value
+    const codForPrintEnabled = codPrintToggle ? codPrintToggle.checked : true;
     const singlePrinterMode = singlePrinterToggle ? singlePrinterToggle.checked : true;
 
     try {
@@ -947,8 +955,9 @@ window.saveAdminStoreSettings = async function() {
                 deliveryFee, 
                 handlingFee, 
                 rainFee, 
-                codForPrintEnabled, // 🔥 Sent to backend
-                singlePrinterMode 
+                codForPrintEnabled, 
+                singlePrinterMode,
+                coupons: window.adminCouponsList || [] // 🔥 Yeh line add karni thi taaki coupons safe rahein!
             })
         });
         const data = await res.json();
@@ -993,14 +1002,16 @@ window.adminAddNewCoupon = async function() {
             alert(`✅ Coupon "${code}" added successfully!`);
             codeInput.value = '';
             descInput.value = '';
+            if (typeof loadAdminConfiguredFeesAndCoupons === 'function') {
+                loadAdminConfiguredFeesAndCoupons();
+            }
         } else {
             alert('❌ Failed to save coupon on server.');
         }
     } catch(e) {
         alert('❌ Server connection error.');
     }
-};
-        
+};        
         // 🛠️ ADMIN ADD & EDIT PRODUCT MODAL LOGIC (NEW UPDATE)
         window.openAddProductModal = function() {
             document.getElementById('adminModalTitle').textContent = "Add New Store Product";
@@ -2474,6 +2485,74 @@ async function submitScheduledBroadcast() {
         alert("❌ Network Error: " + err.message);
     }
 }
+
+// 🔥 Admin Panel par active coupons ki list dikhane aur manage karne ka function
+async function renderAdminCouponsManager() {
+    const container = document.getElementById('adminActiveCouponsContainer');
+    if (!container) return;
+
+    try {
+        const res = await fetch('/api/admin/settings');
+        const data = await res.json();
+        
+        if (data.success && data.settings && Array.isArray(data.settings.coupons)) {
+            window.adminCouponsList = data.settings.coupons;
+            
+            if (window.adminCouponsList.length === 0) {
+                container.innerHTML = `<p style="font-size: 0.75rem; color: var(--text-sub);">No active coupons available right now.</p>`;
+                return;
+            }
+
+            container.innerHTML = window.adminCouponsList.map(c => `
+                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-dark); padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div>
+                        <div style="font-weight: 800; font-size: 0.8rem; color: var(--accent-green);">${c.code}</div>
+                        <div style="font-size: 0.7rem; color: var(--text-sub);">${c.desc || 'No description'}</div>
+                    </div>
+                    <button type="button" onclick="adminRemoveCoupon('${c.code}')" style="background: var(--accent-red); color: white; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; cursor: pointer;">Delete</button>
+                </div>
+            `).join('');
+        }
+    } catch (e) {
+        console.warn("Could not load coupons register");
+    }
+}
+
+// 🔥 Admin Coupon Delete Engine
+window.adminRemoveCoupon = async function(codeToRemove) {
+    if (!confirm(`Are you sure you want to delete the coupon "${codeToRemove}"?`)) return;
+
+    window.adminCouponsList = (window.adminCouponsList || []).filter(c => c.code !== codeToRemove);
+
+    try {
+        const res = await fetch('/api/admin/settings/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                deliveryFee: document.getElementById('adminSettingDeliveryFee')?.value || 25,
+                handlingFee: document.getElementById('adminSettingHandlingFee')?.value || 5,
+                rainFee: document.getElementById('adminSettingRainFee')?.value || 15,
+                codForPrintEnabled: document.getElementById('adminCodForPrintToggle')?.checked ?? true,
+                singlePrinterMode: document.getElementById('adminSettingSinglePrinterMode')?.checked ?? true,
+                coupons: window.adminCouponsList 
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(`✅ Coupon "${codeToRemove}" removed successfully!`);
+            renderAdminCouponsManager(); // List refresh karein
+        } else {
+            alert('❌ Failed to remove coupon.');
+        }
+    } catch (e) {
+        alert('❌ Server connection error.');
+    }
+};
+
+// Page load par aur Fees tab khulte hi coupons load honge
+window.addEventListener('DOMContentLoaded', () => {
+    renderAdminCouponsManager();
+});
 
     </script>
 </body>
