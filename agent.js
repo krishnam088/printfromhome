@@ -174,24 +174,24 @@ async function fetchAndPrintLiveJobs() {
 
                             const isPhoto = fileMeta.jobType === 'photo_print' || fileMeta.paperType === 'photo' || fileMeta.printType === 'photo';
                             
-                            // 🔥 FINAL SAFEGUARD: Ensure target device is never Microsoft PDF
-                            let targetPrintDevice = isSingleMode ? primaryPrinter : (isPhoto ? (settings.photoPrinterName || primaryPrinter) : (settings.documentPrinterName || primaryPrinter));
-                            if (!targetPrintDevice || targetPrintDevice.toLowerCase().includes('pdf') || targetPrintDevice.trim() === '') {
-                                targetPrintDevice = "HPFB5346 (HP Smart Tank 580-590 series)";
-                            }
-                        const isLandscape = fileMeta.orientation === 'landscape';
-
-                         // 🔥 pdf-to-printer / SumatraPDF ke liye 100% safe native properties
-                         const printOptions = {
-                             printer: targetPrintDevice,
-                             copies: parseInt(fileMeta.copies || fileMeta.qty) || 1,
-                             scale: 'fit',
-                             monochrome: isPhoto ? false : (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw'),
-                             side: fileMeta.sides === 'double' ? 'duplex' : 'simplex',
-                             paperSize: 'A4',
-                             printBackground: true,
-                             orientation: isLandscape ? 'landscape' : 'portrait'
-                         };
+                            
+                            // 🔥 FINAL SAFEGUARD: Ensure target device is never Microsoft PDF
+                            let targetPrintDevice = isSingleMode ? primaryPrinter : (isPhoto ? (settings.photoPrinterName || primaryPrinter) : (settings.documentPrinterName || primaryPrinter));
+                            if (!targetPrintDevice || targetPrintDevice.toLowerCase().includes('pdf') || targetPrintDevice.trim() === '') {
+                                targetPrintDevice = "HPFB5346 (HP Smart Tank 580-590 series)";
+                            }
+                         // agent.js ke andar printOptions ko is tarah update karein:
+                         const printOptions = {
+                         printer: targetPrintDevice,
+                         copies: parseInt(fileMeta.copies || fileMeta.qty) || 1,
+                         side: fileMeta.sides === 'double' ? 'duplex' : 'simplex',
+                         orientation: fileMeta.orientation === 'landscape' ? 'landscape' : 'portrait',
+                          monochrome: isPhoto ? false : (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw'),
+                         paperSize: 'A4',
+                           // 🔥 SumatraPDF ke liye direct fit/scaling arguments enforce karein
+                         scale: 'fit',
+                          printBackground: true
+                         };
 
                             if (fileMeta.pdfPassword || order.pdfPassword) {
                                 printOptions.password = fileMeta.pdfPassword || order.pdfPassword;
