@@ -6,7 +6,7 @@ const pt = require('pdf-to-printer');
 const readline = require('readline');
 
 const app = express();
-const PRINTER_NAME = "Microsoft Print to PDF";
+const PRINTER_NAME = "HPFB5346 (HP Smart Tank 580-590 series)";
 
 const BASE_URL = "https://printfromhomes.com"; 
 const HISTORY_FILE = path.join(__dirname, 'printed_history.json');

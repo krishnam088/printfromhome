@@ -2945,6 +2945,7 @@ window.checkAndApplyCodRestrictions = function() {
     const codRadioButton = document.getElementById('paymentOptionCod'); 
     const codContainerBox = document.getElementById('codOptionContainerBox'); 
 
+    // 🔥 Fix: Agar print job hai AUR admin ne COD off kar rakha hai tabhi block karega
     if (hasPrintJobs && window.adminCodForPrintEnabled === false) {
         if (codRadioButton) {
             codRadioButton.disabled = true;
@@ -2964,6 +2965,7 @@ window.checkAndApplyCodRestrictions = function() {
             window.updateCartPaymentMode('online');
         }
     } else {
+        // ✅ Agar admin ne COD on kar diya hai, toh print orders par bhi COD select ho sakega
         if (codRadioButton) {
             codRadioButton.disabled = false;
         }
