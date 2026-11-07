@@ -2553,7 +2553,10 @@ window.renderCartDrawerContents = function() {
 
    // 🔥 Strict COD Check for Print Orders
 const hasPrintJobsCheck = window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0;
-if ((paymentMode === 'cod' || paymentMode === 'cash') && hasPrintJobsCheck && window.adminCodForPrintEnabled === false) {
+const selectedRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
+const currentPaymentMode = selectedRadio ? selectedRadio.value.toLowerCase() : 'online';
+
+if ((currentPaymentMode === 'cod' || currentPaymentMode === 'cash') && hasPrintJobsCheck && window.adminCodForPrintEnabled === false) {
     showPrintPaymentRestrictionNotice();
     if (typeof releaseButton === 'function') releaseButton();
     return;
@@ -3371,15 +3374,15 @@ window.loadAdminConfiguredFeesAndCoupons = async function() {
         if (res && res.ok) {
             const data = await res.json();
             if (data && data.success && data.settings) {
-                // 🔥 Strict check so that '0' is correctly retained instead of falling back
                 window.adminDeliveryFee = (data.settings.deliveryFee !== undefined && data.settings.deliveryFee !== null && data.settings.deliveryFee !== '') ? parseFloat(data.settings.deliveryFee) : 0;
                 window.adminHandlingFee = (data.settings.handlingFee !== undefined && data.settings.handlingFee !== null && data.settings.handlingFee !== '') ? parseFloat(data.settings.handlingFee) : 0;
                 window.adminRainFee = (data.settings.rainFee !== undefined && data.settings.rainFee !== null && data.settings.rainFee !== '') ? parseFloat(data.settings.rainFee) : 0;
                 
-                window.adminCodForPrintEnabled = data.settings.codForPrintEnabled !== undefined ? data.settings.codForPrintEnabled : true;
+                // 🔥 Strict boolean evaluation (No forced default true)
+                window.adminCodForPrintEnabled = (data.settings.codForPrintEnabled === true || data.settings.codForPrintEnabled === 'true');
                 window.adminCouponsList = data.settings.coupons || [];
 
-                // 💾 Save to localStorage so refresh shows it instantly without waiting
+                // 💾 Save to localStorage
                 localStorage.setItem('cached_delivery_fee', window.adminDeliveryFee);
                 localStorage.setItem('cached_handling_fee', window.adminHandlingFee);
                 localStorage.setItem('cached_rain_fee', window.adminRainFee);
@@ -3388,7 +3391,9 @@ window.loadAdminConfiguredFeesAndCoupons = async function() {
 
                 // 🔄 Sync toggle state in UI if element exists
                 const codToggle = document.getElementById('adminCodForPrintToggle');
-                if (codToggle) codToggle.checked = window.adminCodForPrintEnabled;
+                if (codToggle) {
+                    codToggle.checked = window.adminCodForPrintEnabled;
+                }
 
                 // 🔄 Recalculate bill instantly with live admin values
                 if (typeof calculateTotal === 'function') {
@@ -3414,9 +3419,13 @@ window.saveAdminStoreSettings = async function() {
     const deliveryField = document.getElementById('adminSettingDeliveryFee');
     const handlingField = document.getElementById('adminSettingHandlingFee');
     const rainField = document.getElementById('adminSettingRainFee');
+    const singlePrinterToggle = document.getElementById('adminSettingSinglePrinterMode');
     
     const codPrintToggle = document.getElementById('adminCodForPrintToggle');
-    const codForPrintEnabled = codPrintToggle ? codPrintToggle.checked : true;
+    
+    // 🔥 Checkbox ki exact .checked state capture karein (agar toggle nahi mila toh current window state use karein)
+    const codForPrintEnabled = codPrintToggle ? codPrintToggle.checked : (window.adminCodForPrintEnabled || false);
+    const singlePrinterMode = singlePrinterToggle ? singlePrinterToggle.checked : true;
 
     const deliveryFee = deliveryField ? deliveryField.value : 0;
     const handlingFee = handlingField ? handlingField.value : 0;
@@ -3426,12 +3435,19 @@ window.saveAdminStoreSettings = async function() {
         const res = await fetch('/api/admin/settings/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ deliveryFee, handlingFee, rainFee, codForPrintEnabled })
+            body: JSON.stringify({ 
+                deliveryFee, 
+                handlingFee, 
+                rainFee, 
+                codForPrintEnabled, 
+                singlePrinterMode,
+                coupons: window.adminCouponsList || [] 
+            })
         });
 
         const data = await res.json();
         if (data.success) {
-            // Local storage cache ko bhi turant update kar dein taaki page refresh par state na bhatke
+            // Local storage cache ko bhi turant update kar dein
             localStorage.setItem('cached_cod_print', codForPrintEnabled);
             window.adminCodForPrintEnabled = codForPrintEnabled;
 

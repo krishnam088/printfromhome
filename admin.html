@@ -897,43 +897,41 @@ async function fetchAdminRegisteredUsers() {
         // 🔥 Load Live Settings into Admin Inputs on Panel Open
       // 🔥 Load Live Settings into Admin Inputs on Panel Open
      // 🔥 Load Live Settings into Admin Inputs on Panel Open
-   
 async function loadAdminPanelSettings() {
-            try {
-                const res = await fetch('/api/admin/settings');
-                const data = await res.json();
-                if (data.success && data.settings) {
-                    const dField = document.getElementById('adminSettingDeliveryFee');
-                    const hField = document.getElementById('adminSettingHandlingFee');
-                    const rField = document.getElementById('adminSettingRainFee');
-                    const singlePrinterToggle = document.getElementById('adminSettingSinglePrinterMode'); // 🔥 Added
-                    const codToggle = document.getElementById('adminCodForPrintToggle'); // 🔥 Added (COD Toggle)
+    try {
+        const res = await fetch('/api/admin/settings');
+        const data = await res.json();
+        if (data.success && data.settings) {
+            const dField = document.getElementById('adminSettingDeliveryFee');
+            const hField = document.getElementById('adminSettingHandlingFee');
+            const rField = document.getElementById('adminSettingRainFee');
+            const singlePrinterToggle = document.getElementById('adminSettingSinglePrinterMode'); 
+            const codToggle = document.getElementById('adminCodForPrintToggle'); 
 
-                    // 🔥 Strict checks supporting explicit 0 values without defaulting
-                    if (dField) dField.value = (data.settings.deliveryFee !== undefined && data.settings.deliveryFee !== null && data.settings.deliveryFee !== '') ? data.settings.deliveryFee : 25;
-                    if (hField) hField.value = (data.settings.handlingFee !== undefined && data.settings.handlingFee !== null && data.settings.handlingFee !== '') ? data.settings.handlingFee : 5;
-                    if (rField) rField.value = (data.settings.rainFee !== undefined && data.settings.rainFee !== null && data.settings.rainFee !== '') ? data.settings.rainFee : 15;
-                    
-                    // 🔥 Load Single Printer Mode state
-                    if (singlePrinterToggle) {
-                        singlePrinterToggle.checked = data.settings.singlePrinterMode !== false;
-                    }
+            if (dField) dField.value = (data.settings.deliveryFee !== undefined && data.settings.deliveryFee !== null && data.settings.deliveryFee !== '') ? data.settings.deliveryFee : 25;
+            if (hField) hField.value = (data.settings.handlingFee !== undefined && data.settings.handlingFee !== null && data.settings.handlingFee !== '') ? data.settings.handlingFee : 5;
+            if (rField) rField.value = (data.settings.rainFee !== undefined && data.settings.rainFee !== null && data.settings.rainFee !== '') ? data.settings.rainFee : 15;
+            
+            // 🔥 Strict Boolean Check for Single Printer Mode
+            if (singlePrinterToggle) {
+                singlePrinterToggle.checked = (data.settings.singlePrinterMode === true || data.settings.singlePrinterMode === 'true');
+            }
 
-                    // 🔥 Load COD for Print state
-                    if (codToggle) {
-                        codToggle.checked = data.settings.codForPrintEnabled !== false;
-                    }
-                }
-            } catch (e) {
-                console.warn("Could not load admin settings");
+            // 🔥 Strict Boolean Check for COD Toggle (No default true/false tricks)
+            if (codToggle) {
+                codToggle.checked = (data.settings.codForPrintEnabled === true || data.settings.codForPrintEnabled === 'true');
             }
         }
+    } catch (e) {
+        console.warn("Could not load admin settings");
+    }
+}
 
-        window.addEventListener('DOMContentLoaded', () => {
-            loadAdminPanelSettings();
-        });
+window.addEventListener('DOMContentLoaded', () => {
+    loadAdminPanelSettings();
+});
 
-     // 🔥 Admin Store Settings & Fees Save Engine (Including COD, Rain Fee & Single Printer Mode)
+// 🔥 Admin Store Settings & Fees Save Engine
 window.saveAdminStoreSettings = async function() {
     const deliveryField = document.getElementById('adminSettingDeliveryFee');
     const handlingField = document.getElementById('adminSettingHandlingFee');
@@ -944,8 +942,10 @@ window.saveAdminStoreSettings = async function() {
     const deliveryFee = deliveryField ? deliveryField.value : 25;
     const handlingFee = handlingField ? handlingField.value : 5;
     const rainFee = rainField ? rainField.value : 15;
-    const codForPrintEnabled = codPrintToggle ? codPrintToggle.checked : true;
-    const singlePrinterMode = singlePrinterToggle ? singlePrinterToggle.checked : true;
+    
+    // 🔥 Checkbox ki exact .checked state (true ya false) capture karein
+    const codForPrintEnabled = codPrintToggle ? codPrintToggle.checked : false;
+    const singlePrinterMode = singlePrinterToggle ? singlePrinterToggle.checked : false;
 
     try {
         const res = await fetch('/api/admin/settings/update', {
@@ -957,7 +957,7 @@ window.saveAdminStoreSettings = async function() {
                 rainFee, 
                 codForPrintEnabled, 
                 singlePrinterMode,
-                coupons: window.adminCouponsList || [] // 🔥 Yeh line add karni thi taaki coupons safe rahein!
+                coupons: window.adminCouponsList || [] 
             })
         });
         const data = await res.json();
