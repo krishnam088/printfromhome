@@ -9,7 +9,7 @@ const readline = require('readline');
 const PDFDocument = require('pdfkit');
 
 const app = express();
-const PRINTER_NAME = "HPFB5346 (HP Smart Tank 580-590 series)";
+const PRINTER_NAME = "krishnaprinterhpsmart";
 
 const BASE_URL = "https://printfromhomes.com"; 
 const HISTORY_FILE = path.join(__dirname, 'printed_history.json');
@@ -118,7 +118,7 @@ async function fetchAndPrintLiveJobs() {
         
         let primaryPrinter = settings.printerName || PRINTER_NAME;
         if (!primaryPrinter || primaryPrinter.toLowerCase().includes('pdf') || primaryPrinter.trim() === '') {
-            primaryPrinter = "HPFB5346 (HP Smart Tank 580-590 series)";
+            primaryPrinter = "krishnaprinterhpsmart";
         }
 
         const paidOrders = orders.filter(o => {
