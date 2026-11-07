@@ -166,7 +166,7 @@ async function fetchAndPrintLiveJobs() {
                             const isBw = (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw');
                             const isLandscape = fileMeta.orientation === 'landscape';
 
-                          // 🔥 BULLETPROOF IMAGE TO PDF CONVERSION WITH FILE LOCK DELAY
+                            // 🔥 BULLETPROOF IMAGE TO PDF CONVERSION WITH SMART LOCK-CHECKER
                             const isImage = ext === '.jpg' || ext === '.jpeg' || ext === '.png';
                             let finalPrintPath = localPath;
 
@@ -181,12 +181,23 @@ async function fetchAndPrintLiveJobs() {
                                         doc.image(localPath, 0, 0, { fit: [595.28, 841.89], align: 'center', valign: 'center' });
                                         doc.end();
 
-                                        // 🔥 FIX: Use 'close' instead of 'finish' to ensure file handle is fully closed by OS
-                                        stream.on('close', () => {
-                                            setTimeout(() => {
-                                                finalPrintPath = pdfPath;
-                                                resolve();
-                                            }, 2000); // 2 seconds safety buffer after file close
+                                        stream.on('finish', () => {
+                                            // 🕒 Smart Polling: Keep checking until Windows completely releases the file lock
+                                            const interval = setInterval(() => {
+                                                try {
+                                                    const fd = fs.openSync(pdfPath, 'r+');
+                                                    fs.closeSync(fd);
+                                                    clearInterval(interval);
+                                                    
+                                                    // Extra 1 second buffer just to be 100% safe
+                                                    setTimeout(() => {
+                                                        finalPrintPath = pdfPath;
+                                                        resolve();
+                                                    }, 1000);
+                                                } catch (err) {
+                                                    // File is still locked by OS, retry in 200ms
+                                                }
+                                            }, 200);
                                         });
 
                                         stream.on('error', reject);
@@ -205,7 +216,7 @@ async function fetchAndPrintLiveJobs() {
                             const printSettingsStr = settingsArr.join(',');
                             const printCommand = `"${sumatraPath}" -print-to "${targetPrintDevice}" -silent -print-settings "${printSettingsStr}" "${finalPrintPath}"`;
 
-                            let printAttempts = 2;
+                            let printAttempts = 3; // 3 retry attempts for ultimate safety
                             while (printAttempts > 0) {
                                 try {
                                     for (let c = 0; c < totalCopies; c++) {
@@ -216,13 +227,14 @@ async function fetchAndPrintLiveJobs() {
                                 } catch (printErr) {
                                     printAttempts--;
                                     if (printAttempts === 0) throw printErr;
-                                    await new Promise(res => setTimeout(res, 2000));
+                                    console.log(`⚠️ Print dispatch glitch, retrying print command... (${printAttempts} left)`);
+                                    await new Promise(res => setTimeout(res, 3000));
                                 }
                             }
                             
-                            // Cleanup temporary files
-                            if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
-                            if (finalPrintPath !== localPath && fs.existsSync(finalPrintPath)) fs.unlinkSync(finalPrintPath);
+                            // Cleanup temporary files safely
+                            try { if (fs.existsSync(localPath)) fs.unlinkSync(localPath); } catch(e){}
+                            try { if (finalPrintPath !== localPath && fs.existsSync(finalPrintPath)) fs.unlinkSync(finalPrintPath); } catch(e){}
                             
                             await new Promise(res => setTimeout(res, 3000));
 
