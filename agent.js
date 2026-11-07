@@ -179,15 +179,15 @@ async function fetchAndPrintLiveJobs() {
                             if (!targetPrintDevice || targetPrintDevice.toLowerCase().includes('pdf') || targetPrintDevice.trim() === '') {
                                 targetPrintDevice = "HPFB5346 (HP Smart Tank 580-590 series)";
                             }
-
-                         const printOptions = {
-                         printer: targetPrintDevice,
-                         copies: parseInt(fileMeta.copies || fileMeta.qty) || 1,
-                          side: fileMeta.sides === 'double' ? 'duplex' : 'simplex',
+                            const printOptions = {
+                            printer: targetPrintDevice,
+                            copies: parseInt(fileMeta.copies || fileMeta.qty) || 1,
+                            side: fileMeta.sides === 'double' ? 'duplex' : 'simplex',
                           orientation: fileMeta.orientation === 'landscape' ? 'landscape' : 'portrait',
-                         monochrome: isPhoto ? false : (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw'),
-                              paperSize: 'A4' // 🔥 Yeh line zaroor add karein taaki paper mismatch na ho
-                             };
+                           monochrome: isPhoto ? false : (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw'),
+                          paperSize: 'A4',
+                          scale: "fit" // 🔥 Yeh line add karne se image/PDF auto-fit ho jayegi aur E1 error nahi aayega
+                         };
 
                             if (fileMeta.pdfPassword || order.pdfPassword) {
                                 printOptions.password = fileMeta.pdfPassword || order.pdfPassword;
