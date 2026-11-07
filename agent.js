@@ -216,19 +216,28 @@ async function fetchAndPrintLiveJobs() {
                             const printSettingsStr = settingsArr.join(',');
                             const printCommand = `"${sumatraPath}" -print-to "${targetPrintDevice}" -silent -print-settings "${printSettingsStr}" "${finalPrintPath}"`;
 
-                            let printAttempts = 3; // 3 retry attempts for ultimate safety
+                          // 🔥 Use built-in pdf-to-printer module to avoid all CLI command crash errors
+                            const { print } = require('pdf-to-printer');
+
+                            let printAttempts = 3;
                             while (printAttempts > 0) {
                                 try {
-                                    for (let c = 0; c < totalCopies; c++) {
-                                        await execPromise(printCommand);
-                                    }
+                                    // pdf-to-printer natively handles copies, monochrome, orientation, and scaling
+                                    await print(finalPrintPath, {
+                                        printer: targetPrintDevice,
+                                        copies: totalCopies,
+                                        monochrome: isBw,
+                                        orientation: isLandscape ? 'landscape' : 'portrait',
+                                        scale: 'fit'
+                                    });
+                                    
                                     console.log(`✓ Print signal released successfully for item ${i + 1} (${fileMeta.fileName || 'Document'}) [Copies: ${totalCopies}, BW: ${isBw}, Landscape: ${isLandscape}].`);
                                     break;
                                 } catch (printErr) {
                                     printAttempts--;
                                     if (printAttempts === 0) throw printErr;
-                                    console.log(`⚠️ Print dispatch glitch, retrying print command... (${printAttempts} left)`);
-                                    await new Promise(res => setTimeout(res, 3000));
+                                    console.log(`⚠️ Print dispatch glitch, retrying... (${printAttempts} left)`);
+                                    await new Promise(res => setTimeout(res, 2000));
                                 }
                             }
                             
