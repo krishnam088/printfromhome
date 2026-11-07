@@ -180,37 +180,38 @@ async function fetchAndPrintLiveJobs() {
                             if (!targetPrintDevice || targetPrintDevice.toLowerCase().includes('pdf') || targetPrintDevice.trim() === '') {
                                 targetPrintDevice = "HPFB5346 (HP Smart Tank 580-590 series)";
                             }
-                         // agent.js ke andar printOptions ko is tarah update karein:
-                         const printOptions = {
-                         printer: targetPrintDevice,
-                         copies: parseInt(fileMeta.copies || fileMeta.qty) || 1,
-                         side: fileMeta.sides === 'double' ? 'duplex' : 'simplex',
-                         orientation: fileMeta.orientation === 'landscape' ? 'landscape' : 'portrait',
-                          monochrome: isPhoto ? false : (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw'),
-                         paperSize: 'A4',
-                           // 🔥 SumatraPDF ke liye direct fit/scaling arguments enforce karein
-                         scale: 'fit',
-                          printBackground: true
-                         };
+                       // 🔥 Bulletproof Print Options (Removed 'copies' to prevent `,1x` SumatraPDF crash)
+                        const printOptions = {
+                            printer: targetPrintDevice,
+                            scale: 'fit',
+                            monochrome: isPhoto ? false : (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw'),
+                            side: fileMeta.sides === 'double' ? 'duplex' : 'simplex',
+                            paperSize: 'A4',
+                            printBackground: true,
+                            orientation: fileMeta.orientation === 'landscape' ? 'landscape' : 'portrait'
+                        };
 
-                            if (fileMeta.pdfPassword || order.pdfPassword) {
-                                printOptions.password = fileMeta.pdfPassword || order.pdfPassword;
-                            }
+                        if (fileMeta.pdfPassword || order.pdfPassword) {
+                            printOptions.password = fileMeta.pdfPassword || order.pdfPassword;
+                        }
 
-                            // Print execution with small retry mechanism for printer spooler
-                            let printAttempts = 2;
-                            while (printAttempts > 0) {
-                                try {
+                        const totalCopies = parseInt(fileMeta.copies || fileMeta.qty) || 1;
+
+                        // Print execution with retry mechanism & manual copy loop
+                        let printAttempts = 2;
+                        while (printAttempts > 0) {
+                            try {
+                                for (let c = 0; c < totalCopies; c++) {
                                     await pt.print(localPath, printOptions);
-                                    console.log(`✓ Print signal released successfully for item ${i + 1} (${fileMeta.fileName || 'Document'}).`);
-                                    break;
-                                } catch (printErr) {
-                                    printAttempts--;
-                                    if (printAttempts === 0) throw printErr;
-                                    await new Promise(res => setTimeout(res, 2000));
                                 }
+                                console.log(`✓ Print signal released successfully for item ${i + 1} (${fileMeta.fileName || 'Document'}) [${totalCopies} copy/copies].`);
+                                break;
+                            } catch (printErr) {
+                                printAttempts--;
+                                if (printAttempts === 0) throw printErr;
+                                await new Promise(res => setTimeout(res, 2000));
                             }
-
+                        }
                             if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
                             await new Promise(res => setTimeout(res, 3000));
 
