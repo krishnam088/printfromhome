@@ -6,6 +6,7 @@ const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
 const readline = require('readline');
+const PDFDocument = require('pdfkit');
 
 const app = express();
 const PRINTER_NAME = "HPFB5346 (HP Smart Tank 580-590 series)";
@@ -141,7 +142,7 @@ async function fetchAndPrintLiveJobs() {
 
                     if (fileUrl && fileUrl !== '#' && !fileUrl.startsWith('blob:')) {
                         const ext = fileUrl.includes('.png') ? '.png' : (fileUrl.includes('.jpg') || fileUrl.includes('.jpeg') ? '.jpg' : '.pdf');
-                        const localPath = path.join(__dirname, `temp_print_${order.orderId}_${i}_${Date.now()}${ext}`);
+                        let localPath = path.join(__dirname, `temp_print_${order.orderId}_${i}_${Date.now()}${ext}`);
 
                         try {
                             if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
@@ -162,26 +163,40 @@ async function fetchAndPrintLiveJobs() {
                             }
 
                             const totalCopies = parseInt(fileMeta.copies || fileMeta.qty) || 1;
-                            
-                            // User ki settings read karein
                             const isBw = (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw');
                             const isLandscape = fileMeta.orientation === 'landscape';
 
-                            // SumatraPDF ke liye safe settings (PDFs aur Images dono ke liye valid)
+                            // 🔥 IMAGE TO PDF CONVERSION FOR 100% SETTINGS ACCURACY VIA SUMATRA
+                            const isImage = ext === '.jpg' || ext === '.jpeg' || ext === '.png';
+                            let finalPrintPath = localPath;
+
+                            if (isImage) {
+                                const pdfPath = path.join(__dirname, `temp_conv_${order.orderId}_${i}_${Date.now()}.pdf`);
+                                await new Promise((resolve, reject) => {
+                                    const doc = new PDFDocument({ autoFirstPage: false });
+                                    const stream = fs.createWriteStream(pdfPath);
+                                    doc.pipe(stream);
+
+                                    doc.image(localPath, { fit: [595.28, 841.89], align: 'center', valig: 'center' });
+                                    doc.addPage();
+                                    doc.end();
+
+                                    stream.on('finish', () => {
+                                        finalPrintPath = pdfPath;
+                                        resolve();
+                                    });
+                                    stream.on('error', reject);
+                                });
+                            }
+
+                            // SumatraPDF settings array
                             let settingsArr = ['fit'];
-                            if (isBw) {
-                                settingsArr.push('monochrome'); // Black & White ke liye
-                            }
-                            if (isLandscape) {
-                                settingsArr.push('landscape');
-                            } else {
-                                settingsArr.push('portrait');
-                            }
+                            if (isBw) settingsArr.push('monochrome');
+                            if (isLandscape) settingsArr.push('landscape');
+                            else settingsArr.push('portrait');
 
                             const printSettingsStr = settingsArr.join(',');
-
-                            // 🔥 SumatraPDF handles both PDFs and Images with exact user settings
-                            const printCommand = `"${sumatraPath}" -print-to "${targetPrintDevice}" -silent -print-settings "${printSettingsStr}" "${localPath}"`;
+                            const printCommand = `"${sumatraPath}" -print-to "${targetPrintDevice}" -silent -print-settings "${printSettingsStr}" "${finalPrintPath}"`;
 
                             let printAttempts = 2;
                             while (printAttempts > 0) {
@@ -198,7 +213,10 @@ async function fetchAndPrintLiveJobs() {
                                 }
                             }
                             
+                            // Cleanup temporary files
                             if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
+                            if (finalPrintPath !== localPath && fs.existsSync(finalPrintPath)) fs.unlinkSync(finalPrintPath);
+                            
                             await new Promise(res => setTimeout(res, 3000));
 
                         } catch (fileErr) {
