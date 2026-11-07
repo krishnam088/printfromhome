@@ -166,7 +166,7 @@ async function fetchAndPrintLiveJobs() {
                             const isBw = (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw');
                             const isLandscape = fileMeta.orientation === 'landscape';
 
-                           // 🔥 BULLETPROOF IMAGE TO PDF CONVERSION
+                          // 🔥 BULLETPROOF IMAGE TO PDF CONVERSION WITH FILE LOCK DELAY
                             const isImage = ext === '.jpg' || ext === '.jpeg' || ext === '.png';
                             let finalPrintPath = localPath;
 
@@ -178,13 +178,15 @@ async function fetchAndPrintLiveJobs() {
                                         const stream = fs.createWriteStream(pdfPath);
                                         doc.pipe(stream);
 
-                                        // Image ko A4 size par cleanly fit karein
                                         doc.image(localPath, 0, 0, { fit: [595.28, 841.89], align: 'center', valign: 'center' });
                                         doc.end();
 
                                         stream.on('finish', () => {
-                                            finalPrintPath = pdfPath;
-                                            resolve();
+                                            // 🔥 Wait 1 second for OS file lock release
+                                            setTimeout(() => {
+                                                finalPrintPath = pdfPath;
+                                                resolve();
+                                            }, 5000);
                                         });
                                         stream.on('error', reject);
                                     } catch (err) {
@@ -192,7 +194,7 @@ async function fetchAndPrintLiveJobs() {
                                     }
                                 });
                             }
-                            
+
                             // SumatraPDF settings array
                             let settingsArr = ['fit'];
                             if (isBw) settingsArr.push('monochrome');
