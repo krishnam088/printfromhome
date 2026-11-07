@@ -3608,10 +3608,20 @@ window.connectToHumanSupport = function() {
     }, 1500);
 
 
-  // ==========================================
+ // ==========================================
 // 💳 BULLETPROOF ORDER PLACEMENT & PAYMENT GATEWAY ENGINE (SINGLE-TAP SECURED WITH LOADER)
 // ==========================================
 window.executeFinalCartOrderPlacement = async function() {
+    // 🔥 ADDRESS VALIDATION CHECK: Agar address select ya add nahi hai toh order yahi rok do
+    const activeAddressCheck = localStorage.getItem('selected_active_address');
+    if (!activeAddressCheck || activeAddressCheck.trim() === '' || activeAddressCheck.includes('No delivery address')) {
+        alert("Please select or add your delivery address!");
+        if (typeof openAddressManagerModal === 'function') {
+            openAddressManagerModal(); // Address select karne wala modal khol dega
+        }
+        return; // Order process yahin cancel ho jayega
+    }
+
     const submitOrderBtn = document.getElementById('submitOrderBtn') || document.querySelector('[onclick*="executeFinalCartOrderPlacement"]');
     
     // 🚀 Stylish Global Loader Trigger
