@@ -2,9 +2,9 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
 const util = require('util');
-const execPromise = util.promisify(exec);
+const execFilePromise = util.promisify(execFile);
 const readline = require('readline');
 const PDFDocument = require('pdfkit');
 
@@ -57,30 +57,41 @@ function downloadFilePromise(url, localPath) {
     });
 }
 
-// 🔥 CUSTOM BULLETPROOF PRINT FUNCTION (Bypasses all CLI & bracket spacing bugs)
+// 🔥 ULTIMATE SHELL-LESS SAFE PRINT (Bypasses cmd.exe parentheses & spacing bugs completely)
 async function safePrint(filePath, printer, copies, isBw, isLandscape) {
-    let settingsArr = ['fit'];
-    if (isBw) settingsArr.push('monochrome');
-    if (isLandscape) settingsArr.push('landscape');
-    else settingsArr.push('portrait');
-    if (copies > 1) settingsArr.push(`${copies}x`);
+    let settings = ['fit'];
+    if (isBw) settings.push('monochrome');
+    settings.push(isLandscape ? 'landscape' : 'portrait');
 
-    const printSettingsStr = settingsArr.join(',');
-    const cmd = `"${sumatraPath}" -print-to "${printer}" -silent -print-settings "${printSettingsStr}" "${filePath}"`;
+    const printSettingsStr = settings.join(',');
 
-    await execPromise(cmd);
+    for (let c = 0; c < copies; c++) {
+        // Passing arguments as a native array avoids cmd.exe shell parsing issues with brackets ()
+        const args = [
+            '-print-to', printer,
+            '-silent',
+            '-print-settings', printSettingsStr,
+            filePath
+        ];
+
+        await execFilePromise(sumatraPath, args);
+
+        if (copies > 1 && c < copies - 1) {
+            await new Promise(res => setTimeout(res, 1500));
+        }
+    }
 }
 
 async function fetchAndPrintLiveJobs() {
     try {
-        console.log("🔍 Scanning LIVE Cloud Queue... (SAFE CUSTOM MATRIX MODE)");
+        console.log("🔍 Scanning LIVE Cloud Queue... (SHELL-LESS NATIVE MATRIX MODE)");
         
         let response;
         let retries = 3;
         
         while (retries > 0) {
             try {
-                response = await axios.get(`${BASE_URL}/api/admin/orders`, { timeout: 45000 });
+                response = await axios.get(`${BASE_URL}/api/agent/orders`, { timeout: 45000 });
                 break; 
             } catch (netErr) {
                 retries--;
@@ -266,7 +277,7 @@ setInterval(fetchAndPrintLiveJobs, 3000);
 
 app.listen(4000, () => {
     console.log("====================================================================");
-    console.log("🚀 AGENT LIVE: CUSTOM SAFE HARDWARE DISPATCH SYSTEM");
+    console.log("🚀 AGENT LIVE: SHELL-LESS HARDWARE DISPATCH SYSTEM");
     console.log("====================================================================");
     fetchAndPrintLiveJobs();
 });
