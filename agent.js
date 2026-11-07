@@ -90,7 +90,7 @@ async function fetchAndPrintLiveJobs() {
             }
         }
 
-        const orders = response.data;
+      const orders = response.data;
         if (!orders || !Array.isArray(orders)) return;
 
         let settings = { singlePrinterMode: true, printerName: PRINTER_NAME };
@@ -104,7 +104,12 @@ async function fetchAndPrintLiveJobs() {
         } catch (e) {}
 
         const isSingleMode = settings.singlePrinterMode !== false;
-        const primaryPrinter = settings.printerName || PRINTER_NAME;
+        
+        // 🔥 FORCE FIX: Ensure printer is never Microsoft PDF and defaults to physical HP printer
+        let primaryPrinter = settings.printerName || PRINTER_NAME;
+        if (!primaryPrinter || primaryPrinter.toLowerCase().includes('pdf') || primaryPrinter.trim() === '') {
+            primaryPrinter = "HPFB5346 (HP Smart Tank 580-590 series)";
+        }
 
         const paidOrders = orders.filter(o => {
             const st = (o.status || '').toLowerCase();
