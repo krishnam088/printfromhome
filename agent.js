@@ -166,29 +166,33 @@ async function fetchAndPrintLiveJobs() {
                             const isBw = (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw');
                             const isLandscape = fileMeta.orientation === 'landscape';
 
-                            // 🔥 IMAGE TO PDF CONVERSION FOR 100% SETTINGS ACCURACY VIA SUMATRA
+                           // 🔥 BULLETPROOF IMAGE TO PDF CONVERSION
                             const isImage = ext === '.jpg' || ext === '.jpeg' || ext === '.png';
                             let finalPrintPath = localPath;
 
                             if (isImage) {
                                 const pdfPath = path.join(__dirname, `temp_conv_${order.orderId}_${i}_${Date.now()}.pdf`);
                                 await new Promise((resolve, reject) => {
-                                    const doc = new PDFDocument({ autoFirstPage: false });
-                                    const stream = fs.createWriteStream(pdfPath);
-                                    doc.pipe(stream);
+                                    try {
+                                        const doc = new PDFDocument({ margin: 0, size: 'A4' });
+                                        const stream = fs.createWriteStream(pdfPath);
+                                        doc.pipe(stream);
 
-                                    doc.image(localPath, { fit: [595.28, 841.89], align: 'center', valig: 'center' });
-                                    doc.addPage();
-                                    doc.end();
+                                        // Image ko A4 size par cleanly fit karein
+                                        doc.image(localPath, 0, 0, { fit: [595.28, 841.89], align: 'center', valign: 'center' });
+                                        doc.end();
 
-                                    stream.on('finish', () => {
-                                        finalPrintPath = pdfPath;
-                                        resolve();
-                                    });
-                                    stream.on('error', reject);
+                                        stream.on('finish', () => {
+                                            finalPrintPath = pdfPath;
+                                            resolve();
+                                        });
+                                        stream.on('error', reject);
+                                    } catch (err) {
+                                        reject(err);
+                                    }
                                 });
                             }
-
+                            
                             // SumatraPDF settings array
                             let settingsArr = ['fit'];
                             if (isBw) settingsArr.push('monochrome');
