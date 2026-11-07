@@ -181,13 +181,14 @@ async function fetchAndPrintLiveJobs() {
                                         doc.image(localPath, 0, 0, { fit: [595.28, 841.89], align: 'center', valign: 'center' });
                                         doc.end();
 
-                                        stream.on('finish', () => {
-                                            // 🔥 Wait 1 second for OS file lock release
+                                        // 🔥 FIX: Use 'close' instead of 'finish' to ensure file handle is fully closed by OS
+                                        stream.on('close', () => {
                                             setTimeout(() => {
                                                 finalPrintPath = pdfPath;
                                                 resolve();
-                                            }, 5000);
+                                            }, 2000); // 2 seconds safety buffer after file close
                                         });
+
                                         stream.on('error', reject);
                                     } catch (err) {
                                         reject(err);
