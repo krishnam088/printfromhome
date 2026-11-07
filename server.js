@@ -156,7 +156,7 @@ const storeSettingsSchema = mongoose.models.StoreSettingSchema || new mongoose.S
     deliveryFee: { type: Number, default: 25.00 },
     handlingFee: { type: Number, default: 5.00 },
     rainFee: { type: Number, default: 15.00 },
-    codForPrintEnabled: { type: Boolean, default: true }, 
+    codForPrintEnabled: { type: Boolean, default: false }, // 🔥 Yahan true ki jagah false kar dein
     singlePrinterMode: { type: Boolean, default: true }, 
     coupons: { type: Array, default: [
         { code: 'FREEDEL', desc: 'Free delivery on orders above ₹99', discount: 25 },

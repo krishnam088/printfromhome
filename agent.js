@@ -179,14 +179,17 @@ async function fetchAndPrintLiveJobs() {
                             if (!targetPrintDevice || targetPrintDevice.toLowerCase().includes('pdf') || targetPrintDevice.trim() === '') {
                                 targetPrintDevice = "HPFB5346 (HP Smart Tank 580-590 series)";
                             }
-                            const printOptions = {
-                            printer: targetPrintDevice,
-                            copies: parseInt(fileMeta.copies || fileMeta.qty) || 1,
-                            side: fileMeta.sides === 'double' ? 'duplex' : 'simplex',
-                          orientation: fileMeta.orientation === 'landscape' ? 'landscape' : 'portrait',
-                           monochrome: isPhoto ? false : (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw'),
-                          paperSize: 'A4',
-                          scale: "fit" // 🔥 Yeh line add karne se image/PDF auto-fit ho jayegi aur E1 error nahi aayega
+                         // agent.js ke andar printOptions ko is tarah update karein:
+                         const printOptions = {
+                         printer: targetPrintDevice,
+                         copies: parseInt(fileMeta.copies || fileMeta.qty) || 1,
+                         side: fileMeta.sides === 'double' ? 'duplex' : 'simplex',
+                         orientation: fileMeta.orientation === 'landscape' ? 'landscape' : 'portrait',
+                          monochrome: isPhoto ? false : (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw'),
+                         paperSize: 'A4',
+                           // 🔥 SumatraPDF ke liye direct fit/scaling arguments enforce karein
+                         scale: 'fit',
+                          printBackground: true
                          };
 
                             if (fileMeta.pdfPassword || order.pdfPassword) {
