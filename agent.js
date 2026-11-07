@@ -91,7 +91,7 @@ async function fetchAndPrintLiveJobs() {
         
         while (retries > 0) {
             try {
-                response = await axios.get(`${BASE_URL}/api/agent/orders`, { timeout: 45000 });
+          response = await axios.get(`${BASE_URL}/api/admin/orders`, { timeout: 45000 });
                 break; 
             } catch (netErr) {
                 retries--;
