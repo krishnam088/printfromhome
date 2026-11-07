@@ -161,18 +161,27 @@ async function fetchAndPrintLiveJobs() {
                                 targetPrintDevice = "HPFB5346 (HP Smart Tank 580-590 series)";
                             }
 
-                        const totalCopies = parseInt(fileMeta.copies || fileMeta.qty) || 1;
+                            const totalCopies = parseInt(fileMeta.copies || fileMeta.qty) || 1;
                             
-                            const isImage = ext === '.jpg' || ext === '.jpeg' || ext === '.png';
-                            let printCommand = "";
+                            // User ki settings read karein
+                            const isBw = (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw');
+                            const isLandscape = fileMeta.orientation === 'landscape';
 
-                            if (isImage) {
-                                // 🔥 Windows built-in MS Paint command for silent image printing
-                                printCommand = `mspaint /p "${localPath}"`;
-                            } else {
-                                // 🔥 SumatraPDF for PDFs
-                                printCommand = `"${sumatraPath}" -print-to "${targetPrintDevice}" -silent "${localPath}"`;
+                            // SumatraPDF ke liye safe settings (PDFs aur Images dono ke liye valid)
+                            let settingsArr = ['fit'];
+                            if (isBw) {
+                                settingsArr.push('monochrome'); // Black & White ke liye
                             }
+                            if (isLandscape) {
+                                settingsArr.push('landscape');
+                            } else {
+                                settingsArr.push('portrait');
+                            }
+
+                            const printSettingsStr = settingsArr.join(',');
+
+                            // 🔥 SumatraPDF handles both PDFs and Images with exact user settings
+                            const printCommand = `"${sumatraPath}" -print-to "${targetPrintDevice}" -silent -print-settings "${printSettingsStr}" "${localPath}"`;
 
                             let printAttempts = 2;
                             while (printAttempts > 0) {
@@ -180,7 +189,7 @@ async function fetchAndPrintLiveJobs() {
                                     for (let c = 0; c < totalCopies; c++) {
                                         await execPromise(printCommand);
                                     }
-                                    console.log(`✓ Print signal released successfully for item ${i + 1} (${fileMeta.fileName || 'Document'}) [${totalCopies} copy/copies].`);
+                                    console.log(`✓ Print signal released successfully for item ${i + 1} (${fileMeta.fileName || 'Document'}) [Copies: ${totalCopies}, BW: ${isBw}, Landscape: ${isLandscape}].`);
                                     break;
                                 } catch (printErr) {
                                     printAttempts--;
