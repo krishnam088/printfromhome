@@ -415,7 +415,8 @@
    
     <button type="button" id="storeStatusToggleBtn" class="toggle-badge-btn btn-store-open" onclick="toggleStoreStatus()">🏪 Store: <span id="storeStatusStateText">OPEN</span></button>
    <button type="button" id="glossyToggleBtn" class="toggle-badge-btn btn-rain-off" onclick="toggleAdminGlossySystem()">✨ Glossy System: <span id="glossyStateText">OFF</span></button>
-    <button type="button" id="btnInstallAdmin">📥 Install Admin App</button>
+   <button type="button" id="landscapeToggleBtn" class="toggle-badge-btn btn-store-open" onclick="toggleAdminLandscapeSystem()">🖼️ Landscape: <span id="landscapeStateText">ON</span></button>
+   <button type="button" id="btnInstallAdmin">📥 Install Admin App</button>
 </div>
 
 <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
@@ -1696,6 +1697,7 @@ window.adminAddNewCoupon = async function() {
         fetchAdminRainSurgeStatus();
         setInterval(fetchAdminRainSurgeStatus, 4000);
 
+
         let adminGlossyActive = false;
 
 async function fetchAdminGlossyStatus() {
@@ -1742,6 +1744,55 @@ function updateGlossyButtonUI() {
 
 fetchAdminGlossyStatus();
 setInterval(fetchAdminGlossyStatus, 4000);
+
+
+        let adminLandscapeActive = true;
+
+async function fetchAdminLandscapeStatus() {
+    try {
+        const res = await fetch('/api/store-status');
+        const data = await res.json();
+        if (data.success !== undefined && data.landscapeSystemEnabled !== undefined) {
+            adminLandscapeActive = data.landscapeSystemEnabled;
+            updateLandscapeButtonUI();
+        }
+    } catch (e) {}
+}
+
+async function toggleAdminLandscapeSystem() {
+    const nextState = !adminLandscapeActive;
+    try {
+        const res = await fetch('/api/admin/toggle-landscape', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ landscapeSystemEnabled: nextState })
+        });
+        const data = await res.json();
+        if (data.success) {
+            adminLandscapeActive = data.landscapeSystemEnabled;
+            updateLandscapeButtonUI();
+        }
+    } catch (e) {
+        adminLandscapeActive = nextState;
+        updateLandscapeButtonUI();
+    }
+}
+
+function updateLandscapeButtonUI() {
+    const btn = document.getElementById('landscapeToggleBtn');
+    const txt = document.getElementById('landscapeStateText');
+    if (adminLandscapeActive) {
+        if (btn) btn.className = "toggle-badge-btn btn-store-open";
+        if (txt) txt.textContent = "ON";
+    } else {
+        if (btn) btn.className = "toggle-badge-btn btn-rain-off";
+        if (txt) txt.textContent = "OFF";
+    }
+}
+
+// Page load aur interval mein sync karne ke liye
+fetchAdminLandscapeStatus();
+setInterval(fetchAdminLandscapeStatus, 4000);
 
         async function assignOrderToDeliveryBoy(orderId) {
             const boyPhone = prompt("Enter Delivery Executive Mobile Number (10 digits):");

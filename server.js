@@ -125,6 +125,7 @@ const ScheduledEmail = mongoose.model('ScheduledEmail', scheduledEmailSchema);
 // ==========================================
 const storeConfigSchema = new mongoose.Schema({
     isOpen: { type: Boolean, default: true },
+    landscapeSystemEnabled: { type: Boolean, default: true },
     printEnabled: { type: Boolean, default: true }, 
     rainSurgeActive: { type: Boolean, default: false },
     diwaliLaunchMode: { type: Boolean, default: false },
@@ -403,6 +404,7 @@ app.get('/api/store-status', async (req, res) => {
     success: true, 
     isOpen: finalIsOpen, 
     printEnabled: config.printEnabled !== false,
+    landscapeSystemEnabled: config.landscapeSystemEnabled !== false,
     glossySystemEnabled: config.glossySystemEnabled !== false, // 🔥 Yahan add karein
     manualOverride: config.isOpen, 
     rainSurgeActive: config.rainSurgeActive, 
@@ -572,6 +574,20 @@ app.post('/api/admin/toggle-glossy', async (req, res) => {
         config.updatedAt = new Date().toISOString();
         await config.save();
         res.json({ success: true, glossySystemEnabled: config.glossySystemEnabled });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/admin/toggle-landscape', async (req, res) => {
+    try {
+        const { landscapeSystemEnabled } = req.body;
+        let config = await StoreConfig.findOne();
+        if (!config) { config = new StoreConfig(); }
+        config.landscapeSystemEnabled = Boolean(landscapeSystemEnabled);
+        config.updatedAt = new Date().toISOString();
+        await config.save();
+        res.json({ success: true, landscapeSystemEnabled: config.landscapeSystemEnabled });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

@@ -1375,13 +1375,49 @@ window.setStudioPaperType = function(type) {
 };
 
 
-window.setStudioOrientation = function(ori) {
+window.setStudioOrientation = async function(ori) {
+    if (ori === 'landscape') {
+        try {
+            const res = await fetch('/api/store-status');
+            const data = await res.json();
+            if (!data.landscapeSystemEnabled) {
+                showLandscapeLaunchingSoonPopup();
+                return;
+            }
+        } catch(e) {}
+    }
+
     let file = window.studioMasterFiles[window.currentStudioActiveIndex];
     if (file) {
         file.orientation = ori;
         updateMultiFileStudioUI();
     }
 };
+
+function showLandscapeLaunchingSoonPopup() {
+    const existing = document.getElementById('landscapeLaunchingSoonModal');
+    if (existing) existing.remove();
+
+    // Automatically shift orientation back to portrait UI-wise
+    let file = window.studioMasterFiles[window.currentStudioActiveIndex];
+    if (file) {
+        file.orientation = 'portrait';
+        updateMultiFileStudioUI();
+    }
+
+    const popup = document.createElement('div');
+    popup.id = 'landscapeLaunchingSoonModal';
+    popup.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(6px); z-index:999999; display:flex; align-items:center; justify-content:center; padding:20px; font-family:'Poppins', sans-serif;";
+    popup.innerHTML = `
+        <div style="background:#1e293b; border:1px solid #334155; padding:28px; border-radius:20px; max-width:380px; width:100%; text-align:center; box-shadow:0 15px 35px rgba(0,0,0,0.5);">
+            <div style="font-size:2.8rem; margin-bottom:10px;">⏳</div>
+            <h3 style="color:white; font-size:1.2rem; font-weight:800; margin-bottom:8px;">Landscape Mode Coming Soon!</h3>
+            <p style="color:#94a3b8; font-size:0.82rem; line-height:1.5; margin-bottom:20px;">Landscape printing is currently turned off by the admin and will be available shortly. Stay tuned!</p>
+            <button onclick="document.getElementById('landscapeLaunchingSoonModal').remove()" style="background:#059669; color:white; border:none; width:100%; padding:12px; border-radius:10px; font-weight:800; font-size:0.85rem; cursor:pointer;">Got it, Thanks! 👍</button>
+        </div>
+    `;
+    document.body.appendChild(popup);
+}
 
 window.applyCurrentSettingToAllFiles = function() {
     let currentFile = window.studioMasterFiles[window.currentStudioActiveIndex];
