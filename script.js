@@ -19,7 +19,7 @@ async function generateOrderSummaryCoverSlip(orderId, customerName, itemsList, g
         </div>
         
         <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:12px 16px; margin-bottom:16px; font-size:12px; line-height:1.5;">
-            <div><b>Order ID:</b> #${orderId}</div>
+            
             <div><b>Customer Name:</b> ${customerName}</div>
             <div><b>Order Date:</b> ${dateStr}</div>
         </div>
