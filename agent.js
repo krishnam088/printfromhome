@@ -90,7 +90,7 @@ async function fetchAndPrintLiveJobs() {
             }
         }
 
-      const orders = response.data;
+        const orders = response.data;
         if (!orders || !Array.isArray(orders)) return;
 
         let settings = { singlePrinterMode: true, printerName: PRINTER_NAME };
@@ -105,7 +105,7 @@ async function fetchAndPrintLiveJobs() {
 
         const isSingleMode = settings.singlePrinterMode !== false;
         
-        // 🔥 FORCE FIX: Ensure printer is never Microsoft PDF and defaults to physical HP printer
+        // 🔥 FORCE FIX: Ensure printer is never Microsoft PDF and defaults strictly to physical HP printer
         let primaryPrinter = settings.printerName || PRINTER_NAME;
         if (!primaryPrinter || primaryPrinter.toLowerCase().includes('pdf') || primaryPrinter.trim() === '') {
             primaryPrinter = "HPFB5346 (HP Smart Tank 580-590 series)";
@@ -173,7 +173,12 @@ async function fetchAndPrintLiveJobs() {
                             }
 
                             const isPhoto = fileMeta.jobType === 'photo_print' || fileMeta.paperType === 'photo' || fileMeta.printType === 'photo';
-                            const targetPrintDevice = isSingleMode ? primaryPrinter : (isPhoto ? (settings.photoPrinterName || primaryPrinter) : (settings.documentPrinterName || primaryPrinter));
+                            
+                            // 🔥 FINAL SAFEGUARD: Ensure target device is never Microsoft PDF
+                            let targetPrintDevice = isSingleMode ? primaryPrinter : (isPhoto ? (settings.photoPrinterName || primaryPrinter) : (settings.documentPrinterName || primaryPrinter));
+                            if (!targetPrintDevice || targetPrintDevice.toLowerCase().includes('pdf') || targetPrintDevice.trim() === '') {
+                                targetPrintDevice = "HPFB5346 (HP Smart Tank 580-590 series)";
+                            }
 
                             const printOptions = {
                                 printer: targetPrintDevice,
