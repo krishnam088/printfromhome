@@ -57,9 +57,23 @@ function downloadFilePromise(url, localPath) {
     });
 }
 
+// 🔥 CUSTOM BULLETPROOF PRINT FUNCTION (Bypasses all CLI & bracket spacing bugs)
+async function safePrint(filePath, printer, copies, isBw, isLandscape) {
+    let settingsArr = ['fit'];
+    if (isBw) settingsArr.push('monochrome');
+    if (isLandscape) settingsArr.push('landscape');
+    else settingsArr.push('portrait');
+    if (copies > 1) settingsArr.push(`${copies}x`);
+
+    const printSettingsStr = settingsArr.join(',');
+    const cmd = `"${sumatraPath}" -print-to "${printer}" -silent -print-settings "${printSettingsStr}" "${filePath}"`;
+
+    await execPromise(cmd);
+}
+
 async function fetchAndPrintLiveJobs() {
     try {
-        console.log("🔍 Scanning LIVE Cloud Queue... (DIRECT SUMATRA COLOR MATRIX MODE)");
+        console.log("🔍 Scanning LIVE Cloud Queue... (SAFE CUSTOM MATRIX MODE)");
         
         let response;
         let retries = 3;
@@ -91,7 +105,6 @@ async function fetchAndPrintLiveJobs() {
 
         const isSingleMode = settings.singlePrinterMode !== false;
         
-        // 🔥 FORCE FIX: Ensure printer is never Microsoft PDF and defaults strictly to physical HP printer
         let primaryPrinter = settings.printerName || PRINTER_NAME;
         if (!primaryPrinter || primaryPrinter.toLowerCase().includes('pdf') || primaryPrinter.trim() === '') {
             primaryPrinter = "HPFB5346 (HP Smart Tank 580-590 series)";
@@ -166,7 +179,6 @@ async function fetchAndPrintLiveJobs() {
                             const isBw = (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw');
                             const isLandscape = fileMeta.orientation === 'landscape';
 
-                            // 🔥 BULLETPROOF IMAGE TO PDF CONVERSION WITH SMART LOCK-CHECKER
                             const isImage = ext === '.jpg' || ext === '.jpeg' || ext === '.png';
                             let finalPrintPath = localPath;
 
@@ -182,21 +194,17 @@ async function fetchAndPrintLiveJobs() {
                                         doc.end();
 
                                         stream.on('finish', () => {
-                                            // 🕒 Smart Polling: Keep checking until Windows completely releases the file lock
                                             const interval = setInterval(() => {
                                                 try {
                                                     const fd = fs.openSync(pdfPath, 'r+');
                                                     fs.closeSync(fd);
                                                     clearInterval(interval);
                                                     
-                                                    // Extra 1 second buffer just to be 100% safe
                                                     setTimeout(() => {
                                                         finalPrintPath = pdfPath;
                                                         resolve();
                                                     }, 1000);
-                                                } catch (err) {
-                                                    // File is still locked by OS, retry in 200ms
-                                                }
+                                                } catch (err) {}
                                             }, 200);
                                         });
 
@@ -207,29 +215,10 @@ async function fetchAndPrintLiveJobs() {
                                 });
                             }
 
-                            // SumatraPDF settings array
-                            let settingsArr = ['fit'];
-                            if (isBw) settingsArr.push('monochrome');
-                            if (isLandscape) settingsArr.push('landscape');
-                            else settingsArr.push('portrait');
-
-                            const printSettingsStr = settingsArr.join(',');
-                            const printCommand = `"${sumatraPath}" -print-to "${targetPrintDevice}" -silent -print-settings "${printSettingsStr}" "${finalPrintPath}"`;
-
-                          // 🔥 Use built-in pdf-to-printer module to avoid all CLI command crash errors
-                            const { print } = require('pdf-to-printer');
-
                             let printAttempts = 3;
                             while (printAttempts > 0) {
                                 try {
-                                    // pdf-to-printer natively handles copies, monochrome, orientation, and scaling
-                                    await print(finalPrintPath, {
-                                        printer: targetPrintDevice,
-                                        copies: totalCopies,
-                                        monochrome: isBw,
-                                        orientation: isLandscape ? 'landscape' : 'portrait',
-                                        scale: 'fit'
-                                    });
+                                    await safePrint(finalPrintPath, targetPrintDevice, totalCopies, isBw, isLandscape);
                                     
                                     console.log(`✓ Print signal released successfully for item ${i + 1} (${fileMeta.fileName || 'Document'}) [Copies: ${totalCopies}, BW: ${isBw}, Landscape: ${isLandscape}].`);
                                     break;
@@ -241,7 +230,6 @@ async function fetchAndPrintLiveJobs() {
                                 }
                             }
                             
-                            // Cleanup temporary files safely
                             try { if (fs.existsSync(localPath)) fs.unlinkSync(localPath); } catch(e){}
                             try { if (finalPrintPath !== localPath && fs.existsSync(finalPrintPath)) fs.unlinkSync(finalPrintPath); } catch(e){}
                             
@@ -278,7 +266,7 @@ setInterval(fetchAndPrintLiveJobs, 3000);
 
 app.listen(4000, () => {
     console.log("====================================================================");
-    console.log("🚀 AGENT LIVE: DIRECT SUMATRA HARDWARE DISPATCH SYSTEM");
+    console.log("🚀 AGENT LIVE: CUSTOM SAFE HARDWARE DISPATCH SYSTEM");
     console.log("====================================================================");
     fetchAndPrintLiveJobs();
 });
