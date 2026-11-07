@@ -180,18 +180,19 @@ async function fetchAndPrintLiveJobs() {
                                 targetPrintDevice = "HPFB5346 (HP Smart Tank 580-590 series)";
                             }
                          // agent.js ke andar printOptions ko is tarah update karein:
+                       const isLandscape = fileMeta.orientation === 'landscape';
+
                          const printOptions = {
                          printer: targetPrintDevice,
-                         copies: parseInt(fileMeta.copies || fileMeta.qty) || 1,
-                         side: fileMeta.sides === 'double' ? 'duplex' : 'simplex',
-                         orientation: fileMeta.orientation === 'landscape' ? 'landscape' : 'portrait',
+                          copies: parseInt(fileMeta.copies || fileMeta.qty) || 1,
+                          side: fileMeta.sides === 'double' ? 'duplex' : 'simplex',
                           monochrome: isPhoto ? false : (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw'),
-                         paperSize: 'A4',
-                           // 🔥 SumatraPDF ke liye direct fit/scaling arguments enforce karein
-                         scale: 'fit',
-                          printBackground: true
+                          paperSize: 'A4' ,
+                          scale: 'fit',
+                          printBackground: true,
+                         // 🔥 SumatraPDF ke liye explicit paper orientation flag
+                         printSettings: isLandscape ? "landscape" : "portrait"
                          };
-
                             if (fileMeta.pdfPassword || order.pdfPassword) {
                                 printOptions.password = fileMeta.pdfPassword || order.pdfPassword;
                             }

@@ -2312,77 +2312,82 @@ window.openProductDetailModal = function(prod) {
         calculateTotal();
     };
 
-   // ==========================================
+  // ==========================================
 // 🔥 CART DRAWER & FOOTER BAR UI (WITH AUTO-CLOSE & VERTICAL DETAILED LIST)
 // ==========================================
-window.toggleCartDrawer = function(open = true) {
-    const drawerOverlay = document.getElementById('cartDrawerOverlay');
-    const floatingBar = document.getElementById('floatingCartFooterBar');
-    if (!drawerOverlay) return;
+window.toggleCartDrawer = async function(open = true) {
+    const drawerOverlay = document.getElementById('cartDrawerOverlay');
+    const floatingBar = document.getElementById('floatingCartFooterBar');
+    if (!drawerOverlay) return;
 
-    if (open) {
-        drawerOverlay.style.display = 'flex';
-        if (floatingBar) {
-            floatingBar.classList.add('hidden');
-            floatingBar.style.display = 'none';
-        }
-        
-        // 🔥 Cart khulte hi turant store products fetch aur render karein
-        if (typeof loadDynamicStoreProducts === 'function') {
-            loadDynamicStoreProducts();
-        }
-        if (typeof renderCartDrawerContents === 'function') {
-            renderCartDrawerContents();
-        }
-    } else {
-        drawerOverlay.style.display = 'none';
-        if (typeof updateFloatingCartBar === 'function') {
-            updateFloatingCartBar();
-        }
-    }
+    if (open) {
+        drawerOverlay.style.display = 'flex';
+        if (floatingBar) {
+            floatingBar.classList.add('hidden');
+            floatingBar.style.display = 'none';
+        }
+        
+        // 🔥 CART KHULTE HI TURANT SERVER SE LIVE ADMIN SETTINGS (COD STATUS) FETCH KAREIN
+        if (typeof loadAdminConfiguredFeesAndCoupons === 'function') {
+            await loadAdminConfiguredFeesAndCoupons();
+        }
+
+        // 🔥 Cart khulte hi turant store products fetch aur render karein
+        if (typeof loadDynamicStoreProducts === 'function') {
+            loadDynamicStoreProducts();
+        }
+        if (typeof renderCartDrawerContents === 'function') {
+            renderCartDrawerContents();
+        }
+    } else {
+        drawerOverlay.style.display = 'none';
+        if (typeof updateFloatingCartBar === 'function') {
+            updateFloatingCartBar();
+        }
+    }
 };
 
 // 🔥 Bulletproof Upselling Grid Render for "You Might Also Like" Box
 function renderUpsellingGridSafely() {
-    const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
-    if (!upsellingGrid) return;
-    
-    // Agar products empty hain toh background mein fetch call lagayein
-    if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) {
-        upsellingGrid.innerHTML = '<p style="font-size:0.78rem; color:#64748b; text-align:center; padding:15px; width:100%;">Loading store products...</p>';
-        if (typeof loadDynamicStoreProducts === 'function') {
-            loadDynamicStoreProducts();
-        }
-        return;
-    }
+    const upsellingGrid = document.getElementById('cartDrawerUpsellingGrid');
+    if (!upsellingGrid) return;
+    
+    // Agar products empty hain toh background mein fetch call lagayein
+    if (!window.storeInventoryProducts || window.storeInventoryProducts.length === 0) {
+        upsellingGrid.innerHTML = '<p style="font-size:0.78rem; color:#64748b; text-align:center; padding:15px; width:100%;">Loading store products...</p>';
+        if (typeof loadDynamicStoreProducts === 'function') {
+            loadDynamicStoreProducts();
+        }
+        return;
+    }
 
-    upsellingGrid.innerHTML = '';
-    let availableProducts = window.storeInventoryProducts.filter(prod => prod.stockQuantity > 0);
+    upsellingGrid.innerHTML = '';
+    let availableProducts = window.storeInventoryProducts.filter(prod => prod.stockQuantity > 0);
 
-    if (availableProducts.length > 0) {
-        availableProducts.forEach((prod) => {
-            const thumb = prod.imageUrl || prod.image || '';
-            const safeSku = String(prod.sku || prod.name || '').replace(/['"\\]/g, '\\$&');
-            const safeName = String(prod.name || '').replace(/['"\\]/g, '\\$&');
-            const safeThumb = String(thumb || '').replace(/['"\\]/g, '\\$&');
-            
-            const priceVal = Number(prod.sellingPrice || prod.price || 0);
-            const stockVal = Number(prod.stockQuantity || prod.stock || 0);
+    if (availableProducts.length > 0) {
+        availableProducts.forEach((prod) => {
+            const thumb = prod.imageUrl || prod.image || '';
+            const safeSku = String(prod.sku || prod.name || '').replace(/['"\\]/g, '\\$&');
+            const safeName = String(prod.name || '').replace(/['"\\]/g, '\\$&');
+            const safeThumb = String(thumb || '').replace(/['"\\]/g, '\\$&');
+            
+            const priceVal = Number(prod.sellingPrice || prod.price || 0);
+            const stockVal = Number(prod.stockQuantity || prod.stock || 0);
 
-            const itemCard = document.createElement('div');
-            itemCard.style.cssText = "min-width:140px; max-width:140px; background:#ffffff; border:1px solid #cbd5e1; border-radius:16px; padding:12px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 3px 10px rgba(0,0,0,0.04); flex-shrink:0;";
-            
-            itemCard.innerHTML = `
-                ${thumb ? `<img src="${thumb}" style="width:55px; height:55px; object-fit:cover; border-radius:10px; margin-bottom:6px;" />` : '<div style="font-size:2rem; margin-bottom:6px;">📦</div>'}
-                <div title="${prod.name || ''}" style="font-weight:800; font-size:0.78rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; margin-bottom:2px;">${prod.name || ''}</div>
-                <div style="font-size:0.75rem; font-weight:900; color:#065f46; margin-bottom:8px;">₹${priceVal}</div>
-                <button type="button" style="background:#065f46; color:white; border:none; padding:6px 10px; border-radius:8px; font-size:0.72rem; font-weight:800; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
-            `;
-            upsellingGrid.appendChild(itemCard);
-        });
-    } else {
-        upsellingGrid.innerHTML = '<p style="font-size:0.78rem; color:#64748b; text-align:center; padding:15px; width:100%;">No store products available currently.</p>';
-    }
+            const itemCard = document.createElement('div');
+            itemCard.style.cssText = "min-width:140px; max-width:140px; background:#ffffff; border:1px solid #cbd5e1; border-radius:16px; padding:12px; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow:0 3px 10px rgba(0,0,0,0.04); flex-shrink:0;";
+            
+            itemCard.innerHTML = `
+                ${thumb ? `<img src="${thumb}" style="width:55px; height:55px; object-fit:cover; border-radius:10px; margin-bottom:6px;" />` : '<div style="font-size:2rem; margin-bottom:6px;">📦</div>'}
+                <div title="${prod.name || ''}" style="font-weight:800; font-size:0.78rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; margin-bottom:2px;">${prod.name || ''}</div>
+                <div style="font-size:0.75rem; font-weight:900; color:#065f46; margin-bottom:8px;">₹${priceVal}</div>
+                <button type="button" style="background:#065f46; color:white; border:none; padding:6px 10px; border-radius:8px; font-size:0.72rem; font-weight:800; width:100%; cursor:pointer;" onclick="addDynamicProductToCart('${safeSku}', '${safeName}', ${priceVal}, ${stockVal}, '${safeThumb}')">+ Add</button>
+            `;
+            upsellingGrid.appendChild(itemCard);
+        });
+    } else {
+        upsellingGrid.innerHTML = '<p style="font-size:0.78rem; color:#64748b; text-align:center; padding:15px; width:100%;">No store products available currently.</p>';
+    }
 }
 
 window.updateFloatingCartBar = function() {
@@ -2414,7 +2419,6 @@ window.updateFloatingCartBar = function() {
 
     let totalSnacksPrice = window.cartSnacksArray.reduce((acc, item) => acc + (item.price * item.qty), 0);
     
-    // 🔥 UPDATED: Glossy Photo Prints & Document Prints Price Splitter Logic
     let totalPrintPrice = window.cartPrintJobsArray ? window.cartPrintJobsArray.reduce((acc, job) => {
         if (job.paperType === 'photo' || job.jobType === 'photo_print') {
             return acc + Number(job.price || 50);
@@ -2426,8 +2430,6 @@ window.updateFloatingCartBar = function() {
     const freeDeliveryThreshold = window.getDynamicFreeDeliveryThreshold ? window.getDynamicFreeDeliveryThreshold() : 99.00;
 
     let activeDelFee = window.adminDeliveryFee !== undefined ? window.adminDeliveryFee : 0;
-    
-    // 🔥 UPDATED: Store Pickup check added so delivery fee is 0 when pickup is selected
     let delFee = (window.currentCartDeliveryMode === 'pickup') ? 0.00 : ((subtotalCalc >= freeDeliveryThreshold || subtotalCalc === 0) ? 0.00 : activeDelFee);
     
     let activeRainFee = window.adminRainFee !== undefined ? window.adminRainFee : 0;
@@ -2503,11 +2505,9 @@ window.updateFloatingCartBar = function() {
     }
 };
 
-
 // ==========================================
 // 🔥 BULLETPROOF UNIVERSAL CART DRAWER RENDER ENGINE
 // ==========================================
-
 window.renderCartDrawerContents = function() {
     const container = document.getElementById('cartDrawerItemsList') || 
                         document.getElementById('cartItemsListContainer') || 
@@ -2516,7 +2516,6 @@ window.renderCartDrawerContents = function() {
     if (!container) return;
     container.innerHTML = '';
     
-    // 🔥 Selected active address se name aur phone dynamically fetch karna
     const activeAddress = localStorage.getItem('selected_active_address') || '';
     let extractedName = localStorage.getItem('printAppUser') || 'Customer';
     let extractedPhone = localStorage.getItem('printAppUserIdentity') || '7398746551';
@@ -2541,7 +2540,6 @@ window.renderCartDrawerContents = function() {
         addressSummaryNode.textContent = activeAddress || 'No delivery address added yet.';
     }
 
-    // 🌟 Stylish Green & Yellow Cart Header (Search bar removed)
     const stylishCartHeader = `
         <div style="background: linear-gradient(135deg, #fef08a 0%, #bbf7d0 100%); border: 1px solid #16a34a; border-radius: 12px; padding: 10px 14px; text-align: center; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
             <h2 style="font-size: 0.95rem; font-weight: 900; color: #065f46; margin: 0; letter-spacing: 0.5px;">🌱 Print From Home Cart 🛒</h2>
@@ -2551,16 +2549,15 @@ window.renderCartDrawerContents = function() {
     window.cartSnacksArray = JSON.parse(localStorage.getItem('cart_snacks') || '[]');
     window.cartPrintJobsArray = JSON.parse(localStorage.getItem('cart_print_jobs') || '[]');
 
-   // 🔥 Strict COD Check for Print Orders
-const hasPrintJobsCheck = window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0;
-const selectedRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
-const currentPaymentMode = selectedRadio ? selectedRadio.value.toLowerCase() : 'online';
+    const hasPrintJobsCheck = window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0;
+    const selectedRadio = document.querySelector('input[name="cartPaymentMode"]:checked');
+    const currentPaymentMode = selectedRadio ? selectedRadio.value.toLowerCase() : 'online';
 
-if ((currentPaymentMode === 'cod' || currentPaymentMode === 'cash') && hasPrintJobsCheck && window.adminCodForPrintEnabled === false) {
-    showPrintPaymentRestrictionNotice();
-    if (typeof releaseButton === 'function') releaseButton();
-    return;
-}
+    if ((currentPaymentMode === 'cod' || currentPaymentMode === 'cash') && hasPrintJobsCheck && window.adminCodForPrintEnabled === false) {
+        showPrintPaymentRestrictionNotice();
+        if (typeof releaseButton === 'function') releaseButton();
+        return;
+    }
 
     let hasItems = (window.cartSnacksArray.length > 0) || (window.cartPrintJobsArray.length > 0);
     
@@ -2575,7 +2572,6 @@ if ((currentPaymentMode === 'cod' || currentPaymentMode === 'cash') && hasPrintJ
     wrapper.style.cssText = "display:flex; flex-direction:column; gap:12px; width:100%;";
     wrapper.innerHTML = stylishCartHeader;
 
-  // 1. Render Print Jobs in Cart
     window.cartPrintJobsArray.forEach((job, idx) => {
         let jobTotal = 0;
         let subtitleText = "";
@@ -2624,7 +2620,6 @@ if ((currentPaymentMode === 'cod' || currentPaymentMode === 'cash') && hasPrintJ
         wrapper.appendChild(card);
     });
 
-    // 2. Render Snacks / Store Products in Cart (Fixed typo: snack.price * snack.qty)
     window.cartSnacksArray.forEach((snack, idx) => {
         const card = document.createElement('div');
         card.style.cssText = "background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.02); gap:10px;";
@@ -2660,11 +2655,10 @@ if ((currentPaymentMode === 'cod' || currentPaymentMode === 'cash') && hasPrintJ
         calculateTotal();
     }
 };
-// 🔥 Yahan par isko add kar dena hai taaki cart khulte hi COD restriction apply ho jaye
-    if (typeof checkAndApplyCodRestrictions === 'function') {
-        checkAndApplyCodRestrictions();
-    }
 
+if (typeof checkAndApplyCodRestrictions === 'function') {
+    checkAndApplyCodRestrictions();
+}
 
 // 🔍 1. CART DRAWER LIVE SEARCH FUNCTION FOR INVENTORY ITEMS (Global Scope)
 window.filterCartItemsSearch = function(query) {
@@ -3423,7 +3417,7 @@ window.saveAdminStoreSettings = async function() {
     
     const codPrintToggle = document.getElementById('adminCodForPrintToggle');
     
-    // 🔥 Checkbox ki exact .checked state capture karein (agar toggle nahi mila toh current window state use karein)
+    // 🔥 Checkbox ki exact .checked state capture karein
     const codForPrintEnabled = codPrintToggle ? codPrintToggle.checked : (window.adminCodForPrintEnabled || false);
     const singlePrinterMode = singlePrinterToggle ? singlePrinterToggle.checked : true;
 
@@ -3447,7 +3441,6 @@ window.saveAdminStoreSettings = async function() {
 
         const data = await res.json();
         if (data.success) {
-            // Local storage cache ko bhi turant update kar dein
             localStorage.setItem('cached_cod_print', codForPrintEnabled);
             window.adminCodForPrintEnabled = codForPrintEnabled;
 
@@ -3464,7 +3457,7 @@ window.saveAdminStoreSettings = async function() {
     }
 };
 
-// 🔥 Admin Add New Coupon Engine
+// 🔥 Admin Add New Coupon Engine (Updated to preserve all settings)
 window.adminAddNewCoupon = async function() {
     const codeInput = document.getElementById('adminNewCouponCode');
     const descInput = document.getElementById('adminNewCouponDesc');
@@ -3481,17 +3474,33 @@ window.adminAddNewCoupon = async function() {
     if (!window.adminCouponsList) window.adminCouponsList = [];
     window.adminCouponsList.push({ code: code, desc: desc });
 
+    const deliveryFee = document.getElementById('adminSettingDeliveryFee')?.value || 25;
+    const handlingFee = document.getElementById('adminSettingHandlingFee')?.value || 5;
+    const rainFee = document.getElementById('adminSettingRainFee')?.value || 15;
+    const codForPrintEnabled = document.getElementById('adminCodForPrintToggle')?.checked ?? false;
+    const singlePrinterMode = document.getElementById('adminSettingSinglePrinterMode')?.checked ?? true;
+
     try {
         const res = await fetch('/api/admin/settings/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ coupons: window.adminCouponsList })
+            body: JSON.stringify({ 
+                deliveryFee, 
+                handlingFee, 
+                rainFee, 
+                codForPrintEnabled, 
+                singlePrinterMode,
+                coupons: window.adminCouponsList 
+            })
         });
         const data = await res.json();
         if (data.success) {
             alert(`✅ Coupon "${code}" added successfully!`);
             codeInput.value = '';
             descInput.value = '';
+            if (typeof loadAdminConfiguredFeesAndCoupons === 'function') {
+                loadAdminConfiguredFeesAndCoupons();
+            }
         } else {
             alert('❌ Failed to save coupon on server.');
         }
@@ -3499,7 +3508,6 @@ window.adminAddNewCoupon = async function() {
         alert('❌ Server connection error.');
     }
 };
-
 
 window.toggleCouponDrawer = function() {
     let couponModal = document.getElementById('couponDropdownModal');
