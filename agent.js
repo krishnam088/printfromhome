@@ -161,18 +161,26 @@ async function fetchAndPrintLiveJobs() {
                                 targetPrintDevice = "HPFB5346 (HP Smart Tank 580-590 series)";
                             }
 
-                            const totalCopies = parseInt(fileMeta.copies || fileMeta.qty) || 1;
+                        const totalCopies = parseInt(fileMeta.copies || fileMeta.qty) || 1;
                             
-                            // 🔥 Clean & Direct SumatraPDF Execution (No pdf-to-printer settings wrapper)
-                            const sumatraCommand = `"${sumatraPath}" -print-to "${targetPrintDevice}" -silent "${localPath}"`;
+                            const isImage = ext === '.jpg' || ext === '.jpeg' || ext === '.png';
+                            let printCommand = "";
+
+                            if (isImage) {
+                                // 🔥 Windows built-in MS Paint command for silent image printing
+                                printCommand = `mspaint /p "${localPath}"`;
+                            } else {
+                                // 🔥 SumatraPDF for PDFs
+                                printCommand = `"${sumatraPath}" -print-to "${targetPrintDevice}" -silent "${localPath}"`;
+                            }
 
                             let printAttempts = 2;
                             while (printAttempts > 0) {
                                 try {
                                     for (let c = 0; c < totalCopies; c++) {
-                                        await execPromise(sumatraCommand);
+                                        await execPromise(printCommand);
                                     }
-                                    console.log(`✓ Print signal released successfully via Direct Sumatra for item ${i + 1} (${fileMeta.fileName || 'Document'}) [${totalCopies} copy/copies].`);
+                                    console.log(`✓ Print signal released successfully for item ${i + 1} (${fileMeta.fileName || 'Document'}) [${totalCopies} copy/copies].`);
                                     break;
                                 } catch (printErr) {
                                     printAttempts--;
@@ -180,7 +188,7 @@ async function fetchAndPrintLiveJobs() {
                                     await new Promise(res => setTimeout(res, 2000));
                                 }
                             }
-
+                            
                             if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
                             await new Promise(res => setTimeout(res, 3000));
 
