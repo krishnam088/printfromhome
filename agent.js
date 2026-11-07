@@ -179,20 +179,20 @@ async function fetchAndPrintLiveJobs() {
                             if (!targetPrintDevice || targetPrintDevice.toLowerCase().includes('pdf') || targetPrintDevice.trim() === '') {
                                 targetPrintDevice = "HPFB5346 (HP Smart Tank 580-590 series)";
                             }
-                         // agent.js ke andar printOptions ko is tarah update karein:
-                       const isLandscape = fileMeta.orientation === 'landscape';
+                        const isLandscape = fileMeta.orientation === 'landscape';
 
+                         // 🔥 pdf-to-printer / SumatraPDF ke liye 100% safe native properties
                          const printOptions = {
-                         printer: targetPrintDevice,
-                          copies: parseInt(fileMeta.copies || fileMeta.qty) || 1,
-                          side: fileMeta.sides === 'double' ? 'duplex' : 'simplex',
-                          monochrome: isPhoto ? false : (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw'),
-                          paperSize: 'A4' ,
-                          scale: 'fit',
-                          printBackground: true,
-                         // 🔥 SumatraPDF ke liye explicit paper orientation flag
-                         printSettings: isLandscape ? "landscape" : "portrait"
+                             printer: targetPrintDevice,
+                             copies: parseInt(fileMeta.copies || fileMeta.qty) || 1,
+                             scale: 'fit',
+                             monochrome: isPhoto ? false : (fileMeta.printType === 'bw' || fileMeta.colorMode === 'bw'),
+                             side: fileMeta.sides === 'double' ? 'duplex' : 'simplex',
+                             paperSize: 'A4',
+                             printBackground: true,
+                             orientation: isLandscape ? 'landscape' : 'portrait'
                          };
+
                             if (fileMeta.pdfPassword || order.pdfPassword) {
                                 printOptions.password = fileMeta.pdfPassword || order.pdfPassword;
                             }
