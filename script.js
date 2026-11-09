@@ -2966,7 +2966,7 @@ window.showPrintPaymentRestrictionNotice = function() {
         <div style="background:#ffffff; border-radius:24px; width:100%; max-width:380px; padding:28px; text-align:center; box-shadow:0 15px 35px rgba(0,0,0,0.25); position:relative;">
             <div style="font-size:3.5rem; margin-bottom:12px;">🔒</div>
             <h3 style="font-size:1.2rem; font-weight:900; color:#0f172a; margin-bottom:8px;">Online Payment Required</h3>
-            <p style="font-size:0.85rem; color:#475569; line-height:1.5; margin-bottom:22px;">For print orders, Cash on Delivery (COD) is temporarily disabled to prevent paper and ink waste. Please use <b>Online Payment</b> or <b>Print Wallet</b>.</p>
+            <p style="font-size:0.85rem; color:#475569; line-height:1.5; margin-bottom:22px;">For print orders, Cash on delivery is not available for print orders. Please use <b>Online Payment</b> or <b>Print Wallet</b>.</p>
             <button type="button" onclick="document.getElementById('printPaymentNoticeModal').remove()" style="width:100%; padding:13px; background:#065f46; color:white; border:none; border-radius:14px; font-weight:900; font-size:0.9rem; cursor:pointer; box-shadow:0 4px 15px rgba(6,95,70,0.3);">Got it, thanks!</button>
         </div>
     `;
@@ -2987,7 +2987,7 @@ window.checkAndApplyCodRestrictions = function() {
         if (codContainerBox) {
             codContainerBox.style.opacity = '0.5';
             codContainerBox.style.cursor = 'not-allowed';
-            codContainerBox.title = "COD is disabled for print orders to prevent ink and paper waste.";
+            codContainerBox.title = "Cash on delivery is not available for print orders.";
             codContainerBox.onclick = function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -3775,9 +3775,9 @@ window.executeFinalCartOrderPlacement = async function() {
         const hasPrintJobs = window.cartPrintJobsArray && window.cartPrintJobsArray.length > 0;
         if ((paymentMode === 'cod' || paymentMode === 'cash') && hasPrintJobs && !window.adminCodForPrintEnabled) {
             if (typeof showAppToast === 'function') {
-                showAppToast("Cash on Delivery (COD) is currently disabled by admin for print orders.", "error");
+                showAppToast("Cash on delivery is not available for print orders.", "error");
             } else {
-                alert("⚠️ Cash on Delivery (COD) is currently disabled by admin for print orders. Please choose Online Payment or Wallet.");
+                alert("Cash on delivery is not available for print orders. Please choose Online Payment or Wallet.");
             }
             releaseButton();
             return;
