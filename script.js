@@ -6197,3 +6197,69 @@ window.showPrintPaymentRestrictionNotice = function() {
     `;
     document.body.appendChild(modal);
 };
+
+// ==========================================
+// 🌙 AUTOMATIC NIGHT MODE & SHOOTING STAR ENGINE (7 PM to 5 AM)
+// ==========================================
+window.checkAndApplyNightTheme = function() {
+    const now = new Date();
+    const currentHour = now.getHours(); // 0 to 23 format
+
+    // 7 PM (19:00) se lekar Subah 5 AM (5:00) tak Night Mode active rahega
+    const isNightTime = currentHour >= 19 || currentHour < 5;
+
+    if (isNightTime) {
+        document.body.classList.add('night-mode');
+        ensureNightSkyElements();
+    } else {
+        document.body.classList.remove('night-mode');
+        const sky = document.getElementById('nightSkyContainer');
+        if (sky) sky.style.display = 'none';
+    }
+};
+
+function ensureNightSkyElements() {
+    const skyContainer = document.getElementById('nightSkyContainer');
+    if (!skyContainer) return;
+
+    skyContainer.style.display = 'block';
+
+    // Static Twinkling Stars generate karna
+    if (skyContainer.querySelectorAll('.night-star').length === 0) {
+        for (let i = 0; i < 25; i++) { // Optimized count for zero lag
+            const star = document.createElement('div');
+            star.className = 'night-star';
+            star.style.top = `${Math.random() * 80}%`;
+            star.style.left = `${Math.random() * 100}%`;
+            const size = Math.random() * 3 + 1;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.animationDelay = `${Math.random() * 2}s`;
+            skyContainer.appendChild(star);
+        }
+    }
+
+    // Har 1.5 second mein tuta hua tara (Shooting Star) generate karna
+    if (!window.shootingStarInterval) {
+        window.shootingStarInterval = setInterval(() => {
+            if (!document.body.classList.contains('night-mode')) return;
+
+            const shooter = document.createElement('div');
+            shooter.className = 'shooting-star';
+            shooter.style.top = `${Math.random() * 40}%`;
+            shooter.style.left = `${Math.random() * 100}%`;
+            skyContainer.appendChild(shooter);
+
+            // Memory clear karne ke liye element remove kar dena
+            setTimeout(() => {
+                shooter.remove();
+            }, 1500);
+        }, 1500);
+    }
+};
+
+// App load hote hi aur har 1 minute par time check karne ke liye
+document.addEventListener('DOMContentLoaded', () => {
+    checkAndApplyNightTheme();
+    setInterval(checkAndApplyNightTheme, 60000); 
+});

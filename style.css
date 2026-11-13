@@ -1319,3 +1319,80 @@ body.theme-festive-republic #festivalAnimationContainer {
         margin-bottom: -140mm !important;
     }
 }
+
+/* ==========================================
+   🌙 NIGHT MODE & SHOOTING STAR STYLES
+   ========================================== */
+body.night-mode {
+    background-color: #0b0f19 !important;
+    color: #f8fafc !important;
+}
+
+body.night-mode .blinkit-cat-card, 
+body.night-mode div[style*="background: #ffffff"],
+body.night-mode div[style*="background:#ffffff"] {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+    border-color: #334155 !important;
+}
+
+#nightSkyContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+    display: none;
+}
+
+body.night-mode #nightSkyContainer {
+    display: block;
+}
+
+.night-moon {
+    position: absolute;
+    top: 30px;
+    right: 40px;
+    width: 50px;
+    height: 50px;
+    background: #fef08a;
+    border-radius: 50%;
+    box-shadow: 0 0 25px #fde047;
+    opacity: 0.85;
+}
+
+.night-star {
+    position: absolute;
+    background: #ffffff;
+    border-radius: 50%;
+    animation: twinkle 2s infinite ease-in-out;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+.shooting-star {
+    position: absolute;
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(45deg, #ffffff, transparent);
+    transform: rotate(-45deg);
+    opacity: 0;
+    animation: shoot 1.5s ease-in-out infinite;
+}
+
+@keyframes shoot {
+    0% {
+        transform: translateX(0) translateY(0) rotate(-45deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-400px) translateY(400px) rotate(-45deg);
+        opacity: 0;
+    }
+}
