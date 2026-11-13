@@ -1420,47 +1420,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <!-- 👇 Yeh raha script jo aapne pucha, isko banner div ke theek niche rakhna hai -->
         <script>
-            // 🔥 Automatic Time-Locked Banner Switcher (8 Nov 2026, 10:00 AM IST)
-            function checkAndRenderLaunchBanner() {
-                const bannerBox = document.getElementById('dynamicLaunchBannerBox');
-                const bannerContent = document.getElementById('dynamicBannerContent');
-                if (!bannerBox || !bannerContent) return;
+         // 🔥 Automatic Festival Banner & Theme Sync Script
+    function checkAndRenderFestiveBanner() {
+        const bannerBox = document.getElementById('dynamicLaunchBannerBox');
+        const bannerContent = document.getElementById('dynamicBannerContent');
+        if (!bannerBox || !bannerContent) return;
 
-                // 8 November 2026, 10:00 AM IST (Indian Standard Time = UTC+5:30)
-                const launchTargetTime = new Date("2026-11-08T10:00:00+05:30").getTime();
-                const nowTime = new Date().getTime();
+        // Aaj ki date nikalna (YYYY-MM-DD format mein)
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const todayStr = `${year}-${month}-${day}`;
 
-                if (nowTime >= launchTargetTime) {
-                    // 🌟 LIVE & HAPPY DIWALI STATE (After 8 Nov 2026, 10 AM)
-                    bannerBox.style.background = "linear-gradient(135deg, #059669 0%, #047857 100%)";
-                    bannerBox.style.border = "1.5px solid #34d399";
-                    bannerContent.innerHTML = `
-                        <div style="font-family: 'Poppins', sans-serif; color: #ffffff;">
-                            <h2 style="font-size: 1rem; font-weight: 900; margin: 0 0 2px 0; letter-spacing: 0.3px;">🪔 Print From Home App is LIVE! 🚀</h2>
-                            <p style="font-size: 0.75rem; margin: 0; opacity: 0.95; font-weight: 500;">Wishing you a very Happy & Prosperous Diwali! Enjoy 15-minute instant printing & doorstep delivery in Varanasi. 🙏✨</p>
-                        </div>
-                    `;
-                } else {
-                    // ⏳ COMING SOON STATE (Before 8 Nov 2026, 10 AM)
-                    bannerBox.style.background = "linear-gradient(90deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)";
-                    bannerContent.innerHTML = `
-                        <marquee scrollamount="6" style="width: 100%; display: flex; align-items: center; font-family: 'Poppins', sans-serif;">
-                            <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #f8fafc;">
-                                <span style="font-size: 1rem;">🪔✨</span> 
-                                <span style="color: #38bdf8;">Coming Soon:</span> Official Launch on <strong style="color: #f59e0b;">Diwali 2026</strong> in Varanasi!
-                            </span>
-                            <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #10b981;">
-                                <span>⚡</span> 15-Minute Instant Print & Delivery App
-                            </span>
-                        </marquee>
-                    `;
-                }
-            }
-
-            window.addEventListener('DOMContentLoaded', () => {
-                checkAndRenderLaunchBanner();
-                setInterval(checkAndRenderLaunchBanner, 30000);
+        // Agar upar script mein activeFestiveRanges defined hai toh usme se aaj ki date match karein
+        let currentActiveFestival = null;
+        if (typeof activeFestiveRanges !== 'undefined') {
+            currentActiveFestival = activeFestiveRanges.find(fest => {
+                return todayStr >= fest.start && todayStr <= fest.end;
             });
+        }
+
+        if (currentActiveFestival) {
+            // 🎉 Jab koi festival active hoga, tab banner aur background theme uske mutabiq badal jayegi
+            bannerBox.style.background = currentActiveFestival.bg;
+            bannerBox.style.border = "1.5px solid rgba(255, 255, 255, 0.3)";
+            bannerContent.innerHTML = `
+                <div style="font-family: 'Poppins', sans-serif; color: #ffffff; padding: 4px 0;">
+                    <h2 style="font-size: 0.95rem; font-weight: 900; margin: 0 0 2px 0;">🎉 ${currentActiveFestival.name} ACTIVE!</h2>
+                    <p style="font-size: 0.72rem; margin: 0; opacity: 0.95; font-weight: 500;">${currentActiveFestival.greeting}</p>
+                </div>
+            `;
+        } else {
+            // ✅ Normal Days Mode: Jab koi festival nahi hoga, tab standard Live banner dikhega
+            bannerBox.style.background = "linear-gradient(90deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)";
+            bannerBox.style.border = "1.5px solid #334155";
+            bannerContent.innerHTML = `
+                <marquee scrollamount="6" style="width: 100%; display: flex; align-items: center; font-family: 'Poppins', sans-serif;">
+                    <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #f8fafc;">
+                        <span style="font-size: 1rem;">🚀</span> 
+                        <span style="color: #38bdf8;">Print From Home App is LIVE</span> in Varanasi!
+                    </span>
+                    <span style="display: inline-flex; align-items: center; gap: 8px; margin-right: 40px; font-size: 0.8rem; font-weight: 700; color: #10b981;">
+                        <span>⚡</span> India's Last Minute Printing App &bull; 15-Min Delivery
+                    </span>
+                </marquee>
+            `;
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        checkAndRenderFestiveBanner();
+        setInterval(checkAndRenderFestiveBanner, 30000); // Har 30 sec par check karega
+    });
         </script>
 
         <div id="uploadScreenInitialState" style="width:100%;">
