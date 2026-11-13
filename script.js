@@ -6263,3 +6263,18 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAndApplyNightTheme();
     setInterval(checkAndApplyNightTheme, 60000); 
 });
+
+// 🔥 Background Security Watcher: Agar admin ne user delete kiya hai toh turant logout kar dega
+setInterval(async () => {
+    const activeUserMobile = localStorage.getItem('printAppUserIdentity');
+    if (!activeUserMobile) return;
+
+    try {
+        const res = await fetch(`/api/user/addresses/${activeUserMobile}`);
+        if (res.status === 404) {
+            localStorage.clear();
+            alert("⚠️ Your account has been removed by the administrator.");
+            window.location.href = "/index.html";
+        }
+    } catch(e) {}
+}, 12000); // Har 12 seconds mein check karega

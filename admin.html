@@ -749,6 +749,19 @@
     </div>
 
     <script>
+
+        // Agar admin logged in nahi hai, toh password maangega
+    if (localStorage.getItem('admin_logged_in') !== 'true') {
+        let adminPwd = prompt("🔒 Enter Admin Password to Access Control Center:");
+        if (adminPwd === "PrintFromHome2026@Admin") { // Yahan aap apna strong password set kar sakte hain
+            localStorage.setItem('admin_logged_in', 'true');
+        } else {
+            alert("❌ Access Denied! Incorrect Password.");
+            window.location.href = "/index.html";
+        }
+    }
+
+
       async function loadAdminStoreTimings() {
     try {
         const res = await fetch('/api/store-status');
@@ -1188,7 +1201,7 @@ window.adminAddNewCoupon = async function() {
             }
         }
 
-        let audioCtx = null;
+       let audioCtx = null;
         function getAudioContext() {
             if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
             if (audioCtx.state === 'suspended') { audioCtx.resume(); }
@@ -1198,22 +1211,41 @@ window.adminAddNewCoupon = async function() {
         function playLoudOrderChime() {
             try {
                 const ctx = getAudioContext();
-                const now = ctx.currentTime;
-                const osc1 = ctx.createOscillator();
-                const gain1 = ctx.createGain();
-                osc1.type = 'triangle';
-                osc1.frequency.setValueAtTime(880, now);
-                gain1.gain.setValueAtTime(0.4, now);
-                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-                osc1.connect(gain1);
-                gain1.connect(ctx.destination);
-                osc1.start(now);
-                osc1.stop(now + 0.35);
-            } catch (e) {}
+                let beepCount = 0;
+                
+                // 🔥 Har 1 second mein ek loud beep bajegi, total 5 times (5 seconds tak continuous)
+                const chimeInterval = setInterval(() => {
+                    if (beepCount >= 5) {
+                        clearInterval(chimeInterval);
+                        return;
+                    }
+                    
+                    const now = ctx.currentTime;
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    
+                    osc.type = 'square'; // Sharp aur loud alert tone
+                    osc.frequency.setValueAtTime(950, now);
+                    
+                    gain.gain.setValueAtTime(0.6, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                    
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.6);
+                    
+                    beepCount++;
+                }, 1000);
+            } catch (e) {
+                console.warn("Audio Context blocked by browser policy");
+            }
         }
 
         window.addEventListener('click', () => { getAudioContext(); }, { once: true });
 
+        
         async function autoDetectProductByBarcode(inputVal) {
             const cleanVal = inputVal.trim();
             const feedbackBox = document.getElementById('scannerDetectedFeedbackBox');
