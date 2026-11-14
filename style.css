@@ -1321,47 +1321,46 @@ body.theme-festive-republic #festivalAnimationContainer {
 }
 
 /* ==========================================
-   🌙 NIGHT MODE & SHOOTING STAR STYLES
+   🌙 TOP BAR NIGHT MODE & SHOOTING STAR STYLES
    ========================================== */
-body.night-mode {
-    background-color: #0b0f19 !important;
-    color: #f8fafc !important;
-}
 
-body.night-mode .blinkit-cat-card, 
-body.night-mode div[style*="background: #ffffff"],
-body.night-mode div[style*="background:#ffffff"] {
-    background-color: #1e293b !important;
-    color: #f8fafc !important;
-    border-color: #334155 !important;
-}
+/* 🔥 Poore body ka background dark nahi hoga, app clean aur bright rahegi */
 
 #nightSkyContainer {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    pointer-events: none;
-    z-index: 9999;
-    overflow: hidden;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 110px !important; /* Sirf top header/banner ki height ke andar restricted */
+    pointer-events: none !important;
+    z-index: 10 !important;
+    overflow: hidden !important;
     display: none;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
 }
 
+/* Jab bhi night mode active hoga, yeh sirf header ke andar dikhega */
 body.night-mode #nightSkyContainer {
-    display: block;
+    display: block !important;
+}
+
+/* Header container ko relative banana zaroori hai taaki absolute sky container uske andar rahe */
+.brand-premium-header {
+    position: relative !important;
+    overflow: hidden !important;
 }
 
 .night-moon {
     position: absolute;
-    top: 30px;
-    right: 40px;
-    width: 50px;
-    height: 50px;
-    background: #fef08a;
+    top: 15px;
+    right: 20px;
+    width: 32px;
+    height: 32px;
+    background: #ffffff !important; /* Pure clean white moon */
     border-radius: 50%;
-    box-shadow: 0 0 25px #fde047;
-    opacity: 0.85;
+    box-shadow: 0 0 18px rgba(255, 255, 255, 0.9), inset -4px -4px 0px rgba(203, 213, 225, 0.6);
+    opacity: 0.95;
 }
 
 .night-star {
@@ -1378,12 +1377,12 @@ body.night-mode #nightSkyContainer {
 
 .shooting-star {
     position: absolute;
-    width: 80px;
+    width: 60px;
     height: 2px;
     background: linear-gradient(45deg, #ffffff, transparent);
     transform: rotate(-45deg);
     opacity: 0;
-    animation: shoot 1.5s ease-in-out infinite;
+    animation: shoot 2s ease-in-out infinite;
 }
 
 @keyframes shoot {
@@ -1392,7 +1391,7 @@ body.night-mode #nightSkyContainer {
         opacity: 1;
     }
     100% {
-        transform: translateX(-400px) translateY(400px) rotate(-45deg);
+        transform: translateX(-250px) translateY(150px) rotate(-45deg);
         opacity: 0;
     }
 }
