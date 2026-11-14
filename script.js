@@ -1497,7 +1497,6 @@ window.removeCurrentStudioFile = function() {
 window.addStudioJobToCart = async function() {
     const addCartBtn = document.getElementById('studioAddToCartBtn');
     
-    // 🛑 Agar button pehle se disabled hai, toh dubara click hone hi mat do!
     if (addCartBtn && addCartBtn.disabled) return;
 
     if (addCartBtn) {
@@ -1507,9 +1506,8 @@ window.addStudioJobToCart = async function() {
         addCartBtn.textContent = 'Adding... ⏳';
     }
 
-    // 🚀 Turant loading overlay on karo
     if (typeof showGlobalLoader === 'function') {
-        showGlobalLoader("Uploading to Cloud...", "Securely uploading files to cloud, please wait ☁️");
+        showGlobalLoader("Uploading to Cloud...", "Securely uploading all file pages to cloud, please wait ☁️");
     }
 
     try {
@@ -1549,12 +1547,15 @@ window.addStudioJobToCart = async function() {
 
     for (const f of window.studioMasterFiles) {
         let rate = (f.printType === 'bw') ? 3 : 10;
-        let itemPrice = (paperType === 'photo') ? photoCalculatedPrice : (f.pages * rate * f.copies);
+        
+        // 🔥 FIX: Ensure total pages are correctly accounted for in price and cloud sync
+        let totalFilePages = f.pages || (f.pageImages ? f.pageImages.length : 1);
+        let itemPrice = (paperType === 'photo') ? photoCalculatedPrice : (totalFilePages * rate * f.copies);
 
         let finalFileName = f.name;
         let secureCloudinaryUrl = f.fileUrl;
 
-        // 🔥 Cloudinary Direct Upload
+        // 🔥 Cloudinary Direct Upload for multi-page documents/PDFs
         if (!secureCloudinaryUrl || secureCloudinaryUrl.startsWith('blob:') || secureCloudinaryUrl.startsWith('data:')) {
             if (typeof uploadFileDirectToCloudinary === 'function') {
                 let uploadedUrl = await uploadFileDirectToCloudinary(f.fileBlob || f);
@@ -1569,8 +1570,8 @@ window.addStudioJobToCart = async function() {
             fileName: finalFileName,
             fileUrl: secureCloudinaryUrl || '',
             fileData: null,
-            fileBase64: '',
-            pages: f.pages || 1,
+            fileBase64: f.fileBase64 || '',
+            pages: totalFilePages, // 🔥 Exact page count yahan 3 ( ya jitne pages honge) lock ho jayega
             copies: f.copies || 1,
             printType: f.printType || 'bw',
             orientation: f.orientation || 'portrait',
@@ -1584,7 +1585,6 @@ window.addStudioJobToCart = async function() {
         window.cartPrintJobsArray.push(printJobItem);
     }
 
-    // Quota-safe save call
     if (typeof persistCartStateData === 'function') {
         persistCartStateData();
     } else {
@@ -1594,7 +1594,6 @@ window.addStudioJobToCart = async function() {
     if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
     if (typeof closePrintStudio === 'function') closePrintStudio();
 
-    // 🛑 Kaam poora hone par hi loader hatao aur button release karo
     if (typeof hideGlobalLoader === 'function') {
         hideGlobalLoader();
     }

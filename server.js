@@ -50,15 +50,19 @@ const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'print_from_home_products',
-        allowed_formats: ['jpg', 'png', 'jpeg', 'webp']
+        allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'pdf', 'docx', 'txt'], // 🔥 PDF aur documents allow kar diye
+        resource_type: 'auto' // 🔥 Image ho ya PDF, Cloudinary usko automatically public aur accessible banayega
     }
 });
 const uploadCloudinary = multer({ storage: storage });
-
 // 🔥 Corrected Multer Storage with 50MB Field Size Limit for Base64 Strings
-const uploadLocal = multer({ 
+
+const uploadLocal = multer({
+
     dest: localUploadsDir,
-    limits: { fieldSize: 50 * 1024 * 1024 } 
+
+    limits: { fieldSize: 50 * 1024 * 1024 }
+
 });
 
 // ==========================================
