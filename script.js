@@ -85,16 +85,17 @@ async function uploadFileDirectToCloudinary(fileObj) {
     const formData = new FormData();
     formData.append("file", fileObj);
     formData.append("upload_preset", UPLOAD_PRESET);
-    formData.append("resource_type", "auto"); // 🔥 Yeh line ensure karegi ki PDF public aur accessible ho (401 error fix)
+    formData.append("resource_type", "auto");
 
     try {
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {
+        // 🔥 Yahan dekho: '/upload' ki jagah '/auto/upload' kar diya hai
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
             method: "POST",
             body: formData
         });
         const data = await response.json();
         if (data.secure_url) {
-            return data.secure_url; // Yeh secure URL ab order ke sath server par jayega
+            return data.secure_url; // Yeh ab bilkul clean public URL dega bina 401 error ke
         } else {
             throw new Error("Cloudinary upload failed");
         }
@@ -103,7 +104,6 @@ async function uploadFileDirectToCloudinary(fileObj) {
         return null;
     }
 }
-
 
 // 🔥 Diwali Pre-Launch Notice Popup Helper Function
 window.showDiwaliPreLaunchNotice = function(message) {
