@@ -85,6 +85,7 @@ async function uploadFileDirectToCloudinary(fileObj) {
     const formData = new FormData();
     formData.append("file", fileObj);
     formData.append("upload_preset", UPLOAD_PRESET);
+    formData.append("resource_type", "auto"); // 🔥 Yeh line ensure karegi ki PDF public aur accessible ho (401 error fix)
 
     try {
         const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {
@@ -102,7 +103,6 @@ async function uploadFileDirectToCloudinary(fileObj) {
         return null;
     }
 }
-
 
 
 // 🔥 Diwali Pre-Launch Notice Popup Helper Function
@@ -1148,7 +1148,7 @@ uploadedFilesList.push({
         if (modal) modal.style.display = 'none';
     };
 
-  window.updateMultiFileStudioUI = function() {
+window.updateMultiFileStudioUI = function() {
     const files = window.studioMasterFiles;
     if (!files || files.length === 0) return;
 
@@ -1215,13 +1215,19 @@ uploadedFilesList.push({
                     </div>
                 `;
             } else {
-                // 🔥 Document Mode Preview Fix (Exact A4 proportion, landscape/portrait support, no cutting)
-                let singleImgSrc = (f.pageImages && f.pageImages.length > 0) ? f.pageImages[0] : f.fileUrl;
+                // 🔥 MULTI-PAGE DOCUMENT PREVIEW FIX: Render ALL pages of the PDF vertically so user can scroll through the entire document
+                let pagesToRender = (f.pageImages && f.pageImages.length > 0) ? f.pageImages : [f.fileUrl];
+                
+                let allPagesHtml = pagesToRender.map((pageImg, pIdx) => `
+                    <div style="width: ${sheetWidth}; height: ${sheetHeight}; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10mm; box-sizing: border-box; position: relative; margin-bottom: 25px; flex-shrink: 0;">
+                        <span style="position: absolute; top: 12px; left: 15px; background: #0f172a; color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; z-index: 5;">Page ${pIdx + 1} of ${pagesToRender.length}</span>
+                        <img src="${pageImg}" style="width: 100%; height: 100%; object-fit: contain; ${filterStyle} display: block;" />
+                    </div>
+                `).join('');
+
                 previewContent = `
-                    <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 5px; box-sizing: border-box;">
-                        <div style="width: ${sheetWidth}; height: ${sheetHeight}; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; padding: 10mm; box-sizing: border-box; transform: scale(0.30); transform-origin: center center;">
-                            <img src="${singleImgSrc}" style="width: 100%; height: 100%; object-fit: contain; ${filterStyle} display: block;" />
-                        </div>
+                    <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding: 20px; box-sizing: border-box; scrollbar-width: thin;">
+                        ${allPagesHtml}
                     </div>
                 `;
             }
@@ -1247,13 +1253,10 @@ uploadedFilesList.push({
         }, 50);
     }
 
-
-// <--- window.updateMultiFileStudioUI function continues below
-
     const counterBadge = document.getElementById('studioSlideCounterBadge');
     if (counterBadge) {
         if (currentFile.pageImages && currentFile.pageImages.length > 1) {
-            counterBadge.textContent = `Page 1 of ${currentFile.pageImages.length}`;
+            counterBadge.textContent = `${currentFile.pageImages.length} Pages Total`;
         } else {
             counterBadge.textContent = `File ${window.currentStudioActiveIndex + 1}/${files.length}`;
         }
@@ -1293,7 +1296,7 @@ uploadedFilesList.push({
     let grandTotalPrice = 0;
 
     files.forEach((f) => {
-        let pgs = parseInt(f.pages) || 1;
+        let pgs = parseInt(f.pages) || (f.pageImages ? f.pageImages.length : 1);
         let cps = parseInt(f.copies) || 1;
         let rate = (f.printType === 'bw') ? 3 : 10;
         
@@ -1303,7 +1306,6 @@ uploadedFilesList.push({
 
     const totalPriceText = document.getElementById('studioTotalPriceText');
     if (totalPriceText) {
-        // 🔥 Agar photo mode hai toh layout ke mutabiq pricing dikhayein
         if (typeof currentSelectedPaperType !== 'undefined' && currentSelectedPaperType === 'photo') {
             totalPriceText.textContent = `₹${window.currentCalculatedJobPrice || 50}`;
         } else {
