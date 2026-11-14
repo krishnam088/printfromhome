@@ -1148,172 +1148,331 @@ uploadedFilesList.push({
         if (modal) modal.style.display = 'none';
     };
 
-window.updateMultiFileStudioUI = function() {
+ window.updateMultiFileStudioUI = function() {
+
     const files = window.studioMasterFiles;
+
     if (!files || files.length === 0) return;
 
+
+
     const currentFile = files[window.currentStudioActiveIndex] || files[0];
+
     const imageSlider = document.getElementById('studioInImageHorizontalSlider');
 
+
+
     if (imageSlider) {
+
         imageSlider.innerHTML = files.map((f, fIdx) => {
+
             let isLand = f.orientation === 'landscape';
+
             let isBw = f.printType === 'bw';
+
             let filterStyle = isBw ? 'filter: grayscale(100%);' : '';
-            
+
+           
+
             // Orientation ke hisab se A4 sheet dimensions lock karna
+
             let sheetWidth = isLand ? '297mm' : '210mm';
+
             let sheetHeight = isLand ? '210mm' : '297mm';
 
+
+
             let previewContent = '';
+
             const isPhotoMode = (typeof currentSelectedPaperType !== 'undefined' && currentSelectedPaperType === 'photo');
 
+
+
             if (isPhotoMode) {
+
                 const layoutSelect = document.getElementById('photoLayoutSelect');
+
                 const selectedLayout = layoutSelect ? layoutSelect.value : 'passport_8';
-                
+
+               
+
                 let gridCount = 8;
+
                 let gridTemplateCols = 'repeat(4, 1fr)';
 
+
+
                 if (selectedLayout === 'passport_12') { gridCount = 12; gridTemplateCols = 'repeat(4, 1fr)'; }
+
                 else if (selectedLayout === 'passport_20') { gridCount = 20; gridTemplateCols = 'repeat(4, 1fr)'; }
-                else if (selectedLayout === 'photo_2_a4') { 
-                    gridCount = 2; 
-                    sheetWidth = isLand ? '297mm' : '210mm'; 
-                    sheetHeight = isLand ? '210mm' : '297mm'; 
-                    gridTemplateCols = isLand ? 'repeat(2, 1fr)' : '1fr'; 
+
+                else if (selectedLayout === 'photo_2_a4') {
+
+                    gridCount = 2;
+
+                    sheetWidth = isLand ? '297mm' : '210mm';
+
+                    sheetHeight = isLand ? '210mm' : '297mm';
+
+                    gridTemplateCols = isLand ? 'repeat(2, 1fr)' : '1fr';
+
                 }
-                else if (selectedLayout === 'photo_single_glossy') { 
-                    gridCount = 1; 
-                    sheetWidth = isLand ? '297mm' : '210mm'; 
-                    sheetHeight = isLand ? '210mm' : '297mm'; 
-                    gridTemplateCols = '1fr'; 
+
+                else if (selectedLayout === 'photo_single_glossy') {
+
+                    gridCount = 1;
+
+                    sheetWidth = isLand ? '297mm' : '210mm';
+
+                    sheetHeight = isLand ? '210mm' : '297mm';
+
+                    gridTemplateCols = '1fr';
+
                 }
+
+
 
                 let gridItemsHtml = '';
+
                 let singleImgSrc = (f.pageImages && f.pageImages.length > 0) ? f.pageImages[0] : f.fileUrl;
 
+
+
                 for (let g = 0; g < gridCount; g++) {
-                    let itemStyle = (selectedLayout === 'photo_2_a4') 
+
+                    let itemStyle = (selectedLayout === 'photo_2_a4')
+
                         ? (isLand ? 'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff;' : 'width: 100%; height: 120mm; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff;')
-                        : (selectedLayout === 'photo_single_glossy' 
+
+                        : (selectedLayout === 'photo_single_glossy'
+
                             ? 'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff;'
+
                             : 'border: 1px solid #94a3b8; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 2px; aspect-ratio: 3.5 / 4.5; padding: 1.5mm;');
 
+
+
                     gridItemsHtml += `
+
                         <div style="${itemStyle}">
+
                             <img src="${singleImgSrc}" style="width: 100%; height: 100%; object-fit: contain; display: block;" />
+
                         </div>
+
                     `;
+
                 }
 
-                previewContent = `
-                    <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 5px; box-sizing: border-box;">
-                        <div style="width: ${sheetWidth}; height: ${sheetHeight}; background: #ffffff; border: 1.5px solid #cbd5e1; box-shadow: 0 10px 30px rgba(0,0,0,0.12); border-radius: 6px; padding: 10mm; display: grid !important; grid-template-columns: ${gridTemplateCols} !important; gap: 6mm; align-content: center; justify-content: center; box-sizing: border-box; transform: scale(0.30); transform-origin: center center;">
-                            ${gridItemsHtml}
-                        </div>
-                    </div>
-                `;
-            } else {
-                // 🔥 MULTI-PAGE DOCUMENT PREVIEW FIX: Render ALL pages of the PDF vertically so user can scroll through the entire document
-                let pagesToRender = (f.pageImages && f.pageImages.length > 0) ? f.pageImages : [f.fileUrl];
-                
-                let allPagesHtml = pagesToRender.map((pageImg, pIdx) => `
-                    <div style="width: ${sheetWidth}; height: ${sheetHeight}; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10mm; box-sizing: border-box; position: relative; margin-bottom: 25px; flex-shrink: 0;">
-                        <span style="position: absolute; top: 12px; left: 15px; background: #0f172a; color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; z-index: 5;">Page ${pIdx + 1} of ${pagesToRender.length}</span>
-                        <img src="${pageImg}" style="width: 100%; height: 100%; object-fit: contain; ${filterStyle} display: block;" />
-                    </div>
-                `).join('');
+
 
                 previewContent = `
-                    <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding: 20px; box-sizing: border-box; scrollbar-width: thin;">
-                        ${allPagesHtml}
+
+                    <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 5px; box-sizing: border-box;">
+
+                        <div style="width: ${sheetWidth}; height: ${sheetHeight}; background: #ffffff; border: 1.5px solid #cbd5e1; box-shadow: 0 10px 30px rgba(0,0,0,0.12); border-radius: 6px; padding: 10mm; display: grid !important; grid-template-columns: ${gridTemplateCols} !important; gap: 6mm; align-content: center; justify-content: center; box-sizing: border-box; transform: scale(0.30); transform-origin: center center;">
+
+                            ${gridItemsHtml}
+
+                        </div>
+
                     </div>
+
                 `;
+
+            } else {
+
+                // 🔥 Document Mode Preview Fix (Exact A4 proportion, landscape/portrait support, no cutting)
+
+                let singleImgSrc = (f.pageImages && f.pageImages.length > 0) ? f.pageImages[0] : f.fileUrl;
+
+                previewContent = `
+
+                    <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 5px; box-sizing: border-box;">
+
+                        <div style="width: ${sheetWidth}; height: ${sheetHeight}; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; padding: 10mm; box-sizing: border-box; transform: scale(0.30); transform-origin: center center;">
+
+                            <img src="${singleImgSrc}" style="width: 100%; height: 100%; object-fit: contain; ${filterStyle} display: block;" />
+
+                        </div>
+
+                    </div>
+
+                `;
+
             }
+
+
 
             return `
+
                 <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; flex-shrink:0; position:relative; background:#f8fafc; overflow:hidden;">
+
                     <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">${previewContent}</div>
+
                 </div>
+
             `;
+
         }).join('');
 
+
+
         setTimeout(() => {
+
             const sliderEl = document.getElementById('studioInImageHorizontalSlider');
+
             if (sliderEl) {
+
                 const activeChild = sliderEl.children[window.currentStudioActiveIndex];
+
                 if (activeChild) {
+
                     sliderEl.scrollTo({
+
                         left: activeChild.offsetLeft - (sliderEl.clientWidth - activeChild.clientWidth) / 2,
+
                         behavior: 'instant'
+
                     });
+
                 }
+
             }
+
         }, 50);
+
     }
+
+
+
+
+
+// <--- window.updateMultiFileStudioUI function continues below
+
+
 
     const counterBadge = document.getElementById('studioSlideCounterBadge');
+
     if (counterBadge) {
+
         if (currentFile.pageImages && currentFile.pageImages.length > 1) {
-            counterBadge.textContent = `${currentFile.pageImages.length} Pages Total`;
+
+            counterBadge.textContent = `Page 1 of ${currentFile.pageImages.length}`;
+
         } else {
+
             counterBadge.textContent = `File ${window.currentStudioActiveIndex + 1}/${files.length}`;
+
         }
+
     }
+
+
 
     const copiesText = document.getElementById('studioCopiesCountText');
+
     if (copiesText) copiesText.textContent = currentFile.copies;
 
+
+
     const pagesInfo = document.getElementById('studioFilePagesInfo');
+
     if (pagesInfo) pagesInfo.textContent = `${currentFile.name} (${currentFile.pages} page${currentFile.pages > 1 ? 's' : ''})`;
 
+
+
     const colColoured = document.getElementById('colorOptionColoured');
+
     const colBw = document.getElementById('colorOptionBw');
+
     if (colColoured && colBw) {
+
         if (currentFile.printType === 'coloured' || currentFile.printType === 'color') {
+
             colColoured.style.borderColor = '#065f46'; colColoured.style.background = '#f0fdf4';
+
             colBw.style.borderColor = '#e2e8f0'; colBw.style.background = '#ffffff';
+
         } else {
+
             colBw.style.borderColor = '#065f46'; colBw.style.background = '#f0fdf4';
+
             colColoured.style.borderColor = '#e2e8f0'; colColoured.style.background = '#ffffff';
+
         }
+
     }
+
+
 
     const oriPortrait = document.getElementById('orientationPortrait');
+
     const oriLandscape = document.getElementById('orientationLandscape');
+
     if (oriPortrait && oriLandscape) {
+
         if (currentFile.orientation === 'portrait') {
+
             oriPortrait.style.borderColor = '#065f46'; oriPortrait.style.background = '#f0fdf4';
+
             oriLandscape.style.borderColor = '#e2e8f0'; oriLandscape.style.background = '#ffffff';
+
         } else {
+
             oriLandscape.style.borderColor = '#065f46'; oriLandscape.style.background = '#f0fdf4';
+
             oriPortrait.style.borderColor = '#e2e8f0'; oriPortrait.style.background = '#ffffff';
+
         }
+
     }
+
+
 
     let totalPagesCombined = 0;
+
     let grandTotalPrice = 0;
 
+
+
     files.forEach((f) => {
-        let pgs = parseInt(f.pages) || (f.pageImages ? f.pageImages.length : 1);
+
+        let pgs = parseInt(f.pages) || 1;
+
         let cps = parseInt(f.copies) || 1;
+
         let rate = (f.printType === 'bw') ? 3 : 10;
-        
+
+       
+
         totalPagesCombined += pgs * cps;
+
         grandTotalPrice += (pgs * rate * cps) + (f.binding === 'spiral' ? 30 * cps : 0);
+
     });
 
+
+
     const totalPriceText = document.getElementById('studioTotalPriceText');
+
     if (totalPriceText) {
+
+        // 🔥 Agar photo mode hai toh layout ke mutabiq pricing dikhayein
+
         if (typeof currentSelectedPaperType !== 'undefined' && currentSelectedPaperType === 'photo') {
+
             totalPriceText.textContent = `₹${window.currentCalculatedJobPrice || 50}`;
+
         } else {
+
             totalPriceText.textContent = `₹${grandTotalPrice} (${totalPagesCombined} pgs)`;
+
         }
+
     }
+
 };
-    
 
 
 window.updatePrintStudioUI = window.updateMultiFileStudioUI;
