@@ -1321,46 +1321,58 @@ body.theme-festive-republic #festivalAnimationContainer {
 }
 
 /* ==========================================
-   🌙 TOP BAR NIGHT MODE & SHOOTING STAR STYLES
+   🌙 TOP BAR NIGHT MODE & MOON ALIGNMENT FIX
    ========================================== */
 
-/* 🔥 Poore body ka background dark nahi hoga, app clean aur bright rahegi */
+/* 1. Header ka background dark karne ke liye jab night mode active ho */
+body.night-mode .brand-premium-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%) !important;
+    border-bottom: 1px solid #334155 !important;
+    color: #f8fafc !important;
+}
 
+body.night-mode .delivery-brand-box h2,
+body.night-mode .delivery-brand-box div,
+body.night-mode .user-greeting-inline,
+body.night-mode #headerActiveAddressPreview {
+    color: #f8fafc !important;
+}
+
+/* 2. Night Sky Container (Strictly inside header height) */
 #nightSkyContainer {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
     width: 100% !important;
-    height: 110px !important; /* Sirf top header/banner ki height ke andar restricted */
+    height: 100% !important;
     pointer-events: none !important;
-    z-index: 10 !important;
+    z-index: 2 !important;
     overflow: hidden !important;
     display: none;
-    border-bottom-left-radius: 16px;
-    border-bottom-right-radius: 16px;
 }
 
-/* Jab bhi night mode active hoga, yeh sirf header ke andar dikhega */
 body.night-mode #nightSkyContainer {
     display: block !important;
 }
 
-/* Header container ko relative banana zaroori hai taaki absolute sky container uske andar rahe */
 .brand-premium-header {
     position: relative !important;
     overflow: hidden !important;
 }
 
+/* 3. Moon Alignment: Perfectly Centered Vertically on the Right Side */
 .night-moon {
     position: absolute;
-    top: 15px;
-    right: 20px;
-    width: 32px;
-    height: 32px;
-    background: #ffffff !important; /* Pure clean white moon */
+    top: 50% !important;
+    right: 24px !important;
+    transform: translateY(-50%) !important; /* Timings aur open badge ke bilkul center mein align karega */
+    width: 36px;
+    height: 36px;
+    background: #ffffff !important; /* Pure Glowing White Moon */
     border-radius: 50%;
-    box-shadow: 0 0 18px rgba(255, 255, 255, 0.9), inset -4px -4px 0px rgba(203, 213, 225, 0.6);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.95), inset -4px -4px 0px rgba(203, 213, 225, 0.6);
     opacity: 0.95;
+    z-index: 5;
 }
 
 .night-star {
